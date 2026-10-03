@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:baishui_town",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 150,
+    "separation": 75,
+    "salt": 564604127
+  }
+}

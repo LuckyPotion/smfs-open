@@ -1,0 +1,53 @@
+plugins {
+    id 'fabric-loom' version '1.10.5'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    mavenCentral()
+    // MCA Reborn (mod id: mca)
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // 兼容目标。若 Modrinth 未收录对应构建，改用本地 jar：
+    //   modCompileOnly files('reference/minecraft-comes-alive-<version>.jar')
+    modImplementation "maven.modrinth:minecraft-comes-alive-reborn:${project.mca_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    filesMatching('fabric.mod.json') {
+        // 只替换独立的 "${version}" 占位符；用 replace 而非 expand 可避免把
+        // 文本中的 '$' 当作 Groovy 模板变量解析。
+        filter(org.apache.tools.ant.filters.ReplaceTokens,
+               tokens: [version: project.version])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = 'UTF-8'
+    it.options.release = 17
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}

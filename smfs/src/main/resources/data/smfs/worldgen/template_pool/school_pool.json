@@ -1,0 +1,16 @@
+{
+  "name": "smfs:school_pool",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "location": "smfs:school",
+        "processors": "minecraft:empty",
+        "projection": "rigid",
+        "element_type": "minecraft:single_pool_element"
+      },
+      "name": "smfs:school_center"
+    }
+  ]
+}

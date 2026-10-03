@@ -1,0 +1,367 @@
+{
+  "notice.page1": {
+    "sounds": [
+      {
+        "name": "smfs:notice/1",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.notice.page1"
+  },
+  "notice.page2": {
+    "sounds": [
+      {
+        "name": "smfs:notice/2",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.notice.page2"
+  },
+  "notice.page3": {
+    "sounds": [
+      {
+        "name": "smfs:notice/3",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.notice.page3"
+  },
+  "notice.page4": {
+    "sounds": [
+      {
+        "name": "smfs:notice/4",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.notice.page4"
+  },
+  "notice.page5": {
+    "sounds": [
+      {
+        "name": "smfs:notice/5",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.notice.page5"
+  },
+  "notice.page6": {
+    "sounds": [
+      {
+        "name": "smfs:notice/6",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.notice.page6"
+  },
+  "entity.knocking_ghost.knock": {
+    "sounds": [
+      {
+        "name": "smfs:entity/knocking_ghost/knock",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.entity.knocking_ghost.knock"
+  },
+  "entity.giant_male_corpse.swing_attack": {
+    "sounds": [
+      {
+        "name": "smfs:entity/giant_male_corpse/swing_attack",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.entity.giant_male_corpse.swing_attack"
+  },
+  "background.baby_crying": {
+    "sounds": [
+      {
+        "name": "smfs:background/baby_crying",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.baby_crying"
+  },
+  "background.creepy_humming": {
+    "sounds": [
+      {
+        "name": "smfs:background/creepy_humming",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.creepy_humming"
+  },
+  "background.eerie_piano": {
+    "sounds": [
+      {
+        "name": "smfs:background/eerie_piano",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.eerie_piano"
+  },
+  "background.piano": {
+    "sounds": [
+      {
+        "name": "smfs:background/eerie_piano",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.piano"
+  },
+  "background.whispering": {
+    "sounds": [
+      {
+        "name": "smfs:background/creepy_humming",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.whispering"
+  },
+  "script.crow_sound": {
+    "sounds": [
+      {
+        "name": "smfs:script/crow_sound",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.crow_sound"
+  },
+  "script.terrifying_laugh": {
+    "sounds": [
+      {
+        "name": "smfs:script/terrifying_laugh",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.terrifying_laugh"
+  },
+  "script.horror_sound_2": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_2",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_2"
+  },
+  "script.horror_sound_3": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_3",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_3"
+  },
+  "script.horror_sound_4": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_4",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_4"
+  },
+  "script.horror_sound_5": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_5",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_5"
+  },
+  "script.eerie_sound_1": {
+    "sounds": [
+      {
+        "name": "smfs:script/eerie_sound_1",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.eerie_sound_1"
+  },
+  "ui.quest.success": {
+    "sounds": [
+      "random/levelup"
+    ],
+    "subtitle": "subtitles.ui.quest.success"
+  },
+  "ui.quest.failure": {
+    "sounds": [
+      "mob/villager/no2"
+    ],
+    "subtitle": "subtitles.ui.quest.failure"
+  },
+  "entity.ghost_bride.entrance": {
+    "sounds": [
+      {
+        "name": "smfs:entity/ghost_bride/entrance",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.entity.ghost_bride.entrance"
+  },
+  "entity.crying_ghost.entrance": {
+    "sounds": [
+      {
+        "name": "smfs:entity/crying_ghost/entrance",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.entity.crying_ghost.entrance"
+  },
+  "background.suona_music": {
+    "sounds": [
+      {
+        "name": "smfs:background/suona_music",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.suona_music"
+  },
+  "background.horror_background": {
+    "sounds": [
+      {
+        "name": "smfs:background/horror_background",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.horror_background"
+  },
+  "script.horror_sound_6": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_6",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_6"
+  },
+  "script.horror_sound_7": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_7",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_7"
+  },
+  "script.horror_sound_8": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_8",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_8"
+  },
+  "script.horror_sound_9": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_9",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_9"
+  },
+  "script.horror_sound_11": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_11",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_11"
+  },
+  "script.horror_sound_12": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_12",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_12"
+  },
+  "script.horror_sound_13": {
+    "sounds": [
+      {
+        "name": "smfs:script/horror_sound_13",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.horror_sound_13"
+  },
+  "script.gong_sound": {
+    "sounds": [
+      {
+        "name": "smfs:script/gong_sound",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.script.gong_sound"
+  },
+  "entity.yang_jian.entrance": {
+    "sounds": [
+      {
+        "name": "smfs:entity/yang_jian/entrance",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.entity.yang_jian.entrance"
+  },
+  "entity.yang_jian.bgm": {
+    "sounds": [
+      {
+        "name": "smfs:entity/yang_jian/bgm",
+        "volume": 0.8,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.entity.yang_jian.bgm"
+  },
+  "effect.ghost_wind": {
+    "sounds": [
+      {
+        "name": "smfs:script/wind",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.effect.ghost_wind"
+  },
+  "weapon.golden_pistol.shot": {
+    "sounds": [
+      {
+        "name": "smfs:script/gan",
+        "volume": 1.0
+      }
+    ],
+    "subtitle": "subtitles.weapon.golden_pistol.shot"
+  },
+  "entity.ghost_officer.entrance": {
+    "sounds": [
+      {
+        "name": "smfs:entity/ghost_officer/entrance",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.entity.ghost_officer.entrance"
+  },
+  "background.eerie_music_box": {
+    "sounds": [
+      {
+        "name": "smfs:background/bayinghe",
+        "volume": 0.7,
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.background.eerie_music_box"
+  }
+}

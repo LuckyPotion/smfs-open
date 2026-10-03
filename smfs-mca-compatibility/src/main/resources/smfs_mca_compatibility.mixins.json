@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.xie.smfs_mca_compatibility.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [],
+  "client": [
+    "McaGuiSkipMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "smfs_mca_compatibility-refmap.json"
+}

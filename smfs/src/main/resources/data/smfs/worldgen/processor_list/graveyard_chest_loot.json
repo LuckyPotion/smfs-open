@@ -1,0 +1,9 @@
+{
+  "processors": [
+    {
+      "processor_type": "smfs:chest_loot_processor",
+      "loot_table": "smfs:chests/graveyard"
+    }
+  ]
+}
+

@@ -1,0 +1,42 @@
+{
+  "required": true,
+  "package": "com.xie.smfs.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "server.PlayerEntityMixin",
+    "server.ItemStackMixin",
+    "server.UpdateStructureBlockC2SPacketMixin",
+    "server.StructureBlockBlockEntityMixin",
+    "server.LivingEntityHealMixin",
+    "server.VillagerEntityMixin",
+    "server.ChunkGeneratorMixin",
+    "server.ChunkStatusMixin",
+    "server.JigsawStructureMixin",
+    "server.LivingEntityInstantKillMixin",
+    "server.LivingEntitySetHealthMixin",
+    "server.StructureTemplateMixin",
+    "server.ChunkRegionAccessor"
+  ],
+  "client": [
+    "client.LivingEntityMixin",
+    "client.InventoryScreenMixin",
+    "client.DeathScreenMixin",
+    "client.CreateWorldScreenMixin",
+    "client.sound.SoundSystemMixin",
+    "client.PlayerEntityRendererMixin",
+    "client.WorldMixin",
+    "client.IntegratedServerLoaderMixin",
+    "client.FirstPersonRendererMixin",
+    "client.CameraMixin",
+    "client.InGameHudMixin",
+    "client.ClientPlayerEntityMixin",
+    "client.MinecraftClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "refmap": "smfs-refmap.json"
+}

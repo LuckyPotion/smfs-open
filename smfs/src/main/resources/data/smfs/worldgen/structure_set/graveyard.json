@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:graveyard",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 564604125,
+    "spacing": 200,
+    "separation": 100,
+    "type": "minecraft:random_spread"
+  }
+}

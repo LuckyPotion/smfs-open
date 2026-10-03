@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "smfs:blood_lake_still",
+    "smfs:blood_lake_flowing",
+    "smfs:ghost_lake_still",
+    "smfs:ghost_lake_flowing"
+  ]
+}

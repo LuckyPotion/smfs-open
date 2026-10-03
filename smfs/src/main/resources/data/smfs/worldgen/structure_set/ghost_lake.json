@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:ghost_lake",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 120,
+    "separation": 60,
+    "salt": 564604126
+  }
+}

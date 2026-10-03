@@ -1,0 +1,109 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "smfs:ghost_porcelain",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:red_ghost_candle",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:ghost_buddha_beads",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:rusty_firewood_knife",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:white_ghost_candle",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:eerie_family_portrait",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:ghost_shroud_chestplate",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:eerie_music_box",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:eerie_yellow_paper",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:ghost_candy",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:ghost_chinese_medicine",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:worm_eaten_bone",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:eerie_rag",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:viscous_blood",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:blackened_tooth",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:ghost_scissors",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:deception_ghost_necklace",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:coffin_nail",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:terrifying_corpse_skin",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "smfs:rusty_old_broadsword",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

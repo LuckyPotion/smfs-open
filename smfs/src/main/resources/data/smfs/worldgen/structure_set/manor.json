@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:manor",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 872456139,
+    "spacing": 250,
+    "separation": 120,
+    "type": "minecraft:random_spread"
+  }
+}

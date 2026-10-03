@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ghost_eye_equipped",
+    "triggerConditions": {
+      "minDay": 1,
+      "requiredItems": ["smfs:silent_ghost_eye"],
+      "isRepeatable": false
+    },
+    "story": "我在人皮纸的帮助下成功驾驭了鬼眼，我感觉有那么一瞬间我的身体不再属于自己，有一只鬼要从我的身体出去。不过现在不是关心这个的时候。现在的我可以开启鬼域，这是一种很奇妙的感觉，仿佛我一开始就知道一样...那只鬼已经找来了，我尝试开启鬼域逃离它，不过我失败了。我还是死在了那声敲门声下...那只鬼的鬼域太强，我必须让体内的鬼加快复苏，把鬼域开到3层或许可行..."
+  },
+  {
+    "id": "strange_noise",
+    "triggerConditions": {
+      "minDay": 3,
+      "requiredItems": ["minecraft:torch"],
+      "isRepeatable": false
+    },
+    "story": "你听到远处传来奇怪的声音，似乎有什么东西在靠近..."
+  },
+  {
+    "id": "old_letter",
+    "triggerConditions": {
+      "minDay": 5,
+      "requiredItems": [],
+      "isRepeatable": false
+    },
+    "story": "你在地上发现了一封旧信，上面写着模糊的字迹..."
+  }
+]

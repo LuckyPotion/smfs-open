@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "minecraft:gold_ingot"
+  },
+  "base": {
+    "item": "minecraft:diamond_leggings"
+  },
+  "addition": {
+    "item": "smfs:defiled_ingot"
+  },
+  "result": {
+    "item": "smfs:defiled_leggings"
+  }
+}

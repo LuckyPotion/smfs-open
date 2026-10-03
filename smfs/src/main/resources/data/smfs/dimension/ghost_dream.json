@@ -1,0 +1,13 @@
+{
+  "type": "smfs:ghost_dream",
+  "generator": {
+    "type": "minecraft:noise",
+    "seed": 0,
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "smfs:ghost_dream_biome"
+    },
+    "settings": "smfs:ghost_dream_noise"
+  },
+  "_is_experimental": false
+}

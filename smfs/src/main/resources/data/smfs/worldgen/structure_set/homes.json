@@ -1,0 +1,68 @@
+{
+  // 如果位置通过放置检查，选择哪些结构尝试生成。
+  // 如果此列表中的两个或更多结构可以在生物群系中的一个位置生成，则根据权重随机选择一个生成
+  "structures": [
+    {
+      "structure": "smfs:home_1",
+      "weight": 10
+    },
+    {
+      "structure": "smfs:home_2",
+      "weight": 8
+    },
+    {
+      "structure": "smfs:home_3",
+      "weight": 8
+    },
+    {
+      "structure": "smfs:home_4",
+      "weight": 6
+    },
+    {
+      "structure": "smfs:home_5",
+      "weight": 6
+    },
+    {
+      "structure": "smfs:home_6",
+      "weight": 5
+    },
+    {
+      "structure": "smfs:home_7",
+      "weight": 5
+    },
+    {
+      "structure": "smfs:home_8",
+      "weight": 4
+    },
+    {
+      "structure": "smfs:home_9",
+      "weight": 4
+    },
+    {
+      "structure": "smfs:home_10",
+      "weight": 3
+    },
+    {
+      "structure": "smfs:home_11",
+      "weight": 3
+    },
+    {
+      "structure": "smfs:home_12",
+      "weight": 2
+    }
+  ],
+  "placement": {
+    // 确保这是唯一的，并且不匹配任何其他结构集的salt
+    "salt": 564604120,
+
+    // 生成尝试的平均区块距离
+    "spacing": 30,
+
+    // 生成尝试的最小区块距离
+    // 必须始终小于上面的spacing
+    "separation": 20,
+
+    // 要使用的放置类型。另一种类型是基于环的，像要塞使用的那样。
+    "type": "minecraft:random_spread"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "smfs:spirit_realm",
+  "generator": {
+    "type": "minecraft:noise",
+    "seed": 0,
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "smfs:spirit_realm_biome"
+    },
+    "settings": "smfs:spirit_realm_noise"
+  },
+  "_is_experimental": false
+}

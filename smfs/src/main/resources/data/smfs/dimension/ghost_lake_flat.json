@@ -1,0 +1,23 @@
+{
+  "type": "smfs:ghost_lake_flat",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        },
+        {
+          "block": "smfs:ghost_lake",
+          "height": 255
+        }
+      ],
+      "biome": "smfs:ghost_lake_biome",
+      "structures": {
+        "structures": {}
+      }
+    }
+  },
+  "ambient_light": 1.0
+}

@@ -1,0 +1,15 @@
+{
+  "name": "smfs:ghost_lake_pool",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "processors": [],
+        "projection": "rigid",
+        "element_type": "minecraft:single_pool_element",
+        "location": "smfs:ghost_lake"
+      }
+    }
+  ]
+}

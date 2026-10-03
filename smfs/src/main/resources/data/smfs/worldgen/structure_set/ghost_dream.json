@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:ghost_dream",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 987654321,
+    "spacing": 40,
+    "separation": 25,
+    "type": "minecraft:random_spread"
+  }
+}

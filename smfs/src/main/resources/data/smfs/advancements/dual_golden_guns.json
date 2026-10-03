@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "smfs:golden_pistol"
+    },
+    "title": {
+      "translate": "advancement.smfs.dual_golden_guns.title"
+    },
+    "description": {
+      "translate": "advancement.smfs.dual_golden_guns.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "smfs:root",
+  "criteria": {
+    "dual_golden_guns": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 150
+  }
+}

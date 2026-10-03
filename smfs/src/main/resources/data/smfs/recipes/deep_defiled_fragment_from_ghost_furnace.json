@@ -1,0 +1,10 @@
+{
+  "type": "smfs:ghost_furnace",
+  "group": "ghost_furnace",
+  "ingredient": {
+    "item": "smfs:deep_defiled_ore"
+  },
+  "result": "smfs:defiled_fragment",
+  "experience": 1.5,
+  "cookingtime": 300
+}

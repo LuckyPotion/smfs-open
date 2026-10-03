@@ -1,0 +1,49 @@
+{
+  // 用于结构行为的基础结构类。（如额外的地形检查等）
+  "type": "minecraft:jigsaw",
+
+  // 要使用的模板池json文件的路径
+  "start_pool": "smfs:start_pool",
+
+  // 这是结构的一个部件可以距离起始部件多远生成
+  // 可以把它想象成结构分支的长度
+  "size": 1,
+
+  // 部件可以生成距离中心的最大距离。不能大于128
+  "max_distance_from_center": 80,
+
+  // 用于指定此结构可以在哪些生物群系中生成的生物群系标签"
+  "biomes": "#smfs:has_structure/home_1",
+
+  // 生成结构的生成阶段。有10个阶段可供选择！
+  // 这个地表结构阶段在植物和矿石生成之前放置结构
+  // 参见GenerationStep.Feature枚举以获取所有可用的阶段及其顺序
+  "step": "surface_structures",
+
+  // 如果project_start_to_heightmap不存在，在什么y值生成我们的结构。
+  // start_height可用于通过类似这样的方式在随机固定y值生成："max_inclusive": { "below_top": 10 }, "min_inclusive": { "above_bottom": 32 }
+  // 如果project_start_to_heightmap存在，在start_height中选择的y值将被添加到地形的y值中。
+  // 所以一个给出-5的起始高度将使结构沉入地形5个方块。这里，我们将在距离地形60个方块的高度生成这个结构。
+  "start_height": {
+    "absolute": 0
+  },
+
+  // 使我们的天空扇结构获取地形的顶部y值并将其添加到上面的start_height y值中。
+  // 最终值是结构生成的y值。
+  // WORLD_SURFACE_WG将在第一个非空气方块处停止，因此它总是在海洋上方生成，而不是沉入深海。
+  "project_start_to_heightmap": "WORLD_SURFACE_WG",
+  "terrain_adaptation": "beard_box",
+
+  // 保持这个为false。这只是为了vanilla传统村庄使其正确生成。我们这里不需要任何hack！
+  "use_expansion_hack": false,
+
+  // 哪些生物可以随时间在结构中生成。
+  // 确保将生物添加到正确的类别（怪物、生物等）
+  "spawn_overrides": {
+    "creature": {
+      "bounding_box": "piece",
+      "spawns": [
+      ]
+    }
+  }
+}

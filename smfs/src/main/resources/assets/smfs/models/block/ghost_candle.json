@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_candle",
+  "textures": {
+    "candle": "smfs:block/ghost_candle",
+    "particle": "smfs:block/ghost_candle"
+  }
+}

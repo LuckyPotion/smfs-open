@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "smfs_mca_compatibility",
+	"version": "1.0.0",
+	"name": "神秘复苏凡家物语兼容",
+	"description": "禁用凡家物语开局界面，默认直接选择玩家",
+	"authors": [
+		"进击的蟹某人"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.xie.smfs_mca_compatibility.SmfsMcaCompatibility"
+		],
+		"client": [
+			"com.xie.smfs_mca_compatibility.SmfsMcaCompatibilityClient"
+		]
+	},
+	"mixins": [
+		"smfs_mca_compatibility.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"mca": "*"
+	}
+}

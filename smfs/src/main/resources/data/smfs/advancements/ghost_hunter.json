@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "smfs:golden_container"
+    },
+    "title": {
+      "translate": "advancement.smfs.ghost_hunter.title"
+    },
+    "description": {
+      "translate": "advancement.smfs.ghost_hunter.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "smfs:root",
+  "criteria": {
+    "capture_ghost": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 200
+  }
+}

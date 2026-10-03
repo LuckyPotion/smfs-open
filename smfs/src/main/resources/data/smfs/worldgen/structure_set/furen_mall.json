@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:furen_mall",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 564604128,
+    "spacing": 150,
+    "separation": 75,
+    "type": "minecraft:random_spread"
+  }
+}

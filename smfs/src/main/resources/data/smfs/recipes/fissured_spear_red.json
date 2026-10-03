@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "smfs:fissured_spear_purple"
+    },
+    {
+      "item": "smfs:terrifying_corpse_skin"
+    }
+  ],
+  "result": {
+    "item": "smfs:fissured_spear_red",
+    "count": 1
+  }
+}

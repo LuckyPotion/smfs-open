@@ -1,0 +1,186 @@
+{
+  "mappings": {
+    "com/xie/smfs/mixin/client/CameraMixin": {
+      "update": "Lnet/minecraft/class_4184;method_19321(Lnet/minecraft/class_1922;Lnet/minecraft/class_1297;ZZF)V"
+    },
+    "com/xie/smfs/mixin/client/ClientPlayerEntityMixin": {
+      "tick": "Lnet/minecraft/class_746;method_5773()V"
+    },
+    "com/xie/smfs/mixin/client/CreateWorldScreenMixin": {
+      "Lnet/minecraft/server/integrated/IntegratedServerLoader;tryLoad(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V": "Lnet/minecraft/class_7196;method_41892(Lnet/minecraft/class_310;Lnet/minecraft/class_525;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V",
+      "addDrawableChild": "method_37063(Lnet/minecraft/class_364;)Lnet/minecraft/class_364;",
+      "createLevel": "Lnet/minecraft/class_525;method_2736()V",
+      "init": "Lnet/minecraft/class_525;method_25426()V"
+    },
+    "com/xie/smfs/mixin/client/DeathScreenMixin": {
+      "init": "Lnet/minecraft/class_418;method_25426()V"
+    },
+    "com/xie/smfs/mixin/client/FirstPersonRendererMixin": {
+      "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V": "Lnet/minecraft/class_759;method_22976(FLnet/minecraft/class_4587;Lnet/minecraft/class_4597$class_4598;Lnet/minecraft/class_746;I)V"
+    },
+    "com/xie/smfs/mixin/client/InGameHudMixin": {
+      "renderExperienceBar": "Lnet/minecraft/class_329;method_1754(Lnet/minecraft/class_332;I)V",
+      "renderHotbar": "Lnet/minecraft/class_329;method_1759(FLnet/minecraft/class_332;)V",
+      "renderStatusBars": "Lnet/minecraft/class_329;method_1760(Lnet/minecraft/class_332;)V"
+    },
+    "com/xie/smfs/mixin/client/IntegratedServerLoaderMixin": {
+      "start": "method_41899(Lnet/minecraft/class_437;Ljava/lang/String;ZZ)V",
+      "start(Lnet/minecraft/client/gui/screen/Screen;Ljava/lang/String;)V": "Lnet/minecraft/class_7196;method_41894(Lnet/minecraft/class_437;Ljava/lang/String;)V"
+    },
+    "com/xie/smfs/mixin/client/InventoryScreenMixin": {
+      "init": "Lnet/minecraft/class_490;method_25426()V"
+    },
+    "com/xie/smfs/mixin/client/LivingEntityMixin": {
+      "getStatusEffects": "Lnet/minecraft/class_1309;method_6026()Ljava/util/Collection;"
+    },
+    "com/xie/smfs/mixin/client/MinecraftClientMixin": {
+      "doAttack": "Lnet/minecraft/class_310;method_1536()Z"
+    },
+    "com/xie/smfs/mixin/client/PlayerEntityRendererMixin": {
+      "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V": "Lnet/minecraft/class_1007;method_4215(Lnet/minecraft/class_742;FFLnet/minecraft/class_4587;Lnet/minecraft/class_4597;I)V"
+    },
+    "com/xie/smfs/mixin/client/WorldMixin": {
+      "getRainGradient": "Lnet/minecraft/class_1937;method_8430(F)F"
+    },
+    "com/xie/smfs/mixin/client/sound/SoundSystemMixin": {
+      "play(Lnet/minecraft/client/sound/SoundInstance;)V": "Lnet/minecraft/class_1140;method_4854(Lnet/minecraft/class_1113;)V"
+    },
+    "com/xie/smfs/mixin/server/ChunkGeneratorMixin": {
+      "addStructureReferences": "Lnet/minecraft/class_2794;method_16130(Lnet/minecraft/class_5281;Lnet/minecraft/class_5138;Lnet/minecraft/class_2791;)V"
+    },
+    "com/xie/smfs/mixin/server/ChunkRegionAccessor": {
+      "world": "field_14093:Lnet/minecraft/class_3218;"
+    },
+    "com/xie/smfs/mixin/server/ChunkStatusMixin": {
+      "<clinit>": "Lnet/minecraft/class_2806;<clinit>()V"
+    },
+    "com/xie/smfs/mixin/server/ItemStackMixin": {
+      "getName": "Lnet/minecraft/class_1799;method_7964()Lnet/minecraft/class_2561;",
+      "getTooltip": "Lnet/minecraft/class_1799;method_7950(Lnet/minecraft/class_1657;Lnet/minecraft/class_1836;)Ljava/util/List;"
+    },
+    "com/xie/smfs/mixin/server/JigsawStructureMixin": {
+      "validate": "Lnet/minecraft/class_5434;method_42708(Lnet/minecraft/class_5434;)Lcom/mojang/serialization/DataResult;"
+    },
+    "com/xie/smfs/mixin/server/LivingEntityHealMixin": {
+      "heal": "Lnet/minecraft/class_1309;method_6025(F)V"
+    },
+    "com/xie/smfs/mixin/server/LivingEntityInstantKillMixin": {
+      "canTakeDamage": "Lnet/minecraft/class_1309;method_33190()Z",
+      "damage": "Lnet/minecraft/class_1309;method_5643(Lnet/minecraft/class_1282;F)Z"
+    },
+    "com/xie/smfs/mixin/server/LivingEntitySetHealthMixin": {
+      "setHealth": "Lnet/minecraft/class_1309;method_6033(F)V"
+    },
+    "com/xie/smfs/mixin/server/PlayerEntityMixin": {
+      "readCustomDataFromNbt": "Lnet/minecraft/class_1657;method_5749(Lnet/minecraft/class_2487;)V",
+      "writeCustomDataToNbt": "Lnet/minecraft/class_1657;method_5652(Lnet/minecraft/class_2487;)V"
+    },
+    "com/xie/smfs/mixin/server/StructureBlockBlockEntityMixin": {
+      "Lnet/minecraft/util/math/MathHelper;clamp(III)I": "Lnet/minecraft/class_3532;method_15340(III)I",
+      "readNbt": "Lnet/minecraft/class_2633;method_11014(Lnet/minecraft/class_2487;)V"
+    },
+    "com/xie/smfs/mixin/server/StructureTemplateMixin": {
+      "place": "Lnet/minecraft/class_3499;method_15172(Lnet/minecraft/class_5425;Lnet/minecraft/class_2338;Lnet/minecraft/class_2338;Lnet/minecraft/class_3492;Lnet/minecraft/class_5819;I)Z"
+    },
+    "com/xie/smfs/mixin/server/UpdateStructureBlockC2SPacketMixin": {
+      "<init>(Lnet/minecraft/network/PacketByteBuf;)V": "Lnet/minecraft/class_2875;<init>(Lnet/minecraft/class_2540;)V",
+      "Lnet/minecraft/util/math/MathHelper;clamp(III)I": "Lnet/minecraft/class_3532;method_15340(III)I"
+    },
+    "com/xie/smfs/mixin/server/VillagerEntityMixin": {
+      "fillRecipes": "Lnet/minecraft/class_1646;method_7237()V"
+    }
+  },
+  "data": {
+    "named:intermediary": {
+      "com/xie/smfs/mixin/client/CameraMixin": {
+        "update": "Lnet/minecraft/class_4184;method_19321(Lnet/minecraft/class_1922;Lnet/minecraft/class_1297;ZZF)V"
+      },
+      "com/xie/smfs/mixin/client/ClientPlayerEntityMixin": {
+        "tick": "Lnet/minecraft/class_746;method_5773()V"
+      },
+      "com/xie/smfs/mixin/client/CreateWorldScreenMixin": {
+        "Lnet/minecraft/server/integrated/IntegratedServerLoader;tryLoad(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V": "Lnet/minecraft/class_7196;method_41892(Lnet/minecraft/class_310;Lnet/minecraft/class_525;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V",
+        "addDrawableChild": "method_37063(Lnet/minecraft/class_364;)Lnet/minecraft/class_364;",
+        "createLevel": "Lnet/minecraft/class_525;method_2736()V",
+        "init": "Lnet/minecraft/class_525;method_25426()V"
+      },
+      "com/xie/smfs/mixin/client/DeathScreenMixin": {
+        "init": "Lnet/minecraft/class_418;method_25426()V"
+      },
+      "com/xie/smfs/mixin/client/FirstPersonRendererMixin": {
+        "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V": "Lnet/minecraft/class_759;method_22976(FLnet/minecraft/class_4587;Lnet/minecraft/class_4597$class_4598;Lnet/minecraft/class_746;I)V"
+      },
+      "com/xie/smfs/mixin/client/InGameHudMixin": {
+        "renderExperienceBar": "Lnet/minecraft/class_329;method_1754(Lnet/minecraft/class_332;I)V",
+        "renderHotbar": "Lnet/minecraft/class_329;method_1759(FLnet/minecraft/class_332;)V",
+        "renderStatusBars": "Lnet/minecraft/class_329;method_1760(Lnet/minecraft/class_332;)V"
+      },
+      "com/xie/smfs/mixin/client/IntegratedServerLoaderMixin": {
+        "start": "method_41899(Lnet/minecraft/class_437;Ljava/lang/String;ZZ)V",
+        "start(Lnet/minecraft/client/gui/screen/Screen;Ljava/lang/String;)V": "Lnet/minecraft/class_7196;method_41894(Lnet/minecraft/class_437;Ljava/lang/String;)V"
+      },
+      "com/xie/smfs/mixin/client/InventoryScreenMixin": {
+        "init": "Lnet/minecraft/class_490;method_25426()V"
+      },
+      "com/xie/smfs/mixin/client/LivingEntityMixin": {
+        "getStatusEffects": "Lnet/minecraft/class_1309;method_6026()Ljava/util/Collection;"
+      },
+      "com/xie/smfs/mixin/client/MinecraftClientMixin": {
+        "doAttack": "Lnet/minecraft/class_310;method_1536()Z"
+      },
+      "com/xie/smfs/mixin/client/PlayerEntityRendererMixin": {
+        "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V": "Lnet/minecraft/class_1007;method_4215(Lnet/minecraft/class_742;FFLnet/minecraft/class_4587;Lnet/minecraft/class_4597;I)V"
+      },
+      "com/xie/smfs/mixin/client/WorldMixin": {
+        "getRainGradient": "Lnet/minecraft/class_1937;method_8430(F)F"
+      },
+      "com/xie/smfs/mixin/client/sound/SoundSystemMixin": {
+        "play(Lnet/minecraft/client/sound/SoundInstance;)V": "Lnet/minecraft/class_1140;method_4854(Lnet/minecraft/class_1113;)V"
+      },
+      "com/xie/smfs/mixin/server/ChunkGeneratorMixin": {
+        "addStructureReferences": "Lnet/minecraft/class_2794;method_16130(Lnet/minecraft/class_5281;Lnet/minecraft/class_5138;Lnet/minecraft/class_2791;)V"
+      },
+      "com/xie/smfs/mixin/server/ChunkRegionAccessor": {
+        "world": "field_14093:Lnet/minecraft/class_3218;"
+      },
+      "com/xie/smfs/mixin/server/ChunkStatusMixin": {
+        "<clinit>": "Lnet/minecraft/class_2806;<clinit>()V"
+      },
+      "com/xie/smfs/mixin/server/ItemStackMixin": {
+        "getName": "Lnet/minecraft/class_1799;method_7964()Lnet/minecraft/class_2561;",
+        "getTooltip": "Lnet/minecraft/class_1799;method_7950(Lnet/minecraft/class_1657;Lnet/minecraft/class_1836;)Ljava/util/List;"
+      },
+      "com/xie/smfs/mixin/server/JigsawStructureMixin": {
+        "validate": "Lnet/minecraft/class_5434;method_42708(Lnet/minecraft/class_5434;)Lcom/mojang/serialization/DataResult;"
+      },
+      "com/xie/smfs/mixin/server/LivingEntityHealMixin": {
+        "heal": "Lnet/minecraft/class_1309;method_6025(F)V"
+      },
+      "com/xie/smfs/mixin/server/LivingEntityInstantKillMixin": {
+        "canTakeDamage": "Lnet/minecraft/class_1309;method_33190()Z",
+        "damage": "Lnet/minecraft/class_1309;method_5643(Lnet/minecraft/class_1282;F)Z"
+      },
+      "com/xie/smfs/mixin/server/LivingEntitySetHealthMixin": {
+        "setHealth": "Lnet/minecraft/class_1309;method_6033(F)V"
+      },
+      "com/xie/smfs/mixin/server/PlayerEntityMixin": {
+        "readCustomDataFromNbt": "Lnet/minecraft/class_1657;method_5749(Lnet/minecraft/class_2487;)V",
+        "writeCustomDataToNbt": "Lnet/minecraft/class_1657;method_5652(Lnet/minecraft/class_2487;)V"
+      },
+      "com/xie/smfs/mixin/server/StructureBlockBlockEntityMixin": {
+        "Lnet/minecraft/util/math/MathHelper;clamp(III)I": "Lnet/minecraft/class_3532;method_15340(III)I",
+        "readNbt": "Lnet/minecraft/class_2633;method_11014(Lnet/minecraft/class_2487;)V"
+      },
+      "com/xie/smfs/mixin/server/StructureTemplateMixin": {
+        "place": "Lnet/minecraft/class_3499;method_15172(Lnet/minecraft/class_5425;Lnet/minecraft/class_2338;Lnet/minecraft/class_2338;Lnet/minecraft/class_3492;Lnet/minecraft/class_5819;I)Z"
+      },
+      "com/xie/smfs/mixin/server/UpdateStructureBlockC2SPacketMixin": {
+        "<init>(Lnet/minecraft/network/PacketByteBuf;)V": "Lnet/minecraft/class_2875;<init>(Lnet/minecraft/class_2540;)V",
+        "Lnet/minecraft/util/math/MathHelper;clamp(III)I": "Lnet/minecraft/class_3532;method_15340(III)I"
+      },
+      "com/xie/smfs/mixin/server/VillagerEntityMixin": {
+        "fillRecipes": "Lnet/minecraft/class_1646;method_7237()V"
+      }
+    }
+  }
+}

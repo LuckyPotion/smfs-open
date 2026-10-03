@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " D ",
+    " U ",
+    " I "
+  ],
+  "key": {
+    "U": {
+      "item": "smfs:untouchable_ghost"
+    },
+    "D": {
+      "item": "smfs:death_sight_ghost"
+    },
+    "I": {
+      "item": "minecraft:iron_sword"
+    }
+  },
+  "result": {
+    "item": "smfs:zhenwu_sword",
+    "count": 1
+  }
+}

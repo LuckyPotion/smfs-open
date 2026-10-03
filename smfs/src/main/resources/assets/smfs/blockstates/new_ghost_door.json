@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,open=false": { "model": "smfs:block/new_ghost_door", "y": 0 },
+    "facing=north,open=true": { "model": "smfs:block/new_ghost_door", "y": 0 },
+    "facing=south,open=false": { "model": "smfs:block/new_ghost_door", "y": 180 },
+    "facing=south,open=true": { "model": "smfs:block/new_ghost_door", "y": 180 },
+    "facing=east,open=false": { "model": "smfs:block/new_ghost_door", "y": 90 },
+    "facing=east,open=true": { "model": "smfs:block/new_ghost_door", "y": 90 },
+    "facing=west,open=false": { "model": "smfs:block/new_ghost_door", "y": 270 },
+    "facing=west,open=true": { "model": "smfs:block/new_ghost_door", "y": 270 }
+  }
+}

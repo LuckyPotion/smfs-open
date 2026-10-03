@@ -1,0 +1,15 @@
+{
+  "name": "smfs:headquarters_pool",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "location": "smfs:headquarters",
+        "processors": "smfs:headquarters_ghost_spawn",
+        "projection": "rigid",
+        "element_type": "minecraft:single_pool_element"
+      }
+    }
+  ]
+}

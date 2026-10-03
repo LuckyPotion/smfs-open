@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:caesar_hotel",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 564604122,
+    "spacing": 250,
+    "separation": 120,
+    "type": "minecraft:random_spread"
+  }
+}

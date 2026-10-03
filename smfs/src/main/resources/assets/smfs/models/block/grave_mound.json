@@ -1,0 +1,9 @@
+{
+  "parent": "block/block",
+  "geckolib:model": true,
+  "geo": "smfs:geo/grave_mound.geo.json",
+  "textures": {
+    "texture": "smfs:textures/block/grave_mound",
+    "particle": "smfs:block/grave_mound"
+  }
+}

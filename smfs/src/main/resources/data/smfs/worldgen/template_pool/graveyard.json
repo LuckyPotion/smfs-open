@@ -1,0 +1,15 @@
+{
+  "name": "smfs:graveyard",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "location": "smfs:graveyard",
+        "processors": "smfs:graveyard_chest_loot",
+        "projection": "rigid",
+        "element_type": "minecraft:single_pool_element"
+      }
+    }
+  ]
+}

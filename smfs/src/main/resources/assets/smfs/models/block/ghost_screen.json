@@ -1,0 +1,8 @@
+{
+  "parent": "block/orientable",
+  "textures": {
+    "front": "smfs:block/ghost_screen",
+    "side": "smfs:block/ghost_screen",
+    "top": "smfs:block/ghost_screen"
+  }
+}

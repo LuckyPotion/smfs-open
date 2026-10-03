@@ -1,0 +1,20 @@
+{
+  "id": "newbie_get_log",
+  "title": "梦的开始",
+  "description": "获得一块橡树原木",
+  "type": "newbie",
+  "objectives": [
+    {
+      "id": "get_log",
+      "description": "获得原木",
+      "target": 1
+    }
+  ],
+  "rewards": {
+    "items": "cookie:6"
+  },
+  "prerequisites": [],
+  "isNewbieQuest": true,
+  "newbieOrder": 1,
+  "timeLimit": 0
+}

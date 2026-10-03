@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "smfs:block/ghost_skeleton" },
+    "facing=south": { "model": "smfs:block/ghost_skeleton", "y": 180 },
+    "facing=east": { "model": "smfs:block/ghost_skeleton", "y": 90 },
+    "facing=west": { "model": "smfs:block/ghost_skeleton", "y": 270 }
+  }
+}

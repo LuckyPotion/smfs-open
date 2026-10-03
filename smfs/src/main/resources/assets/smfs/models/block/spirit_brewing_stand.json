@@ -1,0 +1,9 @@
+{
+  "parent": "block/block",
+  "geckolib:model": true,
+  "geo": "smfs:geo/spirit_brewing_stand.geo.json",
+  "textures": {
+    "texture": "smfs:textures/block/spirit_brewing_stand",
+    "particle": "smfs:block/spirit_brewing_stand"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "processors": [
+    {
+      "processor_type": "smfs:ghost_spawn",
+      "entity_types": [
+        "smfs:lijun",
+        "smfs:yezhen",
+        "smfs:fengquan",
+        "smfs:caoyang",
+        "smfs:fangshimin",
+        "smfs:yanli",
+        "smfs:lileping",
+        "smfs:zhaokaiming"
+      ],
+      "count": 3,
+      "spawn_blocks": [
+        {
+          "block": "minecraft:quartz_block",
+          "offset_y": 1
+        },
+        {
+          "block": "minecraft:smooth_stone",
+          "offset_y": 1
+        }
+      ]
+    }
+  ]
+}

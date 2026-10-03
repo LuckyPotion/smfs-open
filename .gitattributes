@@ -1,0 +1,27 @@
+# 文本文件按 LF 存储，避免不同平台 clone 后产生 CRLF 差异
+* text=auto eol=lf
+
+# Windows 批处理必须保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制资源必须显式声明，否则换行符转换会损坏文件
+*.png   binary
+*.ogg   binary
+*.nbt   binary
+*.jar   binary
+*.ttf   binary
+*.otf   binary
+*.zip   binary
+
+# 文本类资源
+*.java        text diff=java
+*.gradle      text
+*.properties  text
+*.json        text
+*.md          text
+*.py          text
+*.mcmeta      text
+
+# 语言文件按 JSON 统计，便于 GitHub 识别仓库构成
+*.json linguist-language=JSON

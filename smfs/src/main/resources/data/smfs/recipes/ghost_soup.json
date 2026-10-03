@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "UF",
+    "CO"
+  ],
+  "key": {
+    "U": {
+      "item": "smfs:underworld_fruit"
+    },
+    "F": {
+      "item": "smfs:filthy_fruit"
+    },
+    "C": {
+      "item": "minecraft:bowl"
+    },
+    "O": {
+      "item": "smfs:corpse_oil"
+    }
+  },
+  "result": {
+    "item": "smfs:ghost_soup",
+    "count": 1
+  }
+}

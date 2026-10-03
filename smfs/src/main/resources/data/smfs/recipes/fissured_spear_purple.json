@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " K ",
+    " I ",
+    " N "
+  ],
+  "key": {
+    "K": {
+      "item": "smfs:rusty_firewood_knife"
+    },
+    "I": {
+      "item": "minecraft:gold_block"
+    },
+    "N": {
+      "item": "smfs:coffin_nail"
+    }
+  },
+  "result": {
+    "item": "smfs:fissured_spear_purple",
+    "count": 1
+  }
+}

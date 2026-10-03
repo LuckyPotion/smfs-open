@@ -1,0 +1,10 @@
+{
+  "parent": "block/block",
+  "geckolib:model": true,
+  "geo": "smfs:geo/red_coffin.geo.json",
+  "textures": {
+    "texture": "smfs:textures/block/red_coffin",
+    "particle": "smfs:block/red_coffin"
+  },
+  "animations": ["smfs:animations/red_coffin.animation.json"]
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "block/block",
+  "geckolib:model": true,
+  "geo": "smfs:geo/new_ghost_door.geo.json",
+  "textures": {
+    "texture": "smfs:textures/block/new_ghost_door",
+    "particle": "smfs:block/new_ghost_door"
+  }
+}

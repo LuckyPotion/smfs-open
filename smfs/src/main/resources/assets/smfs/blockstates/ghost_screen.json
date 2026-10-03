@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "smfs:block/ghost_screen",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "smfs:block/ghost_screen"
+    },
+    "facing=south": {
+      "model": "smfs:block/ghost_screen",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "smfs:block/ghost_screen",
+      "y": 270
+    }
+  }
+}

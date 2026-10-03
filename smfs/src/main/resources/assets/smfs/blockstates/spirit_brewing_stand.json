@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "lit=false": { "model": "smfs:block/spirit_brewing_stand" },
+    "lit=true": { "model": "smfs:block/spirit_brewing_stand" }
+  }
+}

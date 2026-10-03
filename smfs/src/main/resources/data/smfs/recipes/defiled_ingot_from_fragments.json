@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "###", 
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "smfs:defiled_fragment"
+    }
+  },
+  "result": {
+    "item": "smfs:defiled_ingot",
+    "count": 1
+  }
+}

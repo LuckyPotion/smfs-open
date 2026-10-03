@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "smfs:gong_ghost"
+    },
+    {
+      "item": "smfs:suona_ghost"
+    },
+    {
+      "item": "smfs:crying_ghost"
+    }
+  ],
+  "result": {
+    "item": "smfs:funeral_music_ghost",
+    "count": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "display": {
+    "icon": {
+      "item": "smfs:silent_ghost_eye"
+    },
+    "title": {
+      "translate": "advancement.smfs.end_ghost_era.title"
+    },
+    "description": {
+      "translate": "advancement.smfs.end_ghost_era.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png"
+  },
+  "parent": "smfs:become_god",
+  "criteria": {
+    "end_ghost_era": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 1000
+  }
+}

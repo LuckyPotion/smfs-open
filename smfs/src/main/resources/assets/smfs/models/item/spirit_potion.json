@@ -1,0 +1,16 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "minecraft:item/potion",
+    "layer1": "minecraft:item/potion_overlay"
+  }
+},
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "smfs:item/spirit_potion_liquid"
+    }
+  ]
+}

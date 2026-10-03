@@ -1,0 +1,9 @@
+{
+  "render_type": "solid",
+  "variants": {
+    "facing=north": { "model": "smfs:block/red_coffin" },
+    "facing=south": { "model": "smfs:block/red_coffin" },
+    "facing=east": { "model": "smfs:block/red_coffin" },
+    "facing=west": { "model": "smfs:block/red_coffin" }
+  }
+}

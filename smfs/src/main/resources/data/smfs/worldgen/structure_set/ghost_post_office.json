@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:ghost_post_office",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 564604129,
+    "spacing": 120,
+    "separation": 60,
+    "type": "minecraft:random_spread"
+  }
+}

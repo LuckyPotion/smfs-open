@@ -1,0 +1,9 @@
+{
+  "parent": "block/block",
+  "geckolib:model": true,
+  "geo": "smfs:geo/ghost_bed.geo.json",
+  "textures": {
+    "texture": "smfs:textures/block/ghost_bed",
+    "particle": "smfs:block/ghost_bed"
+  }
+}

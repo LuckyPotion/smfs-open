@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "smfs:control_slot"
+    },
+    "title": {
+      "translate": "advancement.smfs.tame_ghost.title"
+    },
+    "description": {
+      "translate": "advancement.smfs.tame_ghost.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "smfs:ghost_hunter",
+  "criteria": {
+    "tame_ghost": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 500
+  }
+}

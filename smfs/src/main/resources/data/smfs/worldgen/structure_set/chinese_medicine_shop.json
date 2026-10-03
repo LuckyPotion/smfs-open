@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:chinese_medicine_shop",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 564604123,
+    "spacing": 80,
+    "separation": 55,
+    "type": "minecraft:random_spread"
+  }
+}

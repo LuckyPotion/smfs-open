@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:ancient_house",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 564604121,
+    "spacing": 200,
+    "separation": 100,
+    "type": "minecraft:random_spread"
+  }
+}

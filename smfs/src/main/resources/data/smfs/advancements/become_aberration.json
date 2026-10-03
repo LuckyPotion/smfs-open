@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "smfs:viscous_blood"
+    },
+    "title": {
+      "translate": "advancement.smfs.become_aberration.title"
+    },
+    "description": {
+      "translate": "advancement.smfs.become_aberration.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "smfs:tame_ghost",
+  "criteria": {
+    "become_aberration": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 800
+  }
+}

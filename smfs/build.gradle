@@ -1,0 +1,57 @@
+plugins {
+    id 'fabric-loom' version '1.10.5'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    mavenCentral()
+    // GeckoLib 不在 Maven Central 上发布
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // 原始 jar 声明 geckolib >= 4.2.4；1.20.1 分支的最后版本为 4.4.9
+    modImplementation "software.bernie.geckolib:geckolib-fabric-1.20.1:${project.geckolib_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    filesMatching('fabric.mod.json') {
+        // 只替换独立的 "${version}" 占位符；作者的 fabric.mod.json 中中文简介不含
+        // Groovy 模板语法，用 replace 而非 expand 可避免误把 '$' 当模板变量解析。
+        filter(org.apache.tools.ant.filters.ReplaceTokens,
+               tokens: [version: project.version])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = 'UTF-8'
+    it.options.release = 17
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// 原始 jar 在根目录附带 LICENSE_smfs，打包时保留该位置
+jar {
+    from('LICENSE_smfs')
+}

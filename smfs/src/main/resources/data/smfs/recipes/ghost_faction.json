@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "OOO",
+    "PSP",
+    "BBB"
+  ],
+  "key": {
+    "O": {
+      "item": "smfs:corpse_oil"
+    },
+    "P": {
+      "item": "smfs:corpse_piece"
+    },
+    "S": {
+      "item": "minecraft:sugar"
+    },
+    "B": {
+      "item": "minecraft:bread"
+    }
+  },
+  "result": {
+    "item": "smfs:ghost_faction"
+  }
+}

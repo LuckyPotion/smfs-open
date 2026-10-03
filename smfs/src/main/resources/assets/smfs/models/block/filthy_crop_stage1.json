@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "smfs:block/filthy_crop_stage1"
+  }
+}

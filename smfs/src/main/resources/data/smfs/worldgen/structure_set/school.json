@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "smfs:school",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "salt": 123456789,
+    "spacing": 120,
+    "separation": 60,
+    "type": "minecraft:random_spread"
+  }
+}
