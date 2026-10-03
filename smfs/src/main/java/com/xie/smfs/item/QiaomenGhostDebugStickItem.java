@@ -15,53 +15,48 @@ import net.minecraft.world.World;
 
 public class QiaomenGhostDebugStickItem extends Item {
    public QiaomenGhostDebugStickItem(Settings settings) {
-      super(settings.method_7889(1));
+      super(settings.maxCount(1));
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity player, Hand hand) {
-      if (world.field_9236) {
-         return TypedActionResult.method_22430(player.method_5998(hand));
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      if (world.isClient) {
+         return TypedActionResult.pass(user.getStackInHand(hand));
       }
 
-      ItemStack stack = player.method_5998(hand);
-      Box searchBox = new Box(player.method_24515()).method_1014(20.0);
-      List<QiaomenGhostEntity> nearbyGhosts = world.method_8390(QiaomenGhostEntity.class, searchBox, ghostx -> true);
+      ItemStack stack = user.getStackInHand(hand);
+      Box searchBox = new Box(user.getBlockPos()).expand(20.0);
+      List<QiaomenGhostEntity> nearbyGhosts = world.getEntitiesByClass(QiaomenGhostEntity.class, searchBox, ghostx -> true);
       if (nearbyGhosts.isEmpty()) {
-         player.method_7353(Text.method_43470("§c附近没有找到敲门鬼实体"), false);
-         return TypedActionResult.method_22431(stack);
+         user.sendMessage(Text.literal("§c附近没有找到敲门鬼实体"), false);
+         return TypedActionResult.fail(stack);
       }
 
       for (int i = 0; i < nearbyGhosts.size(); i++) {
          QiaomenGhostEntity ghost = nearbyGhosts.get(i);
          String phaseInfo = this.getPhaseInfo(ghost);
-         player.method_7353(Text.method_43470("§6敲门鬼 #" + (i + 1) + ": " + phaseInfo), false);
-         player.method_7353(Text.method_43470("§7- 当前阶段: " + ghost.getCurrentPhase().name()), false);
-         player.method_7353(Text.method_43470("§7- 阶段计时器: " + ghost.getPhaseTimer() + " ticks"), false);
-         player.method_7353(Text.method_43470("§7- 行走状态: " + (ghost.isWalking() ? "§a是" : "§c否")), false);
-         player.method_7353(
-            Text.method_43470(
-               "§7- 位置: " + ghost.method_24515().method_10263() + ", " + ghost.method_24515().method_10264() + ", " + ghost.method_24515().method_10260()
-            ),
-            false
-         );
+         user.sendMessage(Text.literal("§6敲门鬼 #" + (i + 1) + ": " + phaseInfo), false);
+         user.sendMessage(Text.literal("§7- 当前阶段: " + ghost.getCurrentPhase().name()), false);
+         user.sendMessage(Text.literal("§7- 阶段计时器: " + ghost.getPhaseTimer() + " ticks"), false);
+         user.sendMessage(Text.literal("§7- 行走状态: " + (ghost.isWalking() ? "§a是" : "§c否")), false);
+         user.sendMessage(Text.literal("§7- 位置: " + ghost.getBlockPos().getX() + ", " + ghost.getBlockPos().getY() + ", " + ghost.getBlockPos().getZ()), false);
          if (ghost.getCurrentPhase() == QiaomenGhostEntity.Phase.PREPARE_KNOCK) {
-            player.method_7353(Text.method_43470("§a准备敲门阶段 (剩余: " + (600 - ghost.getPhaseTimer()) + " ticks)"), false);
+            user.sendMessage(Text.literal("§a准备敲门阶段 (剩余: " + (600 - ghost.getPhaseTimer()) + " ticks)"), false);
          } else if (ghost.getCurrentPhase() == QiaomenGhostEntity.Phase.KNOCKING) {
-            player.method_7353(Text.method_43470("§e敲门阶段 (剩余: " + (20 - ghost.getPhaseTimer()) + " ticks)"), false);
+            user.sendMessage(Text.literal("§e敲门阶段 (剩余: " + (20 - ghost.getPhaseTimer()) + " ticks)"), false);
          } else if (ghost.getCurrentPhase() == QiaomenGhostEntity.Phase.PREPARE_ATTACK) {
-            player.method_7353(Text.method_43470("§c准备攻击阶段 (剩余: " + (600 - ghost.getPhaseTimer()) + " ticks)"), false);
+            user.sendMessage(Text.literal("§c准备攻击阶段 (剩余: " + (600 - ghost.getPhaseTimer()) + " ticks)"), false);
          } else if (ghost.getCurrentPhase() == QiaomenGhostEntity.Phase.ATTACKING) {
-            player.method_7353(Text.method_43470("§4攻击阶段 (剩余: " + (20 - ghost.getPhaseTimer()) + " ticks)"), false);
+            user.sendMessage(Text.literal("§4攻击阶段 (剩余: " + (20 - ghost.getPhaseTimer()) + " ticks)"), false);
          }
 
-         player.method_7353(Text.method_43470("§b- 连续空循环次数: " + ghost.getEmptyCycles()), false);
-         player.method_7353(Text.method_43470("§b- 连续失败攻击次数: " + ghost.getFailedAttackCycles()), false);
-         player.method_7353(Text.method_43470("§b- 当前伤害倍率: " + ghost.getAttackDamageMultiplier() + "x"), false);
-         player.method_7353(Text.method_43470("§b- 当前鬼奴个数: " + ghost.getGhostSlaveCount()), false);
-         player.method_7353(Text.method_43470(""), false);
+         user.sendMessage(Text.literal("§b- 连续空循环次数: " + ghost.getEmptyCycles()), false);
+         user.sendMessage(Text.literal("§b- 连续失败攻击次数: " + ghost.getFailedAttackCycles()), false);
+         user.sendMessage(Text.literal("§b- 当前伤害倍率: " + ghost.getAttackDamageMultiplier() + "x"), false);
+         user.sendMessage(Text.literal("§b- 当前鬼奴个数: " + ghost.getGhostSlaveCount()), false);
+         user.sendMessage(Text.literal(""), false);
       }
 
-      return TypedActionResult.method_22427(stack);
+      return TypedActionResult.success(stack);
    }
 
    private String getPhaseInfo(QiaomenGhostEntity ghost) {
@@ -81,22 +76,22 @@ public class QiaomenGhostDebugStickItem extends Item {
       }
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43470("§6敲门鬼测试棒"));
-      tooltip.add(Text.method_43470("§7右键点击查看附近敲门鬼的阶段状态"));
-      tooltip.add(Text.method_43470("§7检测范围: 20格"));
-      tooltip.add(Text.method_43470(""));
-      tooltip.add(Text.method_43470("§a准备敲门阶段 §7- 600 ticks"));
-      tooltip.add(Text.method_43470("§e敲门阶段 §7- 20 ticks"));
-      tooltip.add(Text.method_43470("§c准备攻击阶段 §7- 600 ticks"));
-      tooltip.add(Text.method_43470("§4攻击阶段 §7- 20 ticks"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.literal("§6敲门鬼测试棒"));
+      tooltip.add(Text.literal("§7右键点击查看附近敲门鬼的阶段状态"));
+      tooltip.add(Text.literal("§7检测范围: 20格"));
+      tooltip.add(Text.literal(""));
+      tooltip.add(Text.literal("§a准备敲门阶段 §7- 600 ticks"));
+      tooltip.add(Text.literal("§e敲门阶段 §7- 20 ticks"));
+      tooltip.add(Text.literal("§c准备攻击阶段 §7- 600 ticks"));
+      tooltip.add(Text.literal("§4攻击阶段 §7- 20 ticks"));
    }
 
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43470("敲门鬼测试棒");
+   public Text getName(ItemStack stack) {
+      return Text.literal("敲门鬼测试棒");
    }
 
-   public Text method_7848() {
-      return Text.method_43470("敲门鬼测试棒");
+   public Text getName() {
+      return Text.literal("敲门鬼测试棒");
    }
 }

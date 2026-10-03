@@ -26,22 +26,22 @@ public abstract class CreateWorldScreenMixin {
       CreateWorldScreen screen = (CreateWorldScreen)this;
       int buttonWidth = 210;
       int buttonHeight = 20;
-      int buttonX = (screen.field_22789 - buttonWidth) / 2;
-      int buttonY = screen.field_22789 / 3;
-      ButtonWidget modConfigButton = ButtonWidget.method_46430(Text.method_43471("smfs.config.world.open_mod_config"), button -> {
-         MinecraftClient client = MinecraftClient.method_1551();
+      int buttonX = (screen.width - buttonWidth) / 2;
+      int buttonY = screen.width / 3;
+      ButtonWidget modConfigButton = ButtonWidget.builder(Text.translatable("smfs.config.world.open_mod_config"), button -> {
+         MinecraftClient client = MinecraftClient.getInstance();
          if (client != null) {
-            client.method_1507(new ConfigScreen(screen));
+            client.setScreen(new ConfigScreen(screen));
          }
-      }).method_46434(buttonX, buttonY, buttonWidth, buttonHeight).method_46431();
+      }).dimensions(buttonX, buttonY, buttonWidth, buttonHeight).build();
       this.invokeAddDrawableChild(modConfigButton);
       buttonY += 24;
-      ButtonWidget configButton = ButtonWidget.method_46430(Text.method_43471("smfs.config.world_creation_button"), button -> {
-         MinecraftClient client = MinecraftClient.method_1551();
+      ButtonWidget configButton = ButtonWidget.builder(Text.translatable("smfs.config.world_creation_button"), button -> {
+         MinecraftClient client = MinecraftClient.getInstance();
          if (client != null) {
-            client.method_1507(new WorldCreationConfigScreen(screen));
+            client.setScreen(new WorldCreationConfigScreen(screen));
          }
-      }).method_46434(buttonX, buttonY, buttonWidth, buttonHeight).method_46431();
+      }).dimensions(buttonX, buttonY, buttonWidth, buttonHeight).build();
       this.invokeAddDrawableChild(configButton);
    }
 
@@ -53,6 +53,6 @@ public abstract class CreateWorldScreenMixin {
       )
    )
    private void redirectTryLoad(MinecraftClient client, CreateWorldScreen parent, Lifecycle lifecycle, Runnable loader, boolean showWarning) {
-      IntegratedServerLoader.method_41892(client, parent, lifecycle, loader, true);
+      IntegratedServerLoader.tryLoad(client, parent, lifecycle, loader, true);
    }
 }

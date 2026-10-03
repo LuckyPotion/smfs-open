@@ -35,7 +35,7 @@ public class GhostAPIImpl implements GhostAPI {
       if (!GhostEntity.class.isAssignableFrom(ghostClass)) {
          throw new IllegalArgumentException("Custom ghost class must extend GhostEntity");
       } else {
-         return (EntityType<T>)Registry.method_10230(Registries.field_41177, id, FabricEntityTypeBuilder.create(SpawnGroup.field_6302, (type, world) -> {
+         return (EntityType<T>)Registry.register(Registries.ENTITY_TYPE, id, FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, (type, world) -> {
             try {
                return ghostClass.getConstructor(EntityType.class, World.class).newInstance(type, world);
             } catch (Exception e) {
@@ -48,10 +48,10 @@ public class GhostAPIImpl implements GhostAPI {
    @Override
    public Builder createCustomGhostAttributes(double maxHealth, double movementSpeed, double attackDamage, double followRange) {
       return GhostEntity.createGhostAttributes()
-         .method_26868(EntityAttributes.field_23716, maxHealth)
-         .method_26868(EntityAttributes.field_23719, movementSpeed)
-         .method_26868(EntityAttributes.field_23721, attackDamage)
-         .method_26868(EntityAttributes.field_23717, followRange);
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, maxHealth)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, movementSpeed)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, attackDamage)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, followRange);
    }
 
    @Override
@@ -72,14 +72,14 @@ public class GhostAPIImpl implements GhostAPI {
       char terrorLevel
    ) {
       try {
-         GhostEntity ghost = (GhostEntity)ghostType.method_5883(world);
+         GhostEntity ghost = (GhostEntity)ghostType.create(world);
          if (ghost != null) {
-            ghost.method_5808(x, y, z, world.field_9229.method_43057() * 360.0F, 0.0F);
+            ghost.refreshPositionAndAngles(x, y, z, world.random.nextFloat() * 360.0F, 0.0F);
             ghost.setGhostDomainEnabled(hasGhostDomain);
             ghost.setGhostDomainLevel(ghostDomainLevel);
             ghost.setGhostDomainRadius((float)ghostDomainRadius);
             ghost.setTerrorLevel(terrorLevel);
-            world.method_8649(ghost);
+            world.spawnEntity(ghost);
             return ghost;
          }
       } catch (Exception e) {
@@ -176,18 +176,18 @@ public class GhostAPIImpl implements GhostAPI {
 
    @Override
    public void registerCustomGoal(GhostEntity ghost, int priority, Goal goal) {
-      ghost.getGoalSelector().method_6277(priority, goal);
+      ghost.getGoalSelector().add(priority, goal);
    }
 
    @Override
    public void registerCustomTargetGoal(GhostEntity ghost, int priority, Goal targetGoal) {
-      ghost.getTargetSelector().method_6277(priority, targetGoal);
+      ghost.getTargetSelector().add(priority, targetGoal);
    }
 
    @Override
    public void clearCustomGoals(GhostEntity ghost) {
-      ghost.getGoalSelector().method_35113(null);
-      ghost.getTargetSelector().method_35113(null);
+      ghost.getGoalSelector().clear(null);
+      ghost.getTargetSelector().clear(null);
    }
 
    @Override
@@ -214,12 +214,12 @@ public class GhostAPIImpl implements GhostAPI {
 
    @Override
    public void setMovementSpeed(GhostEntity ghost, double speed) {
-      ghost.method_5996(EntityAttributes.field_23719).method_6192(speed);
+      ghost.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
    }
 
    @Override
    public void setFollowRange(GhostEntity ghost, double range) {
-      ghost.method_5996(EntityAttributes.field_23717).method_6192(range);
+      ghost.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE).setBaseValue(range);
    }
 
    @Override
@@ -255,7 +255,7 @@ public class GhostAPIImpl implements GhostAPI {
 
    @Override
    public void triggerCustomEvent(GhostEntity ghost, String eventName, Object data) {
-      Smfs.LOGGER.debug("Custom event triggered: {} for ghost {}", eventName, ghost.method_5667());
+      Smfs.LOGGER.debug("Custom event triggered: {} for ghost {}", eventName, ghost.getUuid());
    }
 
    @Override

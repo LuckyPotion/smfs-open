@@ -18,7 +18,7 @@ public class GhostChildFusionBeginS2CPacket {
 
    public static void register() {
       ClientPlayNetworking.registerGlobalReceiver(
-         ID, (client, handler, buf, responseSender) -> client.execute(() -> client.method_1507(new FusionSequenceScreen()))
+         ID, (client, handler, buf, responseSender) -> client.execute(() -> client.setScreen(new FusionSequenceScreen()))
       );
    }
 }

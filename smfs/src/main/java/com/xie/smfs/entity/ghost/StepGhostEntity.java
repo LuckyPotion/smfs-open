@@ -23,44 +23,44 @@ public class StepGhostEntity extends GhostEntity {
    }
 
    private void initStepGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.3);
+         speedAttribute.setBaseValue(0.3);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(9.0);
+         attackDamageAttribute.setBaseValue(9.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.5);
+         attackKnockbackAttribute.setBaseValue(0.5);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(28.0);
+         followRangeAttribute.setBaseValue(28.0);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
-         if (this.isSuppressed() || this.method_29504()) {
-            this.method_18799(Vec3d.field_1353);
-            this.method_5942().method_6340();
-         } else if (this.field_6012 % 120 == 0 && this.getGhostRandom().nextBoolean()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
+         if (this.isSuppressed() || this.isDead()) {
+            this.setVelocity(Vec3d.ZERO);
+            this.getNavigation().stop();
+         } else if (this.age % 120 == 0 && this.getGhostRandom().nextBoolean()) {
             double radius = 12.0;
-            double x = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            double z = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            this.method_5942().method_6337(x, this.method_23318(), z, 1.0);
+            double x = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            double z = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            this.getNavigation().startMovingTo(x, this.getY(), z, 1.0);
          }
       }
    }
@@ -68,8 +68,8 @@ public class StepGhostEntity extends GhostEntity {
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
       return !RedGhostCandleItem.isHoldingCandle(player)
-         && player.method_23318() < this.method_23318() - 1.0
-         && this.method_5858(player) <= 784.0
+         && player.getY() < this.getY() - 1.0
+         && this.squaredDistanceTo(player) <= 784.0
          && this.attackCooldown <= 0;
    }
 

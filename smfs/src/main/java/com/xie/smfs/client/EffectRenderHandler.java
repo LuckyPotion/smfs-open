@@ -72,7 +72,7 @@ public class EffectRenderHandler {
       };
 
       for (StatusEffect effect : ghostDomainEffects) {
-         if (player.method_6059(effect)) {
+         if (player.hasStatusEffect(effect)) {
             return true;
          }
       }
@@ -86,7 +86,7 @@ public class EffectRenderHandler {
       }
 
       for (StatusEffect effect : effects) {
-         if (player.method_6059(effect)) {
+         if (player.hasStatusEffect(effect)) {
             return true;
          }
       }
@@ -98,9 +98,9 @@ public class EffectRenderHandler {
       WorldRenderEvents.START
          .register(
             (Start)context -> {
-               PlayerEntity player = MinecraftClient.method_1551().field_1724;
+               PlayerEntity player = MinecraftClient.getInstance().player;
                if (player != null) {
-                  boolean isInSpiritRealm = context.world() != null && context.world().method_27983() == Smfs.SPIRIT_REALM_DIMENSION;
+                  boolean isInSpiritRealm = context.world() != null && context.world().getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION;
                   boolean hadRedEffect = isRedEffectActive;
                   boolean hadFogEffect = isFogEffectActive;
                   boolean hadGreenEffect = isGreenEffectActive;
@@ -121,7 +121,7 @@ public class EffectRenderHandler {
                   );
                   isBlackEffectActive = hasSpecificGhostDomainEffect(player, ModEffects.BLACK_GHOST_DOMAIN, ModEffects.BLACK_GHOST_DOMAIN_TARGET);
                   isCyanEffectActive = hasSpecificGhostDomainEffect(player, ModEffects.CYAN_GHOST_DOMAIN, ModEffects.CYAN_GHOST_DOMAIN_TARGET);
-                  boolean isInGhostDream = context.world() != null && context.world().method_27983() == Smfs.GHOST_DREAM_DIMENSION;
+                  boolean isInGhostDream = context.world() != null && context.world().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION;
                   if ((
                         hadRedEffect && !isRedEffectActive
                            || hadFogEffect && !isFogEffectActive
@@ -161,9 +161,9 @@ public class EffectRenderHandler {
          .register(
             (AfterSetup)context -> {
                if (!isRestoring) {
-                  PlayerEntity player = MinecraftClient.method_1551().field_1724;
+                  PlayerEntity player = MinecraftClient.getInstance().player;
                   if (player != null) {
-                     boolean isInSpiritRealm = context.world() != null && context.world().method_27983() == Smfs.SPIRIT_REALM_DIMENSION;
+                     boolean isInSpiritRealm = context.world() != null && context.world().getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION;
                      boolean hasAnyGhostDomainEffect = isRedEffectActive
                         || isFogEffectActive
                         || isGreenEffectActive
@@ -173,7 +173,7 @@ public class EffectRenderHandler {
                         || isPurpleEffectActive
                         || isBlackEffectActive
                         || isCyanEffectActive;
-                     boolean isInGhostDream = context.world() != null && context.world().method_27983() == Smfs.GHOST_DREAM_DIMENSION;
+                     boolean isInGhostDream = context.world() != null && context.world().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION;
                      if (!hasAnyGhostDomainEffect) {
                         if (isInSpiritRealm) {
                            RenderSystem.setShaderFogStart(0.5F);
@@ -187,42 +187,42 @@ public class EffectRenderHandler {
                         }
                      } else if (isBlackEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.05F, 0.05F, 0.05F, 1.0F);
                      } else if (isRedEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.RED_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.6F, 0.05F, 0.05F, 1.0F);
                      } else if (isGreenEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.05F, 0.6F, 0.05F, 1.0F);
                      } else if (isBlueEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.BLUE_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.BLUE_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.05F, 0.05F, 0.6F, 1.0F);
                      } else if (isGrayEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.GRAY_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.6F, 0.6F, 0.6F, 1.0F);
                      } else if (isGoldenEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.85F, 0.7F, 0.05F, 1.0F);
                      } else if (isPurpleEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.PURPLE_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.5F, 0.05F, 0.5F, 1.0F);
                      } else if (isCyanEffectActive) {
                         RenderSystem.setShaderFogStart(0.5F);
-                        boolean isTargetVersion = player.method_6059(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
+                        boolean isTargetVersion = player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
                         RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
                         RenderSystem.setShaderFogColor(0.05F, 0.6F, 0.6F, 1.0F);
                      } else if (isFogEffectActive) {
@@ -237,12 +237,12 @@ public class EffectRenderHandler {
       WorldRenderEvents.LAST
          .register(
             (Last)context -> {
-               PlayerEntity player = MinecraftClient.method_1551().field_1724;
+               PlayerEntity player = MinecraftClient.getInstance().player;
                if (player != null) {
-                  boolean isInSpiritRealm = context.world() != null && context.world().method_27983() == Smfs.SPIRIT_REALM_DIMENSION;
-                  boolean isInGhostDream = context.world() != null && context.world().method_27983() == Smfs.GHOST_DREAM_DIMENSION;
+                  boolean isInSpiritRealm = context.world() != null && context.world().getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION;
+                  boolean isInGhostDream = context.world() != null && context.world().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION;
                   boolean currentRedEffect = hasSpecificGhostDomainEffect(player, ModEffects.RED_GHOST_DOMAIN, ModEffects.RED_GHOST_DOMAIN_TARGET);
-                  boolean currentFogEffect = player.method_6059(ModEffects.THICK_FOG);
+                  boolean currentFogEffect = player.hasStatusEffect(ModEffects.THICK_FOG);
                   boolean currentGreenEffect = hasSpecificGhostDomainEffect(player, ModEffects.GREEN_GHOST_DOMAIN, ModEffects.GREEN_GHOST_DOMAIN_TARGET);
                   boolean currentBlueEffect = hasSpecificGhostDomainEffect(player, ModEffects.BLUE_GHOST_DOMAIN, ModEffects.BLUE_GHOST_DOMAIN_TARGET);
                   boolean currentGrayEffect = hasSpecificGhostDomainEffect(player, ModEffects.GRAY_GHOST_DOMAIN, ModEffects.GRAY_GHOST_DOMAIN_TARGET);
@@ -319,8 +319,8 @@ public class EffectRenderHandler {
    }
 
    private static void updateCameraShake() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
          long currentTime = System.currentTimeMillis();
          if (currentTime - lastTickTime < 45L) {
             currentTickExecutions++;
@@ -347,15 +347,15 @@ public class EffectRenderHandler {
    }
 
    private static void applyCameraShakeEffect(WorldRenderContext context) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
          float shakeIntensity = screenShakeIntensity;
          if (shakeIntensity > 0.0F && currentOffsetProgress > 0.0F) {
             MatrixStack matrices = context.matrixStack();
-            float offsetAmount = MathHelper.method_15374(currentOffsetProgress * (float) Math.PI);
+            float offsetAmount = MathHelper.sin(currentOffsetProgress * (float) Math.PI);
             float maxRotation = shakeIntensity * 15.0F;
             float rotationAmount = offsetAmount * maxRotation;
-            matrices.method_22907(RotationAxis.field_40714.rotationDegrees(-rotationAmount));
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-rotationAmount));
          }
       }
    }
@@ -391,16 +391,16 @@ public class EffectRenderHandler {
 
    private static void applyFogEffect() {
       RenderSystem.setShaderColor(0.8F, 0.8F, 0.8F, 0.7F);
-      PlayerEntity player = MinecraftClient.method_1551().field_1724;
-      boolean isTargetVersion = player != null && player.method_6059(ModEffects.THICK_FOG_TARGET);
+      PlayerEntity player = MinecraftClient.getInstance().player;
+      boolean isTargetVersion = player != null && player.hasStatusEffect(ModEffects.THICK_FOG_TARGET);
       RenderSystem.setShaderFogStart(0.5F);
       RenderSystem.setShaderFogEnd(getFogEnd(isTargetVersion));
    }
 
    private static float getFogEnd(boolean isTarget) {
-      PlayerEntity player = MinecraftClient.method_1551().field_1724;
+      PlayerEntity player = MinecraftClient.getInstance().player;
       if (player != null) {
-         int configRange = ClientModConfig.getInstance().getGhostDomainFogRange(player.method_5667());
+         int configRange = ClientModConfig.getInstance().getGhostDomainFogRange(player.getUuid());
          if (configRange > 0) {
             return configRange;
          }
@@ -410,8 +410,8 @@ public class EffectRenderHandler {
    }
 
    private static float[] getGhostDreamFogColor() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      PlayerEntity player = client.field_1724;
+      MinecraftClient client = MinecraftClient.getInstance();
+      PlayerEntity player = client.player;
       if (player == null) {
          return new float[]{0.3F, 0.3F, 0.3F, 64.0F};
       } else {

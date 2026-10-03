@@ -5,6 +5,6 @@ import net.minecraft.world.World;
 
 public class GhostPostOfficeMysteryInfoItem extends StructureMysteryInfoItem {
    public GhostPostOfficeMysteryInfoItem() {
-      super(new FabricItemSettings().maxCount(16), "ghost_post_office", World.field_25179);
+      super(new FabricItemSettings().maxCount(16), "ghost_post_office", World.OVERWORLD);
    }
 }

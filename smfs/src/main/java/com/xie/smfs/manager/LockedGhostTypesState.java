@@ -20,18 +20,18 @@ public class LockedGhostTypesState extends PersistentState {
 
    public void setPersistentData(NbtCompound persistentData) {
       this.persistentData = persistentData;
-      this.method_80();
+      this.markDirty();
    }
 
-   public NbtCompound method_75(NbtCompound nbt) {
+   public NbtCompound writeNbt(NbtCompound nbt) {
       if (this.persistentData != null) {
-         nbt.method_10543(this.persistentData);
+         nbt.copyFrom(this.persistentData);
       }
 
       return nbt;
    }
 
-   public boolean method_79() {
+   public boolean isDirty() {
       return true;
    }
 

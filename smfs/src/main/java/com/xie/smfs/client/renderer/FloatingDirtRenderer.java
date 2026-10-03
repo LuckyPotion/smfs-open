@@ -16,17 +16,17 @@ public class FloatingDirtRenderer extends EntityRenderer<FloatingDirtEntity> {
 
    public FloatingDirtRenderer(Context context) {
       super(context);
-      this.blockRenderer = context.method_43337();
-      this.field_4673 = 0.2F;
+      this.blockRenderer = context.getBlockRenderManager();
+      this.shadowRadius = 0.2F;
    }
 
    public void render(FloatingDirtEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-      super.method_3936(entity, yaw, tickDelta, matrices, vertexConsumers, light);
-      matrices.method_22903();
-      matrices.method_22905(0.9F, 0.9F, 0.9F);
-      BakedModel model = this.blockRenderer.method_3349(Blocks.field_10566.method_9564());
-      this.blockRenderer.method_3353(Blocks.field_10566.method_9564(), matrices, vertexConsumers, light, OverlayTexture.field_21444);
-      matrices.method_22909();
+      super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+      matrices.push();
+      matrices.scale(0.9F, 0.9F, 0.9F);
+      BakedModel model = this.blockRenderer.getModel(Blocks.DIRT.getDefaultState());
+      this.blockRenderer.renderBlockAsEntity(Blocks.DIRT.getDefaultState(), matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV);
+      matrices.pop();
    }
 
    public Identifier getTexture(FloatingDirtEntity entity) {

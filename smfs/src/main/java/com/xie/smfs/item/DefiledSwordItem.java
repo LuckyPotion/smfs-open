@@ -20,27 +20,27 @@ import org.jetbrains.annotations.Nullable;
 
 public class DefiledSwordItem extends SwordItem implements SpiritWeapon {
    public DefiledSwordItem(Settings settings) {
-      super(ToolMaterials.field_8930, 7, -2.4F, settings);
+      super(ToolMaterials.DIAMOND, 7, -2.4F, settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (world.method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
-         return TypedActionResult.method_22431(stack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (world.getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
+         return TypedActionResult.fail(stack);
       }
 
-      if (!world.method_8608()) {
-         user.method_5783(SoundEvents.field_14706, 1.0F, 0.8F);
-         user.method_7357().method_7906(this, 10);
+      if (!world.isClient()) {
+         user.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 1.0F, 0.8F);
+         user.getItemCooldownManager().set(this, 10);
       }
 
-      return TypedActionResult.method_22427(stack);
+      return TypedActionResult.success(stack);
    }
 
    @Override
    public void onSpiritWeaponAttack(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-      if (!target.method_37908().method_8608()) {
-         target.method_6092(new StatusEffectInstance(StatusEffects.field_5911, 100, 0));
+      if (!target.getWorld().isClient()) {
+         target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, 0));
       }
    }
 
@@ -49,16 +49,16 @@ public class DefiledSwordItem extends SwordItem implements SpiritWeapon {
       return 30.0F;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.defiled_sword.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.defiled_sword.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.defiled_sword.description.type"));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.defiled_sword.description.source"));
+      tooltip.add(Text.translatable("item.smfs.defiled_sword.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.defiled_sword.description.type"));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
    }
 
-   public boolean method_7846() {
+   public boolean isDamageable() {
       return false;
    }
 }

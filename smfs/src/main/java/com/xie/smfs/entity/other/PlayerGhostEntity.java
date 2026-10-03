@@ -63,8 +63,8 @@ import org.slf4j.LoggerFactory;
 
 public class PlayerGhostEntity extends GhostEntity {
    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerGhostEntity.class);
-   private static final TrackedData<String> PLAYER_UUID = DataTracker.method_12791(PlayerGhostEntity.class, TrackedDataHandlerRegistry.field_13326);
-   private static final TrackedData<String> PLAYER_NAME = DataTracker.method_12791(PlayerGhostEntity.class, TrackedDataHandlerRegistry.field_13326);
+   private static final TrackedData<String> PLAYER_UUID = DataTracker.registerData(PlayerGhostEntity.class, TrackedDataHandlerRegistry.STRING);
+   private static final TrackedData<String> PLAYER_NAME = DataTracker.registerData(PlayerGhostEntity.class, TrackedDataHandlerRegistry.STRING);
    private String playerUuid;
    private String playerName;
    private List<String> playerGhosts = new ArrayList<>();
@@ -83,10 +83,10 @@ public class PlayerGhostEntity extends GhostEntity {
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
-      this.field_6011.method_12784(PLAYER_UUID, "");
-      this.field_6011.method_12784(PLAYER_NAME, "");
+   protected void initDataTracker() {
+      super.initDataTracker();
+      this.dataTracker.startTracking(PLAYER_UUID, "");
+      this.dataTracker.startTracking(PLAYER_NAME, "");
    }
 
    public static PlayerGhostEntity createFromPlayer(PlayerEntity player, World world) {
@@ -110,12 +110,12 @@ public class PlayerGhostEntity extends GhostEntity {
 
       if (servantData != null) {
          ghost.setServantMode(true);
-         ghost.setMasterUuid(master.method_5667());
+         ghost.setMasterUuid(master.getUuid());
          ghost.setOriginalServantUuid(servantUuid);
          ghost.setPlayerName(servantData.getPlayerName());
          ghost.setPlayerUuid(servantData.getPlayerUuid());
-         ghost.method_5665(Text.method_43470(servantData.getPlayerName()));
-         ghost.method_5880(true);
+         ghost.setCustomName(Text.literal(servantData.getPlayerName()));
+         ghost.setCustomNameVisible(true);
          ghost.setGhostDomainColor(servantData.getGhostDomainColor());
          ghost.setGhostDomainLevel(servantData.getGhostDomainLevel());
          ghost.setGhostDomainRadius(servantData.getGhostDomainRadius());
@@ -127,11 +127,11 @@ public class PlayerGhostEntity extends GhostEntity {
          ghost.disableGhostDomain();
          return ghost;
       } else {
-         LOGGER.warn("从存储数据创建玩家鬼魂失败: 无法恢复奴仆数据 (主人: {}, 奴仆UUID: {})，使用默认设置", master.method_5477().getString(), servantUuid);
+         LOGGER.warn("从存储数据创建玩家鬼魂失败: 无法恢复奴仆数据 (主人: {}, 奴仆UUID: {})，使用默认设置", master.getName().getString(), servantUuid);
          ghost.setServantMode(true);
-         ghost.setMasterUuid(master.method_5667());
-         ghost.method_5665(Text.method_43470("王家厉鬼"));
-         ghost.method_5880(true);
+         ghost.setMasterUuid(master.getUuid());
+         ghost.setCustomName(Text.literal("王家厉鬼"));
+         ghost.setCustomNameVisible(true);
          ghost.setPlayerName("王家厉鬼");
          ghost.setGhostDomainColor(String.valueOf(8388736));
          ghost.setGhostDomainLevel(1);
@@ -142,7 +142,7 @@ public class PlayerGhostEntity extends GhostEntity {
          ghost.setSpiritualResistance(50);
          ghost.setSpiritualDamage(50);
          ghost.setRecoveryFactor(0.2F);
-         LOGGER.info("使用默认设置创建玩家鬼魂奴仆 (主人: {})", master.method_5477().getString());
+         LOGGER.info("使用默认设置创建玩家鬼魂奴仆 (主人: {})", master.getName().getString());
          return ghost;
       }
    }
@@ -152,33 +152,33 @@ public class PlayerGhostEntity extends GhostEntity {
    }
 
    private void initFromPlayer(PlayerEntity player) {
-      this.setPlayerUuid(player.method_5845());
-      this.setPlayerName(player.method_5477().getString());
-      this.method_5665(player.method_5477());
-      this.method_5880(true);
+      this.setPlayerUuid(player.getUuidAsString());
+      this.setPlayerName(player.getName().getString());
+      this.setCustomName(player.getName());
+      this.setCustomNameVisible(true);
       this.inheritPlayerAttributes(player);
       this.attackCooldown = 100;
    }
 
    private void inheritPlayerAttributes(PlayerEntity player) {
       NbtCompound spiritAttributes = PlayerEvents.getSpiritAttributes(player);
-      if (spiritAttributes.method_10545("spiritResistance")) {
+      if (spiritAttributes.contains("spiritResistance")) {
          float spiritResistance = this.getFloatFromNbt(spiritAttributes, "spiritResistance");
          this.setSpiritualResistance((int)spiritResistance);
       }
 
-      if (spiritAttributes.method_10545("spiritDamage")) {
+      if (spiritAttributes.contains("spiritDamage")) {
          float spiritDamage = this.getFloatFromNbt(spiritAttributes, "spiritDamage");
          this.setSpiritualDamage((int)spiritDamage);
       }
 
-      if (spiritAttributes.method_10545("maxSpirit")) {
+      if (spiritAttributes.contains("maxSpirit")) {
          float maxSpirit = this.getFloatFromNbt(spiritAttributes, "maxSpirit");
          this.setSpiritualStrength((int)maxSpirit);
          this.setMaxSpiritualStrength((int)maxSpirit);
       }
 
-      if (spiritAttributes.method_10545("revivalFactor")) {
+      if (spiritAttributes.contains("revivalFactor")) {
          float revivalFactor = this.getFloatFromNbt(spiritAttributes, "revivalFactor");
          this.setRecoveryFactor(revivalFactor);
       }
@@ -187,10 +187,10 @@ public class PlayerGhostEntity extends GhostEntity {
    }
 
    private float getFloatFromNbt(NbtCompound nbt, String key) {
-      if (nbt.method_10573(key, 3)) {
-         return nbt.method_10550(key);
+      if (nbt.contains(key, 3)) {
+         return nbt.getInt(key);
       } else {
-         return nbt.method_10573(key, 6) ? (float)nbt.method_10574(key) : nbt.method_10583(key);
+         return nbt.contains(key, 6) ? (float)nbt.getDouble(key) : nbt.getFloat(key);
       }
    }
 
@@ -216,18 +216,18 @@ public class PlayerGhostEntity extends GhostEntity {
 
    private void inheritPlayerGhosts(PlayerEntity player) {
       NbtCompound spiritData = PlayerEvents.getSpiritAttributes(player);
-      if (spiritData.method_10545("GhostSlots")) {
-         NbtCompound ghostSlots = spiritData.method_10562("GhostSlots");
-         this.ghostSlotsData = ghostSlots.method_10553();
+      if (spiritData.contains("GhostSlots")) {
+         NbtCompound ghostSlots = spiritData.getCompound("GhostSlots");
+         this.ghostSlotsData = ghostSlots.copy();
 
          for (int i = 0; i < 10; i++) {
             String slotKey = "Slot" + i;
-            if (ghostSlots.method_10545(slotKey)) {
-               NbtCompound slotData = ghostSlots.method_10562(slotKey);
-               if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-                  ItemStack itemStack = ItemStack.method_7915(slotData.method_10562("item"));
-                  String ghostName = itemStack.method_7909().method_7876();
-                  if (itemStack.method_7909() instanceof SilentGhostEyeItem) {
+            if (ghostSlots.contains(slotKey)) {
+               NbtCompound slotData = ghostSlots.getCompound(slotKey);
+               if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+                  ItemStack itemStack = ItemStack.fromNbt(slotData.getCompound("item"));
+                  String ghostName = itemStack.getItem().getTranslationKey();
+                  if (itemStack.getItem() instanceof SilentGhostEyeItem) {
                      this.playerGhosts.add("silent_ghost_eye");
                      if (this.ghostDomainColor.equals("none")) {
                         this.ghostDomainColor = "red";
@@ -373,9 +373,9 @@ public class PlayerGhostEntity extends GhostEntity {
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (this.ghostSlotsData.method_10545(slotKey)) {
-            NbtCompound slotData = this.ghostSlotsData.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (this.ghostSlotsData.contains(slotKey)) {
+            NbtCompound slotData = this.ghostSlotsData.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                validSlotCount++;
             }
          }
@@ -471,91 +471,91 @@ public class PlayerGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
       if (this.playerUuid != null) {
-         nbt.method_10582("PlayerUuid", this.playerUuid);
+         nbt.putString("PlayerUuid", this.playerUuid);
       }
 
       if (this.playerName != null) {
-         nbt.method_10582("PlayerName", this.playerName);
+         nbt.putString("PlayerName", this.playerName);
       }
 
       if (this.originalServantUuid != null) {
-         nbt.method_25927("OriginalServantUuid", this.originalServantUuid);
+         nbt.putUuid("OriginalServantUuid", this.originalServantUuid);
       }
 
       if (!this.playerGhosts.isEmpty()) {
          NbtCompound ghostsNbt = new NbtCompound();
 
          for (int i = 0; i < this.playerGhosts.size(); i++) {
-            ghostsNbt.method_10582("Ghost" + i, this.playerGhosts.get(i));
+            ghostsNbt.putString("Ghost" + i, this.playerGhosts.get(i));
          }
 
-         nbt.method_10566("PlayerGhosts", ghostsNbt);
+         nbt.put("PlayerGhosts", ghostsNbt);
       }
 
-      nbt.method_10582("GhostDomainColor", this.ghostDomainColor);
+      nbt.putString("GhostDomainColor", this.ghostDomainColor);
       if (!this.killingRules.isEmpty()) {
          NbtCompound rulesNbt = new NbtCompound();
 
          for (int i = 0; i < this.killingRules.size(); i++) {
-            rulesNbt.method_10582("Rule" + i, this.killingRules.get(i));
+            rulesNbt.putString("Rule" + i, this.killingRules.get(i));
          }
 
-         nbt.method_10566("KillingRules", rulesNbt);
+         nbt.put("KillingRules", rulesNbt);
       }
 
-      if (!this.ghostSlotsData.method_33133()) {
-         nbt.method_10566("GhostSlotsData", this.ghostSlotsData);
+      if (!this.ghostSlotsData.isEmpty()) {
+         nbt.put("GhostSlotsData", this.ghostSlotsData);
       }
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("PlayerUuid")) {
-         this.playerUuid = nbt.method_10558("PlayerUuid");
-         if (this.field_6011 != null) {
-            this.field_6011.method_12778(PLAYER_UUID, this.playerUuid != null ? this.playerUuid : "");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("PlayerUuid")) {
+         this.playerUuid = nbt.getString("PlayerUuid");
+         if (this.dataTracker != null) {
+            this.dataTracker.set(PLAYER_UUID, this.playerUuid != null ? this.playerUuid : "");
          }
       }
 
-      if (nbt.method_10545("PlayerName")) {
-         this.playerName = nbt.method_10558("PlayerName");
-         if (this.field_6011 != null) {
-            this.field_6011.method_12778(PLAYER_NAME, this.playerName != null ? this.playerName : "");
+      if (nbt.contains("PlayerName")) {
+         this.playerName = nbt.getString("PlayerName");
+         if (this.dataTracker != null) {
+            this.dataTracker.set(PLAYER_NAME, this.playerName != null ? this.playerName : "");
          }
       }
 
-      if (nbt.method_10545("OriginalServantUuid")) {
-         this.originalServantUuid = nbt.method_25926("OriginalServantUuid");
+      if (nbt.contains("OriginalServantUuid")) {
+         this.originalServantUuid = nbt.getUuid("OriginalServantUuid");
       }
 
       this.playerGhosts.clear();
-      if (nbt.method_10545("PlayerGhosts")) {
-         NbtCompound ghostsNbt = nbt.method_10562("PlayerGhosts");
+      if (nbt.contains("PlayerGhosts")) {
+         NbtCompound ghostsNbt = nbt.getCompound("PlayerGhosts");
 
-         for (String key : ghostsNbt.method_10541()) {
-            this.playerGhosts.add(ghostsNbt.method_10558(key));
+         for (String key : ghostsNbt.getKeys()) {
+            this.playerGhosts.add(ghostsNbt.getString(key));
          }
       }
 
-      if (nbt.method_10545("GhostDomainColor")) {
-         this.ghostDomainColor = nbt.method_10558("GhostDomainColor");
+      if (nbt.contains("GhostDomainColor")) {
+         this.ghostDomainColor = nbt.getString("GhostDomainColor");
       }
 
       this.killingRules.clear();
-      if (nbt.method_10545("KillingRules")) {
-         NbtCompound rulesNbt = nbt.method_10562("KillingRules");
+      if (nbt.contains("KillingRules")) {
+         NbtCompound rulesNbt = nbt.getCompound("KillingRules");
 
-         for (String key : rulesNbt.method_10541()) {
-            this.killingRules.add(rulesNbt.method_10558(key));
+         for (String key : rulesNbt.getKeys()) {
+            this.killingRules.add(rulesNbt.getString(key));
          }
       }
 
-      if (nbt.method_10545("GhostSlotsData")) {
-         this.ghostSlotsData = nbt.method_10562("GhostSlotsData");
+      if (nbt.contains("GhostSlotsData")) {
+         this.ghostSlotsData = nbt.getCompound("GhostSlotsData");
       }
    }
 
@@ -563,35 +563,35 @@ public class PlayerGhostEntity extends GhostEntity {
    protected void applyDefaultEffects(PlayerEntity player) {
       switch (this.ghostDomainColor) {
          case "red":
-            player.method_6092(new StatusEffectInstance(ModEffects.RED_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.RED_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          case "green":
-            player.method_6092(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          case "blue":
-            player.method_6092(new StatusEffectInstance(ModEffects.BLUE_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.BLUE_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          case "gray":
-            player.method_6092(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          case "golden":
-            player.method_6092(new StatusEffectInstance(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          case "blindness":
-            player.method_6092(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 20, 0, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 20, 0, false, false));
             break;
          case "fog":
-            player.method_6092(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, 20, 0, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, 20, 0, false, false));
             break;
          case "purple":
-            player.method_6092(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
-            player.method_6092(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN_VISUAL, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN_VISUAL, 30, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          case "black":
-            player.method_6092(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 30, 0, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 30, 0, false, false));
             break;
          case "cyan":
-            player.method_6092(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN_TARGET, 30, this.getGhostDomainLevel() - 1, false, false, false));
             break;
          default:
             super.applyDefaultEffects(player);
@@ -608,19 +608,19 @@ public class PlayerGhostEntity extends GhostEntity {
          return false;
       }
 
-      if (this.getMasterUuid() != null && this.getMasterUuid().equals(player.method_5667())) {
+      if (this.getMasterUuid() != null && this.getMasterUuid().equals(player.getUuid())) {
          return false;
       }
 
       if (player instanceof PlayerEntity) {
          GhostChildData ghostChildData = PlayerGhostChildManager.getGhostChildData(player);
-         if (ghostChildData.isSummoned() && this.getMasterUuid() != null && this.getMasterUuid().equals(player.method_5667())) {
+         if (ghostChildData.isSummoned() && this.getMasterUuid() != null && this.getMasterUuid().equals(player.getUuid())) {
             return false;
          }
       }
 
-      UUID playerId = player.method_5667();
-      long currentTime = this.method_37908().method_8510();
+      UUID playerId = player.getUuid();
+      long currentTime = this.getWorld().getTime();
       Long lastAttackLogTime = this.playerLastAttackLogTime.get(playerId);
       boolean inLogCooldown = lastAttackLogTime != null && currentTime - lastAttackLogTime < 20L;
       boolean shouldAttack = false;
@@ -628,30 +628,30 @@ public class PlayerGhostEntity extends GhostEntity {
       for (String ghostName : this.playerGhosts) {
          GhostEntity ghostProxy = this.createGhostProxy(ghostName);
          if (ghostProxy != null) {
-            ghostProxy.method_33574(this.method_19538());
+            ghostProxy.setPosition(this.getPos());
             ghostProxy.setGhostDomainRadius(this.getGhostDomainRadius());
             if (ghostProxy.shouldAttackPlayer(player)) {
                shouldAttack = true;
                this.playerLastAttackTime.put(playerId, currentTime);
                if (!inLogCooldown) {
                   if (ghostName.contains("jump_ghost") || ghostName.contains("跳跃鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发跳跃鬼规律攻击：玩家 {} 在鬼域内跳跃", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发跳跃鬼规律攻击：玩家 {} 在鬼域内跳跃", this.playerName, player.getName().getString());
                   } else if (ghostName.contains("block_ghost") || ghostName.contains("方块鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发方块鬼规律攻击：玩家 {} 在鬼域内放置/破坏方块", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发方块鬼规律攻击：玩家 {} 在鬼域内放置/破坏方块", this.playerName, player.getName().getString());
                   } else if (ghostName.contains("taitou_ghost") || ghostName.contains("抬头鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发抬头鬼规律攻击：玩家 {} 在鬼域内抬头", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发抬头鬼规律攻击：玩家 {} 在鬼域内抬头", this.playerName, player.getName().getString());
                   } else if (ghostName.contains("ditou_ghost") || ghostName.contains("低头鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发低头鬼规律攻击：玩家 {} 在鬼域内低头", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发低头鬼规律攻击：玩家 {} 在鬼域内低头", this.playerName, player.getName().getString());
                   } else if (ghostName.contains("food_ghost") || ghostName.contains("食物鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发食物鬼规律攻击：玩家 {} 在鬼域内进食", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发食物鬼规律攻击：玩家 {} 在鬼域内进食", this.playerName, player.getName().getString());
                   } else if (ghostName.contains("fog_ghost") || ghostName.contains("鬼雾")) {
-                     LOGGER.info("玩家鬼魂 {} 触发鬼雾规律攻击：玩家 {} 在鬼域内移动", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发鬼雾规律攻击：玩家 {} 在鬼域内移动", this.playerName, player.getName().getString());
                   } else if (ghostName.contains("lost_ghost") || ghostName.contains("遗忘鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发遗忘鬼规律攻击：玩家 {} 在鬼域内迷失自己", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发遗忘鬼规律攻击：玩家 {} 在鬼域内迷失自己", this.playerName, player.getName().getString());
                   } else if (!ghostName.contains("death_sight_ghost") && !ghostName.contains("死亡视线鬼")) {
-                     LOGGER.info("玩家鬼魂 {} 触发 {} 规律攻击：玩家 {} 符合攻击条件", this.playerName, ghostName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发 {} 规律攻击：玩家 {} 符合攻击条件", this.playerName, ghostName, player.getName().getString());
                   } else {
-                     LOGGER.info("玩家鬼魂 {} 触发死亡视线鬼规律攻击：玩家 {} 与鬼对视", this.playerName, player.method_5477().getString());
+                     LOGGER.info("玩家鬼魂 {} 触发死亡视线鬼规律攻击：玩家 {} 与鬼对视", this.playerName, player.getName().getString());
                   }
 
                   this.playerLastAttackLogTime.put(playerId, currentTime);
@@ -662,21 +662,21 @@ public class PlayerGhostEntity extends GhostEntity {
       }
 
       if (!shouldAttack && this.getGhostDomainLevel() >= 3) {
-         if (this.getMasterUuid() != null && this.getMasterUuid().equals(player.method_5667())) {
+         if (this.getMasterUuid() != null && this.getMasterUuid().equals(player.getUuid())) {
             return shouldAttack;
          }
 
          Long lastAttackTime = this.playerLastAttackTime.get(playerId);
-         if (this.method_5858(player) <= this.getGhostDomainRadius() * this.getGhostDomainRadius()
+         if (this.squaredDistanceTo(player) <= this.getGhostDomainRadius() * this.getGhostDomainRadius()
             && (lastAttackTime == null || currentTime - lastAttackTime >= 1200L)) {
             shouldAttack = true;
             this.playerLastAttackTime.put(playerId, currentTime);
             if (!inLogCooldown) {
                if (lastAttackTime == null) {
-                  LOGGER.info("玩家鬼魂 {} 触发首次60秒无规律攻击：玩家 {} 进入鬼域后60秒未触发任何规律", this.playerName, player.method_5477().getString());
+                  LOGGER.info("玩家鬼魂 {} 触发首次60秒无规律攻击：玩家 {} 进入鬼域后60秒未触发任何规律", this.playerName, player.getName().getString());
                } else {
                   long timeSinceLastAttack = currentTime - lastAttackTime;
-                  LOGGER.info("玩家鬼魂 {} 触发60秒无规律攻击：玩家 {} 距离上次攻击已过去 {} 秒", this.playerName, player.method_5477().getString(), timeSinceLastAttack / 20L);
+                  LOGGER.info("玩家鬼魂 {} 触发60秒无规律攻击：玩家 {} 距离上次攻击已过去 {} 秒", this.playerName, player.getName().getString(), timeSinceLastAttack / 20L);
                }
 
                this.playerLastAttackLogTime.put(playerId, currentTime);
@@ -690,90 +690,90 @@ public class PlayerGhostEntity extends GhostEntity {
    private GhostEntity createGhostProxy(String ghostName) {
       try {
          if (ghostName.contains("jump_ghost") || ghostName.contains("跳跃鬼")) {
-            return new JumpGhostEntity(ModEntities.JUMP_GHOST, this.method_37908());
+            return new JumpGhostEntity(ModEntities.JUMP_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("block_ghost") || ghostName.contains("方块鬼")) {
-            return new BlockGhostEntity(ModEntities.BLOCK_GHOST, this.method_37908());
+            return new BlockGhostEntity(ModEntities.BLOCK_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("taitou_ghost") || ghostName.contains("抬头鬼")) {
-            return new TaitouGhostEntity(ModEntities.TAITOU_GHOST, this.method_37908());
+            return new TaitouGhostEntity(ModEntities.TAITOU_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("ditou_ghost") || ghostName.contains("低头鬼")) {
-            return new DitouGhostEntity(ModEntities.DITOU_GHOST, this.method_37908());
+            return new DitouGhostEntity(ModEntities.DITOU_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("food_ghost") || ghostName.contains("食物鬼")) {
-            return new FoodGhostEntity(ModEntities.FOOD_GHOST, this.method_37908());
+            return new FoodGhostEntity(ModEntities.FOOD_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("fog_ghost") || ghostName.contains("鬼雾")) {
-            return new FogGhostEntity(ModEntities.FOG_GHOST, this.method_37908());
+            return new FogGhostEntity(ModEntities.FOG_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("lost_ghost") || ghostName.contains("迷失鬼")) {
-            return new LostGhostEntity(ModEntities.LOST_GHOST, this.method_37908());
+            return new LostGhostEntity(ModEntities.LOST_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("death_sight_ghost") || ghostName.contains("死亡视线鬼")) {
-            return new DeathSightGhostEntity(ModEntities.DEATH_SIGHT_GHOST, this.method_37908());
+            return new DeathSightGhostEntity(ModEntities.DEATH_SIGHT_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("ghost_merchant") || ghostName.contains("鬼商人")) {
-            return new GhostMerchantEntity(ModEntities.GHOST_MERCHANT, this.method_37908());
+            return new GhostMerchantEntity(ModEntities.GHOST_MERCHANT, this.getWorld());
          }
 
          if (ghostName.contains("villager_ghost") || ghostName.contains("村民鬼")) {
-            return new VillagerGhostEntity(ModEntities.VILLAGER_GHOST, this.method_37908());
+            return new VillagerGhostEntity(ModEntities.VILLAGER_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("box_ghost") || ghostName.contains("开箱鬼")) {
-            return new BoxGhostEntity(ModEntities.BOX_GHOST, this.method_37908());
+            return new BoxGhostEntity(ModEntities.BOX_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("water_ghost") || ghostName.contains("水鬼")) {
-            return new WaterGhostEntity(ModEntities.WATER_GHOST, this.method_37908());
+            return new WaterGhostEntity(ModEntities.WATER_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("giant_shadow_ghost")
             || ghostName.contains("高大鬼影")
             || ghostName.contains("complete_shadow_ghost")
             || ghostName.contains("完整鬼影")) {
-            return new GiantShadowGhostEntity(ModEntities.GIANT_SHADOW_GHOST, this.method_37908());
+            return new GiantShadowGhostEntity(ModEntities.GIANT_SHADOW_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("ganshi_bride_ghost") || ghostName.contains("鬼新娘")) {
-            return new GanshiBrideGhostEntity(ModEntities.GANSHI_BRIDE_GHOST, this.method_37908());
+            return new GanshiBrideGhostEntity(ModEntities.GANSHI_BRIDE_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("crop_ghost") || ghostName.contains("作物鬼")) {
-            return new CropGhostEntity(ModEntities.CROP_GHOST, this.method_37908());
+            return new CropGhostEntity(ModEntities.CROP_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("step_ghost") || ghostName.contains("踩踏鬼")) {
-            return new StepGhostEntity(ModEntities.STEP_GHOST, this.method_37908());
+            return new StepGhostEntity(ModEntities.STEP_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("grave_earth_ghost") || ghostName.contains("坟土鬼")) {
-            return new GraveEarthGhostEntity(ModEntities.GRAVE_EARTH_GHOST, this.method_37908());
+            return new GraveEarthGhostEntity(ModEntities.GRAVE_EARTH_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("trash_ghost") || ghostName.contains("垃圾鬼")) {
-            return new TrashGhostEntity(ModEntities.TRASH_GHOST, this.method_37908());
+            return new TrashGhostEntity(ModEntities.TRASH_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("burn_ghost") || ghostName.contains("烧死鬼")) {
-            return new BurnGhostEntity(ModEntities.BURN_GHOST, this.method_37908());
+            return new BurnGhostEntity(ModEntities.BURN_GHOST, this.getWorld());
          }
 
          if (ghostName.contains("ghost_wind") || ghostName.contains("鬼风")) {
-            return new GhostWindEntity(ModEntities.GHOST_WIND, this.method_37908());
+            return new GhostWindEntity(ModEntities.GHOST_WIND, this.getWorld());
          }
 
          if (ghostName.contains("ghost_smoke") || ghostName.contains("鬼烟")) {
-            return new GhostSmokeEntity(ModEntities.GHOST_SMOKE, this.method_37908());
+            return new GhostSmokeEntity(ModEntities.GHOST_SMOKE, this.getWorld());
          }
 
          if (ghostName.contains("qiaomen_ghost") || ghostName.contains("敲门鬼")) {
@@ -798,17 +798,17 @@ public class PlayerGhostEntity extends GhostEntity {
    public void setSuppressed(boolean suppressed) {
       super.setSuppressed(suppressed);
       if (suppressed) {
-         this.method_6125(0.0F);
+         this.setMovementSpeed(0.0F);
          this.setAttackCooldown(0);
       } else {
-         this.method_6125(0.3F);
+         this.setMovementSpeed(0.3F);
       }
    }
 
    public boolean retrieveCoffinNail() {
       if (this.hasCoffinNail()) {
          ItemStack coffinNail = new ItemStack(ModItems.COFFIN_NAIL);
-         this.method_37908().method_8649(new ItemEntity(this.method_37908(), this.method_23317(), this.method_23318(), this.method_23321(), coffinNail));
+         this.getWorld().spawnEntity(new ItemEntity(this.getWorld(), this.getX(), this.getY(), this.getZ(), coffinNail));
          this.setSuppressed(false);
          this.setCoffinNail(null);
          this.enableGhostDomain();
@@ -822,8 +822,8 @@ public class PlayerGhostEntity extends GhostEntity {
    }
 
    public String getPlayerName() {
-      if (this.method_37908() != null && this.method_37908().field_9236) {
-         String trackedName = (String)this.field_6011.method_12789(PLAYER_NAME);
+      if (this.getWorld() != null && this.getWorld().isClient) {
+         String trackedName = (String)this.dataTracker.get(PLAYER_NAME);
          return trackedName.isEmpty() ? this.playerName : trackedName;
       } else {
          return this.playerName;
@@ -832,14 +832,14 @@ public class PlayerGhostEntity extends GhostEntity {
 
    public void setPlayerName(String playerName) {
       this.playerName = playerName;
-      if (this.field_6011 != null) {
-         this.field_6011.method_12778(PLAYER_NAME, playerName != null ? playerName : "");
+      if (this.dataTracker != null) {
+         this.dataTracker.set(PLAYER_NAME, playerName != null ? playerName : "");
       }
    }
 
    public String getPlayerUuid() {
-      if (this.method_37908() != null && this.method_37908().field_9236) {
-         String trackedUuid = (String)this.field_6011.method_12789(PLAYER_UUID);
+      if (this.getWorld() != null && this.getWorld().isClient) {
+         String trackedUuid = (String)this.dataTracker.get(PLAYER_UUID);
          return trackedUuid.isEmpty() ? this.playerUuid : trackedUuid;
       } else {
          return this.playerUuid;
@@ -848,8 +848,8 @@ public class PlayerGhostEntity extends GhostEntity {
 
    public void setPlayerUuid(String playerUuid) {
       this.playerUuid = playerUuid;
-      if (this.field_6011 != null) {
-         this.field_6011.method_12778(PLAYER_UUID, playerUuid != null ? playerUuid : "");
+      if (this.dataTracker != null) {
+         this.dataTracker.set(PLAYER_UUID, playerUuid != null ? playerUuid : "");
       }
    }
 
@@ -887,7 +887,7 @@ public class PlayerGhostEntity extends GhostEntity {
          && ghostChild.getOwner() != null
          && this.isServantMode()
          && this.getMasterUuid() != null
-         && this.getMasterUuid().equals(ghostChild.getOwner().method_5667())) {
+         && this.getMasterUuid().equals(ghostChild.getOwner().getUuid())) {
          return false;
       } else {
          return ghost instanceof PlayerGhostEntity playerGhost
@@ -942,83 +942,83 @@ public class PlayerGhostEntity extends GhostEntity {
       super.disableGhostDomain();
    }
 
-   public boolean method_16914() {
+   public boolean hasCustomName() {
       return this.playerName != null;
    }
 
-   public Text method_5797() {
-      return (Text)(this.playerName != null ? Text.method_43470(this.playerName) : super.method_5797());
+   public Text getCustomName() {
+      return (Text)(this.playerName != null ? Text.literal(this.playerName) : super.getCustomName());
    }
 
-   public boolean method_18395(LivingEntity target) {
+   public boolean canTarget(LivingEntity target) {
       if (this.isServantMode() && this.getMasterUuid() != null && target instanceof PlayerEntity) {
-         PlayerEntity master = this.method_37908().method_18470(this.getMasterUuid());
-         if (master != null && target.method_5667().equals(master.method_5667())) {
-            LOGGER.debug("奴仆 {} 跳过攻击主人 {}", this.playerName, master.method_5477().getString());
+         PlayerEntity master = this.getWorld().getPlayerByUuid(this.getMasterUuid());
+         if (master != null && target.getUuid().equals(master.getUuid())) {
+            LOGGER.debug("奴仆 {} 跳过攻击主人 {}", this.playerName, master.getName().getString());
             return false;
          }
       }
 
-      return super.method_18395(target);
+      return super.canTarget(target);
    }
 
    @Override
-   public void method_5980(@Nullable LivingEntity target) {
+   public void setTarget(@Nullable LivingEntity target) {
       if (this.isServantMode() && this.getMasterUuid() != null && target instanceof PlayerEntity) {
-         PlayerEntity master = this.method_37908().method_18470(this.getMasterUuid());
-         if (master != null && target.method_5667().equals(master.method_5667())) {
-            LOGGER.debug("奴仆 {} 拒绝将主人 {} 设为目标", this.playerName, master.method_5477().getString());
+         PlayerEntity master = this.getWorld().getPlayerByUuid(this.getMasterUuid());
+         if (master != null && target.getUuid().equals(master.getUuid())) {
+            LOGGER.debug("奴仆 {} 拒绝将主人 {} 设为目标", this.playerName, master.getName().getString());
             return;
          }
       }
 
-      super.method_5980(target);
+      super.setTarget(target);
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236 && this.attackCooldown > 0) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient && this.attackCooldown > 0) {
          this.attackCooldown--;
          if (this.attackCooldown <= 0) {
             LOGGER.debug("玩家鬼魂 {} 攻击冷却结束", this.playerName);
          }
       }
 
-      if (!this.method_37908().field_9236 && this.isServantMode() && this.getMasterUuid() != null && !this.isDeadlocked() && !this.isSuppressed()) {
-         PlayerEntity master = this.method_37908().method_18470(this.getMasterUuid());
-         if (master != null && master.method_5805() && !master.method_7325()) {
-            double distanceToMaster = this.method_5858(master);
+      if (!this.getWorld().isClient && this.isServantMode() && this.getMasterUuid() != null && !this.isDeadlocked() && !this.isSuppressed()) {
+         PlayerEntity master = this.getWorld().getPlayerByUuid(this.getMasterUuid());
+         if (master != null && master.isAlive() && !master.isSpectator()) {
+            double distanceToMaster = this.squaredDistanceTo(master);
             double actualDistance = Math.sqrt(distanceToMaster);
             if (!this.isSuppressed() && !this.isDeadlocked()) {
                double searchRadius = 25.0;
                List<LivingEntity> potentialTargets = new ArrayList<>();
-               List<HostileEntity> hostileMobs = this.method_37908()
-                  .method_8390(
+               List<HostileEntity> hostileMobs = this.getWorld()
+                  .getEntitiesByClass(
                      HostileEntity.class,
-                     this.method_5829().method_1014(searchRadius),
-                     mob -> mob.method_5805() && this.method_5858(mob) <= searchRadius * searchRadius
+                     this.getBoundingBox().expand(searchRadius),
+                     mob -> mob.isAlive() && this.squaredDistanceTo(mob) <= searchRadius * searchRadius
                   );
                potentialTargets.addAll(hostileMobs);
-               List<GhostEntity> otherGhosts = this.method_37908()
-                  .method_8390(
+               List<GhostEntity> otherGhosts = this.getWorld()
+                  .getEntitiesByClass(
                      GhostEntity.class,
-                     this.method_5829().method_1014(searchRadius),
+                     this.getBoundingBox().expand(searchRadius),
                      ghost -> ghost != this
-                        && ghost.method_5805()
-                        && this.method_5858(ghost) <= searchRadius * searchRadius
+                        && ghost.isAlive()
+                        && this.squaredDistanceTo(ghost) <= searchRadius * searchRadius
                         && (
                            !(ghost instanceof PlayerGhostEntity)
                               || ghost instanceof PlayerGhostEntity && ((PlayerGhostEntity)ghost).getMasterUuid() == null
-                              || !((PlayerGhostEntity)ghost).getMasterUuid().equals(master.method_5667())
+                              || !((PlayerGhostEntity)ghost).getMasterUuid().equals(master.getUuid())
                         )
                   );
                potentialTargets.addAll(otherGhosts);
                if (!potentialTargets.isEmpty()) {
-                  potentialTargets.sort((a, b) -> Double.compare(this.method_5858(a), this.method_5858(b)));
+                  potentialTargets.sort((a, b) -> Double.compare(this.squaredDistanceTo(a), this.squaredDistanceTo(b)));
                   LivingEntity target = potentialTargets.get(0);
-                  this.method_5980(target);
-                  double distanceToTarget = this.method_5858(target);
+                  this.setTarget(target);
+                  double distanceToTarget = this.squaredDistanceTo(target);
                   if (distanceToTarget <= 256.0 && this.attackCooldown <= 0) {
                      if (target instanceof PlayerEntity) {
                         this.executeAttack((PlayerEntity)target);
@@ -1029,93 +1029,76 @@ public class PlayerGhostEntity extends GhostEntity {
                      } else if (target instanceof LivingEntity) {
                         this.executeAttack(target);
                      } else {
-                        this.method_6121(target);
+                        this.tryAttack(target);
                         this.attackCooldown = 100;
                      }
                   } else if (distanceToTarget > 25.0) {
-                     Vec3d direction = new Vec3d(
-                           target.method_23317() - this.method_23317(),
-                           target.method_23318() - this.method_23318(),
-                           target.method_23321() - this.method_23321()
-                        )
-                        .method_1029();
+                     Vec3d direction = new Vec3d(target.getX() - this.getX(), target.getY() - this.getY(), target.getZ() - this.getZ()).normalize();
                      float moveSpeed = 0.3F;
-                     this.method_18799(direction.method_1021(moveSpeed));
-                     this.method_36456((float)Math.toDegrees(Math.atan2(direction.field_1350, direction.field_1352)) - 90.0F);
+                     this.setVelocity(direction.multiply(moveSpeed));
+                     this.setYaw((float)Math.toDegrees(Math.atan2(direction.z, direction.x)) - 90.0F);
                   }
                } else if (distanceToMaster > 1225.0) {
-                  this.method_20620(
-                     master.method_23317() + (this.method_6051().method_43058() - 0.5) * 2.0,
-                     master.method_23318(),
-                     master.method_23321() + (this.method_6051().method_43058() - 0.5) * 2.0
+                  this.teleport(
+                     master.getX() + (this.getRandom().nextDouble() - 0.5) * 2.0, master.getY(), master.getZ() + (this.getRandom().nextDouble() - 0.5) * 2.0
                   );
                } else if (distanceToMaster > 25.0) {
-                  Vec3d direction = new Vec3d(
-                        master.method_23317() - this.method_23317(), master.method_23318() - this.method_23318(), master.method_23321() - this.method_23321()
-                     )
-                     .method_1029();
+                  Vec3d direction = new Vec3d(master.getX() - this.getX(), master.getY() - this.getY(), master.getZ() - this.getZ()).normalize();
                   float baseSpeed = 0.1F;
                   float distanceFactor = (float)(actualDistance - 5.0) * 0.05F;
                   float followSpeed = Math.min(baseSpeed + distanceFactor, 0.5F);
-                  this.method_18799(direction.method_1021(followSpeed));
-                  this.method_36456((float)Math.toDegrees(Math.atan2(direction.field_1350, direction.field_1352)) - 90.0F);
+                  this.setVelocity(direction.multiply(followSpeed));
+                  this.setYaw((float)Math.toDegrees(Math.atan2(direction.z, direction.x)) - 90.0F);
                } else if (distanceToMaster < 9.0) {
-                  this.method_18799(Vec3d.field_1353);
+                  this.setVelocity(Vec3d.ZERO);
                }
             } else if (distanceToMaster > 900.0) {
-               this.method_20620(
-                  master.method_23317() + (this.method_6051().method_43058() - 0.5) * 2.0,
-                  master.method_23318(),
-                  master.method_23321() + (this.method_6051().method_43058() - 0.5) * 2.0
+               this.teleport(
+                  master.getX() + (this.getRandom().nextDouble() - 0.5) * 2.0, master.getY(), master.getZ() + (this.getRandom().nextDouble() - 0.5) * 2.0
                );
                LOGGER.debug("奴仆 {} 距离主人过远，已传送至主人身边", this.playerName);
             } else if (distanceToMaster > 25.0) {
-               Vec3d direction = new Vec3d(
-                     master.method_23317() - this.method_23317(), master.method_23318() - this.method_23318(), master.method_23321() - this.method_23321()
-                  )
-                  .method_1029();
+               Vec3d direction = new Vec3d(master.getX() - this.getX(), master.getY() - this.getY(), master.getZ() - this.getZ()).normalize();
                float baseSpeed = 0.1F;
                float distanceFactor = (float)(actualDistance - 5.0) * 0.05F;
                float followSpeed = Math.min(baseSpeed + distanceFactor, 0.5F);
-               this.method_18799(direction.method_1021(followSpeed));
-               this.method_36456((float)Math.toDegrees(Math.atan2(direction.field_1350, direction.field_1352)) - 90.0F);
+               this.setVelocity(direction.multiply(followSpeed));
+               this.setYaw((float)Math.toDegrees(Math.atan2(direction.z, direction.x)) - 90.0F);
             } else if (distanceToMaster < 9.0) {
-               this.method_18799(Vec3d.field_1353);
+               this.setVelocity(Vec3d.ZERO);
             }
          } else {
-            if (this.field_6012 % 100 == 0) {
+            if (this.age % 100 == 0) {
                LOGGER.info("奴仆 {} 的主人不存在或已死亡，自动消失", this.playerName);
             }
 
             GhostDeathHandler.markLegitimateRemoval(this);
-            this.method_31472();
+            this.discard();
          }
       }
 
-      if (!this.method_37908().field_9236 && this.isServantMode() && this.getMasterUuid() != null && (this.isDeadlocked() || this.isSuppressed())) {
-         ServerWorld serverWorld = (ServerWorld)this.method_37908();
-         Vec3d pos = this.method_19538();
+      if (!this.getWorld().isClient && this.isServantMode() && this.getMasterUuid() != null && (this.isDeadlocked() || this.isSuppressed())) {
+         ServerWorld serverWorld = (ServerWorld)this.getWorld();
+         Vec3d pos = this.getPos();
 
          for (int i = 0; i < 5; i++) {
-            double offsetX = this.method_6051().method_43058() - 0.5;
-            double offsetY = (this.method_6051().method_43058() - 0.5) * 2.0 + 1.0;
-            double offsetZ = this.method_6051().method_43058() - 0.5;
-            serverWorld.method_14199(
-               ParticleTypes.field_11251, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.1, 0.0, 0.0
-            );
+            double offsetX = this.getRandom().nextDouble() - 0.5;
+            double offsetY = (this.getRandom().nextDouble() - 0.5) * 2.0 + 1.0;
+            double offsetZ = this.getRandom().nextDouble() - 0.5;
+            serverWorld.spawnParticles(ParticleTypes.SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.1, 0.0, 0.0);
          }
       }
 
-      if (this.field_6012 % 200 == 0) {
+      if (this.age % 200 == 0) {
          int initialJumpingSize = this.playerJumpingState.size();
          int initialAttackSize = this.playerLastAttackTime.size();
          this.playerJumpingState.keySet().removeIf(playerId -> {
-            PlayerEntity player = this.method_37908().method_18470(playerId);
-            return player == null || !player.method_5805() || this.method_5858(player) > this.getGhostDomainRadius() * this.getGhostDomainRadius() * 4.0F;
+            PlayerEntity player = this.getWorld().getPlayerByUuid(playerId);
+            return player == null || !player.isAlive() || this.squaredDistanceTo(player) > this.getGhostDomainRadius() * this.getGhostDomainRadius() * 4.0F;
          });
          this.playerLastAttackTime.keySet().removeIf(playerId -> {
-            PlayerEntity player = this.method_37908().method_18470(playerId);
-            return player == null || !player.method_5805() || this.method_5858(player) > this.getGhostDomainRadius() * this.getGhostDomainRadius() * 4.0F;
+            PlayerEntity player = this.getWorld().getPlayerByUuid(playerId);
+            return player == null || !player.isAlive() || this.squaredDistanceTo(player) > this.getGhostDomainRadius() * this.getGhostDomainRadius() * 4.0F;
          });
          if (initialJumpingSize > this.playerJumpingState.size()) {
             LOGGER.debug("清理了 {} 个玩家跳跃状态数据", initialJumpingSize - this.playerJumpingState.size());

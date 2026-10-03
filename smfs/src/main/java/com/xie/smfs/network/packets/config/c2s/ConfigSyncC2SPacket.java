@@ -26,20 +26,20 @@ public class ConfigSyncC2SPacket {
    }
 
    public ConfigSyncC2SPacket(PacketByteBuf buf) {
-      this.configJson = buf.method_19772();
+      this.configJson = buf.readString();
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10814(this.configJson);
+      buf.writeString(this.configJson);
    }
 
    public static void handle(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      String configJson = buf.method_19772();
+      String configJson = buf.readString();
       server.execute(() -> {
-         if (!server.method_3724() && !player.method_5687(4)) {
-            LOGGER.warn("玩家 {} 没有权限修改服务端配置", player.method_5477().getString());
+         if (!server.isSingleplayer() && !player.hasPermissionLevel(4)) {
+            LOGGER.warn("玩家 {} 没有权限修改服务端配置", player.getName().getString());
          } else {
             try {
                ModConfig newConfig = GSON.fromJson(configJson, ModConfig.class);
@@ -71,7 +71,7 @@ public class ConfigSyncC2SPacket {
                   serverConfig.ghostMasterDropChances = newConfig.ghostMasterDropChances;
                   serverConfig.save();
                   ModConfig.reload();
-                  LOGGER.info("服务端配置已由玩家 {} 更新", player.method_5477().getString());
+                  LOGGER.info("服务端配置已由玩家 {} 更新", player.getName().getString());
                }
             } catch (Exception e) {
                LOGGER.error("处理配置同步数据包失败", e);

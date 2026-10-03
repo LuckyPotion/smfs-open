@@ -24,42 +24,42 @@ import net.minecraft.world.BlockView;
 import org.jetbrains.annotations.Nullable;
 
 public class GhostFurnitureBlock extends BlockWithEntity {
-   public static final DirectionProperty FACING = Properties.field_12481;
-   protected static final VoxelShape SHAPE = Block.method_9541(0.0, 0.0, 0.0, 16.0, 16.0, 16.0);
+   public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+   protected static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 16.0, 16.0);
 
    public GhostFurnitureBlock(Settings settings) {
-      super(settings.method_22488());
-      this.method_9590((BlockState)((BlockState)this.field_10647.method_11664()).method_11657(FACING, Direction.field_11043));
+      super(settings.nonOpaque());
+      this.setDefaultState((BlockState)((BlockState)this.stateManager.getDefaultState()).with(FACING, Direction.NORTH));
    }
 
-   protected void method_9515(Builder<Block, BlockState> builder) {
-      builder.method_11667(new Property[]{FACING});
+   protected void appendProperties(Builder<Block, BlockState> builder) {
+      builder.add(new Property[]{FACING});
    }
 
    @Nullable
-   public BlockState method_9605(ItemPlacementContext ctx) {
-      return (BlockState)this.method_9564().method_11657(FACING, ctx.method_8042().method_10153());
+   public BlockState getPlacementState(ItemPlacementContext ctx) {
+      return (BlockState)this.getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
    }
 
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
       return SHAPE;
    }
 
    @Nullable
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return null;
    }
 
-   public List<ItemStack> method_9560(BlockState state, net.minecraft.loot.context.LootContextParameterSet.Builder builder) {
-      ItemStack tool = (ItemStack)builder.method_51876(LootContextParameters.field_1229);
+   public List<ItemStack> getDroppedStacks(BlockState state, net.minecraft.loot.context.LootContextParameterSet.Builder builder) {
+      ItemStack tool = (ItemStack)builder.getOptional(LootContextParameters.TOOL);
       return tool == null
-            || !(tool.method_7909() instanceof AxeItem)
-               && !tool.method_31574(Items.field_8475)
-               && !tool.method_31574(Items.field_8825)
-               && !tool.method_31574(Items.field_8556)
-               && !tool.method_31574(Items.field_22025)
-               && !tool.method_31574(Items.field_8406)
-               && !tool.method_31574(Items.field_8062)
+            || !(tool.getItem() instanceof AxeItem)
+               && !tool.isOf(Items.IRON_AXE)
+               && !tool.isOf(Items.GOLDEN_AXE)
+               && !tool.isOf(Items.DIAMOND_AXE)
+               && !tool.isOf(Items.NETHERITE_AXE)
+               && !tool.isOf(Items.WOODEN_AXE)
+               && !tool.isOf(Items.STONE_AXE)
          ? List.of()
          : List.of(new ItemStack(this));
    }
@@ -68,31 +68,31 @@ public class GhostFurnitureBlock extends BlockWithEntity {
       return 3.0F;
    }
 
-   public float method_9594(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
-      ItemStack tool = player.method_6047();
-      float baseSpeed = super.method_9594(state, player, world, pos);
-      if (tool != null && tool.method_7909() instanceof AxeItem) {
-         if (tool.method_31574(Items.field_22025)) {
+   public float calcBlockBreakingDelta(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
+      ItemStack tool = player.getMainHandStack();
+      float baseSpeed = super.calcBlockBreakingDelta(state, player, world, pos);
+      if (tool != null && tool.getItem() instanceof AxeItem) {
+         if (tool.isOf(Items.NETHERITE_AXE)) {
             return baseSpeed * 3.0F;
          }
 
-         if (tool.method_31574(Items.field_8556)) {
+         if (tool.isOf(Items.DIAMOND_AXE)) {
             return baseSpeed * 2.5F;
          }
 
-         if (tool.method_31574(Items.field_8475)) {
+         if (tool.isOf(Items.IRON_AXE)) {
             return baseSpeed * 2.0F;
          }
 
-         if (tool.method_31574(Items.field_8825)) {
+         if (tool.isOf(Items.GOLDEN_AXE)) {
             return baseSpeed * 1.5F;
          }
 
-         if (tool.method_31574(Items.field_8062)) {
+         if (tool.isOf(Items.STONE_AXE)) {
             return baseSpeed * 1.2F;
          }
 
-         if (tool.method_31574(Items.field_8406)) {
+         if (tool.isOf(Items.WOODEN_AXE)) {
             return baseSpeed * 1.0F;
          }
       }

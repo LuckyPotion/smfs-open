@@ -29,44 +29,44 @@ public class GhostFurnaceBlock extends AbstractFurnaceBlock {
       super(settings);
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-      if (!world.field_9236) {
-         BlockEntity blockEntity = world.method_8321(pos);
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+      if (!world.isClient) {
+         BlockEntity blockEntity = world.getBlockEntity(pos);
          if (blockEntity instanceof GhostFurnaceBlockEntity) {
-            player.method_17355((NamedScreenHandlerFactory)blockEntity);
-            player.method_7281(Stats.field_15379);
+            player.openHandledScreen((NamedScreenHandlerFactory)blockEntity);
+            player.incrementStat(Stats.INTERACT_WITH_FURNACE);
          }
       }
 
-      return ActionResult.field_5812;
+      return ActionResult.SUCCESS;
    }
 
    @Nullable
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new GhostFurnaceBlockEntity(pos, state);
    }
 
    @Nullable
-   public <T extends BlockEntity> BlockEntityTicker<T> method_31645(World world, BlockState state, BlockEntityType<T> type) {
-      return world.field_9236 ? null : method_31618(type, ModBlockEntities.GHOST_FURNACE_BLOCK_ENTITY, GhostFurnaceBlockEntity::tick);
+   public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+      return world.isClient ? null : checkType(type, ModBlockEntities.GHOST_FURNACE_BLOCK_ENTITY, GhostFurnaceBlockEntity::tick);
    }
 
-   protected void method_17025(World world, BlockPos pos, PlayerEntity player) {
-      BlockEntity blockEntity = world.method_8321(pos);
+   protected void openScreen(World world, BlockPos pos, PlayerEntity player) {
+      BlockEntity blockEntity = world.getBlockEntity(pos);
       if (blockEntity instanceof GhostFurnaceBlockEntity) {
-         player.method_17355((NamedScreenHandlerFactory)blockEntity);
-         player.method_7281(Stats.field_15379);
+         player.openHandledScreen((NamedScreenHandlerFactory)blockEntity);
+         player.incrementStat(Stats.INTERACT_WITH_FURNACE);
       }
    }
 
-   public List<ItemStack> method_9560(BlockState state, Builder builder) {
-      ItemStack tool = (ItemStack)builder.method_51876(LootContextParameters.field_1229);
-      return tool != null && tool.method_31574(Items.field_8335) ? List.of(new ItemStack(this)) : List.of();
+   public List<ItemStack> getDroppedStacks(BlockState state, Builder builder) {
+      ItemStack tool = (ItemStack)builder.getOptional(LootContextParameters.TOOL);
+      return tool != null && tool.isOf(Items.GOLDEN_PICKAXE) ? List.of(new ItemStack(this)) : List.of();
    }
 
-   public float method_9594(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
-      ItemStack tool = player.method_6047();
-      float baseSpeed = super.method_9594(state, player, world, pos);
-      return tool != null && tool.method_31574(Items.field_8335) ? baseSpeed * 2.0F : baseSpeed;
+   public float calcBlockBreakingDelta(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
+      ItemStack tool = player.getMainHandStack();
+      float baseSpeed = super.calcBlockBreakingDelta(state, player, world, pos);
+      return tool != null && tool.isOf(Items.GOLDEN_PICKAXE) ? baseSpeed * 2.0F : baseSpeed;
    }
 }

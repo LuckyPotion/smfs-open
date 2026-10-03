@@ -12,21 +12,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class ControlSlotItem extends Item {
    public ControlSlotItem() {
-      super(new FabricItemSettings().maxCount(64).rarity(Rarity.field_8904));
+      super(new FabricItemSettings().maxCount(64).rarity(Rarity.EPIC));
    }
 
-   public Text method_7848() {
-      return Text.method_43471("item.smfs.control_slot");
+   public Text getName() {
+      return Text.translatable("item.smfs.control_slot");
    }
 
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43471("item.smfs.control_slot");
+   public Text getName(ItemStack stack) {
+      return Text.translatable("item.smfs.control_slot");
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.control_slot.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.control_slot.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.control_slot.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.control_slot.description.source"));
+      tooltip.add(Text.translatable("item.smfs.control_slot.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.control_slot.description.type"));
    }
 }

@@ -15,19 +15,19 @@ import net.minecraft.text.Text;
 
 public class OpenGhostScreenCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
-      dispatcher.register((LiteralArgumentBuilder)CommandManager.method_9247("open_ghost_screen").executes(OpenGhostScreenCommand::execute));
+      dispatcher.register((LiteralArgumentBuilder)CommandManager.literal("open_ghost_screen").executes(OpenGhostScreenCommand::execute));
    }
 
    public static int execute(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
 
       try {
-         player.method_17355(new GhostControlScreenHandler.GhostControlFactory());
-         player.method_7353(Text.method_43471("command.smfs.open_ghost_screen.success"), true);
+         player.openHandledScreen(new GhostControlScreenHandler.GhostControlFactory());
+         player.sendMessage(Text.translatable("command.smfs.open_ghost_screen.success"), true);
          return 1;
       } catch (Exception e) {
          Smfs.LOGGER.error("打开厉鬼控制界面失败", e);
-         player.method_7353(Text.method_43470("§c打开界面失败: " + e.getMessage()), true);
+         player.sendMessage(Text.literal("§c打开界面失败: " + e.getMessage()), true);
          return 0;
       }
    }

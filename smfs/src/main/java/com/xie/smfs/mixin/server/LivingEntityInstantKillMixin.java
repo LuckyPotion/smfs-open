@@ -14,14 +14,14 @@ public abstract class LivingEntityInstantKillMixin {
    private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
       LivingEntity entity = (LivingEntity)this;
       if (InstantKillUtil.isMarkedForInstantKill(entity)) {
-         entity.method_6033(0.0F);
+         entity.setHealth(0.0F);
 
          try {
-            entity.method_6078(source);
+            entity.onDeath(source);
          } catch (Exception var6) {
          }
 
-         entity.method_31472();
+         entity.discard();
          cir.setReturnValue(true);
          cir.cancel();
       }

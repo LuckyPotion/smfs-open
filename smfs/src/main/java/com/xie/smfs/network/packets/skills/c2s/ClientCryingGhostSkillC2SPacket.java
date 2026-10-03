@@ -32,7 +32,7 @@ public class ClientCryingGhostSkillC2SPacket {
       server.execute(() -> {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             try {
-               LOGGER.info("玩家 {} 执行哭丧鬼J键技能：哭泣标记", player.method_5477().getString());
+               LOGGER.info("玩家 {} 执行哭丧鬼J键技能：哭泣标记", player.getName().getString());
                PlayerEvents.balanceRevivalDegree(player);
                handleCryingGhostSkill(player);
             } catch (Exception e) {
@@ -44,13 +44,13 @@ public class ClientCryingGhostSkillC2SPacket {
 
    private static void handleCryingGhostSkill(ServerPlayerEntity player) {
       int radius = 10;
-      List<LivingEntity> entitiesInRange = player.method_37908()
-         .method_8390(LivingEntity.class, player.method_5829().method_1014(radius), entityx -> entityx != player && entityx instanceof LivingEntity);
+      List<LivingEntity> entitiesInRange = player.getWorld()
+         .getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius), entityx -> entityx != player && entityx instanceof LivingEntity);
       if (entitiesInRange.isEmpty()) {
-         player.method_7353(Text.method_43470("§c哭丧鬼J键：范围内没有可攻击的生物"), true);
+         player.sendMessage(Text.literal("§c哭丧鬼J键：范围内没有可攻击的生物"), true);
       } else {
          NbtCompound spiritAttributes = PlayerEvents.getSpiritAttributes(player);
-         float spiritDamage = spiritAttributes.method_10545("spiritDamage") ? (float)spiritAttributes.method_10574("spiritDamage") : 0.0F;
+         float spiritDamage = spiritAttributes.contains("spiritDamage") ? (float)spiritAttributes.getDouble("spiritDamage") : 0.0F;
          if (spiritDamage <= 0.0F) {
             spiritDamage = 5.0F;
          }
@@ -60,11 +60,11 @@ public class ClientCryingGhostSkillC2SPacket {
          for (LivingEntity entity : entitiesInRange) {
             GhostDomainManager.executeSkillSpiritAttack(player, entity);
             attackCount++;
-            LOGGER.info("玩家 {} 使用哭丧鬼J键技能攻击生物 {}，距离: {}", player.method_5477().getString(), entity.method_5477().getString(), player.method_5739(entity));
+            LOGGER.info("玩家 {} 使用哭丧鬼J键技能攻击生物 {}，距离: {}", player.getName().getString(), entity.getName().getString(), player.distanceTo(entity));
          }
 
          if (ModConfig.getInstance().showActionBarInfo) {
-            player.method_7353(Text.method_43470("§a对" + attackCount + "个生物造成" + new DecimalFormat("#.###").format(spiritDamage) + "点灵异伤害"), true);
+            player.sendMessage(Text.literal("§a对" + attackCount + "个生物造成" + new DecimalFormat("#.###").format(spiritDamage) + "点灵异伤害"), true);
          }
       }
    }

@@ -20,14 +20,14 @@ public class QuestAcceptResultPacket {
    }
 
    public QuestAcceptResultPacket(PacketByteBuf buf) {
-      this.questId = buf.method_19772();
+      this.questId = buf.readString();
       this.success = buf.readBoolean();
-      this.updatedQuestData = buf.method_10798();
+      this.updatedQuestData = buf.readNbt();
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10814(this.questId);
+      buf.writeString(this.questId);
       buf.writeBoolean(this.success);
-      buf.method_10794(this.updatedQuestData);
+      buf.writeNbt(this.updatedQuestData);
    }
 }

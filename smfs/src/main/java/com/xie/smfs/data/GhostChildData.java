@@ -218,41 +218,41 @@ public class GhostChildData {
    }
 
    public void saveToNbt(NbtCompound nbt) {
-      nbt.method_10569("level", this.level);
-      nbt.method_10569("experience", this.experience);
-      nbt.method_10569("spiritPower", this.spiritPower);
-      nbt.method_10569("maxSpiritPower", this.maxSpiritPower);
-      nbt.method_10569("spiritResistance", this.spiritResistance);
-      nbt.method_10569("spiritDamage", this.spiritDamage);
-      nbt.method_10548("revivalFactor", this.revivalFactor);
-      nbt.method_10556("isSummoned", this.isSummoned);
+      nbt.putInt("level", this.level);
+      nbt.putInt("experience", this.experience);
+      nbt.putInt("spiritPower", this.spiritPower);
+      nbt.putInt("maxSpiritPower", this.maxSpiritPower);
+      nbt.putInt("spiritResistance", this.spiritResistance);
+      nbt.putInt("spiritDamage", this.spiritDamage);
+      nbt.putFloat("revivalFactor", this.revivalFactor);
+      nbt.putBoolean("isSummoned", this.isSummoned);
       int[] breakthroughsInt = new int[this.breakthroughs.length];
 
       for (int i = 0; i < this.breakthroughs.length; i++) {
          breakthroughsInt[i] = this.breakthroughs[i] ? 1 : 0;
       }
 
-      nbt.method_10539("breakthroughs", breakthroughsInt);
+      nbt.putIntArray("breakthroughs", breakthroughsInt);
       NbtList ghostTypesList = new NbtList();
 
       for (String ghostType : this.fedGhostTypes) {
-         ghostTypesList.add(NbtString.method_23256(ghostType));
+         ghostTypesList.add(NbtString.of(ghostType));
       }
 
-      nbt.method_10566("fedGhostTypes", ghostTypesList);
+      nbt.put("fedGhostTypes", ghostTypesList);
    }
 
    public void loadFromNbt(NbtCompound nbt) {
-      this.level = nbt.method_10550("level");
-      this.experience = nbt.method_10550("experience");
-      this.spiritPower = nbt.method_10550("spiritPower");
-      this.maxSpiritPower = nbt.method_10550("maxSpiritPower");
-      this.spiritResistance = nbt.method_10550("spiritResistance");
-      this.spiritDamage = nbt.method_10550("spiritDamage");
-      this.revivalFactor = nbt.method_10583("revivalFactor");
-      this.isSummoned = nbt.method_10577("isSummoned");
-      if (nbt.method_10545("breakthroughs")) {
-         int[] breakthroughsInt = nbt.method_10561("breakthroughs");
+      this.level = nbt.getInt("level");
+      this.experience = nbt.getInt("experience");
+      this.spiritPower = nbt.getInt("spiritPower");
+      this.maxSpiritPower = nbt.getInt("maxSpiritPower");
+      this.spiritResistance = nbt.getInt("spiritResistance");
+      this.spiritDamage = nbt.getInt("spiritDamage");
+      this.revivalFactor = nbt.getFloat("revivalFactor");
+      this.isSummoned = nbt.getBoolean("isSummoned");
+      if (nbt.contains("breakthroughs")) {
+         int[] breakthroughsInt = nbt.getIntArray("breakthroughs");
          this.breakthroughs = new boolean[Math.min(breakthroughsInt.length, BREAKTHROUGH_LEVELS.length)];
 
          for (int i = 0; i < this.breakthroughs.length; i++) {
@@ -260,12 +260,12 @@ public class GhostChildData {
          }
       }
 
-      if (nbt.method_10545("fedGhostTypes")) {
+      if (nbt.contains("fedGhostTypes")) {
          this.fedGhostTypes.clear();
-         NbtList ghostTypesList = nbt.method_10554("fedGhostTypes", 8);
+         NbtList ghostTypesList = nbt.getList("fedGhostTypes", 8);
 
          for (int i = 0; i < ghostTypesList.size(); i++) {
-            this.fedGhostTypes.add(ghostTypesList.method_10608(i));
+            this.fedGhostTypes.add(ghostTypesList.getString(i));
          }
       }
    }

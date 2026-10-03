@@ -14,11 +14,11 @@ public class EerieRagItem extends Item {
       super(settings);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.eerie_rag.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_rag.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_rag.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.brewable_material"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.eerie_rag.description.source"));
+      tooltip.add(Text.translatable("item.smfs.eerie_rag.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.eerie_rag.description.type"));
+      tooltip.add(Text.translatable("item.smfs.brewable_material"));
    }
 }

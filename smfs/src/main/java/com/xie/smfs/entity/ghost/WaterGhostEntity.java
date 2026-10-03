@@ -33,43 +33,43 @@ public class WaterGhostEntity extends GhostEntity {
    }
 
    private void initWaterGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.35);
+         speedAttribute.setBaseValue(0.35);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(12.0);
+         attackDamageAttribute.setBaseValue(12.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.3);
+         attackKnockbackAttribute.setBaseValue(0.3);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(30.0);
+         followRangeAttribute.setBaseValue(30.0);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          if (this.isSuppressed() || this.isDeadlocked() || this.isMovementDisabled()) {
-            this.method_18799(Vec3d.field_1353);
-            this.method_5942().method_6340();
+            this.setVelocity(Vec3d.ZERO);
+            this.getNavigation().stop();
             return;
          }
 
-         if (this.field_6012 % 50 == 0 && !this.isInWater()) {
+         if (this.age % 50 == 0 && !this.isInWater()) {
             this.findAndEnterWater();
          }
 
@@ -79,7 +79,7 @@ public class WaterGhostEntity extends GhostEntity {
             this.handleLandMovement();
          }
 
-         if (this.field_6012 % 20 == 0) {
+         if (this.age % 20 == 0) {
             this.pullPlayersToWater();
          }
       }
@@ -90,99 +90,96 @@ public class WaterGhostEntity extends GhostEntity {
    }
 
    private void handleWaterMovement() {
-      if (this.field_6012 % 40 == 0) {
-         PlayerEntity nearestPlayer = this.method_37908().method_18460(this, 30.0);
+      if (this.age % 40 == 0) {
+         PlayerEntity nearestPlayer = this.getWorld().getClosestPlayer(this, 30.0);
          if (nearestPlayer != null && !RedGhostCandleItem.isHoldingCandle(nearestPlayer) && this.isPlayerInWater(nearestPlayer)) {
-            this.method_5942().method_6335(nearestPlayer, this.getWaterAdjustedSpeed(1.2));
+            this.getNavigation().startMovingTo(nearestPlayer, this.getWaterAdjustedSpeed(1.2));
          } else {
             double radius = 20.0;
-            double x = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            double y = this.method_23318() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 0.5;
-            double z = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            BlockPos targetPos = BlockPos.method_49637(x, y, z);
-            if (this.method_37908().method_8316(targetPos).method_15767(FluidTags.field_15517)) {
-               this.method_5942().method_6337(x, y, z, this.getWaterAdjustedSpeed(1.0));
+            double x = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            double y = this.getY() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 0.5;
+            double z = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            BlockPos targetPos = BlockPos.ofFloored(x, y, z);
+            if (this.getWorld().getFluidState(targetPos).isIn(FluidTags.WATER)) {
+               this.getNavigation().startMovingTo(x, y, z, this.getWaterAdjustedSpeed(1.0));
             }
          }
       }
 
-      if (this.method_5799()) {
-         Vec3d velocity = this.method_18798();
-         if (this.method_6051().method_43057() < 0.05F) {
-            this.method_18800(velocity.field_1352, velocity.field_1351 + (this.method_6051().method_43058() - 0.5) * 0.2, velocity.field_1350);
+      if (this.isTouchingWater()) {
+         Vec3d velocity = this.getVelocity();
+         if (this.getRandom().nextFloat() < 0.05F) {
+            this.setVelocity(velocity.x, velocity.y + (this.getRandom().nextDouble() - 0.5) * 0.2, velocity.z);
          }
       }
    }
 
    private void handleLandMovement() {
-      if (this.field_6012 % 100 == 0 && this.getGhostRandom().nextBoolean()) {
+      if (this.age % 100 == 0 && this.getGhostRandom().nextBoolean()) {
          double radius = 15.0;
-         double x = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-         double z = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-         this.method_5942().method_6337(x, this.method_23318(), z, this.getWaterAdjustedSpeed(0.48));
+         double x = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+         double z = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+         this.getNavigation().startMovingTo(x, this.getY(), z, this.getWaterAdjustedSpeed(0.48));
       }
    }
 
    private void pullPlayersToWater() {
-      List<PlayerEntity> players = this.method_37908()
-         .method_8390(
+      List<PlayerEntity> players = this.getWorld()
+         .getEntitiesByClass(
             PlayerEntity.class,
-            this.method_5829().method_1014(30.0),
-            playerx -> !RedGhostCandleItem.isHoldingCandle(playerx) && playerx.method_5805() && !this.isPlayerInWater(playerx)
+            this.getBoundingBox().expand(30.0),
+            playerx -> !RedGhostCandleItem.isHoldingCandle(playerx) && playerx.isAlive() && !this.isPlayerInWater(playerx)
          );
       if (!this.isInWater()) {
          this.findAndEnterWater();
       } else {
          for (PlayerEntity player : players) {
-            Vec3d ghostPos = this.method_19538();
-            Vec3d playerPos = player.method_19538();
-            Vec3d direction = ghostPos.method_1020(playerPos).method_1029();
+            Vec3d ghostPos = this.getPos();
+            Vec3d playerPos = player.getPos();
+            Vec3d direction = ghostPos.subtract(playerPos).normalize();
             double pullStrength = 0.1;
-            Vec3d currentVelocity = player.method_18798();
-            Vec3d newVelocity = currentVelocity.method_1019(direction.method_1021(pullStrength));
-            player.method_18799(newVelocity);
-            player.field_6037 = true;
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 40, 1));
+            Vec3d currentVelocity = player.getVelocity();
+            Vec3d newVelocity = currentVelocity.add(direction.multiply(pullStrength));
+            player.setVelocity(newVelocity);
+            player.velocityModified = true;
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 1));
             this.spawnPullEffectParticles(player);
          }
       }
    }
 
    private void spawnPullEffectParticles(PlayerEntity player) {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          for (int i = 0; i < 3; i++) {
-            double offsetX = (this.method_6051().method_43058() - 0.5) * 1.0;
-            double offsetY = this.method_6051().method_43058() * 1.5;
-            double offsetZ = (this.method_6051().method_43058() - 0.5) * 1.0;
-            this.method_37908()
-               .method_8406(
-                  ParticleTypes.field_11202, player.method_23317() + offsetX, player.method_23318() + offsetY, player.method_23321() + offsetZ, 0.0, 0.1, 0.0
-               );
+            double offsetX = (this.getRandom().nextDouble() - 0.5) * 1.0;
+            double offsetY = this.getRandom().nextDouble() * 1.5;
+            double offsetZ = (this.getRandom().nextDouble() - 0.5) * 1.0;
+            this.getWorld().addParticle(ParticleTypes.SPLASH, player.getX() + offsetX, player.getY() + offsetY, player.getZ() + offsetZ, 0.0, 0.1, 0.0);
          }
       }
    }
 
    private boolean isInWater() {
-      return this.method_5799() || this.method_37908().method_8316(this.method_24515()).method_15767(FluidTags.field_15517);
+      return this.isTouchingWater() || this.getWorld().getFluidState(this.getBlockPos()).isIn(FluidTags.WATER);
    }
 
    private boolean isPlayerInWater(PlayerEntity player) {
-      return player.method_5799() || player.method_37908().method_8316(player.method_24515()).method_15767(FluidTags.field_15517);
+      return player.isTouchingWater() || player.getWorld().getFluidState(player.getBlockPos()).isIn(FluidTags.WATER);
    }
 
    private void findAndEnterWater() {
       double searchRadius = 32.0;
-      Vec3d currentPos = this.method_19538();
+      Vec3d currentPos = this.getPos();
       Vec3d bestWaterPos = null;
       double closestDistance = Double.MAX_VALUE;
 
       for (double x = -searchRadius; x <= searchRadius; x += 2.0) {
          for (double z = -searchRadius; z <= searchRadius; z += 2.0) {
             for (double y = -searchRadius; y <= searchRadius; y += 2.0) {
-               Vec3d checkPos = currentPos.method_1031(x, y, z);
-               BlockPos blockPos = BlockPos.method_49638(checkPos);
-               if (this.method_37908().method_8316(blockPos).method_15767(FluidTags.field_15517) && this.isWaterAccessible(blockPos)) {
-                  double distance = checkPos.method_1022(currentPos);
+               Vec3d checkPos = currentPos.add(x, y, z);
+               BlockPos blockPos = BlockPos.ofFloored(checkPos);
+               if (this.getWorld().getFluidState(blockPos).isIn(FluidTags.WATER) && this.isWaterAccessible(blockPos)) {
+                  double distance = checkPos.distanceTo(currentPos);
                   if (distance < closestDistance) {
                      closestDistance = distance;
                      bestWaterPos = this.findWaterEntryPoint(blockPos);
@@ -194,23 +191,24 @@ public class WaterGhostEntity extends GhostEntity {
 
       if (bestWaterPos != null) {
          double moveSpeed = this.isInWater() ? 2.0 : 1.5;
-         this.method_5942().method_6337(bestWaterPos.field_1352, bestWaterPos.field_1351, bestWaterPos.field_1350, moveSpeed);
+         this.getNavigation().startMovingTo(bestWaterPos.x, bestWaterPos.y, bestWaterPos.z, moveSpeed);
          this.spawnWaterEntryParticles();
       }
    }
 
    private boolean isWaterAccessible(BlockPos waterPos) {
-      World world = this.method_37908();
-      BlockPos abovePos = waterPos.method_10084();
-      if (world.method_8320(abovePos).method_26212(world, abovePos)) {
+      World world = this.getWorld();
+      BlockPos abovePos = waterPos.up();
+      if (world.getBlockState(abovePos).isSolidBlock(world, abovePos)) {
          return false;
       }
 
       for (Direction direction : Direction.values()) {
-         if (direction != Direction.field_11036 && direction != Direction.field_11033) {
-            BlockPos adjacentPos = waterPos.method_10093(direction);
-            BlockPos adjacentAbovePos = adjacentPos.method_10084();
-            if (!world.method_8320(adjacentPos).method_26212(world, adjacentPos) && !world.method_8320(adjacentAbovePos).method_26212(world, adjacentAbovePos)) {
+         if (direction != Direction.UP && direction != Direction.DOWN) {
+            BlockPos adjacentPos = waterPos.offset(direction);
+            BlockPos adjacentAbovePos = adjacentPos.up();
+            if (!world.getBlockState(adjacentPos).isSolidBlock(world, adjacentPos)
+               && !world.getBlockState(adjacentAbovePos).isSolidBlock(world, adjacentAbovePos)) {
                return true;
             }
          }
@@ -220,57 +218,51 @@ public class WaterGhostEntity extends GhostEntity {
    }
 
    private Vec3d findWaterEntryPoint(BlockPos waterPos) {
-      BlockPos abovePos = waterPos.method_10084();
-      if (!this.method_37908().method_8320(abovePos).method_26215() && this.method_37908().method_8320(abovePos).method_26212(this.method_37908(), abovePos)) {
+      BlockPos abovePos = waterPos.up();
+      if (!this.getWorld().getBlockState(abovePos).isAir() && this.getWorld().getBlockState(abovePos).isSolidBlock(this.getWorld(), abovePos)) {
          for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                if (dx != 0 || dz != 0) {
-                  BlockPos sidePos = waterPos.method_10069(dx, 0, dz);
-                  BlockPos sideAbovePos = sidePos.method_10084();
-                  if (this.method_37908().method_8316(sidePos).method_15767(FluidTags.field_15517)
+                  BlockPos sidePos = waterPos.add(dx, 0, dz);
+                  BlockPos sideAbovePos = sidePos.up();
+                  if (this.getWorld().getFluidState(sidePos).isIn(FluidTags.WATER)
                      && (
-                        this.method_37908().method_8320(sideAbovePos).method_26215()
-                           || !this.method_37908().method_8320(sideAbovePos).method_26212(this.method_37908(), sideAbovePos)
+                        this.getWorld().getBlockState(sideAbovePos).isAir()
+                           || !this.getWorld().getBlockState(sideAbovePos).isSolidBlock(this.getWorld(), sideAbovePos)
                      )) {
-                     return new Vec3d(sideAbovePos.method_10263() + 0.5, sideAbovePos.method_10264(), sideAbovePos.method_10260() + 0.5);
+                     return new Vec3d(sideAbovePos.getX() + 0.5, sideAbovePos.getY(), sideAbovePos.getZ() + 0.5);
                   }
                }
             }
          }
 
-         return new Vec3d(waterPos.method_10263() + 0.5, waterPos.method_10264() + 1, waterPos.method_10260() + 0.5);
+         return new Vec3d(waterPos.getX() + 0.5, waterPos.getY() + 1, waterPos.getZ() + 0.5);
       } else {
-         return new Vec3d(abovePos.method_10263() + 0.5, abovePos.method_10264(), abovePos.method_10260() + 0.5);
+         return new Vec3d(abovePos.getX() + 0.5, abovePos.getY(), abovePos.getZ() + 0.5);
       }
    }
 
    private void spawnWaterEntryParticles() {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          for (int i = 0; i < 8; i++) {
-            double offsetX = (this.method_6051().method_43058() - 0.5) * 1.5;
-            double offsetY = this.method_6051().method_43058() * 1.0;
-            double offsetZ = (this.method_6051().method_43058() - 0.5) * 1.5;
-            this.method_37908()
-               .method_8406(
-                  ParticleTypes.field_11202, this.method_23317() + offsetX, this.method_23318() + offsetY, this.method_23321() + offsetZ, 0.0, 0.2, 0.0
-               );
+            double offsetX = (this.getRandom().nextDouble() - 0.5) * 1.5;
+            double offsetY = this.getRandom().nextDouble() * 1.0;
+            double offsetZ = (this.getRandom().nextDouble() - 0.5) * 1.5;
+            this.getWorld().addParticle(ParticleTypes.SPLASH, this.getX() + offsetX, this.getY() + offsetY, this.getZ() + offsetZ, 0.0, 0.2, 0.0);
          }
 
          for (int i = 0; i < 5; i++) {
-            double offsetX = (this.method_6051().method_43058() - 0.5) * 1.0;
-            double offsetY = this.method_6051().method_43058() * 1.5;
-            double offsetZ = (this.method_6051().method_43058() - 0.5) * 1.0;
-            this.method_37908()
-               .method_8406(
-                  ParticleTypes.field_11247, this.method_23317() + offsetX, this.method_23318() + offsetY, this.method_23321() + offsetZ, 0.0, 0.1, 0.0
-               );
+            double offsetX = (this.getRandom().nextDouble() - 0.5) * 1.0;
+            double offsetY = this.getRandom().nextDouble() * 1.5;
+            double offsetZ = (this.getRandom().nextDouble() - 0.5) * 1.0;
+            this.getWorld().addParticle(ParticleTypes.BUBBLE, this.getX() + offsetX, this.getY() + offsetY, this.getZ() + offsetZ, 0.0, 0.1, 0.0);
          }
       }
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      return !RedGhostCandleItem.isHoldingCandle(player) && this.isPlayerInWater(player) && this.method_5858(player) <= 900.0 && this.attackCooldown <= 0;
+      return !RedGhostCandleItem.isHoldingCandle(player) && this.isPlayerInWater(player) && this.squaredDistanceTo(player) <= 900.0 && this.attackCooldown <= 0;
    }
 
    @Override
@@ -278,10 +270,10 @@ public class WaterGhostEntity extends GhostEntity {
       if (!this.isDeadlocked()) {
          if (this.attackCooldown <= 0) {
             this.attackCooldown = 30;
-            this.method_20620(player.method_23317(), player.method_23318(), player.method_23321());
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5923, 80, 0));
-            player.method_5855(-20);
-            DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+            this.teleport(player.getX(), player.getY(), player.getZ());
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.WATER_BREATHING, 80, 0));
+            player.setAir(-20);
+            DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
             PlayerEvents.handleSpiritDamage(player, this.getSpiritualDamage(), this.getSpiritualDamage(), damageSource);
          }
       }

@@ -15,18 +15,18 @@ public class QuestAcceptResultPacketClientHandler {
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/QuestAcceptResultPacketClientHandler");
 
    public static void handle(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-      String questId = buf.method_19772();
+      String questId = buf.readString();
       boolean success = buf.readBoolean();
-      NbtCompound updatedQuestData = buf.method_10798();
+      NbtCompound updatedQuestData = buf.readNbt();
       client.execute(() -> {
          try {
             LOGGER.debug("客户端接收到任务接受结果: questId={}, success={}", questId, success);
-            if (updatedQuestData != null && client.field_1724 != null) {
-               QuestManager.updateClientQuestData(client.field_1724, updatedQuestData);
+            if (updatedQuestData != null && client.player != null) {
+               QuestManager.updateClientQuestData(client.player, updatedQuestData);
                LOGGER.debug("已更新客户端任务数据");
             }
 
-            if (client.field_1755 instanceof QuestHandledScreen questScreen) {
+            if (client.currentScreen instanceof QuestHandledScreen questScreen) {
                questScreen.refreshQuestData();
                LOGGER.debug("已刷新任务界面");
             } else {

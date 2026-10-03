@@ -35,7 +35,7 @@ public class ClientGhostOfficerSkillC2SPacket {
             try {
                GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "ghost_officer", ModItems.GHOST_OFFICER, -1);
                if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-                  player.method_7353(Text.method_43470("§c您没有驾驭鬼差，无法使用此技能"), true);
+                  player.sendMessage(Text.literal("§c您没有驾驭鬼差，无法使用此技能"), true);
                   return;
                }
 
@@ -53,27 +53,27 @@ public class ClientGhostOfficerSkillC2SPacket {
       if (targetEntity != null) {
          boolean success = GhostSkillManager.setPrioritySuppressionTarget(player, targetEntity);
          if (success) {
-            player.method_7353(Text.method_43470("§a鬼差J键：已设置" + targetEntity.method_5477().getString() + "为优先压制目标"), true);
-            LOGGER.info("玩家 {} 使用鬼差J键技能设置优先压制目标：{}", player.method_5477().getString(), targetEntity.method_5477().getString());
+            player.sendMessage(Text.literal("§a鬼差J键：已设置" + targetEntity.getName().getString() + "为优先压制目标"), true);
+            LOGGER.info("玩家 {} 使用鬼差J键技能设置优先压制目标：{}", player.getName().getString(), targetEntity.getName().getString());
          } else {
-            player.method_7353(Text.method_43470("§c鬼差J键：无法设置该实体为优先压制目标"), true);
+            player.sendMessage(Text.literal("§c鬼差J键：无法设置该实体为优先压制目标"), true);
          }
 
          spawnSkillParticles(player);
       } else {
-         player.method_7353(Text.method_43470("§c鬼差J键：准星位置没有可压制的目标"), true);
+         player.sendMessage(Text.literal("§c鬼差J键：准星位置没有可压制的目标"), true);
       }
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 15; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            player.method_23318() + world.field_9229.method_43058() * 3.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 3.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            player.getX() + (world.random.nextDouble() - 0.5) * 3.0,
+            player.getY() + world.random.nextDouble() * 3.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 3.0,
             0.0,
             0.1,
             0.0

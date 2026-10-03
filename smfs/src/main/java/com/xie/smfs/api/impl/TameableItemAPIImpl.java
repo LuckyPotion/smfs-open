@@ -37,7 +37,7 @@ public class TameableItemAPIImpl implements TameableItemAPI {
 
       try {
          BaseGhostEyeItem item = itemClass.getConstructor(Settings.class, int.class, int.class, int.class, int.class, double.class)
-            .newInstance(new Settings().method_7889(1), maxSpiritBonus, spiritResistanceBonus, spiritDamageBonus, sanityBonus, revivalFactor);
+            .newInstance(new Settings().maxCount(1), maxSpiritBonus, spiritResistanceBonus, spiritDamageBonus, sanityBonus, revivalFactor);
          String ghostType = item.getGhostType();
          this.registeredGhostTypes.add(ghostType);
          Smfs.LOGGER.debug("成功注册自定义可驾驭物品: {} (鬼类型: {})", id, ghostType);
@@ -101,7 +101,7 @@ public class TameableItemAPIImpl implements TameableItemAPI {
 
    @Override
    public String getGhostType(ItemStack itemStack) {
-      return itemStack.method_7909() instanceof BaseGhostEyeItem ? ((BaseGhostEyeItem)itemStack.method_7909()).getGhostType() : null;
+      return itemStack.getItem() instanceof BaseGhostEyeItem ? ((BaseGhostEyeItem)itemStack.getItem()).getGhostType() : null;
    }
 
    @Override
@@ -131,10 +131,10 @@ public class TameableItemAPIImpl implements TameableItemAPI {
 
    @Override
    public int getItemLevel(ItemStack itemStack) {
-      if (itemStack == null || itemStack.method_7960()) {
+      if (itemStack == null || itemStack.isEmpty()) {
          return 0;
-      } else if (itemStack.method_7909() instanceof BaseGhostEyeItem) {
-         return itemStack.method_7985() && itemStack.method_7969().method_10545("level") ? itemStack.method_7969().method_10550("level") : 1;
+      } else if (itemStack.getItem() instanceof BaseGhostEyeItem) {
+         return itemStack.hasNbt() && itemStack.getNbt().contains("level") ? itemStack.getNbt().getInt("level") : 1;
       } else {
          return 0;
       }

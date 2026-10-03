@@ -19,17 +19,17 @@ public class ClothesGhostEntity extends GhostEntity {
    private static final char TERROR_LEVEL = 'C';
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 75000.0)
-         .method_26868(EntityAttributes.field_23719, 0.25)
-         .method_26868(EntityAttributes.field_23721, 5.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 75000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5.0);
    }
 
    public ClothesGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 1750, 165, 38, 0.13F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(75000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.25);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(5.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(75000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.25);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(5.0);
    }
 
    @Override
@@ -38,7 +38,7 @@ public class ClothesGhostEntity extends GhostEntity {
          return false;
       } else if (CoffinEffectManager.isPlayerInGoldCoffin(player)) {
          return false;
-      } else if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      } else if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       } else {
          return !this.isPlayerInRange(player) ? false : !this.hasAnyArmor(player);
@@ -46,13 +46,13 @@ public class ClothesGhostEntity extends GhostEntity {
    }
 
    private boolean hasAnyArmor(PlayerEntity player) {
-      return !player.method_31548().method_7372(0).method_7960()
-         || !player.method_31548().method_7372(1).method_7960()
-         || !player.method_31548().method_7372(2).method_7960()
-         || !player.method_31548().method_7372(3).method_7960();
+      return !player.getInventory().getArmorStack(0).isEmpty()
+         || !player.getInventory().getArmorStack(1).isEmpty()
+         || !player.getInventory().getArmorStack(2).isEmpty()
+         || !player.getInventory().getArmorStack(3).isEmpty();
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 }

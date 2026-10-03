@@ -11,8 +11,8 @@ public class PotionColorProvider {
       ColorProviderRegistry.ITEM
          .register(
             (ItemColorProvider)(stack, tintIndex) -> {
-               if (tintIndex == 1 && stack.method_7909() instanceof SpiritPotionItem) {
-                  SpiritPotionItem potionItem = (SpiritPotionItem)stack.method_7909();
+               if (tintIndex == 1 && stack.getItem() instanceof SpiritPotionItem) {
+                  SpiritPotionItem potionItem = (SpiritPotionItem)stack.getItem();
                   return potionItem.getPotionColor();
                } else {
                   return -1;

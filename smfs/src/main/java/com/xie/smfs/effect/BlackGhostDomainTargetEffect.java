@@ -11,17 +11,17 @@ public class BlackGhostDomainTargetEffect extends StatusEffect implements ICurse
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/BlackGhostDomainTargetEffect");
 
    public BlackGhostDomainTargetEffect() {
-      super(StatusEffectCategory.field_18272, 0);
+      super(StatusEffectCategory.HARMFUL, 0);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      super.method_5562(entity, attributes, amplifier);
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      super.onRemoved(entity, attributes, amplifier);
    }
 }

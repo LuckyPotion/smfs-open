@@ -35,7 +35,7 @@ public class ModLootTableEvents {
             }
 
             for (int i = 1; i <= 12; i++) {
-               if (Identifier.method_43902("smfs", "chests/home_" + i).equals(id)) {
+               if (Identifier.of("smfs", "chests/home_" + i).equals(id)) {
                   addItemToLootTable(tableBuilder, ModItems.GHOST_MONEY_3, 0.12F);
                   addItemToLootTable(tableBuilder, ModItems.GHOST_MONEY_7, 0.06F);
                   addItemToLootTable(tableBuilder, ModItems.PHOTO, 0.4F);
@@ -60,7 +60,7 @@ public class ModLootTableEvents {
                }
             }
 
-            if (Identifier.method_43902("smfs", "chests/chinese_medicine_shop").equals(id)) {
+            if (Identifier.of("smfs", "chests/chinese_medicine_shop").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.02F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.03F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.03F);
@@ -84,7 +84,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/furen_mall").equals(id)) {
+            if (Identifier.of("smfs", "chests/furen_mall").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.05F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.05F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.05F);
@@ -108,7 +108,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/caesar_hotel").equals(id)) {
+            if (Identifier.of("smfs", "chests/caesar_hotel").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.07F);
@@ -132,7 +132,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/graveyard").equals(id)) {
+            if (Identifier.of("smfs", "chests/graveyard").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.07F);
@@ -157,7 +157,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/ancient_house").equals(id)) {
+            if (Identifier.of("smfs", "chests/ancient_house").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.1F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.1F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.1F);
@@ -188,7 +188,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.01F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/ghost_post_office").equals(id)) {
+            if (Identifier.of("smfs", "chests/ghost_post_office").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.07F);
@@ -221,7 +221,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/baishui_town").equals(id)) {
+            if (Identifier.of("smfs", "chests/baishui_town").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.02F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.03F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.03F);
@@ -245,7 +245,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/school").equals(id)) {
+            if (Identifier.of("smfs", "chests/school").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.07F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.07F);
@@ -269,7 +269,7 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/manor").equals(id)) {
+            if (Identifier.of("smfs", "chests/manor").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_SCISSORS, 0.1F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_AXE, 0.1F);
                addItemToLootTable(tableBuilder, ModItems.GHOST_BOW, 0.1F);
@@ -292,11 +292,11 @@ public class ModLootTableEvents {
                addRandomGhostControlItemToLootTable(tableBuilder, 0.005F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/bone_tree").equals(id)) {
+            if (Identifier.of("smfs", "chests/bone_tree").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.SILENT_GHOST_EYE, 1.0F);
             }
 
-            if (Identifier.method_43902("smfs", "chests/ghost_lake").equals(id)) {
+            if (Identifier.of("smfs", "chests/ghost_lake").equals(id)) {
                addItemToLootTable(tableBuilder, ModItems.GHOST_LAKE, 1.0F);
             }
 
@@ -308,28 +308,28 @@ public class ModLootTableEvents {
    }
 
    private static void addItemToLootTable(Builder tableBuilder, Item item, float chance) {
-      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.method_347()
-         .method_352(ConstantLootNumberProvider.method_32448(1.0F))
-         .conditionally(RandomChanceLootCondition.method_932(chance).build())
-         .method_351(ItemEntry.method_411(item));
-      tableBuilder.method_336(poolBuilder);
+      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.builder()
+         .rolls(ConstantLootNumberProvider.create(1.0F))
+         .conditionally(RandomChanceLootCondition.builder(chance).build())
+         .with(ItemEntry.builder(item));
+      tableBuilder.pool(poolBuilder);
    }
 
    private static void addItemToLootTable(Builder tableBuilder, Item item, float chance, int minCount, int maxCount) {
-      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.method_347()
-         .method_352(ConstantLootNumberProvider.method_32448(1.0F))
-         .conditionally(RandomChanceLootCondition.method_932(chance).build())
-         .method_351(ItemEntry.method_411(item).method_438(SetCountLootFunction.method_621(UniformLootNumberProvider.method_32462(minCount, maxCount))));
-      tableBuilder.method_336(poolBuilder);
+      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.builder()
+         .rolls(ConstantLootNumberProvider.create(1.0F))
+         .conditionally(RandomChanceLootCondition.builder(chance).build())
+         .with(ItemEntry.builder(item).apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(minCount, maxCount))));
+      tableBuilder.pool(poolBuilder);
    }
 
    private static void addMutuallyExclusiveItemsToLootTable(Builder tableBuilder, Item item1, Item item2, float chance) {
-      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.method_347()
-         .method_352(ConstantLootNumberProvider.method_32448(1.0F))
-         .conditionally(RandomChanceLootCondition.method_932(chance).build())
-         .method_351(ItemEntry.method_411(item1))
-         .method_351(ItemEntry.method_411(item2));
-      tableBuilder.method_336(poolBuilder);
+      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.builder()
+         .rolls(ConstantLootNumberProvider.create(1.0F))
+         .conditionally(RandomChanceLootCondition.builder(chance).build())
+         .with(ItemEntry.builder(item1))
+         .with(ItemEntry.builder(item2));
+      tableBuilder.pool(poolBuilder);
    }
 
    private static void addRandomGhostControlItemToLootTable(Builder tableBuilder, float chance) {
@@ -341,28 +341,28 @@ public class ModLootTableEvents {
       String[] parts = itemId.split(":");
       String namespace = parts[0];
       String path = parts[1];
-      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.method_347()
-         .method_352(ConstantLootNumberProvider.method_32448(1.0F))
-         .method_351(
-            ItemEntry.method_411((ItemConvertible)Identifier.method_43902(namespace, path))
-               .method_437(weight)
-               .method_438(SetCountLootFunction.method_621(UniformLootNumberProvider.method_32462(minCount, maxCount)))
+      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.builder()
+         .rolls(ConstantLootNumberProvider.create(1.0F))
+         .with(
+            ItemEntry.builder((ItemConvertible)Identifier.of(namespace, path))
+               .weight(weight)
+               .apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(minCount, maxCount)))
          );
-      tableBuilder.method_336(poolBuilder);
+      tableBuilder.pool(poolBuilder);
    }
 
    private static void addGhostInfoBooksToVanillaChests(Identifier id, Builder tableBuilder) {
-      if (id.method_12836().equals("minecraft") && id.method_12832().startsWith("chests/")) {
+      if (id.getNamespace().equals("minecraft") && id.getPath().startsWith("chests/")) {
          addGhostInfoBookToLootTable(tableBuilder, 0.05F);
       }
    }
 
    private static void addGhostInfoBookToLootTable(Builder tableBuilder, float chance) {
-      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.method_347()
-         .method_352(ConstantLootNumberProvider.method_32448(1.0F))
-         .conditionally(RandomChanceLootCondition.method_932(chance).build())
-         .method_351(ItemEntry.method_411(Items.field_8360).method_438(createRandomGhostBookNbtFunction()));
-      tableBuilder.method_336(poolBuilder);
+      net.minecraft.loot.LootPool.Builder poolBuilder = LootPool.builder()
+         .rolls(ConstantLootNumberProvider.create(1.0F))
+         .conditionally(RandomChanceLootCondition.builder(chance).build())
+         .with(ItemEntry.builder(Items.WRITTEN_BOOK).apply(createRandomGhostBookNbtFunction()));
+      tableBuilder.pool(poolBuilder);
    }
 
    private static net.minecraft.loot.function.ConditionalLootFunction.Builder createRandomGhostBookNbtFunction() {
@@ -426,30 +426,30 @@ public class ModLootTableEvents {
       int bookIndex = (int)(System.currentTimeMillis() % ghostBooks.length);
       ModLootTableEvents.GhostBookInfo selectedBook = ghostBooks[bookIndex];
       NbtCompound bookNbt = new NbtCompound();
-      bookNbt.method_10582("title", selectedBook.title);
-      bookNbt.method_10582("author", selectedBook.author);
-      bookNbt.method_10556("resolved", true);
+      bookNbt.putString("title", selectedBook.title);
+      bookNbt.putString("author", selectedBook.author);
+      bookNbt.putBoolean("resolved", true);
       NbtList pages = new NbtList();
 
       for (String pageContent : selectedBook.pages) {
-         String jsonText = Serializer.method_10867(Text.method_43470(pageContent));
-         pages.add(NbtString.method_23256(jsonText));
+         String jsonText = Serializer.toJson(Text.literal(pageContent));
+         pages.add(NbtString.of(jsonText));
       }
 
-      bookNbt.method_10566("pages", pages);
-      return SetNbtLootFunction.method_677(bookNbt);
+      bookNbt.put("pages", pages);
+      return SetNbtLootFunction.builder(bookNbt);
    }
 
    private static void addFishingLoot(Identifier id, Builder tableBuilder) {
-      if (id.method_12836().equals("minecraft") && id.method_12832().equals("gameplay/fishing")) {
+      if (id.getNamespace().equals("minecraft") && id.getPath().equals("gameplay/fishing")) {
          addItemToLootTable(tableBuilder, ModItems.GHOST_BUDDHA_BEADS, 0.05F);
       }
 
-      if (id.method_12836().equals("minecraft") && id.method_12832().equals("gameplay/fishing/junk")) {
+      if (id.getNamespace().equals("minecraft") && id.getPath().equals("gameplay/fishing/junk")) {
          addItemToLootTable(tableBuilder, ModItems.GHOST_BUDDHA_BEADS, 0.02F);
       }
 
-      if (id.method_12836().equals("minecraft") && id.method_12832().equals("gameplay/fishing/treasure")) {
+      if (id.getNamespace().equals("minecraft") && id.getPath().equals("gameplay/fishing/treasure")) {
          addItemToLootTable(tableBuilder, ModItems.GHOST_BUDDHA_BEADS, 0.1F);
       }
    }

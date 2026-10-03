@@ -26,23 +26,23 @@ public class SyncGhostMerchantOffersS2CPacket {
    }
 
    public static void receive(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-      NbtCompound data = buf.method_10798();
+      NbtCompound data = buf.readNbt();
       client.execute(() -> {
-         if (client.field_1724 != null && data != null) {
+         if (client.player != null && data != null) {
             LOGGER.info("收到鬼商人交易列表同步数据包，数据: {}", data);
-            if (data.method_10545("Offers")) {
-               NbtList offersNbt = data.method_10554("Offers", 10);
+            if (data.contains("Offers")) {
+               NbtList offersNbt = data.getList("Offers", 10);
                TradeOfferList offers = new TradeOfferList();
                LOGGER.info("解析到 {} 个交易项目", offersNbt.size());
 
                for (int i = 0; i < offersNbt.size(); i++) {
-                  NbtCompound offerNbt = offersNbt.method_10602(i);
+                  NbtCompound offerNbt = offersNbt.getCompound(i);
                   TradeOffer offer = new TradeOffer(offerNbt);
                   offers.add(offer);
                   LOGGER.info("解析交易项目 {}: {}", i, offer);
                }
 
-               updateClientMerchantOffers(data.method_25926("MerchantId"), offers);
+               updateClientMerchantOffers(data.getUuid("MerchantId"), offers);
                LOGGER.info("已同步鬼商人交易列表到客户端，共 {} 个交易", offers.size());
             } else {
                LOGGER.warn("数据包中未找到Offers字段");
@@ -54,7 +54,7 @@ public class SyncGhostMerchantOffersS2CPacket {
    }
 
    private static void updateClientMerchantOffers(UUID merchantId, TradeOfferList offers) {
-      ClientWorld world = MinecraftClient.method_1551().field_1687;
+      ClientWorld world = MinecraftClient.getInstance().world;
       LOGGER.info("开始更新客户端商人交易列表，商人ID: {}, 交易数量: {}", merchantId, offers.size());
       if (world != null && merchantId != null) {
          LOGGER.info("客户端世界存在，开始查找实体");
@@ -62,11 +62,11 @@ public class SyncGhostMerchantOffersS2CPacket {
          int entityCount = 0;
 
          try {
-            for (Entity e : world.method_18112()) {
+            for (Entity e : world.getEntities()) {
                entityCount++;
-               if (merchantId.equals(e.method_5667())) {
+               if (merchantId.equals(e.getUuid())) {
                   entity = e;
-                  LOGGER.info("找到匹配的实体: {} (类型: {})", e.method_5667(), e.getClass().getSimpleName());
+                  LOGGER.info("找到匹配的实体: {} (类型: {})", e.getUuid(), e.getClass().getSimpleName());
                   break;
                }
             }
@@ -78,7 +78,7 @@ public class SyncGhostMerchantOffersS2CPacket {
 
          if (entity instanceof GhostMerchantEntity ghostMerchant) {
             LOGGER.info("实体是GhostMerchantEntity类型，开始更新交易列表");
-            ghostMerchant.method_8261(offers);
+            ghostMerchant.setOffersFromServer(offers);
             LOGGER.info("已更新鬼商人 {} 的交易列表，共 {} 个交易", merchantId, offers.size());
             refreshMerchantScreenIfOpen(ghostMerchant);
          } else {

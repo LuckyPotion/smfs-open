@@ -19,8 +19,8 @@ public class OpenHumanSkinPaperScreenS2CPacket {
       client.execute(() -> {
          try {
             LOGGER.info("接收到打开人皮纸界面请求");
-            if (client.field_1755 == null) {
-               client.method_1507(new TutorialScreen());
+            if (client.currentScreen == null) {
+               client.setScreen(new TutorialScreen());
                LOGGER.info("成功打开人皮纸界面");
             } else {
                LOGGER.warn("当前已有打开的界面，无法打开人皮纸界面");

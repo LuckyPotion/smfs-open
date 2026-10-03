@@ -22,65 +22,55 @@ public class EerieFamilyPortraitItem extends Item {
    private static final Logger LOGGER = LoggerFactory.getLogger(EerieFamilyPortraitItem.class);
 
    public EerieFamilyPortraitItem(Settings settings) {
-      super(settings.method_7889(1));
+      super(settings.maxCount(1));
    }
 
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43471("item.smfs.eerie_family_portrait");
+   public Text getName(ItemStack stack) {
+      return Text.translatable("item.smfs.eerie_family_portrait");
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity player, Hand hand) {
-      if (world.field_9236) {
-         return TypedActionResult.method_22430(player.method_5998(hand));
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      if (world.isClient) {
+         return TypedActionResult.pass(user.getStackInHand(hand));
       }
 
-      ItemStack stack = player.method_5998(hand);
-      if (player instanceof ServerPlayerEntity serverPlayer) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (user instanceof ServerPlayerEntity serverPlayer) {
          if (PlayerRoyalCurseManager.hasRoyalCurseUnlocked(serverPlayer)) {
-            player.method_7353(Text.method_43471("item.smfs.eerie_family_portrait.already_unlocked"), true);
-            return TypedActionResult.method_22431(stack);
+            user.sendMessage(Text.translatable("item.smfs.eerie_family_portrait.already_unlocked"), true);
+            return TypedActionResult.fail(stack);
          } else if (PlayerRoyalCurseManager.unlockRoyalCurse(serverPlayer)) {
             this.playUnlockEffects(serverPlayer);
-            player.method_7353(Text.method_43471("item.smfs.eerie_family_portrait.unlock_success"), true);
-            stack.method_7934(1);
-            return TypedActionResult.method_22427(stack);
+            user.sendMessage(Text.translatable("item.smfs.eerie_family_portrait.unlock_success"), true);
+            stack.decrement(1);
+            return TypedActionResult.success(stack);
          } else {
-            LOGGER.error("玩家 {} 解锁王家诅咒失败", serverPlayer.method_7334().getName());
-            player.method_7353(Text.method_43471("item.smfs.eerie_family_portrait.unlock_failed"), true);
-            return TypedActionResult.method_22431(stack);
+            LOGGER.error("玩家 {} 解锁王家诅咒失败", serverPlayer.getGameProfile().getName());
+            user.sendMessage(Text.translatable("item.smfs.eerie_family_portrait.unlock_failed"), true);
+            return TypedActionResult.fail(stack);
          }
       } else {
-         return TypedActionResult.method_22430(stack);
+         return TypedActionResult.pass(stack);
       }
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.eerie_family_portrait.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_family_portrait.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_family_portrait.description.type"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.eerie_family_portrait.description.source"));
+      tooltip.add(Text.translatable("item.smfs.eerie_family_portrait.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.eerie_family_portrait.description.type"));
    }
 
    private void playUnlockEffects(ServerPlayerEntity player) {
-      player.method_5783(SoundEvents.field_14967, 1.0F, 0.5F);
-      if (player.method_37908() instanceof ServerWorld serverWorld) {
+      player.playSound(SoundEvents.ENTITY_ENDERMAN_STARE, 1.0F, 0.5F);
+      if (player.getWorld() instanceof ServerWorld serverWorld) {
          ServerWorld world = serverWorld;
 
          for (int i = 0; i < 20; i++) {
-            double offsetX = (world.field_9229.method_43058() - 0.5) * 4.0;
-            double offsetY = world.field_9229.method_43058() * 2.0;
-            double offsetZ = (world.field_9229.method_43058() - 0.5) * 4.0;
-            world.method_14199(
-               ParticleTypes.field_11251,
-               player.method_23317() + offsetX,
-               player.method_23318() + offsetY,
-               player.method_23321() + offsetZ,
-               3,
-               0.1,
-               0.1,
-               0.1,
-               0.02
-            );
+            double offsetX = (world.random.nextDouble() - 0.5) * 4.0;
+            double offsetY = world.random.nextDouble() * 2.0;
+            double offsetZ = (world.random.nextDouble() - 0.5) * 4.0;
+            world.spawnParticles(ParticleTypes.SMOKE, player.getX() + offsetX, player.getY() + offsetY, player.getZ() + offsetZ, 3, 0.1, 0.1, 0.1, 0.02);
          }
       }
    }

@@ -23,25 +23,25 @@ public class LostStatusEffect extends StatusEffect {
    private static final Logger LOGGER = LoggerFactory.getLogger(LostStatusEffect.class);
 
    public LostStatusEffect() {
-      super(StatusEffectCategory.field_18272, 0);
+      super(StatusEffectCategory.HARMFUL, 0);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      StatusEffectInstance effectInstance = entity.method_6112(this);
-      if (effectInstance != null && effectInstance.method_5579() == ModEffects.LOST) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      StatusEffectInstance effectInstance = entity.getStatusEffect(this);
+      if (effectInstance != null && effectInstance.getEffectType() == ModEffects.LOST) {
          if (!(effectInstance instanceof LostStatusEffectInstance lostInstance)) {
             return;
          }
 
          UUID sourceUuid = lostInstance.getSourceUuid();
-         if (sourceUuid != null && entity.method_37908() instanceof ServerWorld serverWorld) {
-            Entity source = serverWorld.method_14190(sourceUuid);
+         if (sourceUuid != null && entity.getWorld() instanceof ServerWorld serverWorld) {
+            Entity source = serverWorld.getEntity(sourceUuid);
             if (source == null) {
-               entity.method_6016(ModEffects.LOST);
+               entity.removeStatusEffect(ModEffects.LOST);
                return;
             }
 
@@ -49,62 +49,62 @@ public class LostStatusEffect extends StatusEffect {
             Vec3d center;
             if (source instanceof GhostEntity ghost) {
                if (ghost.isSuppressed()) {
-                  entity.method_6016(ModEffects.LOST);
+                  entity.removeStatusEffect(ModEffects.LOST);
                   return;
                }
 
                ghostDomainRadius = ghost.getGhostDomainRadius();
-               center = ghost.method_19538();
+               center = ghost.getPos();
             } else if (source instanceof GhostMasterEntity ghostMaster) {
                ghostDomainRadius = 64.0;
-               center = ghostMaster.method_19538();
+               center = ghostMaster.getPos();
             } else {
                if (!(source instanceof PlayerEntity player)) {
                   return;
                }
 
                int domainLevel = 1;
-               if (player.method_6059(ModEffects.RED_GHOST_DOMAIN)) {
-                  domainLevel = player.method_6112(ModEffects.RED_GHOST_DOMAIN).method_5578() + 1;
-               } else if (player.method_6059(ModEffects.GREEN_GHOST_DOMAIN)) {
-                  domainLevel = player.method_6112(ModEffects.GREEN_GHOST_DOMAIN).method_5578() + 1;
-               } else if (player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN)) {
-                  domainLevel = player.method_6112(ModEffects.GOLDEN_GHOST_DOMAIN).method_5578() + 1;
-               } else if (player.method_6059(ModEffects.THICK_FOG)) {
-                  domainLevel = player.method_6112(ModEffects.THICK_FOG).method_5578() + 1;
-               } else if (player.method_6059(ModEffects.BLACK_GHOST_DOMAIN)) {
-                  domainLevel = player.method_6112(ModEffects.BLACK_GHOST_DOMAIN).method_5578() + 1;
-               } else if (player.method_6059(ModEffects.CYAN_GHOST_DOMAIN)) {
-                  domainLevel = player.method_6112(ModEffects.CYAN_GHOST_DOMAIN).method_5578() + 1;
-               } else if (player.method_6059(ModEffects.GRAY_GHOST_DOMAIN)) {
-                  domainLevel = player.method_6112(ModEffects.GRAY_GHOST_DOMAIN).method_5578() + 1;
+               if (player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN)) {
+                  domainLevel = player.getStatusEffect(ModEffects.RED_GHOST_DOMAIN).getAmplifier() + 1;
+               } else if (player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN)) {
+                  domainLevel = player.getStatusEffect(ModEffects.GREEN_GHOST_DOMAIN).getAmplifier() + 1;
+               } else if (player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN)) {
+                  domainLevel = player.getStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN).getAmplifier() + 1;
+               } else if (player.hasStatusEffect(ModEffects.THICK_FOG)) {
+                  domainLevel = player.getStatusEffect(ModEffects.THICK_FOG).getAmplifier() + 1;
+               } else if (player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN)) {
+                  domainLevel = player.getStatusEffect(ModEffects.BLACK_GHOST_DOMAIN).getAmplifier() + 1;
+               } else if (player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN)) {
+                  domainLevel = player.getStatusEffect(ModEffects.CYAN_GHOST_DOMAIN).getAmplifier() + 1;
+               } else if (player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN)) {
+                  domainLevel = player.getStatusEffect(ModEffects.GRAY_GHOST_DOMAIN).getAmplifier() + 1;
                }
 
                ghostDomainRadius = GhostDomainManager.getDomainRadius(player, domainLevel) - 2.0;
-               center = player.method_19538();
+               center = player.getPos();
             }
 
             if (ghostDomainRadius <= 0.0) {
                ghostDomainRadius = 64.0;
             }
 
-            double distance = entity.method_5707(center);
+            double distance = entity.squaredDistanceTo(center);
             if (distance > ghostDomainRadius * ghostDomainRadius) {
-               Vec3d direction = entity.method_19538().method_1020(center).method_1029();
-               Vec3d newPos = center.method_1019(direction.method_1021(ghostDomainRadius - 0.5));
-               entity.method_20620(newPos.field_1352, newPos.field_1351, newPos.field_1350);
+               Vec3d direction = entity.getPos().subtract(center).normalize();
+               Vec3d newPos = center.add(direction.multiply(ghostDomainRadius - 0.5));
+               entity.teleport(newPos.x, newPos.y, newPos.z);
                if (entity instanceof PlayerEntity player) {
-                  Vec3d directionToCenter = center.method_1020(entity.method_19538()).method_1029();
-                  float newYaw = (float)(Math.atan2(directionToCenter.field_1350, directionToCenter.field_1352) * (180.0 / Math.PI) - 90.0);
-                  player.method_36456(newYaw);
-                  player.method_5847(newYaw);
+                  Vec3d directionToCenter = center.subtract(entity.getPos()).normalize();
+                  float newYaw = (float)(Math.atan2(directionToCenter.z, directionToCenter.x) * (180.0 / Math.PI) - 90.0);
+                  player.setYaw(newYaw);
+                  player.setHeadYaw(newYaw);
                   if (player instanceof ServerPlayerEntity serverPlayer) {
-                     double x = player.method_23317();
-                     double y = player.method_23318();
-                     double z = player.method_23321();
-                     float yaw = player.method_36454();
-                     float pitch = player.method_36455();
-                     serverPlayer.field_13987.method_14364(new PlayerPositionLookS2CPacket(x, y, z, newYaw, player.method_36455(), Collections.emptySet(), 0));
+                     double x = player.getX();
+                     double y = player.getY();
+                     double z = player.getZ();
+                     float yaw = player.getYaw();
+                     float pitch = player.getPitch();
+                     serverPlayer.networkHandler.sendPacket(new PlayerPositionLookS2CPacket(x, y, z, newYaw, player.getPitch(), Collections.emptySet(), 0));
                   }
                }
             }

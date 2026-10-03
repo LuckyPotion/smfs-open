@@ -167,11 +167,11 @@ public class QuestAPI {
             return false;
          }
 
-         NbtList completedQuests = questData.method_10554("completedQuests", 10);
+         NbtList completedQuests = questData.getList("completedQuests", 10);
 
          for (int i = 0; i < completedQuests.size(); i++) {
-            NbtCompound quest = completedQuests.method_10602(i);
-            if (questId.equals(quest.method_10558("id"))) {
+            NbtCompound quest = completedQuests.getCompound(i);
+            if (questId.equals(quest.getString("id"))) {
                return true;
             }
          }
@@ -193,11 +193,11 @@ public class QuestAPI {
          return activeQuestIds;
       }
 
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         activeQuestIds.add(quest.method_10558("id"));
+         NbtCompound quest = activeQuests.getCompound(i);
+         activeQuestIds.add(quest.getString("id"));
       }
 
       return activeQuestIds;

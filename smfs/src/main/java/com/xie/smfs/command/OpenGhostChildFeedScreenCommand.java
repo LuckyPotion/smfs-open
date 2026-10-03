@@ -13,13 +13,13 @@ import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 public class OpenGhostChildFeedScreenCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
       dispatcher.register(
-         (LiteralArgumentBuilder)CommandManager.method_9247("xie")
-            .then(CommandManager.method_9247("gui").then(CommandManager.method_9247("feed").executes(OpenGhostChildFeedScreenCommand::execute)))
+         (LiteralArgumentBuilder)CommandManager.literal("xie")
+            .then(CommandManager.literal("gui").then(CommandManager.literal("feed").executes(OpenGhostChildFeedScreenCommand::execute)))
       );
    }
 
    public static int execute(CommandContext<ServerCommandSource> context) {
-      Objects.requireNonNull(((ServerCommandSource)context.getSource()).method_44023()).method_17355(new GhostChildFeedScreenHandler.GhostChildFeedFactory());
+      Objects.requireNonNull(((ServerCommandSource)context.getSource()).getPlayer()).openHandledScreen(new GhostChildFeedScreenHandler.GhostChildFeedFactory());
       return 1;
    }
 }

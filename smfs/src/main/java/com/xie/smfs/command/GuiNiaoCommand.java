@@ -16,22 +16,22 @@ import net.minecraft.world.World;
 public class GuiNiaoCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
       dispatcher.register(
-         (LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("guiniao").requires(source -> source.method_9259(2)))
+         (LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("guiniao").requires(source -> source.hasPermissionLevel(2)))
             .executes(GuiNiaoCommand::execute)
       );
    }
 
    public static int execute(CommandContext<ServerCommandSource> context) {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
       if (player == null) {
-         ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+         ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
          return 0;
       } else {
-         World world = player.method_37908();
+         World world = player.getWorld();
          GuiNiaoEntity guiNiao = new GuiNiaoEntity(ModEntities.GUI_NIAO, world);
-         guiNiao.method_5808(player.method_23317(), player.method_23318(), player.method_23321(), player.method_36454(), 0.0F);
-         world.method_8649(guiNiao);
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("§d鬼鸟已召唤！"), true);
+         guiNiao.refreshPositionAndAngles(player.getX(), player.getY(), player.getZ(), player.getYaw(), 0.0F);
+         world.spawnEntity(guiNiao);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("§d鬼鸟已召唤！"), true);
          return 1;
       }
    }

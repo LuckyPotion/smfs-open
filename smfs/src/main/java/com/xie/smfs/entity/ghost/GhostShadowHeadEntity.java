@@ -19,17 +19,17 @@ public class GhostShadowHeadEntity extends GhostEntity {
    private static final char TERROR_LEVEL = 'C';
 
    public static Builder createLivingAttributes() {
-      return GhostEntity.createGhostAttributes().method_26868(EntityAttributes.field_23720, 0.28);
+      return GhostEntity.createGhostAttributes().add(EntityAttributes.GENERIC_FLYING_SPEED, 0.28);
    }
 
    public GhostShadowHeadEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, false, 0, 24.0, 'C', 2200, 160, 30, 0.1F);
-      this.method_5875(true);
-      this.field_6207 = new FlightMoveControl(this, 10, true);
-      this.field_6189 = new BirdNavigation(this, world);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(65000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.28);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(5.5);
+      this.setNoGravity(true);
+      this.moveControl = new FlightMoveControl(this, 10, true);
+      this.navigation = new BirdNavigation(this, world);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(65000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.28);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(5.5);
    }
 
    @Override
@@ -37,7 +37,7 @@ public class GhostShadowHeadEntity extends GhostEntity {
       if (RedGhostCandleItem.isHoldingCandle(player)) {
          return false;
       } else {
-         return CoffinEffectManager.isPlayerInGoldCoffin(player) ? false : this.method_5858(player) <= 576.0;
+         return CoffinEffectManager.isPlayerInGoldCoffin(player) ? false : this.squaredDistanceTo(player) <= 576.0;
       }
    }
 }

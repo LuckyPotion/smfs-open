@@ -19,8 +19,8 @@ public class PlayerRoyalCurseManager {
 
    public static RoyalCurseData getRoyalCurseData(PlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      if (data.method_10545("royalCurseData")) {
-         NbtCompound royalCurseNbt = data.method_10562("royalCurseData");
+      if (data.contains("royalCurseData")) {
+         NbtCompound royalCurseNbt = data.getCompound("royalCurseData");
          return new RoyalCurseData(royalCurseNbt);
       } else {
          RoyalCurseData royalCurseData = new RoyalCurseData();
@@ -31,7 +31,7 @@ public class PlayerRoyalCurseManager {
 
    public static void saveRoyalCurseData(PlayerEntity player, RoyalCurseData data) {
       NbtCompound playerData = PlayerEvents.getCachedData(player);
-      playerData.method_10566("royalCurseData", data.toNbt());
+      playerData.put("royalCurseData", data.toNbt());
       PlayerEvents.saveDataToPlayer(player, playerData);
    }
 
@@ -41,18 +41,18 @@ public class PlayerRoyalCurseManager {
       LOGGER.debug("获取到王家诅咒数据，奴仆数量: {}", data.getServantCount());
       RoyalCurseServantData servantData = data.getServant(servantIndex);
       LOGGER.debug("获取到奴仆数据: {}", servantData);
-      if (servantData != null && !servantData.isReleased() && player.method_37908() != null && !player.method_37908().field_9236) {
+      if (servantData != null && !servantData.isReleased() && player.getWorld() != null && !player.getWorld().isClient) {
          LOGGER.debug("开始创建奴仆实体，UUID: {}", servantData.getUuid());
-         PlayerGhostEntity servant = PlayerGhostEntity.createFromStoredData(player, player.method_37908(), servantData.getUuid());
+         PlayerGhostEntity servant = PlayerGhostEntity.createFromStoredData(player, player.getWorld(), servantData.getUuid());
          LOGGER.debug("创建奴仆实体成功: {}", servant);
          servant.setServantMode(true);
-         servant.setMasterUuid(player.method_5667());
-         Vec3d spawnPos = player.method_19538().method_1019(player.method_5720().method_1021(3.0));
-         servant.method_5808(spawnPos.field_1352, spawnPos.field_1351, spawnPos.field_1350, player.method_36454(), 0.0F);
-         player.method_37908().method_8649(servant);
+         servant.setMasterUuid(player.getUuid());
+         Vec3d spawnPos = player.getPos().add(player.getRotationVector().multiply(3.0));
+         servant.refreshPositionAndAngles(spawnPos.x, spawnPos.y, spawnPos.z, player.getYaw(), 0.0F);
+         player.getWorld().spawnEntity(servant);
          LOGGER.debug("奴仆实体生成成功");
          playSummonEffects(player, spawnPos);
-         player.method_7353(Text.method_43471("item.smfs.eerie_family_portrait.servant_summoned"), true);
+         player.sendMessage(Text.translatable("item.smfs.eerie_family_portrait.servant_summoned"), true);
          servantData.summon();
          saveRoyalCurseData(player, data);
          LOGGER.debug("奴仆状态更新并保存成功");
@@ -61,8 +61,8 @@ public class PlayerRoyalCurseManager {
             "召唤条件不满足: servantData={}, isReleased={}, world={}, isClient={}",
             servantData,
             servantData != null ? servantData.isReleased() : "null",
-            player.method_37908(),
-            player.method_37908() != null ? player.method_37908().field_9236 : "null"
+            player.getWorld(),
+            player.getWorld() != null ? player.getWorld().isClient : "null"
          );
       }
    }
@@ -73,20 +73,20 @@ public class PlayerRoyalCurseManager {
       LOGGER.debug("获取到皇家诅咒数据，奴仆数量: {}", data.getServantCount());
       RoyalCurseServantData servantData = data.getServant(servantIndex);
       LOGGER.debug("获取到奴仆数据: {}", servantData);
-      if (servantData != null && servantData.isReleased() && player.method_37908() != null && !player.method_37908().field_9236) {
+      if (servantData != null && servantData.isReleased() && player.getWorld() != null && !player.getWorld().isClient) {
          LOGGER.debug("开始搜索奴仆实体，UUID: {}", servantData.getUuid());
-         List<PlayerGhostEntity> servants = player.method_37908()
-            .method_8390(
+         List<PlayerGhostEntity> servants = player.getWorld()
+            .getEntitiesByClass(
                PlayerGhostEntity.class,
                new Box(-3.0E7, -64.0, -3.0E7, 3.0E7, 320.0, 3.0E7),
                entity -> {
                   boolean hasMaster = entity.getMasterUuid() != null;
-                  boolean isOwner = hasMaster && entity.getMasterUuid().equals(player.method_5667());
+                  boolean isOwner = hasMaster && entity.getMasterUuid().equals(player.getUuid());
                   boolean hasOriginalServantUuid = entity.getOriginalServantUuid() != null;
                   boolean isTargetServant = isOwner && hasOriginalServantUuid && entity.getOriginalServantUuid().equals(servantData.getUuid());
                   LOGGER.debug(
                      "检查实体: UUID={}, OriginalServantUuid={}, hasMaster={}, isOwner={}, hasOriginalServantUuid={}, isTargetServant={}",
-                     entity.method_5667(),
+                     entity.getUuid(),
                      entity.getOriginalServantUuid(),
                      hasMaster,
                      isOwner,
@@ -99,37 +99,37 @@ public class PlayerRoyalCurseManager {
          LOGGER.debug("找到奴仆实体数量: {}", servants.size());
 
          for (PlayerGhostEntity servant : servants) {
-            LOGGER.debug("找到奴仆实体: {}, 主人UUID: {}", servant.method_5667(), servant.getMasterUuid());
+            LOGGER.debug("找到奴仆实体: {}, 主人UUID: {}", servant.getUuid(), servant.getMasterUuid());
             playRecallEffects(player, servant);
-            servant.method_31472();
+            servant.discard();
             LOGGER.debug("奴仆实体已收回");
          }
 
          servantData.recall();
          saveRoyalCurseData(player, data);
          LOGGER.debug("奴仆状态更新并保存成功");
-         player.method_7353(Text.method_43471("item.smfs.eerie_family_portrait.servant_recalled"), true);
+         player.sendMessage(Text.translatable("item.smfs.eerie_family_portrait.servant_recalled"), true);
       } else {
          LOGGER.debug(
             "收回条件不满足: servantData={}, isReleased={}, world={}, isClient={}",
             servantData,
             servantData != null ? servantData.isReleased() : "null",
-            player.method_37908(),
-            player.method_37908() != null ? player.method_37908().field_9236 : "null"
+            player.getWorld(),
+            player.getWorld() != null ? player.getWorld().isClient : "null"
          );
       }
    }
 
    public static void recallAllServants(PlayerEntity player) {
       RoyalCurseData data = getRoyalCurseData(player);
-      if (player.method_37908() != null && !player.method_37908().field_9236) {
-         for (PlayerGhostEntity servant : player.method_37908()
-            .method_8390(
+      if (player.getWorld() != null && !player.getWorld().isClient) {
+         for (PlayerGhostEntity servant : player.getWorld()
+            .getEntitiesByClass(
                PlayerGhostEntity.class,
-               player.method_5829().method_1014(100.0),
-               entity -> entity.getMasterUuid() != null && entity.getMasterUuid().equals(player.method_5667())
+               player.getBoundingBox().expand(100.0),
+               entity -> entity.getMasterUuid() != null && entity.getMasterUuid().equals(player.getUuid())
             )) {
-            servant.method_31472();
+            servant.discard();
          }
 
          for (RoyalCurseServantData servantData : data.getServants()) {
@@ -144,7 +144,7 @@ public class PlayerRoyalCurseManager {
 
    public static void summonAllServants(PlayerEntity player) {
       RoyalCurseData data = getRoyalCurseData(player);
-      if (player.method_37908() != null && !player.method_37908().field_9236) {
+      if (player.getWorld() != null && !player.getWorld().isClient) {
          for (int i = 0; i < data.getServantCount(); i++) {
             RoyalCurseServantData servantData = data.getServant(i);
             if (servantData != null && !servantData.isReleased()) {
@@ -156,7 +156,7 @@ public class PlayerRoyalCurseManager {
 
    public static boolean hasRoyalCurseUnlocked(PlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      return data.method_10577("wangCurseUnlocked");
+      return data.getBoolean("wangCurseUnlocked");
    }
 
    public static boolean unlockRoyalCurse(PlayerEntity player) {
@@ -165,73 +165,43 @@ public class PlayerRoyalCurseManager {
       }
 
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10556("wangCurseUnlocked", true);
+      data.putBoolean("wangCurseUnlocked", true);
       PlayerEvents.saveDataToPlayer(player, data);
-      LOGGER.debug("玩家 {} 解锁了王家诅咒", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 解锁了王家诅咒", player.getName().getString());
       return true;
    }
 
    private static void playSummonEffects(PlayerEntity player, Vec3d spawnPos) {
-      player.method_5783(SoundEvents.field_14858, 1.0F, 0.8F);
-      if (player.method_37908() instanceof ServerWorld serverWorld) {
+      player.playSound(SoundEvents.ENTITY_EVOKER_CAST_SPELL, 1.0F, 0.8F);
+      if (player.getWorld() instanceof ServerWorld serverWorld) {
          ServerWorld world = serverWorld;
 
          for (int i = 0; i < 15; i++) {
-            double offsetX = (world.field_9229.method_43058() - 0.5) * 2.5;
-            double offsetY = world.field_9229.method_43058() * 1.5;
-            double offsetZ = (world.field_9229.method_43058() - 0.5) * 2.5;
-            world.method_14199(
-               ParticleTypes.field_23114,
-               spawnPos.field_1352 + offsetX,
-               spawnPos.field_1351 + offsetY,
-               spawnPos.field_1350 + offsetZ,
-               1,
-               0.02,
-               0.02,
-               0.02,
-               0.005
-            );
+            double offsetX = (world.random.nextDouble() - 0.5) * 2.5;
+            double offsetY = world.random.nextDouble() * 1.5;
+            double offsetZ = (world.random.nextDouble() - 0.5) * 2.5;
+            world.spawnParticles(ParticleTypes.SOUL, spawnPos.x + offsetX, spawnPos.y + offsetY, spawnPos.z + offsetZ, 1, 0.02, 0.02, 0.02, 0.005);
          }
       }
    }
 
    private static void playRecallEffects(PlayerEntity player, PlayerGhostEntity servant) {
-      player.method_5783(SoundEvents.field_14858, 1.0F, 1.2F);
-      if (player.method_37908() instanceof ServerWorld serverWorld) {
+      player.playSound(SoundEvents.ENTITY_EVOKER_CAST_SPELL, 1.0F, 1.2F);
+      if (player.getWorld() instanceof ServerWorld serverWorld) {
          ServerWorld world = serverWorld;
 
          for (int i = 0; i < 30; i++) {
-            double offsetX = (world.field_9229.method_43058() - 0.5) * 2.0;
-            double offsetY = (world.field_9229.method_43058() - 0.5) * 2.0;
-            double offsetZ = (world.field_9229.method_43058() - 0.5) * 2.0;
-            world.method_14199(
-               ParticleTypes.field_22247,
-               servant.method_23317() + offsetX,
-               servant.method_23318() + offsetY,
-               servant.method_23321() + offsetZ,
-               6,
-               0.05,
-               0.05,
-               0.05,
-               0.01
-            );
+            double offsetX = (world.random.nextDouble() - 0.5) * 2.0;
+            double offsetY = (world.random.nextDouble() - 0.5) * 2.0;
+            double offsetZ = (world.random.nextDouble() - 0.5) * 2.0;
+            world.spawnParticles(ParticleTypes.ASH, servant.getX() + offsetX, servant.getY() + offsetY, servant.getZ() + offsetZ, 6, 0.05, 0.05, 0.05, 0.01);
          }
 
          for (int i = 0; i < 15; i++) {
-            double offsetX = (world.field_9229.method_43058() - 0.5) * 1.5;
-            double offsetY = (world.field_9229.method_43058() - 0.5) * 1.5;
-            double offsetZ = (world.field_9229.method_43058() - 0.5) * 1.5;
-            world.method_14199(
-               ParticleTypes.field_11251,
-               servant.method_23317() + offsetX,
-               servant.method_23318() + offsetY,
-               servant.method_23321() + offsetZ,
-               1,
-               0.03,
-               0.03,
-               0.03,
-               0.005
-            );
+            double offsetX = (world.random.nextDouble() - 0.5) * 1.5;
+            double offsetY = (world.random.nextDouble() - 0.5) * 1.5;
+            double offsetZ = (world.random.nextDouble() - 0.5) * 1.5;
+            world.spawnParticles(ParticleTypes.SMOKE, servant.getX() + offsetX, servant.getY() + offsetY, servant.getZ() + offsetZ, 1, 0.03, 0.03, 0.03, 0.005);
          }
       }
    }

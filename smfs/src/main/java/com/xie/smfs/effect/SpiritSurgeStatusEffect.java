@@ -21,35 +21,35 @@ public class SpiritSurgeStatusEffect extends StatusEffect {
    private static final Set<UUID> activePlayers = new HashSet<>();
 
    public SpiritSurgeStatusEffect() {
-      super(StatusEffectCategory.field_18271, 10040115);
-      this.method_5566(SpiritAttributes.SPIRIT_DAMAGE, "7b9e3a8f-2d4c-4e1a-b6c5-9d8e7f6a5b4c", 6.0, Operation.field_6328);
+      super(StatusEffectCategory.BENEFICIAL, 10040115);
+      this.addAttributeModifier(SpiritAttributes.SPIRIT_DAMAGE, "7b9e3a8f-2d4c-4e1a-b6c5-9d8e7f6a5b4c", 6.0, Operation.ADDITION);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return false;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
    }
 
-   public void method_5555(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      if (entity instanceof PlayerEntity player && !player.method_29504()) {
-         activePlayers.add(player.method_5667());
+   public void onApplied(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      if (entity instanceof PlayerEntity player && !player.isDead()) {
+         activePlayers.add(player.getUuid());
       }
 
-      super.method_5555(entity, attributes, amplifier);
+      super.onApplied(entity, attributes, amplifier);
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      if (entity instanceof PlayerEntity player && !player.method_29504()) {
-         activePlayers.remove(player.method_5667());
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      if (entity instanceof PlayerEntity player && !player.isDead()) {
+         activePlayers.remove(player.getUuid());
       }
 
-      super.method_5562(entity, attributes, amplifier);
+      super.onRemoved(entity, attributes, amplifier);
    }
 
    public static boolean hasSpiritSurgeEffect(PlayerEntity player) {
-      return activePlayers.contains(player.method_5667());
+      return activePlayers.contains(player.getUuid());
    }
 
    public static void applySpiritSurgeDamage(PlayerEntity attacker, LivingEntity target, float baseDamage) {
@@ -60,7 +60,7 @@ public class SpiritSurgeStatusEffect extends StatusEffect {
                targetPlayer,
                extraSpiritDamage,
                baseDamage,
-               ModEvents.processingSpiritDamage.get() ? attacker.method_48923().method_48831() : attacker.method_48923().method_48802(attacker)
+               ModEvents.processingSpiritDamage.get() ? attacker.getDamageSources().magic() : attacker.getDamageSources().playerAttack(attacker)
             );
          } else if (target instanceof GhostEntity ghost) {
             handleGhostSpiritDamage(attacker, ghost, extraSpiritDamage);
@@ -68,7 +68,7 @@ public class SpiritSurgeStatusEffect extends StatusEffect {
             handleDefaultSpiritDamage(attacker, target, extraSpiritDamage, baseDamage);
          }
 
-         if (!target.method_37908().method_8608()) {
+         if (!target.getWorld().isClient()) {
             spawnSpiritDamageParticles(target);
          }
       }
@@ -88,30 +88,28 @@ public class SpiritSurgeStatusEffect extends StatusEffect {
 
    private static void handleDefaultSpiritDamage(PlayerEntity attacker, LivingEntity target, float spiritDamage, float baseDamage) {
       DamageSource damageSource = ModEvents.processingSpiritDamage.get()
-         ? attacker.method_48923().method_48831()
-         : attacker.method_48923().method_48802(attacker);
-      if (spiritDamage > 0.0F && !target.method_5679(damageSource)) {
-         float currentHealth = target.method_6032();
+         ? attacker.getDamageSources().magic()
+         : attacker.getDamageSources().playerAttack(attacker);
+      if (spiritDamage > 0.0F && !target.isInvulnerableTo(damageSource)) {
+         float currentHealth = target.getHealth();
          float newHealth = Math.max(0.0F, currentHealth - spiritDamage);
-         target.method_6033(newHealth);
+         target.setHealth(newHealth);
          if (newHealth <= 0.0F) {
-            target.method_6078(damageSource);
+            target.onDeath(damageSource);
          }
       }
    }
 
    private static void spawnSpiritDamageParticles(LivingEntity target) {
-      if (!target.method_37908().method_8608()) {
-         ServerWorld serverWorld = (ServerWorld)target.method_37908();
-         Vec3d pos = target.method_19538();
+      if (!target.getWorld().isClient()) {
+         ServerWorld serverWorld = (ServerWorld)target.getWorld();
+         Vec3d pos = target.getPos();
 
          for (int i = 0; i < 15; i++) {
-            double offsetX = (target.method_6051().method_43058() - 0.5) * 2.0;
-            double offsetY = target.method_6051().method_43058() * 2.0;
-            double offsetZ = (target.method_6051().method_43058() - 0.5) * 2.0;
-            serverWorld.method_14199(
-               ParticleTypes.field_11249, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.0, 0.0, 0.1
-            );
+            double offsetX = (target.getRandom().nextDouble() - 0.5) * 2.0;
+            double offsetY = target.getRandom().nextDouble() * 2.0;
+            double offsetZ = (target.getRandom().nextDouble() - 0.5) * 2.0;
+            serverWorld.spawnParticles(ParticleTypes.WITCH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.0, 0.0, 0.1);
          }
       }
    }

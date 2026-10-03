@@ -7,24 +7,24 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class FatalPoisonEffect extends StatusEffect {
    public FatalPoisonEffect() {
-      super(StatusEffectCategory.field_18272, 4521796);
+      super(StatusEffectCategory.HARMFUL, 4521796);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return duration % 20 == 0;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
       if (entity instanceof PlayerEntity player) {
-         float maxHealth = player.method_6063();
+         float maxHealth = player.getMaxHealth();
          float damageAmount = maxHealth * 0.1F * (amplifier + 1);
-         if (player.method_6032() > 0.0F) {
-            player.method_5643(player.method_48923().method_48831(), damageAmount);
+         if (player.getHealth() > 0.0F) {
+            player.damage(player.getDamageSources().magic(), damageAmount);
          }
       } else {
-         float maxHealth = entity.method_6063();
+         float maxHealth = entity.getMaxHealth();
          float damageAmount = maxHealth * 0.1F * (amplifier + 1);
-         entity.method_5643(entity.method_48923().method_48831(), damageAmount);
+         entity.damage(entity.getDamageSources().magic(), damageAmount);
       }
    }
 }

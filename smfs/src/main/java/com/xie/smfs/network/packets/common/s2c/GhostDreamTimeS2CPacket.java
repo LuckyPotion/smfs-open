@@ -16,7 +16,7 @@ public class GhostDreamTimeS2CPacket implements Packet<ClientPlayPacketListener>
       this.remainingTime = buf.readLong();
    }
 
-   public void method_11052(PacketByteBuf buf) {
+   public void write(PacketByteBuf buf) {
       buf.writeLong(this.remainingTime);
    }
 

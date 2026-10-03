@@ -26,24 +26,24 @@ public class IrisCompatibility {
    private static boolean hasGhostDomainEffect(PlayerEntity player) {
       return player == null
          ? false
-         : player.method_6059(ModEffects.RED_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.RED_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.GREEN_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.GREEN_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.BLUE_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.BLUE_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.GRAY_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.GRAY_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.PURPLE_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.PURPLE_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.BLACK_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.BLACK_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.CYAN_GHOST_DOMAIN)
-            || player.method_6059(ModEffects.CYAN_GHOST_DOMAIN_TARGET)
-            || player.method_6059(ModEffects.THICK_FOG)
-            || player.method_6059(ModEffects.THICK_FOG_TARGET);
+         : player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.BLUE_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.BLUE_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN)
+            || player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET)
+            || player.hasStatusEffect(ModEffects.THICK_FOG)
+            || player.hasStatusEffect(ModEffects.THICK_FOG_TARGET);
    }
 
    private static boolean isIrisEnabled() {
@@ -74,7 +74,7 @@ public class IrisCompatibility {
             irisClass.getMethod("setShadersDisabled").invoke(null);
             return;
          } catch (NoSuchMethodException var6) {
-            MinecraftClient client = MinecraftClient.method_1551();
+            MinecraftClient client = MinecraftClient.getInstance();
             if (client != null) {
                try {
                   irisClass.getMethod("toggleShaders", MinecraftClient.class, boolean.class).invoke(null, client, false);
@@ -110,7 +110,7 @@ public class IrisCompatibility {
                try {
                   irisClass.getMethod("setShadersEnabled").invoke(null);
                } catch (NoSuchMethodException e) {
-                  MinecraftClient client = MinecraftClient.method_1551();
+                  MinecraftClient client = MinecraftClient.getInstance();
                   if (client != null) {
                      try {
                         irisClass.getMethod("toggleShaders", MinecraftClient.class, boolean.class).invoke(null, client, true);
@@ -136,9 +136,9 @@ public class IrisCompatibility {
    }
 
    private static void updateGhostDomainState() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client != null && client.field_1724 != null) {
-         PlayerEntity player = client.field_1724;
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client != null && client.player != null) {
+         PlayerEntity player = client.player;
          boolean hasGhostDomainEffect = hasGhostDomainEffect(player);
          if (hasGhostDomainEffect && !hasGhostDomainEffectLastTick) {
             if (ModConfig.getInstance().irisCompatibilityMode == 0) {
@@ -184,9 +184,9 @@ public class IrisCompatibility {
          long currentTime = System.currentTimeMillis();
          if (currentTime - lastDetectionTime >= detectionInterval) {
             boolean irisEnabled = isIrisEnabled();
-            MinecraftClient client = MinecraftClient.method_1551();
-            if (client != null && client.field_1724 != null) {
-               boolean hasGhostEffect = hasGhostDomainEffect(client.field_1724);
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client != null && client.player != null) {
+               boolean hasGhostEffect = hasGhostDomainEffect(client.player);
                boolean var5 = isIrisDisabledByFog;
             }
 
@@ -197,9 +197,9 @@ public class IrisCompatibility {
 
    public static void triggerDetection() {
       boolean irisEnabled = isIrisEnabled();
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client != null && client.field_1724 != null) {
-         boolean hasGhostEffect = hasGhostDomainEffect(client.field_1724);
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client != null && client.player != null) {
+         boolean hasGhostEffect = hasGhostDomainEffect(client.player);
          boolean var3 = isIrisDisabledByFog;
       }
    }

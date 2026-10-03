@@ -20,11 +20,11 @@ public class DailyQuestManager {
 
    public static boolean hasUnlockedDailyQuests(PlayerEntity player) {
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int i = 0; i < completedQuests.size(); i++) {
-         NbtCompound quest = completedQuests.method_10602(i);
-         if ("newbie_craft_gold_container".equals(quest.method_10558("id"))) {
+         NbtCompound quest = completedQuests.getCompound(i);
+         if ("newbie_craft_gold_container".equals(quest.getString("id"))) {
             return true;
          }
       }
@@ -34,11 +34,11 @@ public class DailyQuestManager {
 
    public static boolean hasUnlockedEventQuests(PlayerEntity player) {
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int i = 0; i < completedQuests.size(); i++) {
-         NbtCompound quest = completedQuests.method_10602(i);
-         if ("main_tame_ghost".equals(quest.method_10558("id"))) {
+         NbtCompound quest = completedQuests.getCompound(i);
+         if ("main_tame_ghost".equals(quest.getString("id"))) {
             return true;
          }
       }
@@ -49,15 +49,15 @@ public class DailyQuestManager {
    public static void clearDailyQuests(PlayerEntity player) {
       if (player instanceof ServerPlayerEntity) {
          NbtCompound questData = QuestManager.getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
-         NbtList availableQuests = questData.method_10554("availableQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
+         NbtList availableQuests = questData.getList("availableQuests", 10);
          NbtList newActiveQuests = new NbtList();
          int clearedActiveCount = 0;
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound quest = activeQuests.method_10602(i);
-            String questId = quest.method_10558("id");
-            String questType = quest.method_10558("type");
+            NbtCompound quest = activeQuests.getCompound(i);
+            String questId = quest.getString("id");
+            String questType = quest.getString("type");
             if ("daily".equals(questType)) {
                clearedActiveCount++;
             } else {
@@ -69,9 +69,9 @@ public class DailyQuestManager {
          int clearedAvailableCount = 0;
 
          for (int i = 0; i < availableQuests.size(); i++) {
-            NbtCompound quest = availableQuests.method_10602(i);
-            String questId = quest.method_10558("id");
-            String questType = quest.method_10558("type");
+            NbtCompound quest = availableQuests.getCompound(i);
+            String questId = quest.getString("id");
+            String questType = quest.getString("type");
             if ("daily".equals(questType)) {
                clearedAvailableCount++;
             } else {
@@ -79,8 +79,8 @@ public class DailyQuestManager {
             }
          }
 
-         questData.method_10566("activeQuests", newActiveQuests);
-         questData.method_10566("availableQuests", newAvailableQuests);
+         questData.put("activeQuests", newActiveQuests);
+         questData.put("availableQuests", newAvailableQuests);
          QuestManager.saveQuestData(player, questData);
       }
    }
@@ -88,15 +88,15 @@ public class DailyQuestManager {
    public static void clearEventQuests(PlayerEntity player) {
       if (player instanceof ServerPlayerEntity) {
          NbtCompound questData = QuestManager.getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
-         NbtList availableQuests = questData.method_10554("availableQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
+         NbtList availableQuests = questData.getList("availableQuests", 10);
          NbtList newActiveQuests = new NbtList();
          int clearedActiveCount = 0;
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound quest = activeQuests.method_10602(i);
-            String questId = quest.method_10558("id");
-            String questType = quest.method_10558("type");
+            NbtCompound quest = activeQuests.getCompound(i);
+            String questId = quest.getString("id");
+            String questType = quest.getString("type");
             if ("side".equals(questType)) {
                clearedActiveCount++;
             } else {
@@ -108,9 +108,9 @@ public class DailyQuestManager {
          int clearedAvailableCount = 0;
 
          for (int i = 0; i < availableQuests.size(); i++) {
-            NbtCompound quest = availableQuests.method_10602(i);
-            String questId = quest.method_10558("id");
-            String questType = quest.method_10558("type");
+            NbtCompound quest = availableQuests.getCompound(i);
+            String questId = quest.getString("id");
+            String questType = quest.getString("type");
             if ("side".equals(questType)) {
                clearedAvailableCount++;
             } else {
@@ -118,8 +118,8 @@ public class DailyQuestManager {
             }
          }
 
-         questData.method_10566("activeQuests", newActiveQuests);
-         questData.method_10566("availableQuests", newAvailableQuests);
+         questData.put("activeQuests", newActiveQuests);
+         questData.put("availableQuests", newAvailableQuests);
          QuestManager.saveQuestData(player, questData);
       }
    }
@@ -143,14 +143,14 @@ public class DailyQuestManager {
                }
 
                NbtCompound questData = QuestManager.getQuestData(player);
-               long currentDay = serverPlayer.method_37908().method_8532() / 24000L;
-               questData.method_10544("lastDailyAssignDay", currentDay);
+               long currentDay = serverPlayer.getWorld().getTimeOfDay() / 24000L;
+               questData.putLong("lastDailyAssignDay", currentDay);
                QuestManager.saveQuestData(player, questData);
                if (assignedCount > 0) {
-                  serverPlayer.method_7353(Text.method_43470("§a今日日常任务已刷新！请查看任务界面"), false);
-                  LOGGER.info("已向玩家 {} 发送日常任务刷新通知", player.method_5477().getString());
+                  serverPlayer.sendMessage(Text.literal("§a今日日常任务已刷新！请查看任务界面"), false);
+                  LOGGER.info("已向玩家 {} 发送日常任务刷新通知", player.getName().getString());
                } else {
-                  LOGGER.warn("未为玩家 {} 分配任何日常任务", player.method_5477().getString());
+                  LOGGER.warn("未为玩家 {} 分配任何日常任务", player.getName().getString());
                }
             }
          }
@@ -161,38 +161,38 @@ public class DailyQuestManager {
       QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
       if (template != null) {
          NbtCompound questData = QuestManager.getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound quest = activeQuests.method_10602(i);
-            if (quest.method_10558("id").equals(questId)) {
+            NbtCompound quest = activeQuests.getCompound(i);
+            if (quest.getString("id").equals(questId)) {
                return;
             }
          }
 
          NbtCompound newQuest = new NbtCompound();
-         newQuest.method_10582("id", questId);
-         newQuest.method_10582("title", template.title);
-         newQuest.method_10582("description", template.description);
-         newQuest.method_10582("type", template.type);
-         newQuest.method_10556("isNewbieQuest", template.isNewbieQuest);
-         newQuest.method_10569("status", 0);
-         newQuest.method_10544("assignTime", System.currentTimeMillis());
+         newQuest.putString("id", questId);
+         newQuest.putString("title", template.title);
+         newQuest.putString("description", template.description);
+         newQuest.putString("type", template.type);
+         newQuest.putBoolean("isNewbieQuest", template.isNewbieQuest);
+         newQuest.putInt("status", 0);
+         newQuest.putLong("assignTime", System.currentTimeMillis());
          NbtList objectives = new NbtList();
 
          for (QuestManager.QuestObjective objective : template.objectives) {
             NbtCompound obj = new NbtCompound();
-            obj.method_10582("id", objective.id);
-            obj.method_10582("description", objective.description);
-            obj.method_10569("target", objective.target);
-            obj.method_10569("progress", 0);
+            obj.putString("id", objective.id);
+            obj.putString("description", objective.description);
+            obj.putInt("target", objective.target);
+            obj.putInt("progress", 0);
             objectives.add(obj);
          }
 
-         newQuest.method_10566("objectives", objectives);
-         NbtList availableQuests = questData.method_10554("availableQuests", 10);
+         newQuest.put("objectives", objectives);
+         NbtList availableQuests = questData.getList("availableQuests", 10);
          availableQuests.add(newQuest);
-         questData.method_10566("availableQuests", availableQuests);
+         questData.put("availableQuests", availableQuests);
          QuestManager.saveQuestData(player, questData);
       }
    }
@@ -201,38 +201,38 @@ public class DailyQuestManager {
       QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
       if (template != null) {
          NbtCompound questData = QuestManager.getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound quest = activeQuests.method_10602(i);
-            if (quest.method_10558("id").equals(questId)) {
+            NbtCompound quest = activeQuests.getCompound(i);
+            if (quest.getString("id").equals(questId)) {
                return;
             }
          }
 
          NbtCompound newQuest = new NbtCompound();
-         newQuest.method_10582("id", questId);
-         newQuest.method_10582("title", template.title);
-         newQuest.method_10582("description", template.description);
-         newQuest.method_10582("type", template.type);
-         newQuest.method_10556("isNewbieQuest", template.isNewbieQuest);
-         newQuest.method_10569("status", 0);
-         newQuest.method_10544("assignTime", System.currentTimeMillis());
+         newQuest.putString("id", questId);
+         newQuest.putString("title", template.title);
+         newQuest.putString("description", template.description);
+         newQuest.putString("type", template.type);
+         newQuest.putBoolean("isNewbieQuest", template.isNewbieQuest);
+         newQuest.putInt("status", 0);
+         newQuest.putLong("assignTime", System.currentTimeMillis());
          NbtList objectives = new NbtList();
 
          for (QuestManager.QuestObjective objective : template.objectives) {
             NbtCompound obj = new NbtCompound();
-            obj.method_10582("id", objective.id);
-            obj.method_10582("description", objective.description);
-            obj.method_10569("target", objective.target);
-            obj.method_10569("progress", 0);
+            obj.putString("id", objective.id);
+            obj.putString("description", objective.description);
+            obj.putInt("target", objective.target);
+            obj.putInt("progress", 0);
             objectives.add(obj);
          }
 
-         newQuest.method_10566("objectives", objectives);
-         NbtList availableQuests = questData.method_10554("availableQuests", 10);
+         newQuest.put("objectives", objectives);
+         NbtList availableQuests = questData.getList("availableQuests", 10);
          availableQuests.add(newQuest);
-         questData.method_10566("availableQuests", availableQuests);
+         questData.put("availableQuests", availableQuests);
          QuestManager.saveQuestData(player, questData);
       }
    }
@@ -248,10 +248,10 @@ public class DailyQuestManager {
                   QuestManager.QuestTemplate selectedTemplate = eventQuestTemplates.get(0);
                   assignEventQuestAsAvailable(player, selectedTemplate.getId());
                   NbtCompound questData = QuestManager.getQuestData(player);
-                  long currentDay = serverPlayer.method_37908().method_8532() / 24000L;
-                  questData.method_10544("lastEventAssignDay", currentDay);
+                  long currentDay = serverPlayer.getWorld().getTimeOfDay() / 24000L;
+                  questData.putLong("lastEventAssignDay", currentDay);
                   QuestManager.saveQuestData(player, questData);
-                  serverPlayer.method_7353(Text.method_43470("§a今日事件任务已刷新！请查看任务界面"), false);
+                  serverPlayer.sendMessage(Text.literal("§a今日事件任务已刷新！请查看任务界面"), false);
                }
             }
          }
@@ -263,29 +263,29 @@ public class DailyQuestManager {
          LOGGER.info("检查任务分配失败：玩家不是ServerPlayerEntity");
       } else {
          NbtCompound questData = QuestManager.getQuestData(player);
-         long currentDay = serverPlayer.method_37908().method_8532() / 24000L;
-         long lastDailyAssignDay = questData.method_10537("lastDailyAssignDay");
-         long lastEventAssignDay = questData.method_10537("lastEventAssignDay");
+         long currentDay = serverPlayer.getWorld().getTimeOfDay() / 24000L;
+         long lastDailyAssignDay = questData.getLong("lastDailyAssignDay");
+         long lastEventAssignDay = questData.getLong("lastEventAssignDay");
          if (currentDay != lastDailyAssignDay && hasUnlockedDailyQuests(player)) {
-            LOGGER.info("玩家 {} 需要刷新日常任务（天数变化: {} != {})", player.method_5477().getString(), currentDay, lastDailyAssignDay);
+            LOGGER.info("玩家 {} 需要刷新日常任务（天数变化: {} != {})", player.getName().getString(), currentDay, lastDailyAssignDay);
             assignNewDailyQuests(player);
          } else if (currentDay == lastDailyAssignDay) {
-            LOGGER.info("玩家 {} 今日已分配过日常任务，无需刷新", player.method_5477().getString());
+            LOGGER.info("玩家 {} 今日已分配过日常任务，无需刷新", player.getName().getString());
             if (hasUnlockedDailyQuests(player)) {
                List<String> currentDailyQuests = getCurrentDailyQuests(player);
                if (currentDailyQuests.isEmpty() && lastDailyAssignDay == 0L) {
-                  LOGGER.info("玩家 {} 刚刚解锁日常任务系统但还没有任务，立即分配新任务", player.method_5477().getString());
+                  LOGGER.info("玩家 {} 刚刚解锁日常任务系统但还没有任务，立即分配新任务", player.getName().getString());
                   assignNewDailyQuests(player);
                } else {
                   if (!currentDailyQuests.isEmpty()) {
-                     serverPlayer.method_7353(Text.method_43470("§6今日日常任务已分配，请查看任务界面"), false);
+                     serverPlayer.sendMessage(Text.literal("§6今日日常任务已分配，请查看任务界面"), false);
                   }
 
                   forceRefreshQuestUI(serverPlayer);
                }
             }
          } else if (!hasUnlockedDailyQuests(player)) {
-            LOGGER.info("玩家 {} 未解锁日常任务系统", player.method_5477().getString());
+            LOGGER.info("玩家 {} 未解锁日常任务系统", player.getName().getString());
          }
 
          if (currentDay != lastEventAssignDay && hasUnlockedEventQuests(player)) {
@@ -297,26 +297,26 @@ public class DailyQuestManager {
                   assignNewEventQuests(player);
                } else {
                   if (!currentEventQuests.isEmpty()) {
-                     serverPlayer.method_7353(Text.method_43470("§6今日事件任务已分配，请查看任务界面"), false);
+                     serverPlayer.sendMessage(Text.literal("§6今日事件任务已分配，请查看任务界面"), false);
                   }
 
                   forceRefreshQuestUI(serverPlayer);
                }
             }
          } else if (!hasUnlockedEventQuests(player)) {
-            LOGGER.info("玩家 {} 未解锁事件任务系统", player.method_5477().getString());
+            LOGGER.info("玩家 {} 未解锁事件任务系统", player.getName().getString());
          }
       }
    }
 
    public static int getCurrentDailyQuestCount(PlayerEntity player) {
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       int dailyCount = 0;
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String questType = quest.method_10558("type");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String questType = quest.getString("type");
          if ("daily".equals(questType)) {
             dailyCount++;
          }
@@ -327,12 +327,12 @@ public class DailyQuestManager {
 
    public static int getCurrentEventQuestCount(PlayerEntity player) {
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       int eventCount = 0;
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String questType = quest.method_10558("type");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String questType = quest.getString("type");
          if ("side".equals(questType)) {
             eventCount++;
          }
@@ -344,12 +344,12 @@ public class DailyQuestManager {
    public static List<String> getCurrentDailyQuests(PlayerEntity player) {
       List<String> dailyQuests = new ArrayList<>();
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String questId = quest.method_10558("id");
-         String questType = quest.method_10558("type");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String questId = quest.getString("id");
+         String questType = quest.getString("type");
          if ("daily".equals(questType)) {
             dailyQuests.add(questId);
          }
@@ -361,12 +361,12 @@ public class DailyQuestManager {
    public static List<String> getCurrentEventQuests(PlayerEntity player) {
       List<String> eventQuests = new ArrayList<>();
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String questId = quest.method_10558("id");
-         String questType = quest.method_10558("type");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String questId = quest.getString("id");
+         String questType = quest.getString("type");
          if ("side".equals(questType)) {
             eventQuests.add(questId);
          }
@@ -380,46 +380,46 @@ public class DailyQuestManager {
          return false;
       } else {
          NbtCompound questData = QuestManager.getQuestData(player);
-         NbtList availableQuests = questData.method_10554("availableQuests", 10);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
+         NbtList availableQuests = questData.getList("availableQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
          NbtCompound acceptedQuest = null;
 
          for (int template = 0; template < availableQuests.size(); template++) {
-            NbtCompound quest = availableQuests.method_10602(template);
-            if (quest.method_10558("id").equals(questId)) {
+            NbtCompound quest = availableQuests.getCompound(template);
+            if (quest.getString("id").equals(questId)) {
                acceptedQuest = quest;
-               availableQuests.method_10536(template);
+               availableQuests.remove(template);
                break;
             }
          }
 
          if (acceptedQuest != null) {
-            acceptedQuest.method_10569("status", 1);
-            acceptedQuest.method_10544("startTime", serverPlayer.method_37908().method_8510());
+            acceptedQuest.putInt("status", 1);
+            acceptedQuest.putLong("startTime", serverPlayer.getWorld().getTime());
             activeQuests.add(acceptedQuest);
-            questData.method_10566("availableQuests", availableQuests);
-            questData.method_10566("activeQuests", activeQuests);
+            questData.put("availableQuests", availableQuests);
+            questData.put("activeQuests", activeQuests);
             QuestManager.saveQuestData(player, questData);
             QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
             if (template != null) {
-               serverPlayer.method_7353(Text.method_43470("§a日常任务开始: " + template.title), false);
+               serverPlayer.sendMessage(Text.literal("§a日常任务开始: " + template.title), false);
             }
 
-            LOGGER.info("玩家 {} 接受了日常任务: {}", player.method_5477().getString(), questId);
+            LOGGER.info("玩家 {} 接受了日常任务: {}", player.getName().getString(), questId);
             return true;
          } else {
-            LOGGER.warn("玩家 {} 尝试接受不存在的日常任务: {}", player.method_5477().getString(), questId);
+            LOGGER.warn("玩家 {} 尝试接受不存在的日常任务: {}", player.getName().getString(), questId);
             return false;
          }
       }
    }
 
    public static void forceRefreshQuestUI(ServerPlayerEntity player) {
-      LOGGER.info("强制刷新玩家 {} 的任务界面", player.method_5477().getString());
+      LOGGER.info("强制刷新玩家 {} 的任务界面", player.getName().getString());
 
       try {
-         player.method_7353(Text.method_43470("§6任务界面已刷新，请查看当前任务"), false);
-         LOGGER.info("已向玩家 {} 发送任务界面刷新通知", player.method_5477().getString());
+         player.sendMessage(Text.literal("§6任务界面已刷新，请查看当前任务"), false);
+         LOGGER.info("已向玩家 {} 发送任务界面刷新通知", player.getName().getString());
       } catch (Exception e) {
          LOGGER.error("强制刷新任务界面时发生错误: {}", e.getMessage());
       }

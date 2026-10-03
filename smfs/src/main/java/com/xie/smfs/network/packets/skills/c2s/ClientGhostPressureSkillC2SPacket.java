@@ -35,7 +35,7 @@ public class ClientGhostPressureSkillC2SPacket {
    ) {
       server.execute(() -> {
          try {
-            LOGGER.info("玩家 {} 执行鬼压人J键技能：将背上的鬼扔到目标身上", player.method_5477().getString());
+            LOGGER.info("玩家 {} 执行鬼压人J键技能：将背上的鬼扔到目标身上", player.getName().getString());
             throwGhostToTarget(player);
             PlayerEvents.balanceRevivalDegree(player);
          } catch (Exception e) {
@@ -47,41 +47,41 @@ public class ClientGhostPressureSkillC2SPacket {
    private static void throwGhostToTarget(ServerPlayerEntity player) {
       GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "ghost_pressure", ModItems.GHOST_PRESSURE, -1);
       if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-         player.method_7353(Text.method_43470("§c您没有驾驭鬼压人，无法使用此技能"), true);
+         player.sendMessage(Text.literal("§c您没有驾驭鬼压人，无法使用此技能"), true);
       } else if (GhostDomainManager.isSkillOnCooldown(player, "ghost_pressure")) {
          long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "ghost_pressure");
          double remainingSeconds = remainingTicks / 20.0;
-         player.method_7353(Text.method_43470("§c鬼压人技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
+         player.sendMessage(Text.literal("§c鬼压人技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
       } else {
          EntityHitResult entityHitResult = TargetingUtil.raycastEntity(player, 20.0);
          if (entityHitResult == null) {
-            player.method_7353(Text.method_43470("§7请对准一个生物或玩家使用此技能"), true);
-         } else if (!(entityHitResult.method_17782() instanceof LivingEntity)) {
-            player.method_7353(Text.method_43470("§7目标必须是生物或玩家"), true);
+            player.sendMessage(Text.literal("§7请对准一个生物或玩家使用此技能"), true);
+         } else if (!(entityHitResult.getEntity() instanceof LivingEntity)) {
+            player.sendMessage(Text.literal("§7目标必须是生物或玩家"), true);
          } else {
-            LivingEntity target = (LivingEntity)entityHitResult.method_17782();
+            LivingEntity target = (LivingEntity)entityHitResult.getEntity();
             if (target == player) {
-               player.method_7353(Text.method_43470("§c不能对自己使用此技能"), true);
-            } else if (target.method_6059(ModEffects.GHOST_PRESSURE)) {
+               player.sendMessage(Text.literal("§c不能对自己使用此技能"), true);
+            } else if (target.hasStatusEffect(ModEffects.GHOST_PRESSURE)) {
                GhostDomainManager.setSkillCooldown(player, "ghost_pressure", 100);
                long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "ghost_pressure");
                double remainingSeconds = remainingTicks / 20.0;
-               player.method_7353(Text.method_43470("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
+               player.sendMessage(Text.literal("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
             } else {
                int mainSlot = MainGhostManager.getMainGhostSlot(player);
                int revivalLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
                revivalLevel = Math.max(1, Math.min(10, revivalLevel));
                StatusEffectInstance ghostPressureEffect = GhostPressureEffect.createEffect(player, 100, revivalLevel);
-               target.method_6092(ghostPressureEffect);
+               target.addStatusEffect(ghostPressureEffect);
                if (target instanceof PlayerEntity targetPlayer) {
-                  targetPlayer.method_7353(Text.method_43470("§c你被鬼压住了！"), true);
+                  targetPlayer.sendMessage(Text.literal("§c你被鬼压住了！"), true);
                }
 
                PlayerEvents.balanceRevivalDegree(player);
                GhostDomainManager.setSkillCooldown(player, "ghost_pressure", 100);
                long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "ghost_pressure");
                double remainingSeconds = remainingTicks / 20.0;
-               player.method_7353(Text.method_43470("§a成功将鬼压到目标身上，" + String.format("%.1f", remainingSeconds) + "秒后将发动袭击"), true);
+               player.sendMessage(Text.literal("§a成功将鬼压到目标身上，" + String.format("%.1f", remainingSeconds) + "秒后将发动袭击"), true);
             }
          }
       }

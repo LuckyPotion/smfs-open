@@ -13,7 +13,7 @@ public class GoldenBulletItem extends Item {
       super(settings);
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
    }
 }

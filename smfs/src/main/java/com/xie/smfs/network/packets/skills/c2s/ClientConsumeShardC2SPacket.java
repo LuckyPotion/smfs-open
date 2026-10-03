@@ -19,7 +19,7 @@ public class ClientConsumeShardC2SPacket {
    public static void receive(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      String ghostType = buf.method_19772();
+      String ghostType = buf.readString();
       server.execute(() -> GhostDomainManager.consumeShardItem(player, ghostType));
    }
 }

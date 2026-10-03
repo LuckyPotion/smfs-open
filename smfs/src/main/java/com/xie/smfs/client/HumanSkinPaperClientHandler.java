@@ -16,8 +16,8 @@ public class HumanSkinPaperClientHandler {
 
    public static void register() {
       ClientTickEvents.END_CLIENT_TICK.register((EndTick)client -> {
-         if (client.field_1724 != null) {
-            boolean isUsingHumanSkinPaper = isUsingHumanSkinPaper(client.field_1724);
+         if (client.player != null) {
+            boolean isUsingHumanSkinPaper = isUsingHumanSkinPaper(client.player);
             if (isUsingHumanSkinPaper && !wasUsingHumanSkinPaper) {
                openHumanSkinPaperScreen(client);
             }
@@ -28,19 +28,19 @@ public class HumanSkinPaperClientHandler {
    }
 
    private static boolean isUsingHumanSkinPaper(PlayerEntity player) {
-      ItemStack mainHandStack = player.method_5998(Hand.field_5808);
-      ItemStack offHandStack = player.method_5998(Hand.field_5810);
-      return (mainHandStack.method_7909() instanceof HumanSkinPaperItem || offHandStack.method_7909() instanceof HumanSkinPaperItem) && player.method_6115();
+      ItemStack mainHandStack = player.getStackInHand(Hand.MAIN_HAND);
+      ItemStack offHandStack = player.getStackInHand(Hand.OFF_HAND);
+      return (mainHandStack.getItem() instanceof HumanSkinPaperItem || offHandStack.getItem() instanceof HumanSkinPaperItem) && player.isUsingItem();
    }
 
    private static void openHumanSkinPaperScreen(MinecraftClient client) {
       client.execute(() -> {
-         if (client.field_1755 == null) {
+         if (client.currentScreen == null) {
             ModConfig config = ModConfig.getInstance();
             if (config.aiHumanSkinPaperEnabled && !config.aiHumanSkinPaperApiKey.isEmpty()) {
-               client.method_1507(new AiHumanSkinPaperScreen());
+               client.setScreen(new AiHumanSkinPaperScreen());
             } else {
-               client.method_1507(new TutorialScreen());
+               client.setScreen(new TutorialScreen());
             }
          }
       });

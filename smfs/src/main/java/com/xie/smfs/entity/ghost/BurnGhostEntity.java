@@ -36,37 +36,37 @@ public class BurnGhostEntity extends GhostEntity {
    }
 
    private void initBurnGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.3);
+         speedAttribute.setBaseValue(0.3);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(10.0);
+         attackDamageAttribute.setBaseValue(10.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.2);
+         attackKnockbackAttribute.setBaseValue(0.2);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(30.0);
+         followRangeAttribute.setBaseValue(30.0);
       }
    }
 
    public static Builder createBurnGhostAttributes() {
       return GhostEntity.createGhostAttributes()
-         .method_26868(EntityAttributes.field_23716, 100000.0)
-         .method_26868(EntityAttributes.field_23719, 0.25)
-         .method_26868(EntityAttributes.field_23717, 32.0);
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 100000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0);
    }
 
    public String getGhostType() {
@@ -79,72 +79,68 @@ public class BurnGhostEntity extends GhostEntity {
 
    @Override
    protected void applyDefaultEffects(PlayerEntity player) {
-      player.method_6092(
+      player.addStatusEffect(
          new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, Integer.MAX_VALUE, this.getGhostDomainActualLevel() - 1, false, false, false)
       );
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
+   protected void initDataTracker() {
+      super.initDataTracker();
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient()) {
          if (this.isSuppressed() || this.isDeadlocked() || this.isMovementDisabled()) {
             return;
          }
 
-         this.method_5639(100);
-         if (this.field_6012 % 5 == 0) {
+         this.setOnFireFor(100);
+         if (this.age % 5 == 0) {
             this.spawnBurnParticles();
          }
 
-         if (this.field_6012 % 40 == 0) {
+         if (this.age % 40 == 0) {
             this.igniteEntitiesInGhostDomain();
          }
 
-         if (this.field_6012 % 20 == 0) {
+         if (this.age % 20 == 0) {
             this.spawnFireOnPath();
          }
       }
    }
 
    private void spawnBurnParticles() {
-      if (!this.method_37908().method_8608()) {
+      if (!this.getWorld().isClient()) {
          for (int i = 0; i < 3; i++) {
-            double offsetX = (this.method_6051().method_43058() - 0.5) * 1.5;
-            double offsetY = this.method_6051().method_43058() * 2.0;
-            double offsetZ = (this.method_6051().method_43058() - 0.5) * 1.5;
-            this.method_37908()
-               .method_8406(
-                  ParticleTypes.field_11240, this.method_23317() + offsetX, this.method_23318() + offsetY, this.method_23321() + offsetZ, 0.0, 0.1, 0.0
-               );
+            double offsetX = (this.getRandom().nextDouble() - 0.5) * 1.5;
+            double offsetY = this.getRandom().nextDouble() * 2.0;
+            double offsetZ = (this.getRandom().nextDouble() - 0.5) * 1.5;
+            this.getWorld().addParticle(ParticleTypes.FLAME, this.getX() + offsetX, this.getY() + offsetY, this.getZ() + offsetZ, 0.0, 0.1, 0.0);
          }
 
          for (int i = 0; i < 2; i++) {
-            double offsetX = (this.method_6051().method_43058() - 0.5) * 1.2;
-            double offsetY = this.method_6051().method_43058() * 1.8;
-            double offsetZ = (this.method_6051().method_43058() - 0.5) * 1.2;
-            this.method_37908()
-               .method_8406(
-                  ParticleTypes.field_11251, this.method_23317() + offsetX, this.method_23318() + offsetY, this.method_23321() + offsetZ, 0.0, 0.05, 0.0
-               );
+            double offsetX = (this.getRandom().nextDouble() - 0.5) * 1.2;
+            double offsetY = this.getRandom().nextDouble() * 1.8;
+            double offsetZ = (this.getRandom().nextDouble() - 0.5) * 1.2;
+            this.getWorld().addParticle(ParticleTypes.SMOKE, this.getX() + offsetX, this.getY() + offsetY, this.getZ() + offsetZ, 0.0, 0.05, 0.0);
          }
       }
    }
 
    private void igniteEntitiesInGhostDomain() {
-      if (!this.method_37908().method_8608()) {
+      if (!this.getWorld().isClient()) {
          double radius = this.getGhostDomainRadius();
 
-         for (LivingEntity entity : this.method_37908()
-            .method_8390(LivingEntity.class, this.method_5829().method_1014(radius), entityx -> entityx != this && entityx.method_5858(this) <= radius * radius)) {
+         for (LivingEntity entity : this.getWorld()
+            .getEntitiesByClass(
+               LivingEntity.class, this.getBoundingBox().expand(radius), entityx -> entityx != this && entityx.squaredDistanceTo(this) <= radius * radius
+            )) {
             if (!(entity instanceof PlayerEntity player && this.isPlayerProtected(player)) && !(entity instanceof GhostEntity)) {
-               int fireTicks = 60 + this.method_6051().method_43048(100);
-               entity.method_5639(fireTicks / 20);
+               int fireTicks = 60 + this.getRandom().nextInt(100);
+               entity.setOnFireFor(fireTicks / 20);
                this.spawnIgnitionParticles(entity);
             }
          }
@@ -152,16 +148,16 @@ public class BurnGhostEntity extends GhostEntity {
    }
 
    private void spawnFireOnPath() {
-      if (!this.method_37908().method_8608()) {
-         int x = (int)Math.floor(this.method_23317());
-         int y = (int)Math.floor(this.method_23318());
-         int z = (int)Math.floor(this.method_23321());
+      if (!this.getWorld().isClient()) {
+         int x = (int)Math.floor(this.getX());
+         int y = (int)Math.floor(this.getY());
+         int z = (int)Math.floor(this.getZ());
          BlockPos pos = new BlockPos(x, y, z);
-         BlockPos downPos = pos.method_10074();
-         if (this.method_37908().method_8320(downPos).method_26212(this.method_37908(), downPos) && this.method_37908().method_8320(pos).method_26215()) {
-            FireBlock fireBlock = (FireBlock)Blocks.field_10036;
-            if (fireBlock.method_9558(this.method_37908().method_8320(pos), this.method_37908(), pos)) {
-               this.method_37908().method_8501(pos, Blocks.field_10036.method_9564());
+         BlockPos downPos = pos.down();
+         if (this.getWorld().getBlockState(downPos).isSolidBlock(this.getWorld(), downPos) && this.getWorld().getBlockState(pos).isAir()) {
+            FireBlock fireBlock = (FireBlock)Blocks.FIRE;
+            if (fireBlock.canPlaceAt(this.getWorld().getBlockState(pos), this.getWorld(), pos)) {
+               this.getWorld().setBlockState(pos, Blocks.FIRE.getDefaultState());
                this.spawnFirePlacementParticles(pos);
             }
          }
@@ -169,37 +165,34 @@ public class BurnGhostEntity extends GhostEntity {
    }
 
    private void spawnIgnitionParticles(LivingEntity entity) {
-      if (!this.method_37908().method_8608()) {
+      if (!this.getWorld().isClient()) {
          for (int i = 0; i < 5; i++) {
-            double offsetX = (this.method_6051().method_43058() - 0.5) * 2.0;
-            double offsetY = this.method_6051().method_43058() * entity.method_17682();
-            double offsetZ = (this.method_6051().method_43058() - 0.5) * 2.0;
-            this.method_37908()
-               .method_8406(
-                  ParticleTypes.field_11240, entity.method_23317() + offsetX, entity.method_23318() + offsetY, entity.method_23321() + offsetZ, 0.0, 0.1, 0.0
-               );
+            double offsetX = (this.getRandom().nextDouble() - 0.5) * 2.0;
+            double offsetY = this.getRandom().nextDouble() * entity.getHeight();
+            double offsetZ = (this.getRandom().nextDouble() - 0.5) * 2.0;
+            this.getWorld().addParticle(ParticleTypes.FLAME, entity.getX() + offsetX, entity.getY() + offsetY, entity.getZ() + offsetZ, 0.0, 0.1, 0.0);
          }
       }
    }
 
    private void spawnFirePlacementParticles(BlockPos pos) {
-      if (!this.method_37908().method_8608()) {
+      if (!this.getWorld().isClient()) {
          for (int i = 0; i < 3; i++) {
-            double x = pos.method_10263() + 0.5 + (this.method_6051().method_43058() - 0.5) * 0.5;
-            double y = pos.method_10264() + 0.1;
-            double z = pos.method_10260() + 0.5 + (this.method_6051().method_43058() - 0.5) * 0.5;
-            this.method_37908().method_8406(ParticleTypes.field_11240, x, y, z, 0.0, 0.05, 0.0);
+            double x = pos.getX() + 0.5 + (this.getRandom().nextDouble() - 0.5) * 0.5;
+            double y = pos.getY() + 0.1;
+            double z = pos.getZ() + 0.5 + (this.getRandom().nextDouble() - 0.5) * 0.5;
+            this.getWorld().addParticle(ParticleTypes.FLAME, x, y, z, 0.0, 0.05, 0.0);
          }
       }
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      return !RedGhostCandleItem.isHoldingCandle(player) && this.isPlayerBurning(player) && this.method_5858(player) <= 900.0 && this.attackCooldown <= 0;
+      return !RedGhostCandleItem.isHoldingCandle(player) && this.isPlayerBurning(player) && this.squaredDistanceTo(player) <= 900.0 && this.attackCooldown <= 0;
    }
 
    private boolean isPlayerBurning(PlayerEntity player) {
-      return player.method_5809() || player.method_20802() > 0;
+      return player.isOnFire() || player.getFireTicks() > 0;
    }
 
    @Override
@@ -207,15 +200,15 @@ public class BurnGhostEntity extends GhostEntity {
       if (!this.isDeadlocked()) {
          if (this.attackCooldown <= 0) {
             this.attackCooldown = 20;
-            this.method_20620(player.method_23317(), player.method_23318(), player.method_23321());
-            if (player.method_5809()) {
-               player.method_20803(player.method_20802() + 100);
+            this.teleport(player.getX(), player.getY(), player.getZ());
+            if (player.isOnFire()) {
+               player.setFireTicks(player.getFireTicks() + 100);
             } else {
-               player.method_5639(5);
+               player.setOnFireFor(5);
             }
 
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5911, 60, 1));
-            DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 60, 1));
+            DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
             PlayerEvents.handleSpiritDamage(player, this.getSpiritualDamage(), this.getSpiritualDamage(), damageSource);
          }
       }

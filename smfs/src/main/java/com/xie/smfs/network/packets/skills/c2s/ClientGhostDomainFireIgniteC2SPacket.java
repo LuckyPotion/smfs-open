@@ -31,20 +31,20 @@ public class ClientGhostDomainFireIgniteC2SPacket {
    private static void igniteEntitiesInGreenGhostDomain(ServerPlayerEntity player) {
       int ghostFireLevel = GhostDomainManager.getEffectiveSkillLevel(player, GhostDomainManager.getGhostFireLevel(player));
       if (ghostFireLevel < 2) {
-         player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+         player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
       } else {
          double range = 20.0;
          int[] ignitedCount = new int[]{0};
-         player.method_37908()
-            .method_8333(player, player.method_5829().method_1014(range), entity -> entity.method_5805() && entity != player && entity instanceof LivingEntity)
+         player.getWorld()
+            .getOtherEntities(player, player.getBoundingBox().expand(range), entity -> entity.isAlive() && entity != player && entity instanceof LivingEntity)
             .forEach(entity -> {
-               entity.method_5639(5);
+               entity.setOnFireFor(5);
                ignitedCount[0]++;
             });
          if (ignitedCount[0] > 0) {
-            player.method_7353(Text.method_43470("§6鬼火V技能点燃了 §c" + ignitedCount[0] + " §6个生物"), true);
+            player.sendMessage(Text.literal("§6鬼火V技能点燃了 §c" + ignitedCount[0] + " §6个生物"), true);
          } else {
-            player.method_7353(Text.method_43470("§7鬼火V技能范围内没有可点燃的生物"), true);
+            player.sendMessage(Text.literal("§7鬼火V技能范围内没有可点燃的生物"), true);
          }
       }
    }

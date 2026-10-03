@@ -14,15 +14,15 @@ public class OpenGhostChildCultivationScreenCommand {
 
    public static int execute(CommandContext<ServerCommandSource> context) {
       ServerCommandSource source = (ServerCommandSource)context.getSource();
-      PlayerEntity player = source.method_44023();
+      PlayerEntity player = source.getPlayer();
       if (player != null) {
          try {
             PlayerGhostChildManager.initializeGhostChild(player);
-            player.method_17355(new GhostChildCultivationScreenHandler.GhostChildCultivationFactory());
+            player.openHandledScreen(new GhostChildCultivationScreenHandler.GhostChildCultivationFactory());
             return 1;
          } catch (Exception e) {
-            LOGGER.error("Error opening Ghost Child Cultivation Screen for player: {}", player.method_5477().getString(), e);
-            player.method_7353(Text.method_43470("§cError opening Ghost Child Cultivation Screen: " + e.getMessage()), false);
+            LOGGER.error("Error opening Ghost Child Cultivation Screen for player: {}", player.getName().getString(), e);
+            player.sendMessage(Text.literal("§cError opening Ghost Child Cultivation Screen: " + e.getMessage()), false);
             return 0;
          }
       } else {

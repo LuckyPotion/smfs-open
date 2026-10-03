@@ -18,24 +18,24 @@ public class RedGhostCandleItem extends Item {
    private static final double DISTANCE_THRESHOLD = 20.0;
 
    public RedGhostCandleItem(Settings settings) {
-      super(settings.method_7895(100));
+      super(settings.maxDamage(100));
    }
 
-   public void method_7888(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-      super.method_7888(stack, world, entity, slot, selected);
-      if (!world.field_9236 && entity instanceof PlayerEntity player && (player.method_6047() == stack || player.method_6079() == stack)) {
+   public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+      super.inventoryTick(stack, world, entity, slot, selected);
+      if (!world.isClient && entity instanceof PlayerEntity player && (player.getMainHandStack() == stack || player.getOffHandStack() == stack)) {
          this.checkAndConsumeDurability(stack, player);
       }
    }
 
    private void checkAndConsumeDurability(ItemStack stack, PlayerEntity player) {
-      World world = player.method_37908();
-      List<GhostEntity> nearbyGhosts = world.method_8390(GhostEntity.class, player.method_5829().method_1014(20.0), ghostx -> true);
+      World world = player.getWorld();
+      List<GhostEntity> nearbyGhosts = world.getEntitiesByClass(GhostEntity.class, player.getBoundingBox().expand(20.0), ghostx -> true);
       if (!nearbyGhosts.isEmpty()) {
          float maxConsumptionRate = 0.0F;
 
          for (GhostEntity ghost : nearbyGhosts) {
-            double distance = player.method_5858(ghost);
+            double distance = player.squaredDistanceTo(ghost);
             if (distance <= 400.0) {
                double actualDistance = Math.sqrt(distance);
                float consumptionRate = this.calculateConsumptionRate(actualDistance, ghost.getTerrorLevel());
@@ -45,8 +45,8 @@ public class RedGhostCandleItem extends Item {
             }
          }
 
-         if (maxConsumptionRate > 0.0F && world.field_9229.method_43057() < maxConsumptionRate) {
-            stack.method_7956(1, player, p -> p.method_20236(p.method_6058()));
+         if (maxConsumptionRate > 0.0F && world.random.nextFloat() < maxConsumptionRate) {
+            stack.damage(1, player, p -> p.sendToolBreakStatus(p.getActiveHand()));
          }
       }
    }
@@ -70,32 +70,32 @@ public class RedGhostCandleItem extends Item {
    }
 
    public static boolean isHoldingCandle(PlayerEntity player) {
-      return player.method_6047().method_31574(ModItems.RED_GHOST_CANDLE) || player.method_6079().method_31574(ModItems.RED_GHOST_CANDLE);
+      return player.getMainHandStack().isOf(ModItems.RED_GHOST_CANDLE) || player.getOffHandStack().isOf(ModItems.RED_GHOST_CANDLE);
    }
 
    public static void consumeDurabilityOnSpiritDamage(PlayerEntity player, float spiritDamage) {
-      if (!(spiritDamage <= 0.0F) && !player.method_37908().field_9236) {
+      if (!(spiritDamage <= 0.0F) && !player.getWorld().isClient) {
          int damageAmount = 10;
-         ItemStack mainHand = player.method_6047();
-         ItemStack offHand = player.method_6079();
-         if (mainHand.method_31574(ModItems.RED_GHOST_CANDLE)) {
-            mainHand.method_7956(damageAmount, player, p -> p.method_20236(Hand.field_5808));
+         ItemStack mainHand = player.getMainHandStack();
+         ItemStack offHand = player.getOffHandStack();
+         if (mainHand.isOf(ModItems.RED_GHOST_CANDLE)) {
+            mainHand.damage(damageAmount, player, p -> p.sendToolBreakStatus(Hand.MAIN_HAND));
          }
 
-         if (offHand.method_31574(ModItems.RED_GHOST_CANDLE)) {
-            offHand.method_7956(damageAmount, player, p -> p.method_20236(Hand.field_5810));
+         if (offHand.isOf(ModItems.RED_GHOST_CANDLE)) {
+            offHand.damage(damageAmount, player, p -> p.sendToolBreakStatus(Hand.OFF_HAND));
          }
       }
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.red_ghost_candle.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.red_ghost_candle.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.red_ghost_candle.description.type"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.red_ghost_candle.description.source"));
+      tooltip.add(Text.translatable("item.smfs.red_ghost_candle.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.red_ghost_candle.description.type"));
    }
 
-   public boolean method_7870(ItemStack stack) {
+   public boolean isEnchantable(ItemStack stack) {
       return false;
    }
 }

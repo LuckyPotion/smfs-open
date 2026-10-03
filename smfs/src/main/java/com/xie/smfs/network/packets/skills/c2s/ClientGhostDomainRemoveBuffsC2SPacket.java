@@ -25,12 +25,12 @@ public class ClientGhostDomainRemoveBuffsC2SPacket {
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
       server.execute(() -> {
-         LOGGER.info("收到玩家 {} 的鬼域移除buff请求", player.method_5477().getString());
+         LOGGER.info("收到玩家 {} 的鬼域移除buff请求", player.getName().getString());
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "silent_ghost_eye", ModItems.SILENT_GHOST_EYE, 7);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭鬼眼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭鬼眼，无法使用此技能"), true);
          } else if (result == GhostDomainManager.SkillCheckResult.LEVEL_TOO_LOW) {
-            player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+            player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
          } else {
             GhostDomainManager.handleGhostDomainRemoveBuffs(player);
          }

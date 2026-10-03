@@ -170,24 +170,24 @@ public class GhostUtils {
       GHOST_TYPE_TO_ITEM_MAP.put("xinkai_ghost", ModItems.XINKAI_GHOST);
       GHOST_TYPE_TO_ITEM_MAP.put("ghost_lake", ModItems.GHOST_LAKE);
       GHOST_TYPE_TO_ITEM_MAP.put("ghost_dream", ModItems.GHOST_DREAM);
-      VANILLA_ITEM_MAP.put("cookie", Items.field_8423);
-      VANILLA_ITEM_MAP.put("gold_ingot", Items.field_8695);
-      VANILLA_ITEM_MAP.put("iron_ingot", Items.field_8620);
-      VANILLA_ITEM_MAP.put("diamond", Items.field_8477);
-      VANILLA_ITEM_MAP.put("experience_bottle", Items.field_8287);
-      VANILLA_ITEM_MAP.put("golden_helmet", Items.field_8862);
-      VANILLA_ITEM_MAP.put("golden_chestplate", Items.field_8678);
-      VANILLA_ITEM_MAP.put("golden_leggings", Items.field_8416);
-      VANILLA_ITEM_MAP.put("golden_boots", Items.field_8753);
-      VANILLA_ITEM_MAP.put("enchanted_golden_apple", Items.field_8367);
-      VANILLA_ITEM_MAP.put("golden_apple", Items.field_8463);
-      VANILLA_ITEM_MAP.put("totem_of_undying", Items.field_8288);
-      VANILLA_ITEM_MAP.put("iron_sword", Items.field_8371);
-      VANILLA_ITEM_MAP.put("iron_leggings", Items.field_8396);
-      VANILLA_ITEM_MAP.put("iron_chestplate", Items.field_8523);
-      VANILLA_ITEM_MAP.put("diamond_sword", Items.field_8802);
-      VANILLA_ITEM_MAP.put("diamond_chestplate", Items.field_8058);
-      VANILLA_ITEM_MAP.put("diamond_leggings", Items.field_8348);
+      VANILLA_ITEM_MAP.put("cookie", Items.COOKIE);
+      VANILLA_ITEM_MAP.put("gold_ingot", Items.GOLD_INGOT);
+      VANILLA_ITEM_MAP.put("iron_ingot", Items.IRON_INGOT);
+      VANILLA_ITEM_MAP.put("diamond", Items.DIAMOND);
+      VANILLA_ITEM_MAP.put("experience_bottle", Items.EXPERIENCE_BOTTLE);
+      VANILLA_ITEM_MAP.put("golden_helmet", Items.GOLDEN_HELMET);
+      VANILLA_ITEM_MAP.put("golden_chestplate", Items.GOLDEN_CHESTPLATE);
+      VANILLA_ITEM_MAP.put("golden_leggings", Items.GOLDEN_LEGGINGS);
+      VANILLA_ITEM_MAP.put("golden_boots", Items.GOLDEN_BOOTS);
+      VANILLA_ITEM_MAP.put("enchanted_golden_apple", Items.ENCHANTED_GOLDEN_APPLE);
+      VANILLA_ITEM_MAP.put("golden_apple", Items.GOLDEN_APPLE);
+      VANILLA_ITEM_MAP.put("totem_of_undying", Items.TOTEM_OF_UNDYING);
+      VANILLA_ITEM_MAP.put("iron_sword", Items.IRON_SWORD);
+      VANILLA_ITEM_MAP.put("iron_leggings", Items.IRON_LEGGINGS);
+      VANILLA_ITEM_MAP.put("iron_chestplate", Items.IRON_CHESTPLATE);
+      VANILLA_ITEM_MAP.put("diamond_sword", Items.DIAMOND_SWORD);
+      VANILLA_ITEM_MAP.put("diamond_chestplate", Items.DIAMOND_CHESTPLATE);
+      VANILLA_ITEM_MAP.put("diamond_leggings", Items.DIAMOND_LEGGINGS);
       MOD_ITEM_MAP.put("control_slot", ModItems.CONTROL_SLOT);
       MOD_ITEM_MAP.put("red_ghost_candle", ModItems.RED_GHOST_CANDLE);
       MOD_ITEM_MAP.put("mystery_coordinate", ModItems.MYSTERY_INFO);
@@ -405,7 +405,7 @@ public class GhostUtils {
    }
 
    public static String getGhostTypeFromEntity(GhostEntity entity) {
-      return entity == null ? null : convertEntityTypeToString(entity.method_5864());
+      return entity == null ? null : convertEntityTypeToString(entity.getType());
    }
 
    public static Item getGhostItemByType(String ghostType) {
@@ -422,7 +422,7 @@ public class GhostUtils {
          if (addonMapping != null) {
             try {
                ItemStack itemStack = addonMapping.apply(ghostNbt);
-               if (itemStack != null && !itemStack.method_7960()) {
+               if (itemStack != null && !itemStack.isEmpty()) {
                   LOGGER.info("使用附属模组映射创建驾驭物品: {}", ghostType);
                   return itemStack;
                }
@@ -440,13 +440,13 @@ public class GhostUtils {
          return new ItemStack(ModItems.CONTROL_SLOT);
       } else {
          LOGGER.warn("尝试创建驾驭物品时鬼类型为空");
-         return ItemStack.field_8037;
+         return ItemStack.EMPTY;
       }
    }
 
    public static String getGhostTypeFromItem(ItemStack itemStack) {
-      if (itemStack != null && !itemStack.method_7960()) {
-         Item item = itemStack.method_7909();
+      if (itemStack != null && !itemStack.isEmpty()) {
+         Item item = itemStack.getItem();
 
          for (Entry<String, Item> entry : GHOST_TYPE_TO_ITEM_MAP.entrySet()) {
             if (entry.getValue() == item) {
@@ -465,9 +465,9 @@ public class GhostUtils {
    }
 
    public static boolean isItemMatchGhostType(ItemStack itemStack, String ghostType) {
-      if (itemStack != null && !itemStack.method_7960() && ghostType != null) {
+      if (itemStack != null && !itemStack.isEmpty() && ghostType != null) {
          Item expectedItem = GHOST_TYPE_TO_ITEM_MAP.get(ghostType);
-         return expectedItem != null && itemStack.method_7909() == expectedItem;
+         return expectedItem != null && itemStack.getItem() == expectedItem;
       } else {
          return false;
       }
@@ -539,7 +539,7 @@ public class GhostUtils {
       }
 
       try {
-         return Registries.field_41177.method_10221(ghostType).toString();
+         return Registries.ENTITY_TYPE.getId(ghostType).toString();
       } catch (Exception e) {
          return "unknown";
       }
@@ -555,8 +555,8 @@ public class GhostUtils {
    }
 
    public static void registerAddonGhostMapping(String ghostType, ItemStack itemStack) {
-      if (ghostType != null && itemStack != null && !itemStack.method_7960()) {
-         ADDON_GHOST_MAPPINGS.put(ghostType, nbt -> itemStack.method_7972());
+      if (ghostType != null && itemStack != null && !itemStack.isEmpty()) {
+         ADDON_GHOST_MAPPINGS.put(ghostType, nbt -> itemStack.copy());
          LOGGER.info("成功注册附属模组鬼类型映射（简化版）: {}", ghostType);
       } else {
          LOGGER.warn("尝试注册无效的附属模组鬼类型映射: ghostType={}, itemStack={}", ghostType, itemStack);
@@ -612,7 +612,7 @@ public class GhostUtils {
       if (ghostType != null && entityType != null) {
          ADDON_ENTITY_CREATION_MAPPINGS.put(ghostType, world -> {
             try {
-               return (GhostEntity)entityType.method_5883(world);
+               return (GhostEntity)entityType.create(world);
             } catch (Exception e) {
                LOGGER.error("创建鬼实体失败: ghostType={}, entityType={}", ghostType, entityType, e);
                return null;
@@ -1651,7 +1651,7 @@ public class GhostUtils {
       }
 
       LOGGER.warn("未知的物品ID: {}", itemId);
-      return ItemStack.field_8037;
+      return ItemStack.EMPTY;
    }
 
    public static Map<String, String> getItemDisplayNameMap() {

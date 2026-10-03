@@ -22,18 +22,15 @@ public class TargetingUtil {
    }
 
    public static LivingEntity findEntityInLookDirection(PlayerEntity player, double maxDistance, double dotThreshold, Predicate<LivingEntity> filter) {
-      Vec3d lookVec = player.method_5828(1.0F);
-      List<Entity> entitiesInRange = player.method_37908().method_8335(player, player.method_5829().method_1014(maxDistance));
+      Vec3d lookVec = player.getRotationVec(1.0F);
+      List<Entity> entitiesInRange = player.getWorld().getOtherEntities(player, player.getBoundingBox().expand(maxDistance));
       LivingEntity bestTarget = null;
       double bestDot = -1.0;
 
       for (Entity entity : entitiesInRange) {
          if (entity instanceof LivingEntity living && entity != player && (filter == null || filter.test(living))) {
-            Vec3d toEntityVec = new Vec3d(
-                  entity.method_23317() - player.method_23317(), entity.method_23320() - player.method_23320(), entity.method_23321() - player.method_23321()
-               )
-               .method_1029();
-            double dot = lookVec.method_1026(toEntityVec);
+            Vec3d toEntityVec = new Vec3d(entity.getX() - player.getX(), entity.getEyeY() - player.getEyeY(), entity.getZ() - player.getZ()).normalize();
+            double dot = lookVec.dotProduct(toEntityVec);
             if (dot > dotThreshold && dot > bestDot) {
                bestTarget = living;
                bestDot = dot;
@@ -51,24 +48,19 @@ public class TargetingUtil {
    public static LivingEntity findEntityInLookDirectionWithOcclusion(
       PlayerEntity player, double maxDistance, double dotThreshold, Predicate<LivingEntity> filter
    ) {
-      Vec3d lookVec = player.method_5828(1.0F);
-      List<Entity> entitiesInRange = player.method_37908().method_8335(player, player.method_5829().method_1014(maxDistance));
+      Vec3d lookVec = player.getRotationVec(1.0F);
+      List<Entity> entitiesInRange = player.getWorld().getOtherEntities(player, player.getBoundingBox().expand(maxDistance));
       LivingEntity bestTarget = null;
       double bestDot = -1.0;
 
       for (Entity entity : entitiesInRange) {
          if (entity instanceof LivingEntity living && entity != player && (filter == null || filter.test(living))) {
-            Vec3d toEntityVec = new Vec3d(
-                  entity.method_23317() - player.method_23317(), entity.method_23320() - player.method_23320(), entity.method_23321() - player.method_23321()
-               )
-               .method_1029();
-            double dot = lookVec.method_1026(toEntityVec);
+            Vec3d toEntityVec = new Vec3d(entity.getX() - player.getX(), entity.getEyeY() - player.getEyeY(), entity.getZ() - player.getZ()).normalize();
+            double dot = lookVec.dotProduct(toEntityVec);
             if (dot > dotThreshold && dot > bestDot) {
-               RaycastContext raycastContext = new RaycastContext(
-                  player.method_33571(), entity.method_19538(), ShapeType.field_17558, FluidHandling.field_1348, player
-               );
-               HitResult hitResult = player.method_37908().method_17742(raycastContext);
-               if (hitResult.method_17783() != Type.field_1332) {
+               RaycastContext raycastContext = new RaycastContext(player.getEyePos(), entity.getPos(), ShapeType.COLLIDER, FluidHandling.NONE, player);
+               HitResult hitResult = player.getWorld().raycast(raycastContext);
+               if (hitResult.getType() != Type.BLOCK) {
                   bestTarget = living;
                   bestDot = dot;
                }
@@ -80,24 +72,24 @@ public class TargetingUtil {
    }
 
    public static EntityHitResult raycastEntity(ServerPlayerEntity player, double maxDistance) {
-      Vec3d startPos = player.method_33571();
-      Vec3d lookVec = player.method_5828(1.0F);
-      Vec3d endPos = startPos.method_1019(lookVec.method_1021(maxDistance));
+      Vec3d startPos = player.getEyePos();
+      Vec3d lookVec = player.getRotationVec(1.0F);
+      Vec3d endPos = startPos.add(lookVec.multiply(maxDistance));
       double maxSqDist = maxDistance * maxDistance;
-      return ProjectileUtil.method_18075(
+      return ProjectileUtil.raycast(
          player,
          startPos,
          endPos,
-         player.method_5829().method_18804(lookVec.method_1021(maxDistance)).method_1014(1.0),
-         e -> !e.method_7325() && e.method_5863() && e instanceof LivingEntity && e != player,
+         player.getBoundingBox().stretch(lookVec.multiply(maxDistance)).expand(1.0),
+         e -> !e.isSpectator() && e.canHit() && e instanceof LivingEntity && e != player,
          maxSqDist
       );
    }
 
    public static EntityHitResult projectileRaycast(Entity entity, Vec3d eyePos, Vec3d lookVec, double maxDistance, double boxExpand) {
-      Vec3d maxPos = eyePos.method_1031(lookVec.field_1352 * maxDistance, lookVec.field_1351 * maxDistance, lookVec.field_1350 * maxDistance);
-      Box box = entity.method_5829().method_18804(lookVec.method_1021(maxDistance)).method_1014(boxExpand);
+      Vec3d maxPos = eyePos.add(lookVec.x * maxDistance, lookVec.y * maxDistance, lookVec.z * maxDistance);
+      Box box = entity.getBoundingBox().stretch(lookVec.multiply(maxDistance)).expand(boxExpand);
       double maxSqDist = maxDistance * maxDistance;
-      return ProjectileUtil.method_18075(entity, eyePos, maxPos, box, e -> !e.method_7325() && e.method_5863(), maxSqDist);
+      return ProjectileUtil.raycast(entity, eyePos, maxPos, box, e -> !e.isSpectator() && e.canHit(), maxSqDist);
    }
 }

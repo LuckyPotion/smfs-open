@@ -86,11 +86,29 @@ String original = new String(mojibake.getBytes(Charset.forName("GBK")), Charset.
 
 | 项目 | 结果 |
 |---|---|
-| 重映射后 `class_*` / `method_*` / `field_*` 残留 | **0** |
+| `class_*` 残留 | **0** |
+| `method_*` / `field_*` 残留 | **38 处 / 14 个文件**（补充 Minecraft 类路径前为 27,434 处，见下） |
 | 编码修复命中文件 | `fabric.mod.json` ×2（模组名/简介）、`tutorials.json`、`event_stories.json`、`home_1.json`、`homes.json` |
 | Java 源码中的中文损坏数 | **0**（4073 个含中文的字符串常量，按码位审计） |
 | 资源文件与原始 jar 差异 | **0**（891 个文件 MD5 全部一致） |
 | 外部类路径带来的改善 | 728 个源文件中 88 个输出质量提升 |
+
+## ⚠️ 必须传入 Minecraft 类路径
+
+`Remap` 的成员重映射依赖类型解析。**只给映射表、不给 Minecraft 类文件时，类名会正确重映射，但成员名一个都不会改**——因为 TinyRemapper 解析不出成员的属主类。
+
+这个失败模式很隐蔽：产物看起来"类名都换成 Yarn 命名了"，容易误判为成功。本项目第一版就有 27,434 处成员引用停留在 intermediary 命名，补上类路径后降到 38 处。
+
+所以调用时必须加 `-cp`：
+
+```bash
+java -cp "$CP" Remap in.jar out.jar mappings.tiny intermediary named \
+     -cp mc-intermediary-1.20.1.jar
+```
+
+该 jar 需自行生成（Fabric 未直接托管），完整步骤见 [`../TOOLS.md`](../TOOLS.md#关于-minecraft-类路径重要)。
+
+校验残留务必用 `grep -r`，**不要用 PowerShell 的 `Select-String -Path "...\**\*.java"`**——`**` 在 PowerShell 里不是递归通配符，匹配不到文件时静默返回 0，本项目因此一度误报"零残留"。
 
 ## 关于编码的教训
 

@@ -18,29 +18,29 @@ public class EndingSupernaturalSecretItem extends Item {
       super(new FabricItemSettings().maxCount(1));
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (world.field_9236) {
-         return TypedActionResult.method_22427(stack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (world.isClient) {
+         return TypedActionResult.success(stack);
       } else if (hasComprehended(user)) {
-         user.method_7353(Text.method_43470("§e..."), true);
-         return TypedActionResult.method_22431(stack);
+         user.sendMessage(Text.literal("§e..."), true);
+         return TypedActionResult.fail(stack);
       } else {
          setComprehended(user);
-         stack.method_7934(1);
-         user.method_7353(Text.method_43470("§d你从老一辈驭鬼者的经历中感悟到了终结灵异时代的关键！"), true);
-         return TypedActionResult.method_22427(stack);
+         stack.decrement(1);
+         user.sendMessage(Text.literal("§d你从老一辈驭鬼者的经历中感悟到了终结灵异时代的关键！"), true);
+         return TypedActionResult.success(stack);
       }
    }
 
    public static boolean hasComprehended(PlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      return data.method_10577("comprehended_ending_secret");
+      return data.getBoolean("comprehended_ending_secret");
    }
 
    public static void setComprehended(PlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10556("comprehended_ending_secret", true);
+      data.putBoolean("comprehended_ending_secret", true);
       PlayerEvents.saveDataToPlayer(player, data);
    }
 }

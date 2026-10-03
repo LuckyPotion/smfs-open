@@ -26,9 +26,9 @@ public abstract class LivingEntityMixin {
          return false;
       }
 
-      ItemStack mainHand = self.method_6047();
-      ItemStack offHand = self.method_6079();
-      return mainHand.method_7909() instanceof GhostScissorsItem || offHand.method_7909() instanceof GhostScissorsItem;
+      ItemStack mainHand = self.getMainHandStack();
+      ItemStack offHand = self.getOffHandStack();
+      return mainHand.getItem() instanceof GhostScissorsItem || offHand.getItem() instanceof GhostScissorsItem;
    }
 
    @Inject(method = "getStatusEffects", at = @At("RETURN"), cancellable = true)
@@ -37,7 +37,7 @@ public abstract class LivingEntityMixin {
          Collection<StatusEffectInstance> originalEffects = cir.getReturnValue();
          if (originalEffects != null && !originalEffects.isEmpty()) {
             Collection<StatusEffectInstance> filteredEffects = originalEffects.stream()
-               .filter(effect -> !(effect.method_5579() instanceof ICurseEffect))
+               .filter(effect -> !(effect.getEffectType() instanceof ICurseEffect))
                .collect(Collectors.toList());
             cir.setReturnValue(filteredEffects);
          }

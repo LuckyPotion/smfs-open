@@ -27,7 +27,7 @@ public class CryingGhostEntity extends GhostEntity {
    private static final int ATTACK_COOLDOWN = 1200;
    private static final int CRYING_PHASE_DURATION = 200;
    private static final double ATTACK_DISTANCE = 8.0;
-   private static final TrackedData<Boolean> IS_IN_CRYING_PHASE = DataTracker.method_12791(CryingGhostEntity.class, TrackedDataHandlerRegistry.field_13323);
+   private static final TrackedData<Boolean> IS_IN_CRYING_PHASE = DataTracker.registerData(CryingGhostEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
    private int cryingDamageTickCounter = 0;
    private int cryingDamageLevel = 0;
 
@@ -37,51 +37,51 @@ public class CryingGhostEntity extends GhostEntity {
       this.attackCooldown = 1200;
       this.setEnableChaseAfterRule(false);
       this.initCryingGhostAttributes();
-      if (!world.field_9236) {
-         this.method_5783(ModSounds.CRYING_GHOST_ENTRANCE, 1.0F, 1.0F);
-         LOGGER.info("哭坟鬼实体生成，播放出场音效: entity.crying_ghost.entrance, 位置: ({}, {}, {})", this.method_23317(), this.method_23318(), this.method_23321());
+      if (!world.isClient) {
+         this.playSound(ModSounds.CRYING_GHOST_ENTRANCE, 1.0F, 1.0F);
+         LOGGER.info("哭坟鬼实体生成，播放出场音效: entity.crying_ghost.entrance, 位置: ({}, {}, {})", this.getX(), this.getY(), this.getZ());
       }
    }
 
    private void initCryingGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.25);
+         speedAttribute.setBaseValue(0.25);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(12.0);
+         attackDamageAttribute.setBaseValue(12.0);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(36.0);
+         followRangeAttribute.setBaseValue(36.0);
       }
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
-      this.field_6011.method_12784(IS_IN_CRYING_PHASE, false);
+   protected void initDataTracker() {
+      super.initDataTracker();
+      this.dataTracker.startTracking(IS_IN_CRYING_PHASE, false);
    }
 
    public boolean isInCryingPhase() {
-      return (Boolean)this.field_6011.method_12789(IS_IN_CRYING_PHASE);
+      return (Boolean)this.dataTracker.get(IS_IN_CRYING_PHASE);
    }
 
    public void setInCryingPhase(boolean inCryingPhase) {
-      this.field_6011.method_12778(IS_IN_CRYING_PHASE, inCryingPhase);
+      this.dataTracker.set(IS_IN_CRYING_PHASE, inCryingPhase);
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.isInCryingPhase()) {
          this.setMovementDisabled(true);
       } else {
@@ -89,12 +89,12 @@ public class CryingGhostEntity extends GhostEntity {
       }
 
       if (this.isInCryingPhase()) {
-         this.field_6252 = true;
+         this.handSwinging = true;
       } else {
-         this.field_6252 = false;
+         this.handSwinging = false;
       }
 
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          if (this.attackCooldown > 0 && !this.isInCryingPhase()) {
             this.attackCooldown--;
          }
@@ -129,8 +129,8 @@ public class CryingGhostEntity extends GhostEntity {
    }
 
    private PlayerEntity findTargetPlayer() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(PlayerEntity.class, this.method_5829().method_1014(36.0), player -> player.method_5805() && !player.method_7325());
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(36.0), player -> player.isAlive() && !player.isSpectator());
       return !nearbyPlayers.isEmpty() ? nearbyPlayers.get(0) : null;
    }
 
@@ -145,7 +145,7 @@ public class CryingGhostEntity extends GhostEntity {
       this.cryingPhaseTicks = 200;
       this.cryingDamageTickCounter = 0;
       this.cryingDamageLevel = 0;
-      this.field_6252 = true;
+      this.handSwinging = true;
       LOGGER.info("哭坟鬼开始哭泣阶段，持续时间: {} ticks", 200);
    }
 
@@ -154,24 +154,24 @@ public class CryingGhostEntity extends GhostEntity {
       this.cryingPhaseTicks = 0;
       this.cryingDamageTickCounter = 0;
       this.cryingDamageLevel = 0;
-      this.field_6252 = false;
+      this.handSwinging = false;
       LOGGER.info("哭坟鬼取消哭泣阶段");
    }
 
    private void applyCryingDamageToAllPlayers() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(
             PlayerEntity.class,
-            this.method_5829().method_1014(36.0),
-            playerx -> playerx.method_5805() && !playerx.method_7325() && !playerx.method_6059(ModEffects.DEAFNESS)
+            this.getBoundingBox().expand(36.0),
+            playerx -> playerx.isAlive() && !playerx.isSpectator() && !playerx.hasStatusEffect(ModEffects.DEAFNESS)
          );
       float damage = 10.0F + this.cryingDamageLevel * 2.0F;
-      DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+      DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
 
       for (PlayerEntity player : nearbyPlayers) {
-         if (!player.method_31481()) {
+         if (!player.isRemoved()) {
             PlayerEvents.handleSpiritDamage(player, damage, damage, damageSource);
-            LOGGER.info("哭坟鬼对玩家 {} 造成 {} 点灵异伤害（伤害等级: {}）", player.method_5477().getString(), damage, this.cryingDamageLevel);
+            LOGGER.info("哭坟鬼对玩家 {} 造成 {} 点灵异伤害（伤害等级: {}）", player.getName().getString(), damage, this.cryingDamageLevel);
          }
       }
    }
@@ -183,19 +183,19 @@ public class CryingGhostEntity extends GhostEntity {
    }
 
    private void executeDirectKill() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(
             PlayerEntity.class,
-            this.method_5829().method_1014(36.0),
-            playerx -> playerx.method_5805() && !playerx.method_7325() && !playerx.method_6059(ModEffects.DEAFNESS)
+            this.getBoundingBox().expand(36.0),
+            playerx -> playerx.isAlive() && !playerx.isSpectator() && !playerx.hasStatusEffect(ModEffects.DEAFNESS)
          );
-      DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+      DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
       float lethalDamage = this.getSpiritualDamage() * 5.0F;
 
       for (PlayerEntity player : nearbyPlayers) {
-         if (player.method_5805() && !player.method_31481()) {
+         if (player.isAlive() && !player.isRemoved()) {
             PlayerEvents.handleSpiritDamage(player, lethalDamage, lethalDamage, damageSource);
-            LOGGER.info("哭坟鬼直接秒杀玩家: {}，造成 {} 点灵异伤害（基于自身灵异伤害 {} 的5倍）", player.method_5477().getString(), lethalDamage, this.getSpiritualDamage());
+            LOGGER.info("哭坟鬼直接秒杀玩家: {}，造成 {} 点灵异伤害（基于自身灵异伤害 {} 的5倍）", player.getName().getString(), lethalDamage, this.getSpiritualDamage());
          }
       }
    }
@@ -206,7 +206,7 @@ public class CryingGhostEntity extends GhostEntity {
       this.cryingDamageTickCounter = 0;
       this.cryingDamageLevel = 0;
       this.attackCooldown = 1200;
-      this.field_6252 = false;
+      this.handSwinging = false;
       LOGGER.info("哭坟鬼哭泣阶段结束，进入冷却");
    }
 
@@ -225,41 +225,41 @@ public class CryingGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10556("IsInCryingPhase", this.isInCryingPhase());
-      nbt.method_10569("CryingPhaseTicks", this.cryingPhaseTicks);
-      nbt.method_10569("CryingDamageLevel", this.cryingDamageLevel);
-      nbt.method_10569("CryingDamageTickCounter", this.cryingDamageTickCounter);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putBoolean("IsInCryingPhase", this.isInCryingPhase());
+      nbt.putInt("CryingPhaseTicks", this.cryingPhaseTicks);
+      nbt.putInt("CryingDamageLevel", this.cryingDamageLevel);
+      nbt.putInt("CryingDamageTickCounter", this.cryingDamageTickCounter);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("IsInCryingPhase")) {
-         this.setInCryingPhase(nbt.method_10577("IsInCryingPhase"));
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("IsInCryingPhase")) {
+         this.setInCryingPhase(nbt.getBoolean("IsInCryingPhase"));
       }
 
-      if (nbt.method_10545("CryingPhaseTicks")) {
-         this.cryingPhaseTicks = nbt.method_10550("CryingPhaseTicks");
+      if (nbt.contains("CryingPhaseTicks")) {
+         this.cryingPhaseTicks = nbt.getInt("CryingPhaseTicks");
       }
 
-      if (nbt.method_10545("CryingDamageLevel")) {
-         this.cryingDamageLevel = nbt.method_10550("CryingDamageLevel");
+      if (nbt.contains("CryingDamageLevel")) {
+         this.cryingDamageLevel = nbt.getInt("CryingDamageLevel");
       }
 
-      if (nbt.method_10545("CryingDamageTickCounter")) {
-         this.cryingDamageTickCounter = nbt.method_10550("CryingDamageTickCounter");
+      if (nbt.contains("CryingDamageTickCounter")) {
+         this.cryingDamageTickCounter = nbt.getInt("CryingDamageTickCounter");
       }
    }
 
    @Override
-   public boolean method_5643(DamageSource source, float amount) {
+   public boolean damage(DamageSource source, float amount) {
       if (this.isInCryingPhase()) {
-         LOGGER.info("哭坟鬼在哭泣阶段免疫伤害，伤害源: {}, 伤害值: {}", source.method_5525(), amount);
+         LOGGER.info("哭坟鬼在哭泣阶段免疫伤害，伤害源: {}, 伤害值: {}", source.getName(), amount);
          return false;
       } else {
-         return super.method_5643(source, amount);
+         return super.damage(source, amount);
       }
    }
 }

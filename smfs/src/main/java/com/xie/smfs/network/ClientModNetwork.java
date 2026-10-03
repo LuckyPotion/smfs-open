@@ -60,8 +60,8 @@ public class ClientModNetwork {
       ClientPlayNetworking.registerGlobalReceiver(GhostChildFeedSuccessPacket.ID, (client, handler, buf, responseSender) -> {
          GhostChildFeedSuccessPacket packet = GhostChildFeedSuccessPacket.read(buf);
          client.execute(() -> {
-            if (client.field_1724 != null) {
-               client.field_1724.method_5783(SoundEvents.field_14709, 1.0F, 1.0F);
+            if (client.player != null) {
+               client.player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
             }
          });
       });

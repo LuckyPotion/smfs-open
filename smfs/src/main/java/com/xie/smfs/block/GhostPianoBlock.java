@@ -30,74 +30,74 @@ public class GhostPianoBlock extends GhostFurnitureBlock {
    private static final String LAST_PIANO_DAY_KEY = "lastPianoDay";
    private static final int MAX_PROFICIENCY = 100;
    private static final int DAILY_PROFICIENCY_GAIN = 10;
-   private static final VoxelShape SHAPE_NORTH = Block.method_9541(-16.0, 0.0, 0.0, 32.0, 32.0, 16.0);
-   private static final VoxelShape SHAPE_SOUTH = Block.method_9541(-16.0, 0.0, 0.0, 32.0, 32.0, 16.0);
-   private static final VoxelShape SHAPE_EAST = Block.method_9541(0.0, 0.0, -16.0, 16.0, 32.0, 32.0);
-   private static final VoxelShape SHAPE_WEST = Block.method_9541(0.0, 0.0, -16.0, 16.0, 32.0, 32.0);
+   private static final VoxelShape SHAPE_NORTH = Block.createCuboidShape(-16.0, 0.0, 0.0, 32.0, 32.0, 16.0);
+   private static final VoxelShape SHAPE_SOUTH = Block.createCuboidShape(-16.0, 0.0, 0.0, 32.0, 32.0, 16.0);
+   private static final VoxelShape SHAPE_EAST = Block.createCuboidShape(0.0, 0.0, -16.0, 16.0, 32.0, 32.0);
+   private static final VoxelShape SHAPE_WEST = Block.createCuboidShape(0.0, 0.0, -16.0, 16.0, 32.0, 32.0);
 
    public GhostPianoBlock(Settings settings) {
       super(settings);
    }
 
    @Override
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return this.getShapeForDirection((Direction)state.method_11654(FACING));
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return this.getShapeForDirection((Direction)state.get(FACING));
    }
 
-   public VoxelShape method_9549(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return this.getShapeForDirection((Direction)state.method_11654(FACING));
+   public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return this.getShapeForDirection((Direction)state.get(FACING));
    }
 
    @Nullable
    @Override
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new StaticAnimatable(ModBlockEntities.GHOST_PIANO_BLOCK_ENTITY, pos, state);
    }
 
    private VoxelShape getShapeForDirection(Direction direction) {
       return switch (direction) {
-         case field_11043 -> SHAPE_NORTH;
-         case field_11035 -> SHAPE_SOUTH;
-         case field_11034 -> SHAPE_EAST;
-         case field_11039 -> SHAPE_WEST;
+         case NORTH -> SHAPE_NORTH;
+         case SOUTH -> SHAPE_SOUTH;
+         case EAST -> SHAPE_EAST;
+         case WEST -> SHAPE_WEST;
          default -> SHAPE_NORTH;
       };
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-      if (world.field_9236) {
-         return ActionResult.field_5812;
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+      if (world.isClient) {
+         return ActionResult.SUCCESS;
       }
 
-      if (player.method_6059(ModEffects.MUSIC_BOX_CURSE)) {
+      if (player.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE)) {
          int proficiency = getPianoProficiency(player);
          if (proficiency >= 100) {
             MusicBoxCurseEffect.safelyRemoveEffect(player);
-            player.method_7353(Text.method_43470("§a尝试将脑海的旋律反过来弹奏，八音盒的诅咒被解除了...").method_27692(Formatting.field_1060), true);
-            return ActionResult.field_5812;
+            player.sendMessage(Text.literal("§a尝试将脑海的旋律反过来弹奏，八音盒的诅咒被解除了...").formatted(Formatting.GREEN), true);
+            return ActionResult.SUCCESS;
          } else {
-            player.method_7353(Text.method_43470("§c我的钢琴技术还不足以解除诅咒").method_27692(Formatting.field_1061), true);
-            return ActionResult.field_5812;
+            player.sendMessage(Text.literal("§c我的钢琴技术还不足以解除诅咒").formatted(Formatting.RED), true);
+            return ActionResult.SUCCESS;
          }
       } else {
          this.tryPracticePiano(player);
-         return super.method_9534(state, world, pos, player, hand, hit);
+         return super.onUse(state, world, pos, player, hand, hit);
       }
    }
 
    private void tryPracticePiano(PlayerEntity player) {
       if (getPianoProficiency(player) < 100) {
-         long currentDay = player.method_37908().method_8510() / 24000L;
+         long currentDay = player.getWorld().getTime() / 24000L;
          NbtCompound data = PlayerEvents.getCachedData(player);
-         int proficiency = data.method_10545("pianoProficiency") ? data.method_10550("pianoProficiency") : 0;
-         long lastDay = data.method_10545("lastPianoDay") ? data.method_10537("lastPianoDay") : -1L;
+         int proficiency = data.contains("pianoProficiency") ? data.getInt("pianoProficiency") : 0;
+         long lastDay = data.contains("lastPianoDay") ? data.getLong("lastPianoDay") : -1L;
          if (proficiency < 100) {
             if (lastDay != currentDay) {
                int newProficiency = Math.min(proficiency + 10, 100);
-               data.method_10569("pianoProficiency", newProficiency);
-               data.method_10544("lastPianoDay", currentDay);
+               data.putInt("pianoProficiency", newProficiency);
+               data.putLong("lastPianoDay", currentDay);
                PlayerEvents.saveDataToPlayer(player, data);
-               player.method_7353(Text.method_43470("§a今天的钢琴技术又精进了不少").method_27692(Formatting.field_1060), true);
+               player.sendMessage(Text.literal("§a今天的钢琴技术又精进了不少").formatted(Formatting.GREEN), true);
             }
          }
       }
@@ -107,7 +107,7 @@ public class GhostPianoBlock extends GhostFurnitureBlock {
       if (!TameableItemAPI.getInstance().hasTamedGhost(player, "ghost_shadow_head")
          && !TameableItemAPI.getInstance().hasTamedGhost(player, "complete_shadow_ghost")) {
          NbtCompound data = PlayerEvents.getCachedData(player);
-         return data.method_10545("pianoProficiency") ? data.method_10550("pianoProficiency") : 0;
+         return data.contains("pianoProficiency") ? data.getInt("pianoProficiency") : 0;
       } else {
          return 100;
       }

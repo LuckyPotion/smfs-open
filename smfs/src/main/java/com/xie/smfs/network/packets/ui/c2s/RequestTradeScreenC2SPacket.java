@@ -36,8 +36,8 @@ public class RequestTradeScreenC2SPacket {
       RequestTradeScreenC2SPacket packet, MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketSender sender
    ) {
       server.execute(() -> {
-         World world = player.method_37908();
-         Entity entity = world.method_8469(packet.entityId);
+         World world = player.getWorld();
+         Entity entity = world.getEntityById(packet.entityId);
          if (entity instanceof GhostMasterEntity ghostMaster) {
             if (!ghostMaster.isSuppressed() && !ghostMaster.isDeadlocked()) {
                ghostMaster.openTradeScreen(player);

@@ -79,13 +79,13 @@ public class QuestManager {
       }
 
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c已经领取过该任务，有进行中的该任务时，不支持重复领取"), false);
+               serverPlayer.sendMessage(Text.literal("§c已经领取过该任务，有进行中的该任务时，不支持重复领取"), false);
             }
 
             return false;
@@ -93,15 +93,15 @@ public class QuestManager {
       }
 
       if (!template.prerequisites.isEmpty()) {
-         NbtList completedQuests = questData.method_10554("completedQuests", 10);
+         NbtList completedQuests = questData.getList("completedQuests", 10);
          boolean allPrerequisitesMet = true;
 
          for (String prerequisite : template.prerequisites) {
             boolean prerequisiteCompleted = false;
 
             for (int i = 0; i < completedQuests.size(); i++) {
-               NbtCompound completedQuest = completedQuests.method_10602(i);
-               if (completedQuest.method_10558("id").equals(prerequisite)) {
+               NbtCompound completedQuest = completedQuests.getCompound(i);
+               if (completedQuest.getString("id").equals(prerequisite)) {
                   prerequisiteCompleted = true;
                   break;
                }
@@ -115,7 +115,7 @@ public class QuestManager {
 
          if (!allPrerequisitesMet) {
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c无法接受任务: 前置任务未完成"), false);
+               serverPlayer.sendMessage(Text.literal("§c无法接受任务: 前置任务未完成"), false);
             }
 
             return false;
@@ -123,41 +123,41 @@ public class QuestManager {
       }
 
       NbtCompound newQuest = new NbtCompound();
-      newQuest.method_10582("id", questId);
-      newQuest.method_10582("title", template.title);
-      newQuest.method_10582("description", template.description);
-      newQuest.method_10582("type", template.type);
-      newQuest.method_10556("isNewbieQuest", template.isNewbieQuest);
-      newQuest.method_10569("status", 1);
-      newQuest.method_10544("startTime", player.method_37908().method_8510());
-      newQuest.method_10569("timeLimit", template.timeLimit);
+      newQuest.putString("id", questId);
+      newQuest.putString("title", template.title);
+      newQuest.putString("description", template.description);
+      newQuest.putString("type", template.type);
+      newQuest.putBoolean("isNewbieQuest", template.isNewbieQuest);
+      newQuest.putInt("status", 1);
+      newQuest.putLong("startTime", player.getWorld().getTime());
+      newQuest.putInt("timeLimit", template.timeLimit);
       if (template.timeLimit > 0) {
-         newQuest.method_10582("title", template.title.replace("（限时）", "（限时1h）"));
+         newQuest.putString("title", template.title.replace("（限时）", "（限时1h）"));
       }
 
       if (requiredGhostType != null && !requiredGhostType.isEmpty()) {
-         newQuest.method_10582("requiredGhostType", requiredGhostType);
+         newQuest.putString("requiredGhostType", requiredGhostType);
          String ghostDisplayName = getGhostDisplayName(requiredGhostType);
-         newQuest.method_10582("description", "使用黄金容器关押一只" + ghostDisplayName + "。");
+         newQuest.putString("description", "使用黄金容器关押一只" + ghostDisplayName + "。");
       }
 
       NbtList objectives = new NbtList();
 
       for (QuestManager.QuestObjective objective : template.objectives) {
          NbtCompound obj = new NbtCompound();
-         obj.method_10582("id", objective.id);
-         obj.method_10582("description", objective.description);
-         obj.method_10569("target", objective.target);
-         obj.method_10569("progress", 0);
+         obj.putString("id", objective.id);
+         obj.putString("description", objective.description);
+         obj.putInt("target", objective.target);
+         obj.putInt("progress", 0);
          objectives.add(obj);
       }
 
-      newQuest.method_10566("objectives", objectives);
+      newQuest.put("objectives", objectives);
       activeQuests.add(newQuest);
-      questData.method_10566("activeQuests", activeQuests);
+      questData.put("activeQuests", activeQuests);
       saveQuestData(player, questData);
       if (player instanceof ServerPlayerEntity serverPlayer) {
-         serverPlayer.method_7353(Text.method_43470("§a新任务开始: " + template.title), false);
+         serverPlayer.sendMessage(Text.literal("§a新任务开始: " + template.title), false);
       }
 
       return true;
@@ -165,22 +165,22 @@ public class QuestManager {
 
    public static void updateQuestProgress(PlayerEntity player, String questId, String objectiveId, int amount) {
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       boolean updated = false;
       boolean taskCompleted = false;
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10550("status") == 1 && quest.method_10558("id").equals(questId)) {
-            NbtList objectives = quest.method_10554("objectives", 10);
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getInt("status") == 1 && quest.getString("id").equals(questId)) {
+            NbtList objectives = quest.getList("objectives", 10);
 
             for (int j = 0; j < objectives.size(); j++) {
-               NbtCompound objective = objectives.method_10602(j);
-               if (objective.method_10558("id").equals(objectiveId)) {
-                  int currentProgress = objective.method_10550("progress");
-                  int target = objective.method_10550("target");
+               NbtCompound objective = objectives.getCompound(j);
+               if (objective.getString("id").equals(objectiveId)) {
+                  int currentProgress = objective.getInt("progress");
+                  int target = objective.getInt("target");
                   int newProgress = Math.min(currentProgress + amount, target);
-                  objective.method_10569("progress", newProgress);
+                  objective.putInt("progress", newProgress);
                   updated = true;
                   if (newProgress >= target) {
                      taskCompleted = checkQuestCompletion(player, quest);
@@ -191,8 +191,8 @@ public class QuestManager {
 
             if (updated) {
                if (!taskCompleted) {
-                  activeQuests.method_10606(i, quest);
-                  questData.method_10566("activeQuests", activeQuests);
+                  activeQuests.set(i, quest);
+                  questData.put("activeQuests", activeQuests);
                   saveQuestData(player, questData);
                }
                break;
@@ -202,17 +202,17 @@ public class QuestManager {
    }
 
    public static boolean checkQuestCompletion(PlayerEntity player, NbtCompound quest) {
-      if (quest.method_10550("status") == 2) {
+      if (quest.getInt("status") == 2) {
          return true;
       }
 
-      NbtList objectives = quest.method_10554("objectives", 10);
+      NbtList objectives = quest.getList("objectives", 10);
       boolean allCompleted = true;
 
       for (int i = 0; i < objectives.size(); i++) {
-         NbtCompound objective = objectives.method_10602(i);
-         int progress = objective.method_10550("progress");
-         int target = objective.method_10550("target");
+         NbtCompound objective = objectives.getCompound(i);
+         int progress = objective.getInt("progress");
+         int target = objective.getInt("target");
          if (progress < target) {
             allCompleted = false;
             break;
@@ -220,37 +220,37 @@ public class QuestManager {
       }
 
       if (allCompleted) {
-         quest.method_10569("status", 2);
-         quest.method_10544("completeTime", System.currentTimeMillis());
-         giveQuestRewards(player, quest.method_10558("id"));
+         quest.putInt("status", 2);
+         quest.putLong("completeTime", System.currentTimeMillis());
+         giveQuestRewards(player, quest.getString("id"));
          NbtCompound questData = getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
-         NbtList completedQuests = questData.method_10554("completedQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
+         NbtList completedQuests = questData.getList("completedQuests", 10);
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound activeQuest = activeQuests.method_10602(i);
-            if (activeQuest.method_10558("id").equals(quest.method_10558("id"))) {
-               activeQuests.method_10536(i);
+            NbtCompound activeQuest = activeQuests.getCompound(i);
+            if (activeQuest.getString("id").equals(quest.getString("id"))) {
+               activeQuests.remove(i);
                break;
             }
          }
 
          completedQuests.add(quest);
-         questData.method_10566("activeQuests", activeQuests);
-         questData.method_10566("completedQuests", completedQuests);
+         questData.put("activeQuests", activeQuests);
+         questData.put("completedQuests", completedQuests);
          saveQuestData(player, questData);
-         if ("newbie_craft_gold_container".equals(quest.method_10558("id"))) {
+         if ("newbie_craft_gold_container".equals(quest.getString("id"))) {
             LOGGER.debug("黄金容器任务已完成并添加到已完成列表，开始分配日常任务");
             DailyQuestManager.assignNewDailyQuests(player);
          }
 
-         if ("main_tame_ghost".equals(quest.method_10558("id"))) {
+         if ("main_tame_ghost".equals(quest.getString("id"))) {
             LOGGER.debug("驾驭鬼魂任务已完成并添加到已完成列表，开始分配事件任务");
             DailyQuestManager.assignNewEventQuests(player);
          }
 
          if (player instanceof ServerPlayerEntity serverPlayer) {
-            serverPlayer.method_7353(Text.method_43470("§6任务完成: " + quest.method_10558("title") + "! 奖励已发放"), false);
+            serverPlayer.sendMessage(Text.literal("§6任务完成: " + quest.getString("title") + "! 奖励已发放"), false);
             FactionManager.addReputation(serverPlayer, 500);
          }
       }
@@ -270,19 +270,17 @@ public class QuestManager {
                switch (rewardType) {
                   case "loot_table":
                      String lootTableId = rewardValue.toString();
-                     Identifier lootTable = Identifier.method_12829(lootTableId);
-                     if (lootTable != null && serverPlayer.method_5682().method_3857() != null) {
-                        LootContextParameterSet lootContext = new Builder((ServerWorld)player.method_37908())
-                           .method_51871(player.method_7292())
-                           .method_51875(LootContextTypes.field_1175);
-                        serverPlayer.method_5682().method_3857().getLootTable(lootTable).method_51882(lootContext, serverPlayer.method_31548()::method_7398);
-                        serverPlayer.method_7353(Text.method_43470("§6恭喜！你获得了卖货郎的奖励！"), false);
+                     Identifier lootTable = Identifier.tryParse(lootTableId);
+                     if (lootTable != null && serverPlayer.getServer().getLootManager() != null) {
+                        LootContextParameterSet lootContext = new Builder((ServerWorld)player.getWorld()).luck(player.getLuck()).build(LootContextTypes.EMPTY);
+                        serverPlayer.getServer().getLootManager().getLootTable(lootTable).generateLoot(lootContext, serverPlayer.getInventory()::offerOrDrop);
+                        serverPlayer.sendMessage(Text.literal("§6恭喜！你获得了卖货郎的奖励！"), false);
                         break;
                      }
 
                      LOGGER.warn("无效的战利品表: {}", lootTableId);
-                     serverPlayer.method_7270(new ItemStack(Items.field_8695, 10));
-                     serverPlayer.method_7353(Text.method_43470("§6恭喜！你获得了10个金锭！"), false);
+                     serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, 10));
+                     serverPlayer.sendMessage(Text.literal("§6恭喜！你获得了10个金锭！"), false);
                      break;
                   case "random_items":
                      String[] itemList = rewardValue.toString().split(",");
@@ -292,18 +290,18 @@ public class QuestManager {
                         LOGGER.debug("卖货郎任务随机奖励抽取: 从 {} 个物品中抽中 {}", itemList.length, randomItemId);
                         ItemStack rewardStack = createItemStack(randomItemId, 1);
                         if (rewardStack != null) {
-                           serverPlayer.method_7270(rewardStack);
-                           serverPlayer.method_7353(Text.method_43470("§6恭喜！你获得了" + getItemDisplayName(randomItemId) + "！"), false);
+                           serverPlayer.giveItemStack(rewardStack);
+                           serverPlayer.sendMessage(Text.literal("§6恭喜！你获得了" + getItemDisplayName(randomItemId) + "！"), false);
                            ModNetwork.sendToClient(new QuestRewardPacket(randomItemId, 1), serverPlayer);
                         } else {
                            LOGGER.warn("无法创建随机奖励物品: {}", randomItemId);
-                           serverPlayer.method_7270(new ItemStack(Items.field_8695, 10));
-                           serverPlayer.method_7353(Text.method_43470("§6恭喜！你获得了10个金锭！"), false);
+                           serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, 10));
+                           serverPlayer.sendMessage(Text.literal("§6恭喜！你获得了10个金锭！"), false);
                         }
                      } else {
                         LOGGER.warn("随机奖励列表为空，使用默认奖励");
-                        serverPlayer.method_7270(new ItemStack(Items.field_8695, 10));
-                        serverPlayer.method_7353(Text.method_43470("§6恭喜！你获得了10个金锭！"), false);
+                        serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, 10));
+                        serverPlayer.sendMessage(Text.literal("§6恭喜！你获得了10个金锭！"), false);
                      }
                      break;
                   case "items":
@@ -316,11 +314,11 @@ public class QuestManager {
                            int count = Integer.parseInt(parts[1]);
                            ItemStack rewardStack = createItemStack(itemId, count);
                            if (rewardStack != null) {
-                              serverPlayer.method_7270(rewardStack);
+                              serverPlayer.giveItemStack(rewardStack);
                               ModNetwork.sendToClient(new QuestRewardPacket(itemId, count), serverPlayer);
                            } else {
                               LOGGER.warn("无法创建奖励物品: {}", itemId);
-                              serverPlayer.method_7270(new ItemStack(Items.field_8695, count));
+                              serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, count));
                               ModNetwork.sendToClient(new QuestRewardPacket("gold_ingot", count), serverPlayer);
                            }
                         } else {
@@ -330,15 +328,15 @@ public class QuestManager {
                      break;
                   case "experience":
                      int exp = Integer.parseInt(rewardValue.toString());
-                     serverPlayer.method_7255(exp);
+                     serverPlayer.addExperience(exp);
                      break;
                   case "spirit_damage":
                      float damage = Float.parseFloat(rewardValue.toString());
-                     serverPlayer.method_7353(Text.method_43470("§a灵异伤害增加了: " + new DecimalFormat("#.###").format(damage)), false);
+                     serverPlayer.sendMessage(Text.literal("§a灵异伤害增加了: " + new DecimalFormat("#.###").format(damage)), false);
                      break;
                   case "max_spirit":
                      float maxSpirit = Float.parseFloat(rewardValue.toString());
-                     serverPlayer.method_7353(Text.method_43470("§a最大灵异值增加了: " + maxSpirit), false);
+                     serverPlayer.sendMessage(Text.literal("§a最大灵异值增加了: " + maxSpirit), false);
                      break;
                   default:
                      LOGGER.warn("未知的奖励类型: " + rewardType);
@@ -358,19 +356,19 @@ public class QuestManager {
                         if (player instanceof ServerPlayerEntity serverPlayer) {
                            ItemStack rewardStack = createItemStack(randomItemId, 1);
                            if (rewardStack != null) {
-                              if (serverPlayer.method_31548().method_7394(rewardStack)) {
-                                 player.method_7353(Text.method_43470("§6恭喜！你获得了" + getItemDisplayName(randomItemId) + "！"), false);
+                              if (serverPlayer.getInventory().insertStack(rewardStack)) {
+                                 player.sendMessage(Text.literal("§6恭喜！你获得了" + getItemDisplayName(randomItemId) + "！"), false);
                                  ModNetwork.sendToClient(new QuestRewardPacket(randomItemId, 1), serverPlayer);
                               } else {
-                                 serverPlayer.method_7328(rewardStack, false);
-                                 player.method_7353(Text.method_43470("§6背包已满，" + getItemDisplayName(randomItemId) + "已掉落在地！"), false);
+                                 serverPlayer.dropItem(rewardStack, false);
+                                 player.sendMessage(Text.literal("§6背包已满，" + getItemDisplayName(randomItemId) + "已掉落在地！"), false);
                                  ModNetwork.sendToClient(new QuestRewardPacket(randomItemId, 1), serverPlayer);
                               }
                            } else {
                               LOGGER.warn("无法创建随机奖励物品: {}", randomItemId);
-                              player.method_7353(Text.method_43470("§c随机奖励发放失败: 无法创建物品 " + randomItemId), false);
-                              serverPlayer.method_7270(new ItemStack(Items.field_8695, 10));
-                              player.method_7353(Text.method_43470("§6恭喜！你获得了10个金锭！"), false);
+                              player.sendMessage(Text.literal("§c随机奖励发放失败: 无法创建物品 " + randomItemId), false);
+                              serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, 10));
+                              player.sendMessage(Text.literal("§6恭喜！你获得了10个金锭！"), false);
                               ModNetwork.sendToClient(new QuestRewardPacket("gold_ingot", 10), serverPlayer);
                            }
                         } else {
@@ -379,8 +377,8 @@ public class QuestManager {
                      } else {
                         LOGGER.warn("随机奖励列表为空，使用默认奖励");
                         if (player instanceof ServerPlayerEntity serverPlayer) {
-                           serverPlayer.method_7270(new ItemStack(Items.field_8695, 10));
-                           player.method_7353(Text.method_43470("§6恭喜！你获得了10个金锭！"), false);
+                           serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, 10));
+                           player.sendMessage(Text.literal("§6恭喜！你获得了10个金锭！"), false);
                         }
                      }
                      break;
@@ -395,19 +393,19 @@ public class QuestManager {
                            if (player instanceof ServerPlayerEntity serverPlayer) {
                               ItemStack rewardStack = createItemStack(itemId, count);
                               if (rewardStack != null) {
-                                 if (serverPlayer.method_31548().method_7394(rewardStack)) {
-                                    player.method_7353(Text.method_43470("§a获得奖励: " + count + " 个 " + getItemDisplayName(itemId)), false);
+                                 if (serverPlayer.getInventory().insertStack(rewardStack)) {
+                                    player.sendMessage(Text.literal("§a获得奖励: " + count + " 个 " + getItemDisplayName(itemId)), false);
                                     ModNetwork.sendToClient(new QuestRewardPacket(itemId, count), serverPlayer);
                                  } else {
-                                    serverPlayer.method_7328(rewardStack, false);
-                                    player.method_7353(Text.method_43470("§a背包已满，奖励已掉落在地: " + count + " 个 " + getItemDisplayName(itemId)), false);
+                                    serverPlayer.dropItem(rewardStack, false);
+                                    player.sendMessage(Text.literal("§a背包已满，奖励已掉落在地: " + count + " 个 " + getItemDisplayName(itemId)), false);
                                     ModNetwork.sendToClient(new QuestRewardPacket(itemId, count), serverPlayer);
                                  }
                               } else {
                                  LOGGER.warn("无法创建奖励物品: {}", itemId);
-                                 player.method_7353(Text.method_43470("§c奖励发放失败: 无法创建物品 " + itemId), false);
-                                 serverPlayer.method_7270(new ItemStack(Items.field_8695, 10));
-                                 player.method_7353(Text.method_43470("§6恭喜！你获得了10个金锭！"), false);
+                                 player.sendMessage(Text.literal("§c奖励发放失败: 无法创建物品 " + itemId), false);
+                                 serverPlayer.giveItemStack(new ItemStack(Items.GOLD_INGOT, 10));
+                                 player.sendMessage(Text.literal("§6恭喜！你获得了10个金锭！"), false);
                                  ModNetwork.sendToClient(new QuestRewardPacket("gold_ingot", 10), serverPlayer);
                               }
                            } else {
@@ -419,10 +417,10 @@ public class QuestManager {
                   case "experience":
                      int exp = Integer.parseInt(rewardValue.toString());
                      if (player instanceof ServerPlayerEntity) {
-                        ((ServerPlayerEntity)player).method_7255(exp);
-                        player.method_7353(Text.method_43470("§a获得经验值: " + exp), false);
+                        ((ServerPlayerEntity)player).addExperience(exp);
+                        player.sendMessage(Text.literal("§a获得经验值: " + exp), false);
                      } else {
-                        player.method_7353(Text.method_43470("§a获得经验值: " + exp), false);
+                        player.sendMessage(Text.literal("§a获得经验值: " + exp), false);
                      }
                      break;
                   default:
@@ -443,25 +441,25 @@ public class QuestManager {
 
    public static NbtCompound getQuestData(PlayerEntity player) {
       NbtCompound playerData = PlayerEvents.getCachedData(player);
-      if (!playerData.method_10545("questData")) {
+      if (!playerData.contains("questData")) {
          NbtCompound newQuestData = new NbtCompound();
-         newQuestData.method_10566("activeQuests", new NbtList());
-         newQuestData.method_10566("completedQuests", new NbtList());
-         playerData.method_10566("questData", newQuestData);
+         newQuestData.put("activeQuests", new NbtList());
+         newQuestData.put("completedQuests", new NbtList());
+         playerData.put("questData", newQuestData);
          PlayerEvents.saveDataToPlayer(player, playerData);
          return newQuestData;
       }
 
-      NbtCompound questData = playerData.method_10562("questData");
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtCompound questData = playerData.getCompound("questData");
+      NbtList activeQuests = questData.getList("activeQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound var6 = activeQuests.method_10602(i);
+         NbtCompound var6 = activeQuests.getCompound(i);
       }
 
       for (int i = 0; i < completedQuests.size(); i++) {
-         NbtCompound var9 = completedQuests.method_10602(i);
+         NbtCompound var9 = completedQuests.getCompound(i);
       }
 
       logPlayerQuestSummary(player, activeQuests, completedQuests);
@@ -469,33 +467,33 @@ public class QuestManager {
    }
 
    public static void saveQuestData(PlayerEntity player, NbtCompound questData) {
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound var5 = activeQuests.method_10602(i);
+         NbtCompound var5 = activeQuests.getCompound(i);
       }
 
       NbtCompound playerData = PlayerEvents.getCachedData(player);
-      playerData.method_10566("questData", questData.method_10553());
+      playerData.put("questData", questData.copy());
       PlayerEvents.saveDataToPlayer(player, playerData);
-      LOGGER.debug("已保存玩家 {} 的任务数据，活跃任务: {}，已完成任务: {}", player.method_5477().getString(), activeQuests.size(), completedQuests.size());
+      LOGGER.debug("已保存玩家 {} 的任务数据，活跃任务: {}，已完成任务: {}", player.getName().getString(), activeQuests.size(), completedQuests.size());
    }
 
    private static void logPlayerQuestSummary(PlayerEntity player, NbtList activeQuests, NbtList completedQuests) {
       Map<String, Integer> activeByType = new HashMap<>();
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String type = quest.method_10558("type");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String type = quest.getString("type");
          activeByType.put(type, activeByType.getOrDefault(type, 0) + 1);
       }
 
       Map<String, Integer> completedByType = new HashMap<>();
 
       for (int i = 0; i < completedQuests.size(); i++) {
-         NbtCompound quest = completedQuests.method_10602(i);
-         String type = quest.method_10558("type");
+         NbtCompound quest = completedQuests.getCompound(i);
+         String type = quest.getString("type");
          completedByType.put(type, completedByType.getOrDefault(type, 0) + 1);
       }
    }
@@ -505,12 +503,12 @@ public class QuestManager {
 
    public static List<NbtCompound> getActiveQuests(PlayerEntity player) {
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       List<NbtCompound> result = new ArrayList<>();
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10550("status") == 1) {
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getInt("status") == 1) {
             result.add(quest);
          }
       }
@@ -520,36 +518,36 @@ public class QuestManager {
 
    public static boolean checkItemSubmission(PlayerEntity player, String questId, String itemId, int amount, boolean consume) {
       boolean success = checkQuestWithStrategy(player, questId, itemId, amount, consume);
-      LOGGER.debug("策略检测结果 - 玩家: {}, 任务ID: {}, 物品ID: {}, 结果: {}", player.method_5477().getString(), questId, itemId, success);
+      LOGGER.debug("策略检测结果 - 玩家: {}, 任务ID: {}, 物品ID: {}, 结果: {}", player.getName().getString(), questId, itemId, success);
       if (success) {
-         LOGGER.debug("检测成功，开始检查任务完成状态 - 玩家: {}, 任务ID: {}", player.method_5477().getString(), questId);
+         LOGGER.debug("检测成功，开始检查任务完成状态 - 玩家: {}, 任务ID: {}", player.getName().getString(), questId);
          NbtCompound questData = getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
-         LOGGER.debug("查找活跃任务 - 玩家: {}, 活跃任务数: {}", player.method_5477().getString(), activeQuests.size());
+         NbtList activeQuests = questData.getList("activeQuests", 10);
+         LOGGER.debug("查找活跃任务 - 玩家: {}, 活跃任务数: {}", player.getName().getString(), activeQuests.size());
          boolean found = false;
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound quest = activeQuests.method_10602(i);
-            if (quest.method_10558("id").equals(questId)) {
-               LOGGER.debug("找到匹配任务 - 玩家: {}, 任务ID: {}, 任务状态: {}", player.method_5477().getString(), questId, quest.method_10550("status"));
+            NbtCompound quest = activeQuests.getCompound(i);
+            if (quest.getString("id").equals(questId)) {
+               LOGGER.debug("找到匹配任务 - 玩家: {}, 任务ID: {}, 任务状态: {}", player.getName().getString(), questId, quest.getInt("status"));
                found = true;
                checkQuestCompletion(player, quest);
-               LOGGER.debug("任务完成检查已调用 - 玩家: {}, 任务ID: {}", player.method_5477().getString(), questId);
+               LOGGER.debug("任务完成检查已调用 - 玩家: {}, 任务ID: {}", player.getName().getString(), questId);
                break;
             }
          }
 
          if (!found) {
-            LOGGER.warn("未找到匹配的活跃任务 - 玩家: {}, 任务ID: {}", player.method_5477().getString(), questId);
+            LOGGER.warn("未找到匹配的活跃任务 - 玩家: {}, 任务ID: {}", player.getName().getString(), questId);
          }
       }
 
-      LOGGER.debug("物品提交检测完成 - 玩家: {}, 任务ID: {}, 最终结果: {}", player.method_5477().getString(), questId, success);
+      LOGGER.debug("物品提交检测完成 - 玩家: {}, 任务ID: {}, 最终结果: {}", player.getName().getString(), questId, success);
       return success;
    }
 
    public static boolean submitEventQuest(PlayerEntity player, String questId) {
-      LOGGER.debug("玩家 {} 尝试提交事件任务: {}", player.method_5477().getString(), questId);
+      LOGGER.debug("玩家 {} 尝试提交事件任务: {}", player.getName().getString(), questId);
       QuestManager.QuestTemplate template = QUEST_TEMPLATES.get(questId);
       if (template == null) {
          LOGGER.warn("任务模板不存在: {}", questId);
@@ -557,12 +555,12 @@ public class QuestManager {
       }
 
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       NbtCompound targetQuest = null;
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId) && quest.method_10550("status") == 1) {
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId) && quest.getInt("status") == 1) {
             targetQuest = quest;
             break;
          }
@@ -571,21 +569,21 @@ public class QuestManager {
       if (targetQuest == null) {
          LOGGER.warn("任务未在进行中或不存在: {}", questId);
          if (player instanceof ServerPlayerEntity serverPlayer) {
-            serverPlayer.method_7353(Text.method_43470("§c任务未在进行中或不存在"), false);
+            serverPlayer.sendMessage(Text.literal("§c任务未在进行中或不存在"), false);
          }
 
          return false;
       } else {
-         NbtList objectives = targetQuest.method_10554("objectives", 10);
+         NbtList objectives = targetQuest.getList("objectives", 10);
          boolean allCompleted = true;
 
          for (int i = 0; i < objectives.size(); i++) {
-            NbtCompound objective = objectives.method_10602(i);
-            int progress = objective.method_10550("progress");
-            int target = objective.method_10550("target");
+            NbtCompound objective = objectives.getCompound(i);
+            int progress = objective.getInt("progress");
+            int target = objective.getInt("target");
             if (progress < target) {
                allCompleted = false;
-               LOGGER.debug("目标未完成: {} - 进度: {}/{}", objective.method_10558("description"), progress, target);
+               LOGGER.debug("目标未完成: {} - 进度: {}/{}", objective.getString("description"), progress, target);
                break;
             }
          }
@@ -593,16 +591,16 @@ public class QuestManager {
          if (!allCompleted) {
             LOGGER.warn("任务目标未全部完成，无法提交: {}", questId);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c任务目标未全部完成，无法提交"), false);
+               serverPlayer.sendMessage(Text.literal("§c任务目标未全部完成，无法提交"), false);
             }
 
             return false;
          } else {
             for (int i = 0; i < objectives.size(); i++) {
-               NbtCompound objective = objectives.method_10602(i);
-               String objectiveId = objective.method_10558("id");
+               NbtCompound objective = objectives.getCompound(i);
+               String objectiveId = objective.getString("id");
                if (objectiveId.endsWith("_event")) {
-                  int target = objective.method_10550("target");
+                  int target = objective.getInt("target");
                   EventQuestStrategy strategy = new EventQuestStrategy();
                   boolean conditionMet = strategy.checkCondition(player, objectiveId, target);
                   if (!conditionMet) {
@@ -612,11 +610,11 @@ public class QuestManager {
                         String ghostType = getGhostTypeForEvent(objectiveId);
                         String ghostName = GhostUtils.getGhostDisplayName(ghostType);
                         if (currentProgress == 0) {
-                           serverPlayer.method_7353(Text.method_43470("§c未找到包含§6" + ghostName + "§c的黄金容器"), false);
-                           serverPlayer.method_7353(Text.method_43470("§7请确保背包中有包含对应鬼的黄金容器"), false);
+                           serverPlayer.sendMessage(Text.literal("§c未找到包含§6" + ghostName + "§c的黄金容器"), false);
+                           serverPlayer.sendMessage(Text.literal("§7请确保背包中有包含对应鬼的黄金容器"), false);
                         } else {
-                           serverPlayer.method_7353(Text.method_43470("§c黄金容器数量不足: §e" + currentProgress + "§c/§a" + target), false);
-                           serverPlayer.method_7353(Text.method_43470("§7还需要§6" + (target - currentProgress) + "§7个包含§6" + ghostName + "§7的黄金容器"), false);
+                           serverPlayer.sendMessage(Text.literal("§c黄金容器数量不足: §e" + currentProgress + "§c/§a" + target), false);
+                           serverPlayer.sendMessage(Text.literal("§7还需要§6" + (target - currentProgress) + "§7个包含§6" + ghostName + "§7的黄金容器"), false);
                         }
                      }
 
@@ -671,7 +669,7 @@ public class QuestManager {
       LOGGER.debug("检测天数任务目标: questId={}, objectiveId={}", questId, objectiveId);
       if ("survive_5_days".equals(objectiveId)
          && player instanceof ServerPlayerEntity serverPlayer
-         && serverPlayer.method_37908() instanceof ServerWorld serverWorld) {
+         && serverPlayer.getWorld() instanceof ServerWorld serverWorld) {
          int currentDay = TutorialManager.calculateCurrentDay(serverWorld);
          if (currentDay >= amount) {
             updateQuestProgress(player, questId, objectiveId, amount);
@@ -688,20 +686,20 @@ public class QuestManager {
          NbtCompound data = PlayerEvents.getCachedData(player);
          String progressKey = "quest_kill_progress_" + objectiveId;
          int currentProgress = 0;
-         if (data.method_10545(progressKey)) {
-            currentProgress = data.method_10550(progressKey);
+         if (data.contains(progressKey)) {
+            currentProgress = data.getInt(progressKey);
          }
 
          LOGGER.debug("击杀任务进度: objectiveId={}, 当前进度={}, 目标进度={}", objectiveId, currentProgress, amount);
-         LOGGER.debug("数据缓存检查: progressKey={}, 数据存在={}, 玩家UUID={}", progressKey, data.method_10545(progressKey), player.method_5667());
+         LOGGER.debug("数据缓存检查: progressKey={}, 数据存在={}, 玩家UUID={}", progressKey, data.contains(progressKey), player.getUuid());
          if (currentProgress >= amount) {
             updateQuestProgress(player, questId, objectiveId, amount);
-            data.method_10551(progressKey);
+            data.remove(progressKey);
             PlayerEvents.saveDataToPlayer(player, data);
             LOGGER.debug("已清除击杀任务进度缓存: {}", progressKey);
             return true;
          } else {
-            serverPlayer.method_7353(Text.method_43470("§c击杀进度不足: 当前 " + currentProgress + "/" + amount), false);
+            serverPlayer.sendMessage(Text.literal("§c击杀进度不足: 当前 " + currentProgress + "/" + amount), false);
             return false;
          }
       } else {
@@ -730,11 +728,11 @@ public class QuestManager {
             String ghostType = getGhostTypeForEvent(objectiveId);
             String ghostName = GhostUtils.getGhostDisplayName(ghostType);
             if (currentProgress == 0) {
-               serverPlayer.method_7353(Text.method_43470("§c未找到包含§6" + ghostName + "§c的黄金容器"), false);
-               serverPlayer.method_7353(Text.method_43470("§7请确保背包中有包含对应鬼的黄金容器"), false);
+               serverPlayer.sendMessage(Text.literal("§c未找到包含§6" + ghostName + "§c的黄金容器"), false);
+               serverPlayer.sendMessage(Text.literal("§7请确保背包中有包含对应鬼的黄金容器"), false);
             } else {
-               serverPlayer.method_7353(Text.method_43470("§c黄金容器数量不足: §e" + currentProgress + "§c/§a" + amount), false);
-               serverPlayer.method_7353(Text.method_43470("§7还需要§6" + (amount - currentProgress) + "§7个包含§6" + ghostName + "§7的黄金容器"), false);
+               serverPlayer.sendMessage(Text.literal("§c黄金容器数量不足: §e" + currentProgress + "§c/§a" + amount), false);
+               serverPlayer.sendMessage(Text.literal("§7还需要§6" + (amount - currentProgress) + "§7个包含§6" + ghostName + "§7的黄金容器"), false);
             }
          }
 
@@ -746,13 +744,13 @@ public class QuestManager {
       LOGGER.debug("检测卖货郎任务目标: questId={}, objectiveId={}, consume={}", questId, objectiveId, consume);
       String requiredGhostType = null;
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
-            if (quest.method_10545("requiredGhostType")) {
-               requiredGhostType = quest.method_10558("requiredGhostType");
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
+            if (quest.contains("requiredGhostType")) {
+               requiredGhostType = quest.getString("requiredGhostType");
             }
             break;
          }
@@ -771,7 +769,7 @@ public class QuestManager {
          }
 
          if (player instanceof ServerPlayerEntity serverPlayer) {
-            serverPlayer.method_7353(Text.method_43470("§a卖货郎任务条件满足！"), false);
+            serverPlayer.sendMessage(Text.literal("§a卖货郎任务条件满足！"), false);
          }
 
          return true;
@@ -783,7 +781,7 @@ public class QuestManager {
                itemName = "关押" + getGhostDisplayName(requiredGhostType) + "的沉重黄金容器";
             }
 
-            serverPlayer.method_7353(Text.method_43470("§c卖货郎任务条件不满足: 需要§6" + amount + "§c个§6" + itemName), false);
+            serverPlayer.sendMessage(Text.literal("§c卖货郎任务条件不满足: 需要§6" + amount + "§c个§6" + itemName), false);
          }
 
          return false;
@@ -805,13 +803,13 @@ public class QuestManager {
       boolean shouldConsume = determineShouldConsumeItems(questId, objectiveId, consume);
       LOGGER.debug("物品映射配置: objectiveId={} -> itemId={}, shouldConsume={}", objectiveId, itemId, shouldConsume);
       int itemCount = 0;
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
 
-      for (int i = 0; i < inventory.method_5439(); i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && isItemMatch(stack, itemId)) {
-            itemCount += stack.method_7947();
-            LOGGER.debug("找到匹配物品: {} x{}", stack.method_7909().method_7876(), stack.method_7947());
+      for (int i = 0; i < inventory.size(); i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && isItemMatch(stack, itemId)) {
+            itemCount += stack.getCount();
+            LOGGER.debug("找到匹配物品: {} x{}", stack.getItem().getTranslationKey(), stack.getCount());
          }
       }
 
@@ -855,32 +853,32 @@ public class QuestManager {
    }
 
    private static boolean isItemMatchPrivate(ItemStack stack, String targetItemId) {
-      if (stack.method_7960()) {
+      if (stack.isEmpty()) {
          return false;
       } else {
-         String stackItemKey = stack.method_7909().method_7876();
-         String stackItemId = Registries.field_41178.method_10221(stack.method_7909()).toString();
-         if ("corpse_piece".equals(targetItemId) && stack.method_7909() == ModItems.CORPSE_PIECE) {
+         String stackItemKey = stack.getItem().getTranslationKey();
+         String stackItemId = Registries.ITEM.getId(stack.getItem()).toString();
+         if ("corpse_piece".equals(targetItemId) && stack.getItem() == ModItems.CORPSE_PIECE) {
             return true;
-         } else if ("corpse_oil".equals(targetItemId) && stack.method_7909() == ModItems.CORPSE_OIL) {
+         } else if ("corpse_oil".equals(targetItemId) && stack.getItem() == ModItems.CORPSE_OIL) {
             return true;
-         } else if ("gold_block".equals(targetItemId) && stack.method_7909() == Items.field_8494) {
+         } else if ("gold_block".equals(targetItemId) && stack.getItem() == Items.GOLD_BLOCK) {
             return true;
-         } else if ("oak_log".equals(targetItemId) && stack.method_7909() == Items.field_8583) {
+         } else if ("oak_log".equals(targetItemId) && stack.getItem() == Items.OAK_LOG) {
             return true;
-         } else if ("stone".equals(targetItemId) && stack.method_7909() == Items.field_20391) {
+         } else if ("stone".equals(targetItemId) && stack.getItem() == Items.STONE) {
             return true;
-         } else if ("cobblestone".equals(targetItemId) && stack.method_7909() == Items.field_20412) {
+         } else if ("cobblestone".equals(targetItemId) && stack.getItem() == Items.COBBLESTONE) {
             return true;
-         } else if ("iron_ingot".equals(targetItemId) && stack.method_7909() == Items.field_8620) {
+         } else if ("iron_ingot".equals(targetItemId) && stack.getItem() == Items.IRON_INGOT) {
             return true;
-         } else if ("gold_ingot".equals(targetItemId) && stack.method_7909() == Items.field_8695) {
+         } else if ("gold_ingot".equals(targetItemId) && stack.getItem() == Items.GOLD_INGOT) {
             return true;
-         } else if ("golden_container".equals(targetItemId) && stack.method_7909() == ModItems.GOLDEN_CONTAINER) {
-            return !stack.method_7985() || !stack.method_7969().method_10577("IsHeavy");
+         } else if ("golden_container".equals(targetItemId) && stack.getItem() == ModItems.GOLDEN_CONTAINER) {
+            return !stack.hasNbt() || !stack.getNbt().getBoolean("IsHeavy");
          } else {
-            return "heavy_golden_container".equals(targetItemId) && stack.method_7909() == ModItems.GOLDEN_CONTAINER
-               ? stack.method_7985() && stack.method_7969().method_10577("IsHeavy")
+            return "heavy_golden_container".equals(targetItemId) && stack.getItem() == ModItems.GOLDEN_CONTAINER
+               ? stack.hasNbt() && stack.getNbt().getBoolean("IsHeavy")
                : stackItemKey.equals("item.smfs." + targetItemId)
                   || stackItemId.equals("smfs:" + targetItemId)
                   || stackItemKey.equals("item.minecraft." + targetItemId)
@@ -892,16 +890,16 @@ public class QuestManager {
    }
 
    private static void consumeItemsFromInventory(PlayerEntity player, String itemId, int amount) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int remaining = amount;
 
-      for (int i = 0; i < inventory.method_5439() && remaining > 0; i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && isItemMatch(stack, itemId)) {
-            int toRemove = Math.min(stack.method_7947(), remaining);
-            stack.method_7934(toRemove);
+      for (int i = 0; i < inventory.size() && remaining > 0; i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && isItemMatch(stack, itemId)) {
+            int toRemove = Math.min(stack.getCount(), remaining);
+            stack.decrement(toRemove);
             remaining -= toRemove;
-            LOGGER.debug("消耗物品: {} x{}", stack.method_7909().method_7876(), toRemove);
+            LOGGER.debug("消耗物品: {} x{}", stack.getItem().getTranslationKey(), toRemove);
          }
       }
    }
@@ -915,29 +913,29 @@ public class QuestManager {
    }
 
    public static void updateWorldDaysProgress(PlayerEntity player) {
-      if (player instanceof ServerPlayerEntity serverPlayer && serverPlayer.method_37908() instanceof ServerWorld serverWorld) {
+      if (player instanceof ServerPlayerEntity serverPlayer && serverPlayer.getWorld() instanceof ServerWorld serverWorld) {
          int currentDay = TutorialManager.calculateCurrentDay(serverWorld);
          NbtCompound questData = getQuestData(player);
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeQuests.size(); i++) {
-            NbtCompound quest = activeQuests.method_10602(i);
-            if (quest.method_10550("status") == 1) {
-               String questId = quest.method_10558("id");
+            NbtCompound quest = activeQuests.getCompound(i);
+            if (quest.getInt("status") == 1) {
+               String questId = quest.getString("id");
                if ("newbie_world_days".equals(questId)) {
-                  NbtList objectives = quest.method_10554("objectives", 10);
+                  NbtList objectives = quest.getList("objectives", 10);
 
                   for (int j = 0; j < objectives.size(); j++) {
-                     NbtCompound objective = objectives.method_10602(j);
-                     String objectiveId = objective.method_10558("id");
+                     NbtCompound objective = objectives.getCompound(j);
+                     String objectiveId = objective.getString("id");
                      if ("survive_5_days".equals(objectiveId)) {
-                        int target = objective.method_10550("target");
-                        int currentProgress = objective.method_10550("progress");
+                        int target = objective.getInt("target");
+                        int currentProgress = objective.getInt("progress");
                         if (currentDay > currentProgress && currentDay <= target) {
-                           objective.method_10569("progress", currentDay);
-                           objectives.method_10606(j, objective);
-                           quest.method_10566("objectives", objectives);
-                           activeQuests.method_10606(i, quest);
+                           objective.putInt("progress", currentDay);
+                           objectives.set(j, objective);
+                           quest.put("objectives", objectives);
+                           activeQuests.set(i, quest);
                         }
                         break;
                      }
@@ -946,25 +944,25 @@ public class QuestManager {
             }
          }
 
-         questData.method_10566("activeQuests", activeQuests);
+         questData.put("activeQuests", activeQuests);
          saveQuestData(player, questData);
       }
    }
 
    public static void abandonQuest(PlayerEntity player, String questId) {
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId) && quest.method_10550("status") == 1) {
-            activeQuests.method_10536(i);
-            LOGGER.debug("玩家 {} 放弃任务: {}", player.method_5477().getString(), quest.method_10558("title"));
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId) && quest.getInt("status") == 1) {
+            activeQuests.remove(i);
+            LOGGER.debug("玩家 {} 放弃任务: {}", player.getName().getString(), quest.getString("title"));
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§e任务已放弃: " + quest.method_10558("title")), false);
+               serverPlayer.sendMessage(Text.literal("§e任务已放弃: " + quest.getString("title")), false);
             }
 
-            questData.method_10566("activeQuests", activeQuests);
+            questData.put("activeQuests", activeQuests);
             saveQuestData(player, questData);
             break;
          }
@@ -973,29 +971,29 @@ public class QuestManager {
 
    public static void failQuest(PlayerEntity player, String questId) {
       NbtCompound questData = getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId) && quest.method_10550("status") == 1) {
-            NbtCompound failedQuest = quest.method_10553();
-            failedQuest.method_10569("status", 3);
-            failedQuest.method_10544("failTime", System.currentTimeMillis());
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId) && quest.getInt("status") == 1) {
+            NbtCompound failedQuest = quest.copy();
+            failedQuest.putInt("status", 3);
+            failedQuest.putLong("failTime", System.currentTimeMillis());
             completedQuests.add(failedQuest);
-            activeQuests.method_10536(i);
-            LOGGER.debug("玩家 {} 任务失败: {}", player.method_5477().getString(), quest.method_10558("title"));
+            activeQuests.remove(i);
+            LOGGER.debug("玩家 {} 任务失败: {}", player.getName().getString(), quest.getString("title"));
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c任务失败: " + quest.method_10558("title")), false);
+               serverPlayer.sendMessage(Text.literal("§c任务失败: " + quest.getString("title")), false);
                if ("seller_basic_collection".equals(questId)) {
-                  serverPlayer.method_7353(Text.method_43470("§4由于任务超时，你受到了卖货郎的致命袭击！"), false);
+                  serverPlayer.sendMessage(Text.literal("§4由于任务超时，你受到了卖货郎的致命袭击！"), false);
                   InstantKillUtil.executePlayerSelfKill(serverPlayer);
-                  LOGGER.debug("玩家 {} 因卖货郎任务超时受到致命惩罚", player.method_5477().getString());
+                  LOGGER.debug("玩家 {} 因卖货郎任务超时受到致命惩罚", player.getName().getString());
                }
             }
 
-            questData.method_10566("activeQuests", activeQuests);
-            questData.method_10566("completedQuests", completedQuests);
+            questData.put("activeQuests", activeQuests);
+            questData.put("completedQuests", completedQuests);
             saveQuestData(player, questData);
             break;
          }
@@ -1024,18 +1022,16 @@ public class QuestManager {
          LOGGER.warn("updateClientQuestData: 更新数据为null，无法更新任务数据");
       } else {
          try {
-            MinecraftClient client = MinecraftClient.method_1551();
-            if (client.field_1724 == null) {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player == null) {
                LOGGER.warn("updateClientQuestData: 客户端玩家为null，无法更新任务数据");
                return;
             }
 
-            IPlayerData playerData = (IPlayerData)client.field_1724;
+            IPlayerData playerData = (IPlayerData)client.player;
             playerData.setQuestData(updatedQuestData);
             LOGGER.debug(
-               "客户端任务数据已更新，活跃任务数: {}, 已完成任务数: {}",
-               updatedQuestData.method_10554("activeQuests", 10).size(),
-               updatedQuestData.method_10554("completedQuests", 10).size()
+               "客户端任务数据已更新，活跃任务数: {}, 已完成任务数: {}", updatedQuestData.getList("activeQuests", 10).size(), updatedQuestData.getList("completedQuests", 10).size()
             );
          } catch (Exception e) {
             LOGGER.error("更新客户端任务数据时发生错误: {}", e.getMessage());

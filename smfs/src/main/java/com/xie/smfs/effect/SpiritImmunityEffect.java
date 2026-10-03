@@ -13,21 +13,21 @@ public class SpiritImmunityEffect extends StatusEffect {
    private static final Logger LOGGER = LoggerFactory.getLogger(SpiritImmunityEffect.class);
 
    public SpiritImmunityEffect() {
-      super(StatusEffectCategory.field_18271, 16776960);
+      super(StatusEffectCategory.BENEFICIAL, 16776960);
    }
 
-   public String method_5567() {
+   public String getTranslationKey() {
       return "effect.smfs.spirit_immunity";
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return duration <= 1;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      StatusEffectInstance effectInstance = entity.method_6112(this);
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      StatusEffectInstance effectInstance = entity.getStatusEffect(this);
       if (effectInstance != null
-         && effectInstance.method_5579() == ModEffects.SPIRIT_IMMUNITY
+         && effectInstance.getEffectType() == ModEffects.SPIRIT_IMMUNITY
          && effectInstance instanceof SpiritImmunityEffectInstance immunityInstance) {
          UUID var5 = immunityInstance.getSourceUuid();
       }

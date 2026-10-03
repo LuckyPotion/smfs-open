@@ -17,12 +17,12 @@ public class GoldenBulletRenderer extends EntityRenderer<GoldenBulletEntity> {
    }
 
    public void render(GoldenBulletEntity bullet, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-      matrices.method_22903();
-      matrices.method_22907(RotationAxis.field_40716.rotationDegrees(MathHelper.method_16439(tickDelta, bullet.field_5982, bullet.method_36454()) - 90.0F));
-      matrices.method_22907(RotationAxis.field_40718.rotationDegrees(MathHelper.method_16439(tickDelta, bullet.field_6004, bullet.method_36455())));
-      matrices.method_22905(0.5F, 0.5F, 0.5F);
-      super.method_3936(bullet, yaw, tickDelta, matrices, vertexConsumers, light);
-      matrices.method_22909();
+      matrices.push();
+      matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(MathHelper.lerp(tickDelta, bullet.prevYaw, bullet.getYaw()) - 90.0F));
+      matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.lerp(tickDelta, bullet.prevPitch, bullet.getPitch())));
+      matrices.scale(0.5F, 0.5F, 0.5F);
+      super.render(bullet, yaw, tickDelta, matrices, vertexConsumers, light);
+      matrices.pop();
    }
 
    public Identifier getTexture(GoldenBulletEntity bullet) {

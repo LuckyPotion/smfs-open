@@ -27,21 +27,21 @@ public class WorldConfig {
    }
 
    public static WorldConfig getInstance(World world) {
-      return world != null && !world.field_9236 ? loadConfig(world) : loadDefault();
+      return world != null && !world.isClient ? loadConfig(world) : loadDefault();
    }
 
    private static Path getConfigPath(World world) {
-      MinecraftServer server = world.method_8503();
+      MinecraftServer server = world.getServer();
       if (server == null) {
          return DEFAULT_CONFIG_PATH;
       }
 
-      Path worldDir = server.method_3831().toPath();
-      if (!server.method_3816()) {
+      Path worldDir = server.getRunDirectory().toPath();
+      if (!server.isDedicated()) {
          worldDir = worldDir.resolve("saves");
       }
 
-      worldDir = worldDir.resolve(server.method_27728().method_150());
+      worldDir = worldDir.resolve(server.getSaveProperties().getLevelName());
       return worldDir.resolve("smfs_world.json");
    }
 

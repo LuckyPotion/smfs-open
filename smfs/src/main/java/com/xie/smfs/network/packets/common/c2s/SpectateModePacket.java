@@ -26,11 +26,11 @@ public class SpectateModePacket {
    public static void receive(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      LOGGER.info("收到玩家 {} 的旁观者模式请求", player.method_5477().getString());
+      LOGGER.info("收到玩家 {} 的旁观者模式请求", player.getName().getString());
       server.execute(() -> {
          try {
             LOGGER.info("=== 收到旁观者模式请求 ===");
-            UUID playerUuid = player.method_5667();
+            UUID playerUuid = player.getUuid();
             SPECTATING_PLAYERS.add(playerUuid);
             LOGGER.info("已添加旁观者标志，UUID: {}, 标志验证: {}", playerUuid, SPECTATING_PLAYERS.contains(playerUuid));
             LOGGER.info("等待 AFTER_RESPAWN 事件切换到旁观者模式");
@@ -40,7 +40,7 @@ public class SpectateModePacket {
             }));
          } catch (Exception e) {
             LOGGER.error("处理旁观者模式请求时出错", e);
-            SPECTATING_PLAYERS.remove(player.method_5667());
+            SPECTATING_PLAYERS.remove(player.getUuid());
          }
       });
    }

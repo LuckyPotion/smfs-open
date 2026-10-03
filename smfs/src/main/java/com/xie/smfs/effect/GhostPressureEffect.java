@@ -22,24 +22,24 @@ import net.minecraft.sound.SoundEvents;
 
 public class GhostPressureEffect extends StatusEffect {
    public GhostPressureEffect() {
-      super(StatusEffectCategory.field_18272, 3100495);
+      super(StatusEffectCategory.HARMFUL, 3100495);
    }
 
-   public String method_5567() {
+   public String getTranslationKey() {
       return "effect.smfs.ghost_pressure";
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return duration % 20 == 0 || duration <= 1;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      if (!entity.method_37908().method_8608()) {
-         StatusEffectInstance effect = entity.method_6112(this);
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      if (!entity.getWorld().isClient()) {
+         StatusEffectInstance effect = entity.getStatusEffect(this);
          if (effect != null && effect instanceof GhostPressureEffectInstance ghostPressureEffect) {
             UUID sourceUuid = ghostPressureEffect.getSourceUuid();
             if (sourceUuid != null) {
-               ServerPlayerEntity sourcePlayer = entity.method_5682().method_3760().method_14602(sourceUuid);
+               ServerPlayerEntity sourcePlayer = entity.getServer().getPlayerManager().getPlayer(sourceUuid);
                if (sourcePlayer != null) {
                   float threshold = 0.0F;
                   if (AdvancementManager.hasAdvancement(sourcePlayer, "smfs:become_aberration")) {
@@ -52,14 +52,12 @@ public class GhostPressureEffect extends StatusEffect {
                      return;
                   }
 
-                  if (effect.method_5584() > 1) {
+                  if (effect.getDuration() > 1) {
                      NbtCompound spiritAttributes = PlayerEvents.getSpiritAttributes(sourcePlayer);
-                     float spiritDamage = spiritAttributes.method_10545("spiritDamage") ? (float)spiritAttributes.method_10574("spiritDamage") : 0.0F;
-                     float tempSpiritDamage = spiritAttributes.method_10545("tempSpiritDamage")
-                        ? (float)spiritAttributes.method_10574("tempSpiritDamage")
-                        : 0.0F;
-                     float tempSpiritDamageMultiplier = spiritAttributes.method_10545("tempSpiritDamageMultiplier")
-                        ? (float)spiritAttributes.method_10574("tempSpiritDamageMultiplier")
+                     float spiritDamage = spiritAttributes.contains("spiritDamage") ? (float)spiritAttributes.getDouble("spiritDamage") : 0.0F;
+                     float tempSpiritDamage = spiritAttributes.contains("tempSpiritDamage") ? (float)spiritAttributes.getDouble("tempSpiritDamage") : 0.0F;
+                     float tempSpiritDamageMultiplier = spiritAttributes.contains("tempSpiritDamageMultiplier")
+                        ? (float)spiritAttributes.getDouble("tempSpiritDamageMultiplier")
                         : 1.0F;
                      float totalSpiritDamage = spiritDamage * tempSpiritDamageMultiplier + tempSpiritDamage;
                      int revivalLevel = Math.max(1, Math.min(10, amplifier + 1));
@@ -71,52 +69,52 @@ public class GhostPressureEffect extends StatusEffect {
 
                      if (!AdvancementManager.hasAdvancement(sourcePlayer, "smfs:become_aberration")) {
                         int slowLevel = Math.min(revivalLevel / 3, 3);
-                        entity.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 40, slowLevel, false, false, true));
+                        entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, slowLevel, false, false, true));
                      }
                   } else {
                      GhostDomainManager.executeSkillSpiritAttack(sourcePlayer, entity);
                   }
-               } else if (entity.method_37908() instanceof ServerWorld serverWorld) {
-                  Entity sourceEntity = serverWorld.method_14190(sourceUuid);
+               } else if (entity.getWorld() instanceof ServerWorld serverWorld) {
+                  Entity sourceEntity = serverWorld.getEntity(sourceUuid);
                   if (sourceEntity instanceof GhostEntity ghostSource) {
                      if (this.tryExecuteSpiritExecution(entity, 0.2F)) {
                         return;
                      }
 
-                     if (effect.method_5584() > 1) {
+                     if (effect.getDuration() > 1) {
                         int revivalLevel = Math.max(1, Math.min(10, amplifier + 1));
                         float damageRatio = revivalLevel * 0.1F;
                         float damagePerTick = ghostSource.getSpiritualDamage() * damageRatio;
                         if (damagePerTick > 0.0F) {
-                           entity.method_5643(ghostSource.method_48923().method_48812(ghostSource), damagePerTick);
+                           entity.damage(ghostSource.getDamageSources().mobAttack(ghostSource), damagePerTick);
                         }
                      } else {
                         float endDamage = ghostSource.getSpiritualDamage() * 0.1F;
-                        entity.method_5643(ghostSource.method_48923().method_48812(ghostSource), endDamage);
+                        entity.damage(ghostSource.getDamageSources().mobAttack(ghostSource), endDamage);
                      }
                   } else if (sourceEntity instanceof GhostMasterEntity masterSource) {
                      if (this.tryExecuteSpiritExecution(entity, 0.2F)) {
                         return;
                      }
 
-                     if (effect.method_5584() > 1) {
+                     if (effect.getDuration() > 1) {
                         int revivalLevel = Math.max(1, Math.min(10, amplifier + 1));
                         float damageRatio = revivalLevel * 0.1F;
                         float damagePerTick = masterSource.getSpiritualDamage() * damageRatio;
                         if (damagePerTick > 0.0F) {
-                           entity.method_5643(masterSource.method_48923().method_48812(masterSource), damagePerTick);
+                           entity.damage(masterSource.getDamageSources().mobAttack(masterSource), damagePerTick);
                         }
                      } else {
                         float endDamage = masterSource.getSpiritualDamage() * 0.1F;
-                        entity.method_5643(masterSource.method_48923().method_48812(masterSource), endDamage);
+                        entity.damage(masterSource.getDamageSources().mobAttack(masterSource), endDamage);
                      }
                   }
                }
             }
          }
 
-         if (effect != null && effect.method_5584() <= 1) {
-            entity.method_6016(this);
+         if (effect != null && effect.getDuration() <= 1) {
+            entity.removeStatusEffect(this);
             GhostPressureDetectionPacket.sendToAllNearby(entity, false);
          }
       }
@@ -130,16 +128,14 @@ public class GhostPressureEffect extends StatusEffect {
          maxStrength = ghost.getMaxSpiritualStrength();
       } else {
          if (!(entity instanceof ServerPlayerEntity player)) {
-            float currentHealth = entity.method_6032();
-            float maxHealth = entity.method_6063();
+            float currentHealth = entity.getHealth();
+            float maxHealth = entity.getMaxHealth();
             if (maxHealth > 0.0F && currentHealth > 0.0F && currentHealth / maxHealth <= threshold) {
-               entity.method_6016(this);
+               entity.removeStatusEffect(this);
                GhostPressureDetectionPacket.sendToAllNearby(entity, false);
-               entity.method_5768();
-               if (entity.method_37908() instanceof ServerWorld serverWorld) {
-                  serverWorld.method_43128(
-                     null, entity.method_23317(), entity.method_23318(), entity.method_23321(), SoundEvents.field_15136, SoundCategory.field_15251, 1.0F, 1.0F
-                  );
+               entity.kill();
+               if (entity.getWorld() instanceof ServerWorld serverWorld) {
+                  serverWorld.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1.0F, 1.0F);
                }
 
                return true;
@@ -162,13 +158,11 @@ public class GhostPressureEffect extends StatusEffect {
             PlayerEvents.setCurrentSpirit(player, 0.0F);
          }
 
-         if (entity.method_37908() instanceof ServerWorld serverWorld) {
-            serverWorld.method_43128(
-               null, entity.method_23317(), entity.method_23318(), entity.method_23321(), SoundEvents.field_15136, SoundCategory.field_15251, 1.0F, 1.0F
-            );
+         if (entity.getWorld() instanceof ServerWorld serverWorld) {
+            serverWorld.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1.0F, 1.0F);
          }
 
-         entity.method_6016(this);
+         entity.removeStatusEffect(this);
          GhostPressureDetectionPacket.sendToAllNearby(entity, false);
          return true;
       } else {
@@ -177,10 +171,10 @@ public class GhostPressureEffect extends StatusEffect {
    }
 
    public static StatusEffectInstance createEffect(ServerPlayerEntity sourcePlayer, int duration, int level) {
-      return new GhostPressureEffectInstance(ModEffects.GHOST_PRESSURE, duration, level - 1, false, true, true, sourcePlayer.method_5667());
+      return new GhostPressureEffectInstance(ModEffects.GHOST_PRESSURE, duration, level - 1, false, true, true, sourcePlayer.getUuid());
    }
 
    public static StatusEffectInstance createEffect(LivingEntity sourceEntity, int duration, int level) {
-      return new GhostPressureEffectInstance(ModEffects.GHOST_PRESSURE, duration, level - 1, false, true, true, sourceEntity.method_5667());
+      return new GhostPressureEffectInstance(ModEffects.GHOST_PRESSURE, duration, level - 1, false, true, true, sourceEntity.getUuid());
    }
 }

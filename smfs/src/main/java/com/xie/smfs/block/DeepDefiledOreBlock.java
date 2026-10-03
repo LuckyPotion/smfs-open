@@ -23,35 +23,35 @@ public class DeepDefiledOreBlock extends DefiledOreBlock {
    }
 
    @Override
-   public float method_9594(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
-      float baseSpeed = super.method_9594(state, player, world, pos);
+   public float calcBlockBreakingDelta(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
+      float baseSpeed = super.calcBlockBreakingDelta(state, player, world, pos);
       return baseSpeed * 0.25F;
    }
 
    @Override
-   public void method_9576(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-      ItemStack heldItem = player.method_6047();
-      boolean isUsingGoldenPickaxe = heldItem.method_31574(Items.field_8335);
-      if (!isUsingGoldenPickaxe && !world.field_9236) {
-         player.method_5643(ModDamageSources.ghost(world), 8.0F);
-         double currentMaxHealth = player.method_5996(EntityAttributes.field_23716).method_6201();
+   public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+      ItemStack heldItem = player.getMainHandStack();
+      boolean isUsingGoldenPickaxe = heldItem.isOf(Items.GOLDEN_PICKAXE);
+      if (!isUsingGoldenPickaxe && !world.isClient) {
+         player.damage(ModDamageSources.ghost(world), 8.0F);
+         double currentMaxHealth = player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).getBaseValue();
          if (currentMaxHealth > 1.0) {
-            player.method_5996(EntityAttributes.field_23716).method_6192(currentMaxHealth - 1.0);
-            if (player.method_6032() > currentMaxHealth - 1.0) {
-               player.method_6033((float)(currentMaxHealth - 1.0));
+            player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(currentMaxHealth - 1.0);
+            if (player.getHealth() > currentMaxHealth - 1.0) {
+               player.setHealth((float)(currentMaxHealth - 1.0));
             }
          }
 
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 200, 1));
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5901, 200, 1));
-         world.method_8396(null, pos, SoundEvents.field_14729, SoundCategory.field_15248, 1.0F, 0.8F);
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 1));
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 200, 1));
+         world.playSound(null, pos, SoundEvents.ENTITY_PHANTOM_BITE, SoundCategory.PLAYERS, 1.0F, 0.8F);
       }
 
-      super.method_9576(world, pos, state, player);
+      super.onBreak(world, pos, state, player);
    }
 
    @Override
-   public List<ItemStack> method_9560(BlockState state, Builder builder) {
+   public List<ItemStack> getDroppedStacks(BlockState state, Builder builder) {
       return List.of(new ItemStack(this));
    }
 }

@@ -22,7 +22,7 @@ public class RecipeUnlockManager {
    }
 
    public static boolean isRecipeUnlocked(PlayerEntity player, String recipeId) {
-      String playerId = player.method_5845();
+      String playerId = player.getUuidAsString();
       Set<String> unlockedRecipes = PLAYER_UNLOCKED_RECIPES.get(playerId);
       return !UNLOCK_CONDITIONS.containsKey(recipeId) ? true : unlockedRecipes != null && unlockedRecipes.contains(recipeId);
    }
@@ -34,12 +34,12 @@ public class RecipeUnlockManager {
 
    public static void unlockRecipe(PlayerEntity player, String recipeId) {
       if (player instanceof ServerPlayerEntity serverPlayer) {
-         String playerId = player.method_5845();
+         String playerId = player.getUuidAsString();
          Set<String> unlockedRecipes = PLAYER_UNLOCKED_RECIPES.computeIfAbsent(playerId, k -> new HashSet<>());
          if (!unlockedRecipes.contains(recipeId)) {
             unlockedRecipes.add(recipeId);
             addToVanillaRecipeBook(serverPlayer, recipeId);
-            Smfs.LOGGER.debug("玩家 {} 解锁配方: {}", player.method_5477().getString(), recipeId);
+            Smfs.LOGGER.debug("玩家 {} 解锁配方: {}", player.getName().getString(), recipeId);
          }
       }
    }
@@ -47,10 +47,10 @@ public class RecipeUnlockManager {
    private static void addToVanillaRecipeBook(ServerPlayerEntity player, String recipeId) {
       try {
          Identifier recipeIdentifier = new Identifier(recipeId);
-         Recipe<?> recipe = (Recipe<?>)player.method_37908().method_8433().method_8130(recipeIdentifier).orElse(null);
+         Recipe<?> recipe = (Recipe<?>)player.getWorld().getRecipeManager().get(recipeIdentifier).orElse(null);
          if (recipe != null) {
-            player.method_7254(List.of(recipe));
-            Smfs.LOGGER.debug("已将配方 {} 添加到玩家 {} 的原版配方书中", recipeId, player.method_5477().getString());
+            player.unlockRecipes(List.of(recipe));
+            Smfs.LOGGER.debug("已将配方 {} 添加到玩家 {} 的原版配方书中", recipeId, player.getName().getString());
          }
       } catch (Exception e) {
          Smfs.LOGGER.warn("无法将配方 {} 添加到原版配方书: {}", recipeId, e.getMessage());
@@ -154,7 +154,7 @@ public class RecipeUnlockManager {
    }
 
    public static Set<String> getUnlockedRecipes(PlayerEntity player) {
-      String playerId = player.method_5845();
+      String playerId = player.getUuidAsString();
       return PLAYER_UNLOCKED_RECIPES.getOrDefault(playerId, new HashSet<>());
    }
 
@@ -170,8 +170,8 @@ public class RecipeUnlockManager {
          if (!(player instanceof ServerPlayerEntity serverPlayer)) {
             return false;
          } else {
-            Advancement advancement = serverPlayer.field_13995.method_3851().method_12896(new Identifier(this.advancementId));
-            return advancement != null && serverPlayer.method_14236().method_12882(advancement).method_740();
+            Advancement advancement = serverPlayer.server.getAdvancementLoader().get(new Identifier(this.advancementId));
+            return advancement != null && serverPlayer.getAdvancementTracker().getProgress(advancement).isDone();
          }
       }
 
@@ -228,9 +228,9 @@ public class RecipeUnlockManager {
       public boolean isMet(PlayerEntity player) {
          int foundCount = 0;
 
-         for (ItemStack stack : player.method_31548().field_7547) {
-            if (stack.method_7909().method_7876().contains(this.itemId)) {
-               foundCount += stack.method_7947();
+         for (ItemStack stack : player.getInventory().main) {
+            if (stack.getItem().getTranslationKey().contains(this.itemId)) {
+               foundCount += stack.getCount();
             }
          }
 
@@ -252,7 +252,7 @@ public class RecipeUnlockManager {
 
       @Override
       public boolean isMet(PlayerEntity player) {
-         return player.field_7520 >= this.requiredLevel;
+         return player.experienceLevel >= this.requiredLevel;
       }
 
       @Override

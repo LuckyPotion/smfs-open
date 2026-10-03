@@ -54,15 +54,15 @@ public class ScreenTearRenderer implements HudRenderCallback {
    }
 
    public void onHudRender(DrawContext context, float tickDelta) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null && client.field_1687 != null) {
-         if (isHoldingRustyBroadsword(client.field_1724)) {
-            this.loadConfigFromItem(client.field_1724);
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null && client.world != null) {
+         if (isHoldingRustyBroadsword(client.player)) {
+            this.loadConfigFromItem(client.player);
             ScreenTearRenderer.TearParams params = new ScreenTearRenderer.TearParams(0.6F, 0.1F, 0.05F, 1.0F);
-            int width = client.method_22683().method_4486();
-            int height = client.method_22683().method_4502();
-            if (this.seed != client.field_1724.method_5667().getLeastSignificantBits() || forceRefreshCount != this.lastForceRefreshCount) {
-               this.seed = client.field_1724.method_5667().getLeastSignificantBits();
+            int width = client.getWindow().getScaledWidth();
+            int height = client.getWindow().getScaledHeight();
+            if (this.seed != client.player.getUuid().getLeastSignificantBits() || forceRefreshCount != this.lastForceRefreshCount) {
+               this.seed = client.player.getUuid().getLeastSignificantBits();
                this.lastHitCount = hitCount;
                this.lastForceRefreshCount = forceRefreshCount;
                this.generateCracks(width, height, this.seed + forceRefreshCount);
@@ -75,7 +75,7 @@ public class ScreenTearRenderer implements HudRenderCallback {
                RenderSystem.enableBlend();
                RenderSystem.defaultBlendFunc();
                RenderSystem.disableDepthTest();
-               MatrixStack matrices = context.method_51448();
+               MatrixStack matrices = context.getMatrices();
                this.drawScreenTear(context, client, width, height);
 
                for (ScreenTearRenderer.CrackSegment seg : this.crackSegments) {
@@ -87,29 +87,29 @@ public class ScreenTearRenderer implements HudRenderCallback {
                      int iLen = (int)len;
                      int glowHW = Math.max(1, (int)(8.0F * seg.intensity / 2.0F));
                      int crackHW = Math.max(1, (int)(3.0F * seg.intensity / 2.0F));
-                     matrices.method_22903();
-                     matrices.method_46416(seg.x1, seg.y1, 0.0F);
-                     matrices.method_22907(RotationAxis.field_40718.rotation(angle));
+                     matrices.push();
+                     matrices.translate(seg.x1, seg.y1, 0.0F);
+                     matrices.multiply(RotationAxis.POSITIVE_Z.rotation(angle));
                      int glowAlpha = (int)(0.25F * seg.intensity * 255.0F);
                      int glowOuter = argb(glowAlpha, (int)(params.r * 255.0F), (int)(params.g * 255.0F), (int)(params.b * 255.0F));
                      int glowInner = argb(glowAlpha / 2, (int)(params.r * 255.0F), (int)(params.g * 255.0F), (int)(params.b * 255.0F));
-                     context.method_25294(0, -glowHW, iLen, glowHW, glowOuter);
-                     context.method_25294(0, -glowHW / 2, iLen, glowHW / 2, glowInner);
+                     context.fill(0, -glowHW, iLen, glowHW, glowOuter);
+                     context.fill(0, -glowHW / 2, iLen, glowHW / 2, glowInner);
                      glowAlpha = (int)(0.6F * seg.intensity * 255.0F);
                      glowOuter = argb(glowAlpha, 0, 0, 0);
                      glowInner = crackHW + 1;
-                     context.method_25294(0, -glowInner - 1, iLen, -glowInner, glowOuter);
+                     context.fill(0, -glowInner - 1, iLen, -glowInner, glowOuter);
                      glowAlpha = (int)(0.3F * seg.intensity * 255.0F);
                      glowOuter = argb(glowAlpha, 255, 255, 255);
-                     context.method_25294(0, crackHW, iLen, crackHW + 1, glowOuter);
+                     context.fill(0, crackHW, iLen, crackHW + 1, glowOuter);
                      glowAlpha = (int)(0.9F * seg.intensity * 255.0F);
                      glowOuter = argb(glowAlpha, 2, 2, 2);
-                     context.method_25294(0, -crackHW, iLen, crackHW, glowOuter);
+                     context.fill(0, -crackHW, iLen, crackHW, glowOuter);
                      glowAlpha = (int)(0.12F * seg.intensity * 255.0F);
                      glowOuter = argb(glowAlpha, (int)(params.r * 255.0F), (int)(params.g * 255.0F), (int)(params.b * 255.0F));
                      glowInner = crackHW + 2;
-                     context.method_25294(0, crackHW + 2, iLen, glowInner + 2, glowOuter);
-                     matrices.method_22909();
+                     context.fill(0, crackHW + 2, iLen, glowInner + 2, glowOuter);
+                     matrices.pop();
                   }
                }
 
@@ -133,10 +133,10 @@ public class ScreenTearRenderer implements HudRenderCallback {
          int a = (int)(alpha * (1.0F - ease));
          int d = margin * (i + 1) / bands;
          int c = argb(Math.max(0, a), (int)(params.r * 255.0F), (int)(params.g * 255.0F), (int)(params.b * 255.0F));
-         context.method_25294(0, d, width, d + 1, c);
-         context.method_25294(0, height - d - 1, width, height - d, c);
-         context.method_25294(d, 0, d + 1, height, c);
-         context.method_25294(width - d - 1, 0, width - d, height, c);
+         context.fill(0, d, width, d + 1, c);
+         context.fill(0, height - d - 1, width, height - d, c);
+         context.fill(d, 0, d + 1, height, c);
+         context.fill(width - d - 1, 0, width - d, height, c);
       }
    }
 
@@ -163,29 +163,29 @@ public class ScreenTearRenderer implements HudRenderCallback {
                float shardAngle = (float)(Math.random() * Math.PI * 2.0);
                int shardW = 2 + (int)(Math.random() * 4.0);
                int shardH = 2 + (int)(Math.random() * 3.0);
-               matrices.method_22903();
-               matrices.method_46416(sx, sy, 0.0F);
-               matrices.method_22907(RotationAxis.field_40718.rotation(shardAngle));
-               context.method_25294(0, 0, shardW, shardH, shardColor);
-               context.method_25294(0, 0, shardW, 1, shardEdge);
-               matrices.method_22909();
+               matrices.push();
+               matrices.translate(sx, sy, 0.0F);
+               matrices.multiply(RotationAxis.POSITIVE_Z.rotation(shardAngle));
+               context.fill(0, 0, shardW, shardH, shardColor);
+               context.fill(0, 0, shardW, 1, shardEdge);
+               matrices.pop();
             }
          }
       }
    }
 
    private void drawScreenTear(DrawContext context, MinecraftClient client, int screenW, int screenH) {
-      Framebuffer fb = client.method_1522();
+      Framebuffer fb = client.getFramebuffer();
       if (fb != null) {
-         int fbTex = fb.method_30277();
+         int fbTex = fb.getColorAttachment();
          if (fbTex != 0) {
-            int fbW = fb.field_1482;
-            int fbH = fb.field_1481;
+            int fbW = fb.textureWidth;
+            int fbH = fb.textureHeight;
             RenderSystem.setShaderTexture(0, fbTex);
-            RenderSystem.setShader(GameRenderer::method_34542);
-            Matrix4f matrix = context.method_51448().method_23760().method_23761();
-            Tessellator tess = Tessellator.method_1348();
-            BufferBuilder buffer = tess.method_1349();
+            RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+            Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+            Tessellator tess = Tessellator.getInstance();
+            BufferBuilder buffer = tess.getBuffer();
             float uScale = (float)screenW / fbW;
             float vScale = (float)screenH / fbH;
 
@@ -222,12 +222,12 @@ public class ScreenTearRenderer implements HudRenderCallback {
                   float dv1 = dy1 / fbH * vScale;
                   float du2 = dx2 / fbW * uScale;
                   float dv2 = dy2 / fbH * vScale;
-                  buffer.method_1328(DrawMode.field_27382, VertexFormats.field_1585);
-                  buffer.method_22918(matrix, sx1, sy1, 0.0F).method_22913(u1, v1).method_1344();
-                  buffer.method_22918(matrix, sdx1, sdy1, 0.0F).method_22913(du1, dv1).method_1344();
-                  buffer.method_22918(matrix, sdx2, sdy2, 0.0F).method_22913(du2, dv2).method_1344();
-                  buffer.method_22918(matrix, sx2, sy2, 0.0F).method_22913(u2, v2).method_1344();
-                  tess.method_1350();
+                  buffer.begin(DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+                  buffer.vertex(matrix, sx1, sy1, 0.0F).texture(u1, v1).next();
+                  buffer.vertex(matrix, sdx1, sdy1, 0.0F).texture(du1, dv1).next();
+                  buffer.vertex(matrix, sdx2, sdy2, 0.0F).texture(du2, dv2).next();
+                  buffer.vertex(matrix, sx2, sy2, 0.0F).texture(u2, v2).next();
+                  tess.draw();
                }
             }
          }
@@ -295,24 +295,24 @@ public class ScreenTearRenderer implements HudRenderCallback {
    }
 
    private static boolean isHoldingRustyBroadsword(PlayerEntity player) {
-      ItemStack mainHand = player.method_6047();
-      ItemStack offHand = player.method_6079();
-      return mainHand.method_31574(ModItems.RUSTY_OLD_BROADSWORD) && RustyOldBroadswordItem.isRangedMode(mainHand)
+      ItemStack mainHand = player.getMainHandStack();
+      ItemStack offHand = player.getOffHandStack();
+      return mainHand.isOf(ModItems.RUSTY_OLD_BROADSWORD) && RustyOldBroadswordItem.isRangedMode(mainHand)
          ? true
-         : offHand.method_31574(ModItems.RUSTY_OLD_BROADSWORD) && RustyOldBroadswordItem.isRangedMode(offHand);
+         : offHand.isOf(ModItems.RUSTY_OLD_BROADSWORD) && RustyOldBroadswordItem.isRangedMode(offHand);
    }
 
    private void loadConfigFromItem(PlayerEntity player) {
-      ItemStack stack = player.method_6047();
-      if (!stack.method_31574(ModItems.RUSTY_OLD_BROADSWORD) || !RustyOldBroadswordItem.isRangedMode(stack)) {
-         stack = player.method_6079();
+      ItemStack stack = player.getMainHandStack();
+      if (!stack.isOf(ModItems.RUSTY_OLD_BROADSWORD) || !RustyOldBroadswordItem.isRangedMode(stack)) {
+         stack = player.getOffHandStack();
       }
 
-      if (stack.method_31574(ModItems.RUSTY_OLD_BROADSWORD) && RustyOldBroadswordItem.isRangedMode(stack)) {
-         NbtCompound nbt = stack.method_7969();
+      if (stack.isOf(ModItems.RUSTY_OLD_BROADSWORD) && RustyOldBroadswordItem.isRangedMode(stack)) {
+         NbtCompound nbt = stack.getNbt();
          if (nbt != null) {
-            if (nbt.method_10545("broadsword_crack_fixed")) {
-               this.crackFixed = nbt.method_10577("broadsword_crack_fixed");
+            if (nbt.contains("broadsword_crack_fixed")) {
+               this.crackFixed = nbt.getBoolean("broadsword_crack_fixed");
             }
          }
       }

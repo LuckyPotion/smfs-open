@@ -30,21 +30,21 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
 
    public GhostChildFeedScreenHandler(int syncId, PlayerInventory inventory) {
       super(ModScreenHandlers.GHOST_CHILD_FEED_SCREEN_HANDLER, syncId);
-      this.player = inventory.field_7546;
+      this.player = inventory.player;
       this.ghostChildData = PlayerGhostChildManager.getGhostChildData(this.player);
-      this.method_7621(new GhostChildFeedScreenHandler.FeedSlot(this.feedInventory, 0, 80, 20));
+      this.addSlot(new GhostChildFeedScreenHandler.FeedSlot(this.feedInventory, 0, 80, 20));
       this.addPlayerInventorySlots(inventory);
    }
 
    private void addPlayerInventorySlots(PlayerInventory inventory) {
       for (int row = 0; row < 3; row++) {
          for (int col = 0; col < 9; col++) {
-            this.method_7621(new Slot(inventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+            this.addSlot(new Slot(inventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
          }
       }
 
       for (int col = 0; col < 9; col++) {
-         this.method_7621(new Slot(inventory, col, 8 + col * 18, 142));
+         this.addSlot(new Slot(inventory, col, 8 + col * 18, 142));
       }
    }
 
@@ -60,42 +60,42 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
       return this.player;
    }
 
-   public boolean method_7597(PlayerEntity player) {
+   public boolean canUse(PlayerEntity player) {
       return true;
    }
 
-   public void method_7595(PlayerEntity player) {
-      if (!player.method_37908().field_9236) {
-         ItemStack stack = this.feedInventory.method_5438(0);
-         if (!stack.method_7960()) {
-            this.feedInventory.method_5447(0, ItemStack.field_8037);
-            if (!player.method_31548().method_7394(stack)) {
-               player.method_7328(stack, false);
+   public void onClosed(PlayerEntity player) {
+      if (!player.getWorld().isClient) {
+         ItemStack stack = this.feedInventory.getStack(0);
+         if (!stack.isEmpty()) {
+            this.feedInventory.setStack(0, ItemStack.EMPTY);
+            if (!player.getInventory().insertStack(stack)) {
+               player.dropItem(stack, false);
             }
          }
       }
 
-      super.method_7595(player);
+      super.onClosed(player);
    }
 
-   public ItemStack method_7601(PlayerEntity player, int index) {
-      ItemStack itemStack = ItemStack.field_8037;
-      Slot slot = (Slot)this.field_7761.get(index);
-      if (slot != null && slot.method_7681()) {
-         ItemStack itemStack2 = slot.method_7677();
-         itemStack = itemStack2.method_7972();
-         if (index == 0) {
-            if (!this.method_7616(itemStack2, 1, this.field_7761.size(), false)) {
-               return ItemStack.field_8037;
+   public ItemStack quickMove(PlayerEntity player, int slot) {
+      ItemStack itemStack = ItemStack.EMPTY;
+      Slot slotx = (Slot)this.slots.get(slot);
+      if (slotx != null && slotx.hasStack()) {
+         ItemStack itemStack2 = slotx.getStack();
+         itemStack = itemStack2.copy();
+         if (slot == 0) {
+            if (!this.insertItem(itemStack2, 1, this.slots.size(), false)) {
+               return ItemStack.EMPTY;
             }
-         } else if (!this.method_7616(itemStack2, 0, 1, false)) {
-            return ItemStack.field_8037;
+         } else if (!this.insertItem(itemStack2, 0, 1, false)) {
+            return ItemStack.EMPTY;
          }
 
-         if (itemStack2.method_7960()) {
-            slot.method_48931(ItemStack.field_8037);
+         if (itemStack2.isEmpty()) {
+            slotx.setStack(ItemStack.EMPTY);
          } else {
-            slot.method_7668();
+            slotx.markDirty();
          }
       }
 
@@ -103,19 +103,19 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
    }
 
    public ItemStack getContainerStack() {
-      return this.feedInventory.method_5438(0);
+      return this.feedInventory.getStack(0);
    }
 
    public void feedGhostChild() {
-      ItemStack containerStack = this.feedInventory.method_5438(0);
+      ItemStack containerStack = this.feedInventory.getStack(0);
       int containerSlot = -1;
-      if (this.player != null && !containerStack.method_7960()) {
-         if (containerStack.method_7909() instanceof GoldenContainerItem) {
-            NbtCompound nbt = containerStack.method_7948();
-            boolean hasGhost = nbt.method_10577("HasGhost");
+      if (this.player != null && !containerStack.isEmpty()) {
+         if (containerStack.getItem() instanceof GoldenContainerItem) {
+            NbtCompound nbt = containerStack.getOrCreateNbt();
+            boolean hasGhost = nbt.getBoolean("HasGhost");
             if (hasGhost) {
-               NbtCompound contained = nbt.method_10562("ContainedGhost");
-               String ghostType = contained.method_10558("id");
+               NbtCompound contained = nbt.getCompound("ContainedGhost");
+               String ghostType = contained.getString("id");
                if (!ghostType.isEmpty()) {
                   if (ghostType.contains(":")) {
                      ghostType = ghostType.substring(ghostType.indexOf(":") + 1);
@@ -124,11 +124,11 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
                   int oldLevel = this.ghostChildData.getLevel();
                   Random random = new Random();
                   int totalExperience = 0;
-                  if ("player_ghost".equals(ghostType) && contained.method_10545("PlayerGhosts")) {
-                     NbtCompound playerGhostsNbt = contained.method_10562("PlayerGhosts");
+                  if ("player_ghost".equals(ghostType) && contained.contains("PlayerGhosts")) {
+                     NbtCompound playerGhostsNbt = contained.getCompound("PlayerGhosts");
 
-                     for (String key : playerGhostsNbt.method_10541()) {
-                        String innerGhostType = playerGhostsNbt.method_10558(key);
+                     for (String key : playerGhostsNbt.getKeys()) {
+                        String innerGhostType = playerGhostsNbt.getString(key);
                         if (!innerGhostType.isEmpty()) {
                            this.ghostChildData.addFedGhostType(innerGhostType);
                            char innerTerrorLevel = this.getTerrorLevelForGhostType(innerGhostType);
@@ -138,8 +138,8 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
                   } else {
                      this.ghostChildData.addFedGhostType(ghostType);
                      char terrorLevel = 'C';
-                     if (contained.method_10545("TerrorLevel")) {
-                        String terrorLevelStr = contained.method_10558("TerrorLevel");
+                     if (contained.contains("TerrorLevel")) {
+                        String terrorLevelStr = contained.getString("TerrorLevel");
                         if (!terrorLevelStr.isEmpty()) {
                            terrorLevel = Character.toUpperCase(terrorLevelStr.charAt(0));
                         }
@@ -150,40 +150,40 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
 
                   this.ghostChildData.addExperience(totalExperience);
                   PlayerGhostChildManager.saveGhostChildData(this.player, this.ghostChildData);
-                  ItemStack emptyContainer = containerStack.method_7972();
-                  emptyContainer.method_7939(1);
-                  emptyContainer.method_7969().method_10551("ContainedGhost");
-                  emptyContainer.method_7969().method_10556("HasGhost", false);
-                  emptyContainer.method_7969().method_10551("IsHeavy");
-                  this.feedInventory.method_5447(0, emptyContainer);
+                  ItemStack emptyContainer = containerStack.copy();
+                  emptyContainer.setCount(1);
+                  emptyContainer.getNbt().remove("ContainedGhost");
+                  emptyContainer.getNbt().putBoolean("HasGhost", false);
+                  emptyContainer.getNbt().remove("IsHeavy");
+                  this.feedInventory.setStack(0, emptyContainer);
                   if (this.player instanceof ServerPlayerEntity serverPlayer) {
                      GhostChildFeedSuccessPacket.sendToClient(serverPlayer);
                   }
 
-                  this.player.method_7353(Text.method_43470("§a喂食成功！"), false);
-                  this.player.method_7353(Text.method_43470("§a鬼童获得了 " + totalExperience + " 点经验！"), false);
+                  this.player.sendMessage(Text.literal("§a喂食成功！"), false);
+                  this.player.sendMessage(Text.literal("§a鬼童获得了 " + totalExperience + " 点经验！"), false);
                   int newLevel = this.ghostChildData.getLevel();
                   if (newLevel > oldLevel) {
-                     this.player.method_7353(Text.method_43470("§a你的鬼童升级了！现在等级：" + newLevel), false);
+                     this.player.sendMessage(Text.literal("§a你的鬼童升级了！现在等级：" + newLevel), false);
                   }
                } else {
-                  this.player.method_7353(Text.method_43470("§c无法识别鬼的类型！"), false);
+                  this.player.sendMessage(Text.literal("§c无法识别鬼的类型！"), false);
                }
             } else {
-               this.player.method_7353(Text.method_43470("§c黄金容器中没有厉鬼！"), false);
+               this.player.sendMessage(Text.literal("§c黄金容器中没有厉鬼！"), false);
             }
          } else {
-            this.player.method_7353(Text.method_43470("§c请放入黄金容器！"), false);
+            this.player.sendMessage(Text.literal("§c请放入黄金容器！"), false);
          }
       } else if (this.player != null) {
-         this.player.method_7353(Text.method_43470("§c请放入黄金容器！"), false);
+         this.player.sendMessage(Text.literal("§c请放入黄金容器！"), false);
       }
    }
 
    private char getTerrorLevelForGhostType(String ghostType) {
       if (ghostType != null && !ghostType.isEmpty()) {
          try {
-            GhostEntity tempGhost = GhostUtils.createGhostEntityByType(ghostType, this.player.method_37908());
+            GhostEntity tempGhost = GhostUtils.createGhostEntityByType(ghostType, this.player.getWorld());
             if (tempGhost != null) {
                return tempGhost.getTerrorLevel();
             }
@@ -215,15 +215,15 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
          super(inventory, index, x, y);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return stack.method_7909() instanceof GoldenContainerItem;
+      public boolean canInsert(ItemStack stack) {
+         return stack.getItem() instanceof GoldenContainerItem;
       }
 
-      public int method_7675() {
+      public int getMaxItemCount() {
          return 1;
       }
 
-      public int method_7676(ItemStack stack) {
+      public int getMaxItemCount(ItemStack stack) {
          return 1;
       }
    }
@@ -234,7 +234,7 @@ public class GhostChildFeedScreenHandler extends ScreenHandler {
       }
 
       public Text method_5476() {
-         return Text.method_43470("Ghost Child Feed");
+         return Text.literal("Ghost Child Feed");
       }
 
       public void writeScreenOpeningData(ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf) {

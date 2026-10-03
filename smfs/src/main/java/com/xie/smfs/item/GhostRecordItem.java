@@ -29,20 +29,20 @@ public class GhostRecordItem extends MusicDiscItem {
       super(15, ModSounds.KNOCKING_SOUND, settings, 60);
    }
 
-   public ActionResult method_7884(ItemUsageContext context) {
-      World world = context.method_8045();
-      BlockPos pos = context.method_8037();
-      PlayerEntity player = context.method_8036();
-      Smfs.LOGGER.debug("鬼唱片使用开始 - 玩家: {}, 位置: {}, 世界: {}", player != null ? player.method_5477().getString() : "null", pos, world.field_9236 ? "客户端" : "服务端");
-      ActionResult parentResult = super.method_7884(context);
+   public ActionResult useOnBlock(ItemUsageContext context) {
+      World world = context.getWorld();
+      BlockPos pos = context.getBlockPos();
+      PlayerEntity player = context.getPlayer();
+      Smfs.LOGGER.debug("鬼唱片使用开始 - 玩家: {}, 位置: {}, 世界: {}", player != null ? player.getName().getString() : "null", pos, world.isClient ? "客户端" : "服务端");
+      ActionResult parentResult = super.useOnBlock(context);
       Smfs.LOGGER.debug("父类处理结果: {}", parentResult);
-      if (world.method_8320(pos).method_27852(Blocks.field_10223)) {
+      if (world.getBlockState(pos).isOf(Blocks.JUKEBOX)) {
          Smfs.LOGGER.debug("检测到唱片机方块");
-         boolean hasRecord = (Boolean)world.method_8320(pos).method_11654(JukeboxBlock.field_11180);
+         boolean hasRecord = (Boolean)world.getBlockState(pos).get(JukeboxBlock.HAS_RECORD);
          Smfs.LOGGER.debug("唱片机当前是否有唱片: {}", hasRecord);
-         if (!hasRecord && (parentResult == ActionResult.field_5812 || parentResult == ActionResult.field_21466)) {
+         if (!hasRecord && (parentResult == ActionResult.SUCCESS || parentResult == ActionResult.CONSUME)) {
             Smfs.LOGGER.debug("检测到放入操作 - 准备添加特殊效果");
-            if (!world.field_9236) {
+            if (!world.isClient) {
                Smfs.LOGGER.debug("服务端 - 开始添加敲门诅咒效果");
                Smfs.LOGGER.debug("父类已处理唱片放入，开始添加特殊效果");
                this.applyEffectToNearbyPlayers(world, pos);
@@ -51,7 +51,7 @@ public class GhostRecordItem extends MusicDiscItem {
             }
          } else if (hasRecord) {
             Smfs.LOGGER.debug("检测到取出操作 - 跳过效果添加");
-         } else if (parentResult != ActionResult.field_5812 && parentResult != ActionResult.field_21466) {
+         } else if (parentResult != ActionResult.SUCCESS && parentResult != ActionResult.CONSUME) {
             Smfs.LOGGER.debug("父类处理未成功 - 跳过效果添加");
          }
       } else {
@@ -62,33 +62,24 @@ public class GhostRecordItem extends MusicDiscItem {
       return parentResult;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_record.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_record.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_record.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_record.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_record.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_record.description.type"));
    }
 
    private void applyEffectToNearbyPlayers(World world, BlockPos pos) {
       Smfs.LOGGER.debug("开始搜索唱片机周围玩家 - 唱片机位置: {}", pos);
-      Box box = new Box(
-         pos.method_10263() - 16.0,
-         pos.method_10264() - 16.0,
-         pos.method_10260() - 16.0,
-         pos.method_10263() + 16.0,
-         pos.method_10264() + 16.0,
-         pos.method_10260() + 16.0
-      );
-      List<PlayerEntity> players = world.method_18467(PlayerEntity.class, box);
+      Box box = new Box(pos.getX() - 16.0, pos.getY() - 16.0, pos.getZ() - 16.0, pos.getX() + 16.0, pos.getY() + 16.0, pos.getZ() + 16.0);
+      List<PlayerEntity> players = world.getNonSpectatingEntities(PlayerEntity.class, box);
       Smfs.LOGGER.debug("找到 {} 个附近玩家", players.size());
 
       for (PlayerEntity player : players) {
-         Smfs.LOGGER.debug("给玩家 {} 添加敲门诅咒效果", player.method_5477().getString());
-         player.method_6092(new StatusEffectInstance(ModEffects.KNOCKING_CURSE, 3600, 0));
-         world.method_43128(
-            null, player.method_23317(), player.method_23318(), player.method_23321(), ModSounds.KNOCKING_SOUND, SoundCategory.field_15256, 1.0F, 1.0F
-         );
-         Smfs.LOGGER.debug("已为玩家 {} 添加效果并播放音效", player.method_5477().getString());
+         Smfs.LOGGER.debug("给玩家 {} 添加敲门诅咒效果", player.getName().getString());
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.KNOCKING_CURSE, 3600, 0));
+         world.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.KNOCKING_SOUND, SoundCategory.AMBIENT, 1.0F, 1.0F);
+         Smfs.LOGGER.debug("已为玩家 {} 添加效果并播放音效", player.getName().getString());
       }
 
       Smfs.LOGGER.debug("敲门诅咒效果添加完成 - 总共影响 {} 个玩家", players.size());

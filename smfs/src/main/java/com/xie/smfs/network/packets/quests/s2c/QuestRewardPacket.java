@@ -26,20 +26,20 @@ public class QuestRewardPacket {
    }
 
    public QuestRewardPacket(PacketByteBuf buf) {
-      this.itemId = buf.method_19772();
+      this.itemId = buf.readString();
       this.count = buf.readInt();
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10814(this.itemId);
+      buf.writeString(this.itemId);
       buf.writeInt(this.count);
    }
 
    public static void handle(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-      String itemId = buf.method_19772();
+      String itemId = buf.readString();
       int count = buf.readInt();
       client.execute(() -> {
-         if (client.field_1724 != null) {
+         if (client.player != null) {
             LOGGER.info("客户端收到奖励通知: {} x {}", itemId, count);
          }
       });
@@ -48,24 +48,24 @@ public class QuestRewardPacket {
    public static void handleServer(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      String itemId = buf.method_19772();
+      String itemId = buf.readString();
       int count = buf.readInt();
       server.execute(() -> {
          try {
             ItemStack rewardStack = GhostUtils.createItemStack(itemId, count);
-            if (rewardStack == null || rewardStack.method_7960()) {
+            if (rewardStack == null || rewardStack.isEmpty()) {
                LOGGER.warn("无法识别的物品ID: {}", itemId);
                return;
             }
 
-            if (!player.method_31548().method_7394(rewardStack)) {
-               player.method_7328(rewardStack, false);
+            if (!player.getInventory().insertStack(rewardStack)) {
+               player.dropItem(rewardStack, false);
             }
 
-            player.method_7353(Text.method_43470("§a获得奖励: " + count + " 个 " + getItemDisplayName(itemId)), false);
+            player.sendMessage(Text.literal("§a获得奖励: " + count + " 个 " + getItemDisplayName(itemId)), false);
          } catch (Exception e) {
             LOGGER.error("服务端发放奖励时发生错误: {}", e.getMessage());
-            player.method_7353(Text.method_43470("§c奖励发放失败"), false);
+            player.sendMessage(Text.literal("§c奖励发放失败"), false);
          }
       });
    }

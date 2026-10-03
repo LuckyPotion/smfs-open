@@ -29,7 +29,7 @@ public class FootprintBlockEntity extends BlockEntity implements GeoBlockEntity 
 
    public void setDecayTime(int decayTime) {
       this.decayTime = FootprintBlock.clampDecayTime(decayTime);
-      this.method_5431();
+      this.markDirty();
    }
 
    @Override
@@ -47,27 +47,27 @@ public class FootprintBlockEntity extends BlockEntity implements GeoBlockEntity 
 
    public void setEntityUUID(String entityUUID) {
       this.entityUUID = entityUUID;
-      this.method_5431();
+      this.markDirty();
    }
 
-   public void method_11014(NbtCompound nbt) {
-      super.method_11014(nbt);
-      if (nbt.method_10545("entityUUID")) {
-         this.entityUUID = nbt.method_10558("entityUUID");
+   public void readNbt(NbtCompound nbt) {
+      super.readNbt(nbt);
+      if (nbt.contains("entityUUID")) {
+         this.entityUUID = nbt.getString("entityUUID");
       }
 
-      if (nbt.method_10545("decayTime")) {
-         this.decayTime = nbt.method_10550("decayTime");
+      if (nbt.contains("decayTime")) {
+         this.decayTime = nbt.getInt("decayTime");
       }
    }
 
-   protected void method_11007(NbtCompound nbt) {
-      super.method_11007(nbt);
+   protected void writeNbt(NbtCompound nbt) {
+      super.writeNbt(nbt);
       if (this.entityUUID != null) {
-         nbt.method_10582("entityUUID", this.entityUUID);
+         nbt.putString("entityUUID", this.entityUUID);
       }
 
-      nbt.method_10569("decayTime", this.decayTime);
+      nbt.putInt("decayTime", this.decayTime);
    }
 
    public boolean hasValidEntityInfo() {
@@ -80,17 +80,17 @@ public class FootprintBlockEntity extends BlockEntity implements GeoBlockEntity 
       }
 
       try {
-         return (LivingEntity)world.method_8390(
+         return (LivingEntity)world.getEntitiesByClass(
                LivingEntity.class,
                new Box(
-                  this.field_11867.method_10263() - 1000,
-                  this.field_11867.method_10264() - 1000,
-                  this.field_11867.method_10260() - 1000,
-                  this.field_11867.method_10263() + 1000,
-                  this.field_11867.method_10264() + 1000,
-                  this.field_11867.method_10260() + 1000
+                  this.pos.getX() - 1000,
+                  this.pos.getY() - 1000,
+                  this.pos.getZ() - 1000,
+                  this.pos.getX() + 1000,
+                  this.pos.getY() + 1000,
+                  this.pos.getZ() + 1000
                ),
-               entity -> entity.method_5845().equals(this.entityUUID)
+               entity -> entity.getUuidAsString().equals(this.entityUUID)
             )
             .stream()
             .findFirst()

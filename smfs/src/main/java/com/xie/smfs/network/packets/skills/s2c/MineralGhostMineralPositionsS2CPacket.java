@@ -31,7 +31,7 @@ public class MineralGhostMineralPositionsS2CPacket {
       buf.writeInt(packet.mineralPositions.size());
 
       for (int i = 0; i < packet.mineralPositions.size(); i++) {
-         buf.method_10807(packet.mineralPositions.get(i));
+         buf.writeBlockPos(packet.mineralPositions.get(i));
          buf.writeByte(packet.oreTypes.get(i));
       }
    }
@@ -42,7 +42,7 @@ public class MineralGhostMineralPositionsS2CPacket {
       List<Integer> oreTypes = new ArrayList<>();
 
       for (int i = 0; i < size; i++) {
-         positions.add(buf.method_10811());
+         positions.add(buf.readBlockPos());
          oreTypes.add(Integer.valueOf(buf.readByte()));
       }
 
@@ -54,7 +54,7 @@ public class MineralGhostMineralPositionsS2CPacket {
       client.execute(() -> {
          try {
             LOGGER.debug("接收到矿物鬼被动技能矿物位置信息，共 {} 个矿物", packet.mineralPositions.size());
-            if (client.field_1724 != null) {
+            if (client.player != null) {
                MineralGhostMineralRenderer.setMineralPositions(packet.mineralPositions, packet.oreTypes);
             }
          } catch (Exception e) {
@@ -72,7 +72,7 @@ public class MineralGhostMineralPositionsS2CPacket {
          PacketByteBuf buf = PacketByteBufs.create();
          encode(new MineralGhostMineralPositionsS2CPacket(mineralPositions, oreTypes), buf);
          ServerPlayNetworking.send(player, ID, buf);
-         LOGGER.debug("向玩家 {} 发送矿物鬼矿物位置信息，共 {} 个矿物", player.method_5477().getString(), mineralPositions.size());
+         LOGGER.debug("向玩家 {} 发送矿物鬼矿物位置信息，共 {} 个矿物", player.getName().getString(), mineralPositions.size());
       }
    }
 }

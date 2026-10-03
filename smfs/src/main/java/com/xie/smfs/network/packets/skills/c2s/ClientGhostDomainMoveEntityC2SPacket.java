@@ -24,17 +24,17 @@ public class ClientGhostDomainMoveEntityC2SPacket {
    public static void receive(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      LOGGER.info("收到玩家 {} 的传送生物请求", player.method_5477().getString());
+      LOGGER.info("收到玩家 {} 的传送生物请求", player.getName().getString());
       server.execute(() -> {
-         LOGGER.info("开始处理玩家 {} 的传送生物请求", player.method_5477().getString());
+         LOGGER.info("开始处理玩家 {} 的传送生物请求", player.getName().getString());
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "silent_ghost_eye", ModItems.SILENT_GHOST_EYE, 5);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭鬼眼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭鬼眼，无法使用此技能"), true);
          } else if (result == GhostDomainManager.SkillCheckResult.LEVEL_TOO_LOW) {
-            player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+            player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
          } else {
             GhostDomainManager.handleGhostDomainTeleportEntity(player);
-            LOGGER.info("完成玩家 {} 的传送生物请求处理", player.method_5477().getString());
+            LOGGER.info("完成玩家 {} 的传送生物请求处理", player.getName().getString());
          }
       });
    }

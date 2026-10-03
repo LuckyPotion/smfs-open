@@ -33,7 +33,7 @@ public class ClientGhostShadowHeadJSkillC2SPacket {
             }
 
             if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-               player.method_7353(Text.method_43470("§c您没有驾驭鬼影头，无法使用此技能"), true);
+               player.sendMessage(Text.literal("§c您没有驾驭鬼影头，无法使用此技能"), true);
             } else {
                GhostDomainManager.handleGhostShadowHeadJSkill(player);
                PlayerEvents.balanceRevivalDegree(player);

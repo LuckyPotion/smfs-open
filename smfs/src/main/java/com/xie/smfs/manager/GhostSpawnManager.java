@@ -190,9 +190,9 @@ public class GhostSpawnManager {
 
    public static boolean canSpawnGhostInOverworld(ServerWorld world, EntityType<?> ghostType) {
       ModConfig config = ModConfig.getInstance();
-      LOGGER.debug("主世界：开始检查{}的生成条件，当前世界维度: {}", ghostType, world.method_27983().method_29177());
-      LOGGER.debug("主世界：灵异世界维度: {}", Smfs.SPIRIT_REALM_DIMENSION.method_29177());
-      LOGGER.debug("主世界：维度比较结果: {}", world.method_27983().equals(Smfs.SPIRIT_REALM_DIMENSION));
+      LOGGER.debug("主世界：开始检查{}的生成条件，当前世界维度: {}", ghostType, world.getRegistryKey().getValue());
+      LOGGER.debug("主世界：灵异世界维度: {}", Smfs.SPIRIT_REALM_DIMENSION.getValue());
+      LOGGER.debug("主世界：维度比较结果: {}", world.getRegistryKey().equals(Smfs.SPIRIT_REALM_DIMENSION));
       if (!config.enableEvilGhosts) {
          LOGGER.debug("主世界：厉鬼生成失败: 全局开关未启用");
          return false;
@@ -203,7 +203,7 @@ public class GhostSpawnManager {
          return false;
       }
 
-      if (isGhostLocked(ghostType) && !world.method_27983().equals(Smfs.SPIRIT_REALM_DIMENSION)) {
+      if (isGhostLocked(ghostType) && !world.getRegistryKey().equals(Smfs.SPIRIT_REALM_DIMENSION)) {
          LOGGER.debug("主世界：厉鬼生成失败: 被锁死的鬼类型只能在灵异世界生成");
          return false;
       }
@@ -214,7 +214,7 @@ public class GhostSpawnManager {
          return false;
       }
 
-      int currentDay = (int)(world.method_8510() / 24000L) + 1;
+      int currentDay = (int)(world.getTime() / 24000L) + 1;
       LOGGER.debug("主世界：厉鬼生成天数检测：当前第{}天，需要第{}天", currentDay, spawnConfig.minDay);
       if (spawnConfig.minDay > 0 && currentDay < spawnConfig.minDay) {
          LOGGER.debug("主世界：厉鬼生成失败: 天数不足，当前第{}天，需要第{}天", currentDay, spawnConfig.minDay);
@@ -243,9 +243,9 @@ public class GhostSpawnManager {
 
    public static boolean canSpawnGhostInSpiritRealm(ServerWorld world, EntityType<?> ghostType) {
       ModConfig config = ModConfig.getInstance();
-      LOGGER.debug("灵异世界：开始检查{}的生成条件，当前世界维度: {}", ghostType, world.method_27983().method_29177());
-      LOGGER.debug("灵异世界：灵异世界维度: {}", Smfs.SPIRIT_REALM_DIMENSION.method_29177());
-      LOGGER.debug("灵异世界：维度比较结果: {}", world.method_27983().equals(Smfs.SPIRIT_REALM_DIMENSION));
+      LOGGER.debug("灵异世界：开始检查{}的生成条件，当前世界维度: {}", ghostType, world.getRegistryKey().getValue());
+      LOGGER.debug("灵异世界：灵异世界维度: {}", Smfs.SPIRIT_REALM_DIMENSION.getValue());
+      LOGGER.debug("灵异世界：维度比较结果: {}", world.getRegistryKey().equals(Smfs.SPIRIT_REALM_DIMENSION));
       if (!config.enableEvilGhosts) {
          LOGGER.debug("灵异世界：厉鬼生成失败: 全局开关未启用");
          return false;
@@ -348,11 +348,11 @@ public class GhostSpawnManager {
    }
 
    public static void lockGhostType(ServerWorld world, EntityType<?> ghostType) {
-      boolean isGod = AdvancementManager.hasAnyGodAdvancement(world.method_8503());
+      boolean isGod = AdvancementManager.hasAnyGodAdvancement(world.getServer());
       WorldConfig worldConfig = WorldConfig.getInstance(world);
       boolean isLinear = "linear".equals(worldConfig.endingMode);
       if (!isGod && !isLinear) {
-         LOCKED_GHOST_TYPES_WITH_TIME.put(ghostType, world.method_8510());
+         LOCKED_GHOST_TYPES_WITH_TIME.put(ghostType, world.getTime());
       } else {
          LOCKED_GHOST_TYPES_WITH_TIME.put(ghostType, -1L);
       }
@@ -374,10 +374,10 @@ public class GhostSpawnManager {
    }
 
    public static void checkAndUnlockExpiredGhostTypes(ServerWorld world) {
-      if (!AdvancementManager.hasAnyGodAdvancement(world.method_8503())) {
+      if (!AdvancementManager.hasAnyGodAdvancement(world.getServer())) {
          WorldConfig worldConfig = WorldConfig.getInstance(world);
          if (!"linear".equals(worldConfig.endingMode)) {
-            long currentTime = world.method_8510();
+            long currentTime = world.getTime();
             List<EntityType<?>> expiredTypes = new ArrayList<>();
 
             for (Entry<EntityType<?>, Long> entry : LOCKED_GHOST_TYPES_WITH_TIME.entrySet()) {
@@ -400,7 +400,7 @@ public class GhostSpawnManager {
    }
 
    private static boolean isNightTime(World world) {
-      long time = world.method_8532() % 24000L;
+      long time = world.getTimeOfDay() % 24000L;
       return time >= 13000L && time <= 23000L;
    }
 
@@ -424,7 +424,7 @@ public class GhostSpawnManager {
    }
 
    public static BlockPos findSuitableSpawnPosition(ServerWorld world, ServerPlayerEntity targetPlayer, int radius) {
-      BlockPos playerPos = targetPlayer.method_24515();
+      BlockPos playerPos = targetPlayer.getBlockPos();
       ModConfig config = ModConfig.getInstance();
       int minRange = config.evilGhostMinSpawnRange;
       int maxRange = config.evilGhostMaxSpawnRange;
@@ -434,8 +434,8 @@ public class GhostSpawnManager {
       for (int attempt = 0; attempt < 10; attempt++) {
          int offsetX = RANDOM.nextInt(actualRadius * 2) - actualRadius;
          int offsetZ = RANDOM.nextInt(actualRadius * 2) - actualRadius;
-         BlockPos spawnPos = playerPos.method_10069(offsetX, 0, offsetZ);
-         spawnPos = world.method_8598(Type.field_13202, spawnPos);
+         BlockPos spawnPos = playerPos.add(offsetX, 0, offsetZ);
+         spawnPos = world.getTopPosition(Type.WORLD_SURFACE, spawnPos);
          if (isValidSpawnPosition(world, spawnPos)) {
             return spawnPos;
          }
@@ -445,9 +445,7 @@ public class GhostSpawnManager {
    }
 
    private static boolean isValidSpawnPosition(ServerWorld world, BlockPos pos) {
-      return !world.method_8320(pos.method_10074()).method_26212(world, pos.method_10074())
-         ? false
-         : world.method_22347(pos) && world.method_22347(pos.method_10084());
+      return !world.getBlockState(pos.down()).isSolidBlock(world, pos.down()) ? false : world.isAir(pos) && world.isAir(pos.up());
    }
 
    private static void registerConfigReloadListener() {
@@ -460,13 +458,13 @@ public class GhostSpawnManager {
    }
 
    private static void saveLockedGhostTypes(ServerWorld world) {
-      MinecraftServer server = world.method_8503();
-      PersistentStateManager stateManager = server.method_30002().method_17983();
+      MinecraftServer server = world.getServer();
+      PersistentStateManager stateManager = server.getOverworld().getPersistentStateManager();
 
       try {
          Function<NbtCompound, LockedGhostTypesState> fromNbt = LockedGhostTypesState::fromNbt;
          Supplier<LockedGhostTypesState> supplier = LockedGhostTypesState::new;
-         LockedGhostTypesState ghostTypesState = (LockedGhostTypesState)stateManager.method_17924(fromNbt, supplier, "smfs_locked_ghost_types");
+         LockedGhostTypesState ghostTypesState = (LockedGhostTypesState)stateManager.getOrCreate(fromNbt, supplier, "smfs_locked_ghost_types");
          NbtCompound persistentData = new NbtCompound();
          NbtList lockedList = new NbtList();
 
@@ -474,14 +472,14 @@ public class GhostSpawnManager {
             EntityType<?> ghostType = entry.getKey();
             Long lockTime = entry.getValue();
             NbtCompound ghostEntry = new NbtCompound();
-            ghostEntry.method_10582("type", Registries.field_41177.method_10221(ghostType).toString());
-            ghostEntry.method_10544("lock_time", lockTime);
+            ghostEntry.putString("type", Registries.ENTITY_TYPE.getId(ghostType).toString());
+            ghostEntry.putLong("lock_time", lockTime);
             lockedList.add(ghostEntry);
          }
 
-         persistentData.method_10566("locked_ghost_types", lockedList);
+         persistentData.put("locked_ghost_types", lockedList);
          ghostTypesState.setPersistentData(persistentData);
-         stateManager.method_125();
+         stateManager.save();
          LOGGER.debug("已保存 {} 个锁死鬼类型到持久化数据", LOCKED_GHOST_TYPES_WITH_TIME.size());
       } catch (Exception e) {
          LOGGER.error("保存锁死鬼类型数据失败: {}", e.getMessage());
@@ -489,27 +487,27 @@ public class GhostSpawnManager {
    }
 
    public static void loadLockedGhostTypes(ServerWorld world) {
-      MinecraftServer server = world.method_8503();
+      MinecraftServer server = world.getServer();
       if (server != null) {
-         PersistentStateManager stateManager = server.method_30002().method_17983();
+         PersistentStateManager stateManager = server.getOverworld().getPersistentStateManager();
          LOCKED_GHOST_TYPES_WITH_TIME.clear();
 
          try {
             Function<NbtCompound, LockedGhostTypesState> fromNbt = nbt -> LockedGhostTypesState.fromNbt(nbt);
             Supplier<LockedGhostTypesState> supplier = () -> new LockedGhostTypesState();
-            LockedGhostTypesState ghostTypesState = (LockedGhostTypesState)stateManager.method_17924(fromNbt, supplier, "smfs_locked_ghost_types");
+            LockedGhostTypesState ghostTypesState = (LockedGhostTypesState)stateManager.getOrCreate(fromNbt, supplier, "smfs_locked_ghost_types");
             if (ghostTypesState != null && ghostTypesState.getPersistentData() != null) {
                NbtCompound persistentData = ghostTypesState.getPersistentData();
-               if (persistentData.method_10545("locked_ghost_types")) {
-                  NbtList lockedList = persistentData.method_10554("locked_ghost_types", 10);
-                  if (lockedList.isEmpty() && persistentData.method_10554("locked_ghost_types", 8).size() > 0) {
-                     lockedList = persistentData.method_10554("locked_ghost_types", 8);
+               if (persistentData.contains("locked_ghost_types")) {
+                  NbtList lockedList = persistentData.getList("locked_ghost_types", 10);
+                  if (lockedList.isEmpty() && persistentData.getList("locked_ghost_types", 8).size() > 0) {
+                     lockedList = persistentData.getList("locked_ghost_types", 8);
 
                      for (int i = 0; i < lockedList.size(); i++) {
-                        String ghostTypeId = lockedList.method_10608(i);
+                        String ghostTypeId = lockedList.getString(i);
 
                         try {
-                           EntityType<?> ghostType = (EntityType<?>)Registries.field_41177.method_10223(new Identifier(ghostTypeId));
+                           EntityType<?> ghostType = (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier(ghostTypeId));
                            if (ghostType != null) {
                               LOCKED_GHOST_TYPES_WITH_TIME.put(ghostType, -1L);
                            }
@@ -519,12 +517,12 @@ public class GhostSpawnManager {
                      }
                   } else {
                      for (int i = 0; i < lockedList.size(); i++) {
-                        NbtCompound ghostEntry = lockedList.method_10602(i);
+                        NbtCompound ghostEntry = lockedList.getCompound(i);
 
                         try {
-                           String ghostTypeId = ghostEntry.method_10558("type");
-                           long lockTime = ghostEntry.method_10537("lock_time");
-                           EntityType<?> ghostType = (EntityType<?>)Registries.field_41177.method_10223(new Identifier(ghostTypeId));
+                           String ghostTypeId = ghostEntry.getString("type");
+                           long lockTime = ghostEntry.getLong("lock_time");
+                           EntityType<?> ghostType = (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier(ghostTypeId));
                            if (ghostType != null) {
                               LOCKED_GHOST_TYPES_WITH_TIME.put(ghostType, lockTime);
                            }

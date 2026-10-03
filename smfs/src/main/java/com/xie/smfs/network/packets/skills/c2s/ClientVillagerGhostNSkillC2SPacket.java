@@ -28,9 +28,9 @@ public class ClientVillagerGhostNSkillC2SPacket {
       server.execute(() -> {
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "villager_ghost", ModItems.VILLAGER_GHOST, 5);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭村民鬼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭村民鬼，无法使用此技能"), true);
          } else if (result == GhostDomainManager.SkillCheckResult.LEVEL_TOO_LOW) {
-            player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+            player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
          } else {
             GhostDomainManager.handleVillagerGhostNSkill(player);
             PlayerEvents.balanceRevivalDegree(player);

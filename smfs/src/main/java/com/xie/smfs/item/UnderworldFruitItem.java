@@ -23,38 +23,38 @@ public class UnderworldFruitItem extends Item {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack itemStack = user.method_5998(hand);
-      if (user.method_7332(true)) {
-         user.method_6019(hand);
-         return TypedActionResult.method_22428(itemStack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack itemStack = user.getStackInHand(hand);
+      if (user.canConsume(true)) {
+         user.setCurrentHand(hand);
+         return TypedActionResult.consume(itemStack);
       } else {
-         return TypedActionResult.method_22431(itemStack);
+         return TypedActionResult.fail(itemStack);
       }
    }
 
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (user instanceof PlayerEntity player && !world.field_9236) {
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (user instanceof PlayerEntity player && !world.isClient) {
          float currentSanity = PlayerEvents.getSpiritAttribute(player, SpiritAttributes.SANITY);
          float maxSanity = PlayerEvents.getMaxSanity(player);
          float actualIncrease = Math.min(5.0F, maxSanity - currentSanity);
          if (actualIncrease > 0.0F) {
             PlayerEvents.addSpiritAttribute(player, SpiritAttributes.SANITY, actualIncrease);
-            player.method_7353(Text.method_43470("冥果效果: 当前理智=" + currentSanity + ", 增加理智=" + actualIncrease), true);
-            player.method_7353(Text.method_43469("item.smfs.underworld_fruit.effect.sanity_increased", new Object[]{(int)actualIncrease}), true);
+            player.sendMessage(Text.literal("冥果效果: 当前理智=" + currentSanity + ", 增加理智=" + actualIncrease), true);
+            player.sendMessage(Text.translatable("item.smfs.underworld_fruit.effect.sanity_increased", new Object[]{(int)actualIncrease}), true);
          }
 
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5903, 200, 1, false, true));
-         player.method_5783(SoundEvents.field_19149, 1.0F, 1.0F);
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 200, 1, false, true));
+         player.playSound(SoundEvents.ENTITY_PLAYER_BURP, 1.0F, 1.0F);
       }
 
-      return super.method_7861(stack, world, user);
+      return super.finishUsing(stack, world, user);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.underworld_fruit.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.underworld_fruit.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.brewable_material"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.underworld_fruit.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.underworld_fruit.description.type"));
+      tooltip.add(Text.translatable("item.smfs.brewable_material"));
    }
 }

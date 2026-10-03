@@ -28,17 +28,17 @@ public class BoxGhostEntity extends GhostEntity {
    private static final int INTERACTION_TIMEOUT = 50;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 100000.0)
-         .method_26868(EntityAttributes.field_23719, 0.25)
-         .method_26868(EntityAttributes.field_23721, 5.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 100000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5.0);
    }
 
    public BoxGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 1000, 190, 45, 0.2F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(100000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.25);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(5.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(100000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.25);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(5.0);
    }
 
    @Override
@@ -47,7 +47,7 @@ public class BoxGhostEntity extends GhostEntity {
          return false;
       } else if (CoffinEffectManager.isPlayerInGoldCoffin(player)) {
          return false;
-      } else if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      } else if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       } else if (this.attackCooldown > 0) {
          return false;
@@ -57,34 +57,34 @@ public class BoxGhostEntity extends GhostEntity {
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 
    public static void registerChestInteractionListener() {
       UseBlockCallback.EVENT.register((UseBlockCallback)(player, world, hand, hitResult) -> {
-         if (!world.method_8608() && world.method_8320(hitResult.method_17777()).method_26204() instanceof ChestBlock) {
-            playerChestInteractionMap.put(player.method_5667(), System.currentTimeMillis());
+         if (!world.isClient() && world.getBlockState(hitResult.getBlockPos()).getBlock() instanceof ChestBlock) {
+            playerChestInteractionMap.put(player.getUuid(), System.currentTimeMillis());
          }
 
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       });
    }
 
    private boolean isPlayerInteractingWithChest(PlayerEntity player) {
-      Long lastInteractionTime = playerChestInteractionMap.get(player.method_5667());
+      Long lastInteractionTime = playerChestInteractionMap.get(player.getUuid());
       return lastInteractionTime == null ? false : System.currentTimeMillis() - lastInteractionTime < 2500L;
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.attackCooldown > 0) {
          this.attackCooldown--;
       }
 
-      if (!this.method_37908().method_8608() && this.field_6012 % 10 == 0) {
-         for (PlayerEntity player : this.method_37908().method_18456()) {
-            if (this.shouldAttackPlayer(player) && this.method_6057(player)) {
+      if (!this.getWorld().isClient() && this.age % 10 == 0) {
+         for (PlayerEntity player : this.getWorld().getPlayers()) {
+            if (this.shouldAttackPlayer(player) && this.canSee(player)) {
                this.executeAttack(player);
                this.attackCooldown = 40;
                break;

@@ -16,15 +16,15 @@ public class PlayerBlockActionTracker {
    public static void registerEvents() {
       PlayerBlockBreakEvents.AFTER.register((After)(world, player, pos, state, blockEntity) -> {
          if (player instanceof ServerPlayerEntity) {
-            recordBlockAction(player.method_5667());
+            recordBlockAction(player.getUuid());
          }
       });
       UseBlockCallback.EVENT.register((UseBlockCallback)(player, world, hand, hitResult) -> {
-         if (player instanceof ServerPlayerEntity && hand == Hand.field_5808) {
-            recordBlockAction(player.method_5667());
+         if (player instanceof ServerPlayerEntity && hand == Hand.MAIN_HAND) {
+            recordBlockAction(player.getUuid());
          }
 
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       });
    }
 

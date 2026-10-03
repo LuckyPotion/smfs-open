@@ -13,11 +13,11 @@ public class ShowCustomDeathScreenPacketHandler {
    private static final Logger LOGGER = LoggerFactory.getLogger(ShowCustomDeathScreenPacketHandler.class);
 
    public static void handle(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-      Text deathMessage = buf.method_10808();
+      Text deathMessage = buf.readText();
       boolean isSilentGhostReinvade = buf.readBoolean();
       client.execute(() -> {
-         if (client.field_1755 == null) {
-            client.method_1507(new CustomDeathScreen(deathMessage, true, isSilentGhostReinvade));
+         if (client.currentScreen == null) {
+            client.setScreen(new CustomDeathScreen(deathMessage, true, isSilentGhostReinvade));
             LOGGER.info("显示自定义死亡界面，死亡消息: {}, 静悄悄重新入侵: {}", deathMessage.getString(), isSilentGhostReinvade);
          } else {
             LOGGER.warn("当前已有界面显示，无法显示死亡界面");

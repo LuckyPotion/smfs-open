@@ -25,44 +25,44 @@ public class TrashGhostEntity extends GhostEntity {
    }
 
    private void initTrashGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.2);
+         speedAttribute.setBaseValue(0.2);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(7.0);
+         attackDamageAttribute.setBaseValue(7.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.0);
+         attackKnockbackAttribute.setBaseValue(0.0);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(20.0);
+         followRangeAttribute.setBaseValue(20.0);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
-         if (this.isSuppressed() || this.method_29504()) {
-            this.method_18799(Vec3d.field_1353);
-            this.method_5942().method_6340();
-         } else if (this.field_6012 % 180 == 0 && this.getGhostRandom().nextBoolean()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
+         if (this.isSuppressed() || this.isDead()) {
+            this.setVelocity(Vec3d.ZERO);
+            this.getNavigation().stop();
+         } else if (this.age % 180 == 0 && this.getGhostRandom().nextBoolean()) {
             double radius = 6.0;
-            double x = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            double z = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            this.method_5942().method_6337(x, this.method_23318(), z, 0.6);
+            double x = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            double z = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            this.getNavigation().startMovingTo(x, this.getY(), z, 0.6);
          }
       }
    }
@@ -71,12 +71,12 @@ public class TrashGhostEntity extends GhostEntity {
    public boolean shouldAttackPlayer(PlayerEntity player) {
       return !RedGhostCandleItem.isHoldingCandle(player)
          && this.hasItemsNearPlayer(player, 6.0)
-         && this.method_5858(player) <= 400.0
+         && this.squaredDistanceTo(player) <= 400.0
          && this.attackCooldown <= 0;
    }
 
    private boolean hasItemsNearPlayer(PlayerEntity player, double radius) {
-      List<ItemEntity> items = player.method_37908().method_8390(ItemEntity.class, player.method_5829().method_1014(radius), item -> true);
+      List<ItemEntity> items = player.getWorld().getEntitiesByClass(ItemEntity.class, player.getBoundingBox().expand(radius), item -> true);
       return !items.isEmpty();
    }
 

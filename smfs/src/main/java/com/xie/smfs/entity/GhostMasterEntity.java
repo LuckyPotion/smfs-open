@@ -85,7 +85,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    protected static final int SKILL_ATTACK_DELAY = 20;
    protected boolean isSuppressed = false;
    protected boolean isDeadlocked = false;
-   protected ItemStack coffinNail = ItemStack.field_8037;
+   protected ItemStack coffinNail = ItemStack.EMPTY;
    protected Set<UUID> attackedPlayers = new HashSet<>();
    protected boolean hasSentWarning = false;
    private final Map<String, String> questList = new HashMap<>();
@@ -110,74 +110,74 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
 
    public GhostMasterEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5665(Text.method_43470("§6" + this.getGhostMasterDisplayName()));
-      this.method_5880(true);
-      this.method_5803(true);
-      this.spiritualStrength = DifficultyManager.adjustSpiritualStrength(this.spiritualStrength, this.method_37908());
-      this.spiritualDamage = DifficultyManager.adjustSpiritualDamage(this.spiritualDamage, this.method_37908());
-      this.spiritualResistance = DifficultyManager.adjustSpiritualResistance(this.spiritualResistance, this.method_37908());
+      this.setCustomName(Text.literal("§6" + this.getGhostMasterDisplayName()));
+      this.setCustomNameVisible(true);
+      this.setSilent(true);
+      this.spiritualStrength = DifficultyManager.adjustSpiritualStrength(this.spiritualStrength, this.getWorld());
+      this.spiritualDamage = DifficultyManager.adjustSpiritualDamage(this.spiritualDamage, this.getWorld());
+      this.spiritualResistance = DifficultyManager.adjustSpiritualResistance(this.spiritualResistance, this.getWorld());
    }
 
    protected abstract String getGhostMasterDisplayName();
 
    public static Builder createGhostMasterAttributes() {
-      return MobEntity.method_26828()
-         .method_26868(EntityAttributes.field_23716, 1000.0)
-         .method_26868(EntityAttributes.field_23719, 0.3)
-         .method_26868(EntityAttributes.field_23721, 15.0)
-         .method_26868(EntityAttributes.field_23717, 16.0);
+      return MobEntity.createMobAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 1000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 16.0);
    }
 
-   protected void method_5959() {
-      super.method_5959();
-      this.field_6185.method_6277(1, new RevengeGoal(this, new Class[0]));
-      this.field_6201.method_6277(1, new MeleeAttackGoal(this, 1.2, true));
-      this.field_6201.method_6277(2, new WanderAroundGoal(this, 0.8));
-      this.field_6201.method_6277(3, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
-      this.field_6201.method_6277(4, new LookAroundGoal(this));
+   protected void initGoals() {
+      super.initGoals();
+      this.targetSelector.add(1, new RevengeGoal(this, new Class[0]));
+      this.goalSelector.add(1, new MeleeAttackGoal(this, 1.2, true));
+      this.goalSelector.add(2, new WanderAroundGoal(this, 0.8));
+      this.goalSelector.add(3, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
+      this.goalSelector.add(4, new LookAroundGoal(this));
    }
 
-   public boolean method_5643(DamageSource source, float amount) {
+   public boolean damage(DamageSource source, float amount) {
       if (this.isGoldenSwordDamage(source)) {
-         if (source.method_5529() instanceof PlayerEntity player) {
-            this.attackedPlayers.add(player.method_5667());
+         if (source.getAttacker() instanceof PlayerEntity player) {
+            this.attackedPlayers.add(player.getUuid());
          }
 
-         return super.method_5643(source, amount);
+         return super.damage(source, amount);
       } else if (this.isGoldenBulletDamage(source)) {
-         if (source.method_5526() instanceof PlayerEntity player) {
-            this.attackedPlayers.add(player.method_5667());
+         if (source.getSource() instanceof PlayerEntity player) {
+            this.attackedPlayers.add(player.getUuid());
          }
 
-         return super.method_5643(source, amount);
+         return super.damage(source, amount);
       } else if (this.isSpiritDamage(source)) {
-         if (source.method_5529() instanceof PlayerEntity player) {
-            this.attackedPlayers.add(player.method_5667());
+         if (source.getAttacker() instanceof PlayerEntity player) {
+            this.attackedPlayers.add(player.getUuid());
          }
 
          this.triggerSpiritCounterAttack(source);
          float actualDamage = PlayerEvents.calculateSpiritDamage(amount, this.getSpiritResistance());
-         return super.method_5643(source, actualDamage);
+         return super.damage(source, actualDamage);
       } else {
          return false;
       }
    }
 
-   public boolean method_5679(DamageSource damageSource) {
+   public boolean isInvulnerableTo(DamageSource damageSource) {
       return !this.isGoldenSwordDamage(damageSource) && !this.isGoldenBulletDamage(damageSource) && !this.isSpiritDamage(damageSource);
    }
 
    private boolean isGoldenSwordDamage(DamageSource source) {
-      if (!(source.method_5529() instanceof PlayerEntity player)) {
+      if (!(source.getAttacker() instanceof PlayerEntity player)) {
          return false;
       } else {
-         ItemStack heldItem = player.method_6047();
-         return heldItem.method_7909() == Items.field_8845 || heldItem.method_7909() == Items.field_8825;
+         ItemStack heldItem = player.getMainHandStack();
+         return heldItem.getItem() == Items.GOLDEN_SWORD || heldItem.getItem() == Items.GOLDEN_AXE;
       }
    }
 
    private boolean isGoldenBulletDamage(DamageSource source) {
-      return source.method_5526() instanceof GoldenBulletEntity;
+      return source.getSource() instanceof GoldenBulletEntity;
    }
 
    private boolean isSpiritDamage(DamageSource source) {
@@ -185,11 +185,11 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
          return true;
       }
 
-      if (!(source.method_5529() instanceof GhostEntity) && !(source.method_5529() instanceof GhostDreamEntity)) {
-         if (source.method_5529() instanceof PlayerEntity player) {
-            boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(player.method_6047());
+      if (!(source.getAttacker() instanceof GhostEntity) && !(source.getAttacker() instanceof GhostDreamEntity)) {
+         if (source.getAttacker() instanceof PlayerEntity player) {
+            boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(player.getMainHandStack());
             boolean hasCorpseOilWeapon = false;
-            if (player.method_6047().method_7909() instanceof SwordItem && WeaponOilHandler.getCorpseOilLayers(player.method_6047()) > 0) {
+            if (player.getMainHandStack().getItem() instanceof SwordItem && WeaponOilHandler.getCorpseOilLayers(player.getMainHandStack()) > 0) {
                hasCorpseOilWeapon = true;
             }
 
@@ -212,43 +212,43 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
       this.spiritualResistance = (int)resistance;
    }
 
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
-   public ActionResult method_5992(PlayerEntity player, Hand hand) {
-      return super.method_5992(player, hand);
+   public ActionResult interactMob(PlayerEntity player, Hand hand) {
+      return super.interactMob(player, hand);
    }
 
-   protected Identifier method_5991() {
+   protected Identifier getLootTableId() {
       return new Identifier("smfs", "entities/ghost_master");
    }
 
-   public void method_5697(Entity entity) {
+   public void pushAwayFrom(Entity entity) {
       if (!(entity instanceof BoatEntity) && !(entity instanceof AbstractMinecartEntity)) {
-         super.method_5697(entity);
+         super.pushAwayFrom(entity);
       }
    }
 
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (!this.isSuppressed && !this.isDeadlocked) {
-         if (!this.method_37908().method_8608()) {
-            if (this.method_5968() instanceof GhostEntity ghostTarget
+         if (!this.getWorld().isClient()) {
+            if (this.getTarget() instanceof GhostEntity ghostTarget
                && (
                   ghostTarget.getSpiritualStrength() <= 0
                      || ghostTarget.getMaxSpiritualStrength() > 0 && (float)ghostTarget.getSpiritualStrength() / ghostTarget.getMaxSpiritualStrength() <= 0.2F
                )) {
-               this.method_5980(null);
+               this.setTarget(null);
                this.hasSentWarning = false;
             }
 
-            if (this.method_6032() <= this.method_6063() * 0.5 && this.ghostDomainLevel >= 1) {
+            if (this.getHealth() <= this.getMaxHealth() * 0.5 && this.ghostDomainLevel >= 1) {
                this.applyGhostDomainToNearbyPlayers(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
                if (!this.isSkillActive
                   && this.skillCooldown <= 0
                   && this.currentState != GhostMasterEntity.BehaviorState.ESCAPING
-                  && this.field_5974.method_43057() < 0.01F) {
+                  && this.random.nextFloat() < 0.01F) {
                   this.startSkill();
                }
             }
@@ -265,7 +265,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
                this.protectPlayerCooldown--;
             }
 
-            if (!this.method_37908().method_8608() && this.field_6012 % 20 == 0 && this.method_5968() == null) {
+            if (!this.getWorld().isClient() && this.age % 20 == 0 && this.getTarget() == null) {
                if (!this.shouldFleeFromGhosts && !this.shouldAttackPlayers) {
                   this.attackHostileMobsNearPlayers();
                } else {
@@ -282,83 +282,85 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
          }
 
          this.disableGhostDomain();
-         this.method_5980(null);
-         this.method_6015(null);
-         this.method_18800(0.0, this.method_18798().field_1351, 0.0);
-         this.field_6189.method_6340();
-         this.method_5977(true);
+         this.setTarget(null);
+         this.setAttacker(null);
+         this.setVelocity(0.0, this.getVelocity().y, 0.0);
+         this.navigation.stop();
+         this.setAiDisabled(true);
       }
    }
 
    protected void enableGhostDomain(PlayerEntity player, StatusEffect effect) {
-      player.method_6092(new StatusEffectInstance(effect, 20, this.ghostDomainLevel - 1, false, false, false));
+      player.addStatusEffect(new StatusEffectInstance(effect, 20, this.ghostDomainLevel - 1, false, false, false));
    }
 
    protected void applyGhostDomainToNearbyPlayers(StatusEffect effect) {
       double radius = this.ghostDomainRadius;
-      this.method_37908().method_8390(PlayerEntity.class, this.method_5829().method_1014(radius), player -> player instanceof PlayerEntity).forEach(player -> {
-         double distance = this.method_5739(player);
-         if (distance <= radius) {
-            boolean hasHigherLevelGhostDomain = this.checkPlayerHasHigherLevelGhostDomain(player);
-            if (!hasHigherLevelGhostDomain) {
-               this.enableGhostDomain(player, effect);
-               player.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 100, this.ghostDomainLevel - 1, false, false, false));
-               if (!player.method_6059(ModEffects.LOST)) {
-                  player.method_6092(new LostStatusEffectInstance(ModEffects.LOST, Integer.MAX_VALUE, 0, false, false, false, this.method_5667()));
+      this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(radius), player -> player instanceof PlayerEntity)
+         .forEach(player -> {
+            double distance = this.distanceTo(player);
+            if (distance <= radius) {
+               boolean hasHigherLevelGhostDomain = this.checkPlayerHasHigherLevelGhostDomain(player);
+               if (!hasHigherLevelGhostDomain) {
+                  this.enableGhostDomain(player, effect);
+                  player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, this.ghostDomainLevel - 1, false, false, false));
+                  if (!player.hasStatusEffect(ModEffects.LOST)) {
+                     player.addStatusEffect(new LostStatusEffectInstance(ModEffects.LOST, Integer.MAX_VALUE, 0, false, false, false, this.getUuid()));
+                  }
+               } else {
+                  player.removeStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
+                  player.removeStatusEffect(ModEffects.RED_GHOST_DOMAIN_TARGET);
+                  player.removeStatusEffect(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
+                  player.removeStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
+                  player.removeStatusEffect(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
+                  player.removeStatusEffect(ModEffects.THICK_FOG_TARGET);
+                  player.removeStatusEffect(ModEffects.LOST);
+                  player.removeStatusEffect(StatusEffects.SLOWNESS);
                }
-            } else {
-               player.method_6016(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
-               player.method_6016(ModEffects.RED_GHOST_DOMAIN_TARGET);
-               player.method_6016(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
-               player.method_6016(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
-               player.method_6016(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
-               player.method_6016(ModEffects.THICK_FOG_TARGET);
-               player.method_6016(ModEffects.LOST);
-               player.method_6016(StatusEffects.field_5909);
             }
-         }
-      });
+         });
    }
 
    private boolean checkPlayerHasHigherLevelGhostDomain(PlayerEntity player) {
-      if (player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN)) {
-         StatusEffectInstance goldenEffect = player.method_6112(ModEffects.GOLDEN_GHOST_DOMAIN);
-         if (goldenEffect != null && goldenEffect.method_5578() + 1 > this.ghostDomainLevel) {
+      if (player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN)) {
+         StatusEffectInstance goldenEffect = player.getStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN);
+         if (goldenEffect != null && goldenEffect.getAmplifier() + 1 > this.ghostDomainLevel) {
             return true;
          }
       }
 
-      if (player.method_6059(ModEffects.RED_GHOST_DOMAIN)) {
-         StatusEffectInstance redEffect = player.method_6112(ModEffects.RED_GHOST_DOMAIN);
-         if (redEffect != null && redEffect.method_5578() + 1 > this.ghostDomainLevel) {
+      if (player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN)) {
+         StatusEffectInstance redEffect = player.getStatusEffect(ModEffects.RED_GHOST_DOMAIN);
+         if (redEffect != null && redEffect.getAmplifier() + 1 > this.ghostDomainLevel) {
             return true;
          }
       }
 
-      if (player.method_6059(ModEffects.GREEN_GHOST_DOMAIN)) {
-         StatusEffectInstance greenEffect = player.method_6112(ModEffects.GREEN_GHOST_DOMAIN);
-         if (greenEffect != null && greenEffect.method_5578() + 1 > this.ghostDomainLevel) {
+      if (player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN)) {
+         StatusEffectInstance greenEffect = player.getStatusEffect(ModEffects.GREEN_GHOST_DOMAIN);
+         if (greenEffect != null && greenEffect.getAmplifier() + 1 > this.ghostDomainLevel) {
             return true;
          }
       }
 
-      if (player.method_6059(ModEffects.CYAN_GHOST_DOMAIN)) {
-         StatusEffectInstance cyanEffect = player.method_6112(ModEffects.CYAN_GHOST_DOMAIN);
-         if (cyanEffect != null && cyanEffect.method_5578() + 1 > this.ghostDomainLevel) {
+      if (player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN)) {
+         StatusEffectInstance cyanEffect = player.getStatusEffect(ModEffects.CYAN_GHOST_DOMAIN);
+         if (cyanEffect != null && cyanEffect.getAmplifier() + 1 > this.ghostDomainLevel) {
             return true;
          }
       }
 
-      if (player.method_6059(ModEffects.BLACK_GHOST_DOMAIN)) {
-         StatusEffectInstance blackEffect = player.method_6112(ModEffects.BLACK_GHOST_DOMAIN);
-         if (blackEffect != null && blackEffect.method_5578() + 1 > this.ghostDomainLevel) {
+      if (player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN)) {
+         StatusEffectInstance blackEffect = player.getStatusEffect(ModEffects.BLACK_GHOST_DOMAIN);
+         if (blackEffect != null && blackEffect.getAmplifier() + 1 > this.ghostDomainLevel) {
             return true;
          }
       }
 
-      if (player.method_6059(ModEffects.THICK_FOG)) {
-         StatusEffectInstance thickFogEffect = player.method_6112(ModEffects.THICK_FOG);
-         if (thickFogEffect != null && thickFogEffect.method_5578() + 1 > this.ghostDomainLevel) {
+      if (player.hasStatusEffect(ModEffects.THICK_FOG)) {
+         StatusEffectInstance thickFogEffect = player.getStatusEffect(ModEffects.THICK_FOG);
+         if (thickFogEffect != null && thickFogEffect.getAmplifier() + 1 > this.ghostDomainLevel) {
             return true;
          }
       }
@@ -367,7 +369,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public boolean hasGhostDomain() {
-      return this.method_6032() <= this.method_6063() * 0.5;
+      return this.getHealth() <= this.getMaxHealth() * 0.5;
    }
 
    public int getGhostDomainLevel() {
@@ -391,7 +393,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public void setSpiritualStrength(int spiritualStrength) {
-      this.spiritualStrength = DifficultyManager.adjustSpiritualStrength(spiritualStrength, this.method_37908());
+      this.spiritualStrength = DifficultyManager.adjustSpiritualStrength(spiritualStrength, this.getWorld());
    }
 
    public int getSpiritualDamage() {
@@ -399,7 +401,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public void setSpiritualDamage(int spiritualDamage) {
-      this.spiritualDamage = DifficultyManager.adjustSpiritualDamage(spiritualDamage, this.method_37908());
+      this.spiritualDamage = DifficultyManager.adjustSpiritualDamage(spiritualDamage, this.getWorld());
    }
 
    public int getSpiritualResistance() {
@@ -407,7 +409,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public void setSpiritualResistance(int spiritualResistance) {
-      this.spiritualResistance = DifficultyManager.adjustSpiritualResistance(spiritualResistance, this.method_37908());
+      this.spiritualResistance = DifficultyManager.adjustSpiritualResistance(spiritualResistance, this.getWorld());
    }
 
    public float getRecoveryFactor() {
@@ -426,28 +428,28 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
       this.isSkillActive = true;
       this.skillHitCount = 0;
       this.skillDelayCounter = 0;
-      LivingEntity target = this.method_5968();
+      LivingEntity target = this.getTarget();
       if (target != null) {
          this.teleportBehindTarget(target);
       }
    }
 
    protected void handleSkill() {
-      LivingEntity target = this.method_5968();
-      if (target == null || !target.method_5805()) {
+      LivingEntity target = this.getTarget();
+      if (target == null || !target.isAlive()) {
          this.endSkill();
       } else if (this.skillHitCount >= 10) {
          this.endSkill();
       } else if (this.skillDelayCounter > 0) {
          this.skillDelayCounter--;
       } else {
-         double distance = this.method_5739(target);
+         double distance = this.distanceTo(target);
          if (distance > 4.0) {
             this.teleportBehindTarget(target);
             this.skillDelayCounter = 20;
          } else {
-            if (this.method_6057(target) && distance <= 4.0) {
-               this.method_6121(target);
+            if (this.canSee(target) && distance <= 4.0) {
+               this.tryAttack(target);
                this.skillHitCount++;
                if (this.skillHitCount < 10) {
                   this.teleportBehindTarget(target);
@@ -459,21 +461,21 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    protected void teleportBehindTarget(LivingEntity target) {
-      Vec3d targetLookVec = target.method_5828(1.0F);
-      Vec3d behindPos = target.method_19538().method_1020(targetLookVec.method_1021(4.0));
+      Vec3d targetLookVec = target.getRotationVec(1.0F);
+      Vec3d behindPos = target.getPos().subtract(targetLookVec.multiply(4.0));
       behindPos = this.findSafeTeleportPosition(behindPos);
-      this.method_20620(behindPos.field_1352, behindPos.field_1351, behindPos.field_1350);
+      this.teleport(behindPos.x, behindPos.y, behindPos.z);
    }
 
    protected Vec3d findSafeTeleportPosition(Vec3d originalPos) {
-      World world = this.method_37908();
+      World world = this.getWorld();
       if (this.isPositionSafe(world, originalPos)) {
          return originalPos;
       }
 
       for (int x = -2; x <= 2; x++) {
          for (int z = -2; z <= 2; z++) {
-            Vec3d testPos = originalPos.method_1031(x, 0.0, z);
+            Vec3d testPos = originalPos.add(x, 0.0, z);
             if (this.isPositionSafe(world, testPos)) {
                return testPos;
             }
@@ -484,9 +486,9 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    protected boolean isPositionSafe(World world, Vec3d pos) {
-      BlockPos blockPos = new BlockPos((int)pos.field_1352, (int)pos.field_1351, (int)pos.field_1350);
-      BlockPos abovePos = blockPos.method_10084();
-      return !world.method_8320(blockPos).method_51366() && !world.method_8320(abovePos).method_51366();
+      BlockPos blockPos = new BlockPos((int)pos.x, (int)pos.y, (int)pos.z);
+      BlockPos abovePos = blockPos.up();
+      return !world.getBlockState(blockPos).blocksMovement() && !world.getBlockState(abovePos).blocksMovement();
    }
 
    protected void endSkill() {
@@ -495,20 +497,20 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
       this.skillCooldown = 100;
    }
 
-   public boolean method_6121(Entity target) {
+   public boolean tryAttack(Entity target) {
       boolean attacked = false;
       if (target instanceof GhostEntity targetGhost) {
          if (!targetGhost.isDeadlocked() && !targetGhost.isSuppressed() && targetGhost.getSpiritualStrength() > 0) {
-            targetGhost.method_5643(this.method_48923().method_48812(this), this.getSpiritualDamage());
+            targetGhost.damage(this.getDamageSources().mobAttack(this), this.getSpiritualDamage());
             attacked = true;
          }
       } else {
-         attacked = super.method_6121(target);
+         attacked = super.tryAttack(target);
       }
 
       if (attacked && this.isSkillActive && target instanceof LivingEntity livingTarget) {
-         livingTarget.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 40, 1, false, false, false));
-         livingTarget.method_6092(new StatusEffectInstance(StatusEffects.field_5919, 20, 0, false, false, false));
+         livingTarget.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 1, false, false, false));
+         livingTarget.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 20, 0, false, false, false));
       }
 
       if (attacked) {
@@ -519,12 +521,12 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    protected void triggerAttackDialogue() {
-      if (this.method_6051().method_43057() < 0.2F) {
+      if (this.getRandom().nextFloat() < 0.2F) {
          String dialogue = this.getAttackDialogue();
-         if (dialogue != null && !dialogue.isEmpty() && !this.method_37908().method_8608()) {
-            this.method_37908()
-               .method_18456()
-               .forEach(player -> player.method_7353(Text.method_43470("§6[" + this.getGhostMasterDisplayName() + "] §f" + dialogue), false));
+         if (dialogue != null && !dialogue.isEmpty() && !this.getWorld().isClient()) {
+            this.getWorld()
+               .getPlayers()
+               .forEach(player -> player.sendMessage(Text.literal("§6[" + this.getGhostMasterDisplayName() + "] §f" + dialogue), false));
          }
       }
    }
@@ -559,14 +561,14 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
          dialogues = DEFAULT_GREETING_DIALOGUES;
       }
 
-      return dialogues[this.method_6051().method_43048(dialogues.length)];
+      return dialogues[this.getRandom().nextInt(dialogues.length)];
    }
 
-   public void method_6078(DamageSource damageSource) {
-      super.method_6078(damageSource);
-      if (!this.method_37908().method_8608()) {
+   public void onDeath(DamageSource damageSource) {
+      super.onDeath(damageSource);
+      if (!this.getWorld().isClient()) {
          boolean ghostMasterRevival = ModConfig.getInstance().ghostMasterRevival;
-         EntityType<?> entityType = this.method_5864();
+         EntityType<?> entityType = this.getType();
          if (entityType != ModEntities.YE_ZHEN
             && entityType != ModEntities.YAN_LI
             && entityType != ModEntities.ZHAO_KAI_MING
@@ -576,85 +578,85 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
                this.spawnGhostAtDeathLocation();
             } else if (entityType == ModEntities.CAO_YANG) {
                if (this.shouldDropItem("cao_yang")) {
-                  this.method_5706(ModItems.GHOST_WIND);
+                  this.dropItem(ModItems.GHOST_WIND);
                }
             } else if (entityType == ModEntities.FENG_QUAN) {
                if (this.shouldDropItem("feng_quan")) {
-                  this.method_5706(ModItems.FOG_GHOST);
-                  this.method_5706(ModItems.GRAVE_EARTH_GHOST);
+                  this.dropItem(ModItems.FOG_GHOST);
+                  this.dropItem(ModItems.GRAVE_EARTH_GHOST);
                }
             } else if (entityType == ModEntities.LI_JUN) {
                if (this.shouldDropItem("li_jun")) {
-                  this.method_5706(ModItems.GHOST_FIRE);
+                  this.dropItem(ModItems.GHOST_FIRE);
                }
             } else if (entityType == ModEntities.FANG_SHI_MIN) {
                if (this.shouldDropItem("fang_shi_min")) {
-                  this.method_5706(ModItems.GHOST_PRESSURE);
+                  this.dropItem(ModItems.GHOST_PRESSURE);
                }
             } else if (entityType == ModEntities.NPC1) {
                if (this.shouldDropItem("npc1")) {
-                  this.method_5706(ModItems.TAITOU_GHOST);
+                  this.dropItem(ModItems.TAITOU_GHOST);
                }
             } else if (entityType == ModEntities.NPC2) {
                if (this.shouldDropItem("npc2")) {
-                  this.method_5706(ModItems.DITOU_GHOST);
+                  this.dropItem(ModItems.DITOU_GHOST);
                }
             } else if (entityType == ModEntities.NPC3) {
                if (this.shouldDropItem("npc3")) {
-                  this.method_5706(ModItems.STEP_GHOST);
+                  this.dropItem(ModItems.STEP_GHOST);
                }
             } else if (entityType == ModEntities.NPC4) {
                if (this.shouldDropItem("npc4")) {
-                  this.method_5706(ModItems.JUMP_GHOST);
+                  this.dropItem(ModItems.JUMP_GHOST);
                }
             } else if (entityType == ModEntities.NPC5) {
                if (this.shouldDropItem("npc5")) {
-                  this.method_5706(ModItems.BOX_GHOST);
+                  this.dropItem(ModItems.BOX_GHOST);
                }
             } else if (entityType == ModEntities.NPC6) {
                if (this.shouldDropItem("npc6")) {
-                  this.method_5706(ModItems.CROP_GHOST);
+                  this.dropItem(ModItems.CROP_GHOST);
                }
             } else if (entityType == ModEntities.LI_LE_PING) {
                if (this.shouldDropItem("li_le_ping")) {
-                  this.method_5706(ModItems.LOST_GHOST);
-                  this.method_5706(ModItems.GHOST_SMOKE);
+                  this.dropItem(ModItems.LOST_GHOST);
+                  this.dropItem(ModItems.GHOST_SMOKE);
                }
             } else if (entityType == ModEntities.YIN_QI && this.shouldDropItem("yin_qi")) {
-               this.method_5706(ModItems.XINKAI_GHOST);
+               this.dropItem(ModItems.XINKAI_GHOST);
             }
          } else if (entityType == ModEntities.YE_ZHEN) {
             if (this.shouldDropItem("ye_zhen")) {
-               this.method_5706(ModItems.SCAPEGOAT_GHOST);
-               this.method_5706(ModItems.GHOST_FIST);
+               this.dropItem(ModItems.SCAPEGOAT_GHOST);
+               this.dropItem(ModItems.GHOST_FIST);
             }
          } else if (entityType == ModEntities.YAN_LI) {
             this.generateBloodLakeAtDeathLocation();
          } else if (entityType == ModEntities.ZHAO_KAI_MING) {
             if (this.shouldDropItem("zhao_kai_ming")) {
-               this.method_5706(ModItems.WISH_GHOST);
+               this.dropItem(ModItems.WISH_GHOST);
             }
          } else if (entityType == ModEntities.XIAN_WANG) {
             if (this.shouldDropItem("xian_wang")) {
-               this.method_5706(ModItems.FUNERAL_MUSIC_GHOST);
+               this.dropItem(ModItems.FUNERAL_MUSIC_GHOST);
             }
          } else if (entityType == ModEntities.GUI_NIAO && this.shouldDropItem("gui_niao")) {
-            this.method_5706(ModItems.GHOST_PRESSURE);
+            this.dropItem(ModItems.GHOST_PRESSURE);
          }
 
          if (this.hasCoffinNail()) {
-            this.method_5699(this.getCoffinNail(), 0.5F);
+            this.dropStack(this.getCoffinNail(), 0.5F);
          }
       }
    }
 
    private boolean shouldDropItem(String ghostMasterType) {
       double dropChance = ModConfig.getInstance().getGhostMasterDropChance(ghostMasterType);
-      return this.method_6051().method_43058() < dropChance;
+      return this.getRandom().nextDouble() < dropChance;
    }
 
    private void spawnGhostAtDeathLocation() {
-      EntityType<?> entityType = this.method_5864();
+      EntityType<?> entityType = this.getType();
       if (entityType == ModEntities.CAO_YANG) {
          this.spawnGhostEntity(ModEntities.GHOST_WIND);
       } else if (entityType == ModEntities.FENG_QUAN) {
@@ -689,95 +691,95 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    private void spawnGhostDreamAtDeathLocation() {
-      GhostDreamEntity ghostDream = new GhostDreamEntity(ModEntities.GHOST_DREAM, this.method_37908());
-      ghostDream.method_5808(this.method_23317(), this.method_23318(), this.method_23321(), this.method_36454(), this.method_36455());
-      this.method_37908().method_8649(ghostDream);
+      GhostDreamEntity ghostDream = new GhostDreamEntity(ModEntities.GHOST_DREAM, this.getWorld());
+      ghostDream.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch());
+      this.getWorld().spawnEntity(ghostDream);
    }
 
    private void spawnGhostPressureAtDeathLocation() {
-      GhostPressureEntity ghostPressure = new GhostPressureEntity(ModEntities.GHOST_PRESSURE, this.method_37908());
-      ghostPressure.method_5808(this.method_23317(), this.method_23318(), this.method_23321(), this.method_36454(), this.method_36455());
-      this.method_37908().method_8649(ghostPressure);
+      GhostPressureEntity ghostPressure = new GhostPressureEntity(ModEntities.GHOST_PRESSURE, this.getWorld());
+      ghostPressure.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch());
+      this.getWorld().spawnEntity(ghostPressure);
    }
 
    private void spawnGhostEntity(EntityType<?> ghostType) {
-      Entity ghostEntity = ghostType.method_5883(this.method_37908());
+      Entity ghostEntity = ghostType.create(this.getWorld());
       if (ghostEntity != null) {
-         ghostEntity.method_5808(this.method_23317(), this.method_23318(), this.method_23321(), this.method_36454(), this.method_36455());
+         ghostEntity.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch());
          if (ghostEntity instanceof GhostEntity ghost) {
             ghost.setSpiritualStrength(100);
          }
 
-         this.method_37908().method_8649(ghostEntity);
+         this.getWorld().spawnEntity(ghostEntity);
       }
    }
 
    private void generateBloodLakeAtDeathLocation() {
-      World world = this.method_37908();
-      BlockPos deathPos = this.method_24515();
+      World world = this.getWorld();
+      BlockPos deathPos = this.getBlockPos();
 
       for (int x = -1; x <= 1; x++) {
          for (int z = -1; z <= 1; z++) {
-            BlockPos lakePos = deathPos.method_10069(x, 0, z);
-            world.method_8501(lakePos, ModFluids.BLOOD_LAKE_BLOCK.method_9564());
+            BlockPos lakePos = deathPos.add(x, 0, z);
+            world.setBlockState(lakePos, ModFluids.BLOOD_LAKE_BLOCK.getDefaultState());
          }
       }
    }
 
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10556("IsSuppressed", this.isSuppressed);
-      nbt.method_10556("IsDeadlocked", this.isDeadlocked);
-      if (!this.coffinNail.method_7960()) {
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putBoolean("IsSuppressed", this.isSuppressed);
+      nbt.putBoolean("IsDeadlocked", this.isDeadlocked);
+      if (!this.coffinNail.isEmpty()) {
          NbtCompound nailNbt = new NbtCompound();
-         this.coffinNail.method_7953(nailNbt);
-         nbt.method_10566("CoffinNail", nailNbt);
+         this.coffinNail.writeNbt(nailNbt);
+         nbt.put("CoffinNail", nailNbt);
       }
 
       NbtList offersNbt = new NbtList();
 
       for (TradeOffer offer : this.tradeOffers) {
-         NbtCompound offerNbt = offer.method_8251();
+         NbtCompound offerNbt = offer.toNbt();
          offersNbt.add(offerNbt);
       }
 
-      nbt.method_10566("TradeOffers", offersNbt);
-      nbt.method_10556("TradeOffersInitialized", this.tradeOffersInitialized);
-      nbt.method_10569("TradeExperience", this.tradeExperience);
+      nbt.put("TradeOffers", offersNbt);
+      nbt.putBoolean("TradeOffersInitialized", this.tradeOffersInitialized);
+      nbt.putInt("TradeExperience", this.tradeExperience);
    }
 
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("IsSuppressed")) {
-         this.isSuppressed = nbt.method_10577("IsSuppressed");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("IsSuppressed")) {
+         this.isSuppressed = nbt.getBoolean("IsSuppressed");
       }
 
-      if (nbt.method_10545("IsDeadlocked")) {
-         this.isDeadlocked = nbt.method_10577("IsDeadlocked");
+      if (nbt.contains("IsDeadlocked")) {
+         this.isDeadlocked = nbt.getBoolean("IsDeadlocked");
       }
 
-      if (nbt.method_10545("CoffinNail")) {
-         NbtCompound nailNbt = nbt.method_10562("CoffinNail");
-         this.coffinNail = ItemStack.method_7915(nailNbt);
+      if (nbt.contains("CoffinNail")) {
+         NbtCompound nailNbt = nbt.getCompound("CoffinNail");
+         this.coffinNail = ItemStack.fromNbt(nailNbt);
       }
 
-      if (nbt.method_10573("TradeOffers", 9)) {
-         NbtList offersNbt = nbt.method_10554("TradeOffers", 10);
+      if (nbt.contains("TradeOffers", 9)) {
+         NbtList offersNbt = nbt.getList("TradeOffers", 10);
          this.tradeOffers = new TradeOfferList();
 
          for (int i = 0; i < offersNbt.size(); i++) {
-            NbtCompound offerNbt = offersNbt.method_10602(i);
+            NbtCompound offerNbt = offersNbt.getCompound(i);
             TradeOffer offer = new TradeOffer(offerNbt);
             this.tradeOffers.add(offer);
          }
       }
 
-      if (nbt.method_10545("TradeOffersInitialized")) {
-         this.tradeOffersInitialized = nbt.method_10577("TradeOffersInitialized");
+      if (nbt.contains("TradeOffersInitialized")) {
+         this.tradeOffersInitialized = nbt.getBoolean("TradeOffersInitialized");
       }
 
-      if (nbt.method_10545("TradeExperience")) {
-         this.tradeExperience = nbt.method_10550("TradeExperience");
+      if (nbt.contains("TradeExperience")) {
+         this.tradeExperience = nbt.getInt("TradeExperience");
       }
    }
 
@@ -798,7 +800,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public boolean hasCoffinNail() {
-      return !this.coffinNail.method_7960();
+      return !this.coffinNail.isEmpty();
    }
 
    public ItemStack getCoffinNail() {
@@ -810,17 +812,17 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public void disableGhostDomain() {
-      this.method_37908()
-         .method_8390(PlayerEntity.class, this.method_5829().method_1014(this.ghostDomainRadius), player -> player instanceof PlayerEntity)
+      this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(this.ghostDomainRadius), player -> player instanceof PlayerEntity)
          .forEach(player -> {
-            player.method_6016(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
-            player.method_6016(ModEffects.RED_GHOST_DOMAIN_TARGET);
-            player.method_6016(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
-            player.method_6016(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
-            player.method_6016(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
-            player.method_6016(ModEffects.THICK_FOG_TARGET);
-            player.method_6016(ModEffects.LOST);
-            player.method_6016(StatusEffects.field_5909);
+            player.removeStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
+            player.removeStatusEffect(ModEffects.RED_GHOST_DOMAIN_TARGET);
+            player.removeStatusEffect(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
+            player.removeStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
+            player.removeStatusEffect(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
+            player.removeStatusEffect(ModEffects.THICK_FOG_TARGET);
+            player.removeStatusEffect(ModEffects.LOST);
+            player.removeStatusEffect(StatusEffects.SLOWNESS);
          });
    }
 
@@ -864,12 +866,12 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
       this.currentState = GhostMasterEntity.BehaviorState.ESCAPING;
       this.currentTarget = condition.getTarget();
       this.protectPlayerCooldown = 600;
-      Vec3d targetPos = this.currentTarget.method_19538();
-      Vec3d thisPos = this.method_19538();
-      Vec3d fleeDirection = thisPos.method_1020(targetPos).method_1029();
-      Vec3d fleeTarget = thisPos.method_1019(fleeDirection.method_1021(30.0));
-      if (!this.field_6189.method_23966() || this.field_6012 % 20 == 0) {
-         this.field_6189.method_6337(fleeTarget.field_1352, fleeTarget.field_1351, fleeTarget.field_1350, 1.5);
+      Vec3d targetPos = this.currentTarget.getPos();
+      Vec3d thisPos = this.getPos();
+      Vec3d fleeDirection = thisPos.subtract(targetPos).normalize();
+      Vec3d fleeTarget = thisPos.add(fleeDirection.multiply(30.0));
+      if (!this.navigation.isFollowingPath() || this.age % 20 == 0) {
+         this.navigation.startMovingTo(fleeTarget.x, fleeTarget.y, fleeTarget.z, 1.5);
       }
 
       this.sendEscapeMessage(condition.getReason());
@@ -877,10 +879,10 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    private void checkEscapeCompletion() {
-      if (this.currentTarget != null && this.currentTarget.method_5805()) {
-         double distance = this.method_5739(this.currentTarget);
+      if (this.currentTarget != null && this.currentTarget.isAlive()) {
+         double distance = this.distanceTo(this.currentTarget);
          if (distance > 30.0) {
-            this.field_6189.method_6340();
+            this.navigation.stop();
             this.resetState();
          }
       } else {
@@ -914,7 +916,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
       this.currentState = GhostMasterEntity.BehaviorState.ATTACKING;
       this.currentTarget = condition.getTarget();
       this.protectPlayerCooldown = 600;
-      this.method_5980((LivingEntity)this.currentTarget);
+      this.setTarget((LivingEntity)this.currentTarget);
       this.sendAttackMessage();
    }
 
@@ -928,30 +930,30 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
 
    private Entity findNearestGhost() {
       double radius = 10.0;
-      return this.method_37908()
-         .method_8390(GhostEntity.class, this.method_5829().method_1014(radius), ghost -> ghost.method_5805() && !ghost.isDeadlocked())
+      return this.getWorld()
+         .getEntitiesByClass(GhostEntity.class, this.getBoundingBox().expand(radius), ghost -> ghost.isAlive() && !ghost.isDeadlocked())
          .stream()
-         .min((g1, g2) -> Double.compare(this.method_5739(g1), this.method_5739(g2)))
+         .min((g1, g2) -> Double.compare(this.distanceTo(g1), this.distanceTo(g2)))
          .orElse(null);
    }
 
    private Entity findPowerfulPlayer() {
       double radius = 10.0;
-      return this.method_37908()
-         .method_8390(
-            PlayerEntity.class, this.method_5829().method_1014(radius), player -> player.method_5805() && PlayerEvents.countOccupiedGhostSlots(player) >= 4
+      return this.getWorld()
+         .getEntitiesByClass(
+            PlayerEntity.class, this.getBoundingBox().expand(radius), player -> player.isAlive() && PlayerEvents.countOccupiedGhostSlots(player) >= 4
          )
          .stream()
-         .min((p1, p2) -> Double.compare(this.method_5739(p1), this.method_5739(p2)))
+         .min((p1, p2) -> Double.compare(this.distanceTo(p1), this.distanceTo(p2)))
          .orElse(null);
    }
 
    private PlayerEntity findWeakPlayerWithSpiritWeapon() {
       double radius = 10.0;
 
-      for (PlayerEntity player : this.method_37908().method_8390(PlayerEntity.class, this.method_5829().method_1014(radius), playerx -> playerx.method_5805())) {
+      for (PlayerEntity player : this.getWorld().getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(radius), playerx -> playerx.isAlive())) {
          int ghostCount = PlayerEvents.countOccupiedGhostSlots(player);
-         boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(player.method_6047()) || SpiritWeapon.isSpiritWeapon(player.method_6079());
+         boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(player.getMainHandStack()) || SpiritWeapon.isSpiritWeapon(player.getOffHandStack());
          if (hasSpiritWeapon && ghostCount < 2) {
             return player;
          }
@@ -961,24 +963,24 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    private Entity findGhostNearPlayer(PlayerEntity player, double radius) {
-      List<GhostEntity> ghostsNearPlayer = this.method_37908()
-         .method_8390(
+      List<GhostEntity> ghostsNearPlayer = this.getWorld()
+         .getEntitiesByClass(
             GhostEntity.class,
-            player.method_5829().method_1014(radius),
-            ghost -> ghost.method_5805()
+            player.getBoundingBox().expand(radius),
+            ghost -> ghost.isAlive()
                && !ghost.isDeadlocked()
                && ghost.getSpiritualStrength() > 0
                && (ghost.getMaxSpiritualStrength() <= 0 || (float)ghost.getSpiritualStrength() / ghost.getMaxSpiritualStrength() > 0.2F)
          );
       return !ghostsNearPlayer.isEmpty()
-         ? (Entity)ghostsNearPlayer.stream().min((g1, g2) -> Double.compare(this.method_5739(g1), this.method_5739(g2))).orElse(null)
+         ? (Entity)ghostsNearPlayer.stream().min((g1, g2) -> Double.compare(this.distanceTo(g1), this.distanceTo(g2))).orElse(null)
          : null;
    }
 
    private void broadcastMessage(String message, double radius) {
-      this.method_37908()
-         .method_8390(PlayerEntity.class, this.method_5829().method_1014(radius), player -> player instanceof PlayerEntity)
-         .forEach(player -> player.method_43496(Text.method_43470(message)));
+      this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(radius), player -> player instanceof PlayerEntity)
+         .forEach(player -> player.sendMessage(Text.literal(message)));
    }
 
    private void resetState() {
@@ -1005,11 +1007,11 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
             if (!this.isSuppressed() && !this.isDeadlocked()) {
                if (this.currentState != GhostMasterEntity.BehaviorState.ESCAPING) {
                   double radius = 10.0;
-                  List<PlayerEntity> nearbyPlayers = this.method_37908()
-                     .method_8390(PlayerEntity.class, this.method_5829().method_1014(radius), playerx -> playerx instanceof PlayerEntity);
+                  List<PlayerEntity> nearbyPlayers = this.getWorld()
+                     .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(radius), playerx -> playerx instanceof PlayerEntity);
                   if (!nearbyPlayers.isEmpty()) {
                      for (PlayerEntity player : nearbyPlayers) {
-                        if (!this.attackedPlayers.contains(player.method_5667())) {
+                        if (!this.attackedPlayers.contains(player.getUuid())) {
                            if (this.faction != PlayerFaction.ORDINARY) {
                               PlayerFaction playerFaction = FactionManager.getFaction(player);
                               if (playerFaction != this.faction) {
@@ -1019,32 +1021,30 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
 
                            if (this.shouldAttackGhostsNearPlayers) {
                               Entity ghostTarget = this.findGhostNearPlayer(player, 8.0);
-                              if (ghostTarget != null
-                                 && this.method_5739(ghostTarget) <= 16.0
-                                 && (this.method_5968() == null || !this.method_5968().method_5805())) {
-                                 this.method_5980((LivingEntity)ghostTarget);
-                                 if (!this.hasSentWarning && this.method_6051().method_43057() < 0.3F) {
-                                    player.method_43496(Text.method_43470("§f" + this.getGhostMasterDisplayName() + "：小心！"));
+                              if (ghostTarget != null && this.distanceTo(ghostTarget) <= 16.0 && (this.getTarget() == null || !this.getTarget().isAlive())) {
+                                 this.setTarget((LivingEntity)ghostTarget);
+                                 if (!this.hasSentWarning && this.getRandom().nextFloat() < 0.3F) {
+                                    player.sendMessage(Text.literal("§f" + this.getGhostMasterDisplayName() + "：小心！"));
                                     this.hasSentWarning = true;
                                  }
                                  continue;
                               }
                            }
 
-                           List<HostileEntity> hostileMobs = this.method_37908()
-                              .method_8390(
+                           List<HostileEntity> hostileMobs = this.getWorld()
+                              .getEntitiesByClass(
                                  HostileEntity.class,
-                                 player.method_5829().method_1014(radius),
-                                 mob -> mob instanceof HostileEntity && mob.method_5805() && mob.method_5667() != this.method_5667()
+                                 player.getBoundingBox().expand(radius),
+                                 mob -> mob instanceof HostileEntity && mob.isAlive() && mob.getUuid() != this.getUuid()
                               );
                            if (!hostileMobs.isEmpty()) {
                               HostileEntity nearestHostile = hostileMobs.stream()
-                                 .min((mob1, mob2) -> Double.compare(this.method_5739(mob1), this.method_5739(mob2)))
+                                 .min((mob1, mob2) -> Double.compare(this.distanceTo(mob1), this.distanceTo(mob2)))
                                  .orElse(null);
-                              if (this.method_5739(nearestHostile) <= 16.0 && (this.method_5968() == null || !this.method_5968().method_5805())) {
-                                 this.method_5980(nearestHostile);
-                                 if (!this.hasSentWarning && this.method_6051().method_43057() < 0.3F) {
-                                    player.method_43496(Text.method_43470("§f" + this.getGhostMasterDisplayName() + "：小心！"));
+                              if (this.distanceTo(nearestHostile) <= 16.0 && (this.getTarget() == null || !this.getTarget().isAlive())) {
+                                 this.setTarget(nearestHostile);
+                                 if (!this.hasSentWarning && this.getRandom().nextFloat() < 0.3F) {
+                                    player.sendMessage(Text.literal("§f" + this.getGhostMasterDisplayName() + "：小心！"));
                                     this.hasSentWarning = true;
                                  }
                               }
@@ -1059,7 +1059,7 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    private void triggerSpiritCounterAttack(DamageSource source) {
-      if (!this.method_37908().method_8608() && source.method_5529() instanceof PlayerEntity player) {
+      if (!this.getWorld().isClient() && source.getAttacker() instanceof PlayerEntity player) {
          if (this.isSuppressed() || this.isDeadlocked()) {
             return;
          }
@@ -1068,18 +1068,18 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
             return;
          }
 
-         this.method_5980(player);
+         this.setTarget(player);
       }
    }
 
    public boolean retrieveCoffinNail() {
       if (this.hasCoffinNail()) {
          ItemStack coffinNail = new ItemStack(ModItems.COFFIN_NAIL);
-         this.method_37908().method_8649(new ItemEntity(this.method_37908(), this.method_23317(), this.method_23318(), this.method_23321(), coffinNail));
+         this.getWorld().spawnEntity(new ItemEntity(this.getWorld(), this.getX(), this.getY(), this.getZ(), coffinNail));
          this.setSuppressed(false);
          this.setDeadlocked(false);
-         this.setCoffinNail(ItemStack.field_8037);
-         this.method_5977(false);
+         this.setCoffinNail(ItemStack.EMPTY);
+         this.setAiDisabled(false);
          return true;
       } else {
          return false;
@@ -1094,34 +1094,34 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
    }
 
    public void openTradeScreen(PlayerEntity player) {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          if (!this.tradeOffersInitialized) {
             this.initTradeOffers();
          }
 
-         if (this.method_8257() != player) {
-            this.method_8259(player);
-            this.method_5977(true);
-            this.method_5942().method_6340();
-            player.method_17355(new NamedScreenHandlerFactory() {
+         if (this.getCustomer() != player) {
+            this.setCustomer(player);
+            this.setAiDisabled(true);
+            this.getNavigation().stop();
+            player.openHandledScreen(new NamedScreenHandlerFactory() {
                public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity playerx) {
                   return new MerchantScreenHandler(syncId, inventory, GhostMasterEntity.this);
                }
 
-               public Text method_5476() {
-                  return GhostMasterEntity.this.method_5476();
+               public Text getDisplayName() {
+                  return GhostMasterEntity.this.getDisplayName();
                }
             });
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               int syncId = serverPlayer.field_7512 != null ? serverPlayer.field_7512.field_7763 : 0;
-               serverPlayer.field_13987
-                  .method_14364(new SetTradeOffersS2CPacket(syncId, this.tradeOffers, 0, this.method_19269(), this.method_19270(), this.method_20708()));
+               int syncId = serverPlayer.currentScreenHandler != null ? serverPlayer.currentScreenHandler.syncId : 0;
+               serverPlayer.networkHandler
+                  .sendPacket(new SetTradeOffersS2CPacket(syncId, this.tradeOffers, 0, this.getExperience(), this.isLeveledMerchant(), this.canRefreshTrades()));
             }
          }
       }
    }
 
-   public TradeOfferList method_8264() {
+   public TradeOfferList getOffers() {
       if (!this.tradeOffersInitialized) {
          this.initTradeOffers();
       }
@@ -1129,53 +1129,53 @@ public abstract class GhostMasterEntity extends PathAwareEntity implements Merch
       return this.tradeOffers;
    }
 
-   public void method_8261(TradeOfferList offers) {
+   public void setOffersFromServer(TradeOfferList offers) {
       if (offers != null) {
          this.tradeOffers = offers;
          this.tradeOffersInitialized = true;
       }
    }
 
-   public void method_8259(PlayerEntity customer) {
+   public void setCustomer(PlayerEntity customer) {
       if (customer == null && this.customer != null) {
-         this.method_5977(false);
+         this.setAiDisabled(false);
       }
 
       this.customer = customer;
    }
 
-   public PlayerEntity method_8257() {
+   public PlayerEntity getCustomer() {
       return this.customer;
    }
 
-   public void method_8262(TradeOffer offer) {
-      offer.method_8244();
+   public void trade(TradeOffer offer) {
+      offer.use();
    }
 
-   public void method_8258(ItemStack stack) {
+   public void onSellingItem(ItemStack stack) {
    }
 
-   public int method_19269() {
+   public int getExperience() {
       return this.tradeExperience;
    }
 
-   public void method_19271(int experience) {
+   public void setExperienceFromServer(int experience) {
       this.tradeExperience = experience;
    }
 
-   public boolean method_19270() {
+   public boolean isLeveledMerchant() {
       return false;
    }
 
-   public SoundEvent method_18010() {
+   public SoundEvent getYesSound() {
       return null;
    }
 
-   public boolean method_38069() {
-      return this.method_37908().field_9236;
+   public boolean isClient() {
+      return this.getWorld().isClient;
    }
 
-   public boolean method_20708() {
+   public boolean canRefreshTrades() {
       return false;
    }
 

@@ -26,7 +26,7 @@ public class RefreshQuestUIPacket {
    public static void handle(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
       client.execute(() -> {
          try {
-            if (client.field_1755 instanceof QuestHandledScreen screen) {
+            if (client.currentScreen instanceof QuestHandledScreen screen) {
                screen.refreshUI();
             }
 
@@ -50,6 +50,6 @@ public class RefreshQuestUIPacket {
    public static void sendToClient(ServerPlayerEntity player) {
       RefreshQuestUIPacket packet = new RefreshQuestUIPacket();
       ServerPlayNetworking.send(player, PACKET_ID, packet.toPacket());
-      LOGGER.debug("已发送任务界面刷新包到玩家: {}", player.method_5477().getString());
+      LOGGER.debug("已发送任务界面刷新包到玩家: {}", player.getName().getString());
    }
 }

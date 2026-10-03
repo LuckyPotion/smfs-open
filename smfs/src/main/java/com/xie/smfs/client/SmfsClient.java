@@ -168,11 +168,11 @@ public class SmfsClient implements ClientModInitializer {
       EntityRendererRegistry.register(ModEntities.GUI_NIAO, HumanRenderer::new);
       EntityRendererRegistry.register(ModEntities.LUO_QIAN_GHOST, UniversalGhostRenderer::new);
       BlockEntityRendererRegistry.register(ModBlockEntities.GHOST_COFFIN_BLOCK_ENTITY, CoffinBlockRenderer::new);
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_COFFIN, RenderLayer.method_23583());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_COFFIN, RenderLayer.getTranslucent());
       BlockEntityRendererRegistry.register(ModBlockEntities.RED_COFFIN_BLOCK_ENTITY, RedCoffinBlockRenderer::new);
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.RED_COFFIN, RenderLayer.method_23583());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.RED_COFFIN, RenderLayer.getTranslucent());
       BlockEntityRendererRegistry.register(ModBlockEntities.GOLD_COFFIN_BLOCK_ENTITY, GoldCoffinBlockRenderer::new);
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GOLD_COFFIN, RenderLayer.method_23583());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GOLD_COFFIN, RenderLayer.getTranslucent());
       BlockEntityRendererRegistry.register(ModBlockEntities.GHOST_TABLE_BLOCK_ENTITY, GhostTableBlockRenderer::new);
       BlockEntityRendererRegistry.register(ModBlockEntities.GHOST_TABLE2_BLOCK_ENTITY, GhostTable2BlockRenderer::new);
       BlockEntityRendererRegistry.register(ModBlockEntities.GHOST_BED_BLOCK_ENTITY, GhostBedBlockRenderer::new);
@@ -189,27 +189,27 @@ public class SmfsClient implements ClientModInitializer {
       BlockEntityRendererRegistry.register(ModBlockEntities.FOOTPRINT_BLOCK_ENTITY, FootprintBlockEntityRenderer::new);
       BlockEntityRendererRegistry.register(ModBlockEntities.FOOTPRINT2_BLOCK_ENTITY, Footprint2BlockEntityRenderer::new);
       BlockEntityRendererRegistry.register(ModBlockEntities.GRAVE_MOUND_BLOCK_ENTITY, GraveMoundBlockRenderer::new);
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE2, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_BED, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_PIANO, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_DOOR, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_PIANO, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_DOOR, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.NEW_GHOST_DOOR, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_BED, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE2, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_SCREEN, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_CANDLE, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_SKELETON, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_PORTRAIT, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_MIRROR, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.SPIRIT_BREWING_STAND, RenderLayer.method_23583());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.FOOTPRINT, RenderLayer.method_23581());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.FOOTPRINT2, RenderLayer.method_23581());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.DIRTY_CROP, RenderLayer.method_23581());
-      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.FILTHY_CROP, RenderLayer.method_23581());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE2, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_BED, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_PIANO, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_DOOR, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_PIANO, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_DOOR, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.NEW_GHOST_DOOR, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_BED, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_TABLE2, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_SCREEN, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_CANDLE, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_SKELETON, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_PORTRAIT, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.GHOST_MIRROR, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.SPIRIT_BREWING_STAND, RenderLayer.getTranslucent());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.FOOTPRINT, RenderLayer.getCutout());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.FOOTPRINT2, RenderLayer.getCutout());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.DIRTY_CROP, RenderLayer.getCutout());
+      BlockRenderLayerMapImpl.INSTANCE.putBlock(ModBlocks.FILTHY_CROP, RenderLayer.getCutout());
       EffectRenderHandler.register();
       MusicBoxCurseRenderer.register();
       MusicBoxCurseSoundHandler.init();
@@ -217,19 +217,19 @@ public class SmfsClient implements ClientModInitializer {
       GhostPullRenderHandler.register();
       BoxGhostContainerRenderer.register();
       MineralGhostMineralRenderer.register();
-      HandledScreens.method_17542(ModScreenHandlers.GHOST_CONTROL_SCREEN_HANDLER, GhostControlScreen::new);
-      HandledScreens.method_17542(ModScreenHandlers.GHOST_TAMING_SCREEN_HANDLER, GhostTamingScreen::new);
-      HandledScreens.method_17542(ModScreenHandlers.QUEST_SCREEN_HANDLER, QuestHandledScreen::new);
-      HandledScreens.method_17542(ModScreenHandlers.GHOST_CHILD_CULTIVATION_SCREEN_HANDLER, GhostChildCultivationScreen::new);
-      HandledScreens.method_17542(ModScreenHandlers.ROYAL_CURSE_SCREEN_HANDLER, RoyalCurseScreen::new);
-      HandledScreens.method_17542(ModScreenHandlers.GHOST_CHILD_FEED_SCREEN_HANDLER, GhostChildFeedScreen::new);
-      HandledScreens.method_17542(ModScreenHandlers.SPIRIT_BREWING_STAND_SCREEN_HANDLER, SpiritBrewingStandScreen::new);
+      HandledScreens.register(ModScreenHandlers.GHOST_CONTROL_SCREEN_HANDLER, GhostControlScreen::new);
+      HandledScreens.register(ModScreenHandlers.GHOST_TAMING_SCREEN_HANDLER, GhostTamingScreen::new);
+      HandledScreens.register(ModScreenHandlers.QUEST_SCREEN_HANDLER, QuestHandledScreen::new);
+      HandledScreens.register(ModScreenHandlers.GHOST_CHILD_CULTIVATION_SCREEN_HANDLER, GhostChildCultivationScreen::new);
+      HandledScreens.register(ModScreenHandlers.ROYAL_CURSE_SCREEN_HANDLER, RoyalCurseScreen::new);
+      HandledScreens.register(ModScreenHandlers.GHOST_CHILD_FEED_SCREEN_HANDLER, GhostChildFeedScreen::new);
+      HandledScreens.register(ModScreenHandlers.SPIRIT_BREWING_STAND_SCREEN_HANDLER, SpiritBrewingStandScreen::new);
       KeyEventHandler.register();
       ClientDataManager.init();
       ClientTickEvents.END_CLIENT_TICK.register((EndTick)client -> {
-         if (PlayNoticeScreen.shouldShow() && client.field_1687 != null) {
+         if (PlayNoticeScreen.shouldShow() && client.world != null) {
             PlayNoticeScreen.markAsShown();
-            client.method_1507(new PlayNoticeScreen());
+            client.setScreen(new PlayNoticeScreen());
          }
       });
       ClientSpiritNetworkHandler.register();
@@ -250,10 +250,10 @@ public class SmfsClient implements ClientModInitializer {
       ClientModNetwork.register();
       HumanSkinPaperClientHandler.register();
       PotionColorProvider.register();
-      DimensionRenderingRegistry.registerSkyRenderer(World.field_25179, new GhostDomainSkyRenderer());
+      DimensionRenderingRegistry.registerSkyRenderer(World.OVERWORLD, new GhostDomainSkyRenderer());
       DimensionRenderingRegistry.registerSkyRenderer(Smfs.SPIRIT_REALM_DIMENSION, new GhostDomainSkyRenderer());
       DimensionRenderingRegistry.registerSkyRenderer(Smfs.GHOST_DREAM_DIMENSION, new GhostDomainSkyRenderer());
-      DimensionRenderingRegistry.registerCloudRenderer(World.field_25179, new EmptyCloudRenderer());
+      DimensionRenderingRegistry.registerCloudRenderer(World.OVERWORLD, new EmptyCloudRenderer());
       DimensionRenderingRegistry.registerCloudRenderer(Smfs.SPIRIT_REALM_DIMENSION, new EmptyCloudRenderer());
       DimensionRenderingRegistry.registerCloudRenderer(Smfs.GHOST_DREAM_DIMENSION, new EmptyCloudRenderer());
       ConfigManager.initialize();
@@ -263,11 +263,11 @@ public class SmfsClient implements ClientModInitializer {
       HudRenderCallback.EVENT.register(new ScreenPresetRenderer());
       HudRenderCallback.EVENT.register((HudRenderCallback)(context, tickDelta) -> GhostShadowHeadCameraManager.renderFilter(context));
       AttackEntityCallback.EVENT.register((AttackEntityCallback)(player, world, hand, entity, hitResult) -> {
-         if (world.field_9236 && player.method_5998(hand).method_31574(ModItems.RUSTY_OLD_BROADSWORD)) {
+         if (world.isClient && player.getStackInHand(hand).isOf(ModItems.RUSTY_OLD_BROADSWORD)) {
             ScreenTearRenderer.onRustyBladeHit();
          }
 
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       });
       DeafnessClientHandler.init();
       FluidRenderHandlerRegistry.INSTANCE
@@ -276,14 +276,14 @@ public class SmfsClient implements ClientModInitializer {
             ModFluids.BLOOD_LAKE_FLOWING,
             new SimpleFluidRenderHandler(new Identifier("minecraft:block/water_still"), new Identifier("minecraft:block/water_flow"), 16711680)
          );
-      BlockRenderLayerMapImpl.INSTANCE.putFluids(RenderLayer.method_23583(), new Fluid[]{ModFluids.BLOOD_LAKE_STILL, ModFluids.BLOOD_LAKE_FLOWING});
+      BlockRenderLayerMapImpl.INSTANCE.putFluids(RenderLayer.getTranslucent(), new Fluid[]{ModFluids.BLOOD_LAKE_STILL, ModFluids.BLOOD_LAKE_FLOWING});
       FluidRenderHandlerRegistry.INSTANCE
          .register(
             ModFluids.GHOST_LAKE_STILL,
             ModFluids.GHOST_LAKE_FLOWING,
             new SimpleFluidRenderHandler(new Identifier("minecraft:block/water_still"), new Identifier("minecraft:block/water_flow"), 65535)
          );
-      BlockRenderLayerMapImpl.INSTANCE.putFluids(RenderLayer.method_23583(), new Fluid[]{ModFluids.GHOST_LAKE_STILL, ModFluids.GHOST_LAKE_FLOWING});
+      BlockRenderLayerMapImpl.INSTANCE.putFluids(RenderLayer.getTranslucent(), new Fluid[]{ModFluids.GHOST_LAKE_STILL, ModFluids.GHOST_LAKE_FLOWING});
       LOGGER.info("=================神秘复苏模组客户端初始化完成=================");
    }
 
@@ -293,23 +293,23 @@ public class SmfsClient implements ClientModInitializer {
    }
 
    private void registerBowPredicates() {
-      ModelPredicateProviderRegistry.method_27879(ModItems.GHOST_BOW, new Identifier("pulling"), (stack, world, entity, seed) -> {
+      ModelPredicateProviderRegistry.register(ModItems.GHOST_BOW, new Identifier("pulling"), (stack, world, entity, seed) -> {
          if (entity == null) {
             return 0.0F;
          } else {
-            return entity.method_6115() && entity.method_6030() == stack ? 1.0F : 0.0F;
+            return entity.isUsingItem() && entity.getActiveItem() == stack ? 1.0F : 0.0F;
          }
       });
-      ModelPredicateProviderRegistry.method_27879(ModItems.GHOST_BOW, new Identifier("pull"), (stack, world, entity, seed) -> {
+      ModelPredicateProviderRegistry.register(ModItems.GHOST_BOW, new Identifier("pull"), (stack, world, entity, seed) -> {
          if (entity == null) {
             return 0.0F;
          }
 
-         if (entity.method_6030() != stack) {
+         if (entity.getActiveItem() != stack) {
             return 0.0F;
          }
 
-         float useTicks = stack.method_7935() - entity.method_6014();
+         float useTicks = stack.getMaxUseTime() - entity.getItemUseTimeLeft();
          float pullProgress = useTicks / 20.0F;
          return Math.min(pullProgress, 1.0F);
       });

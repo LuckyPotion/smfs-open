@@ -79,15 +79,15 @@ class SpecialQuestStrategy implements QuestDetectionStrategy {
 
    private int getTamedGhostCount(PlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      if (data.method_10545("GhostSlots")) {
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      if (data.contains("GhostSlots")) {
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          int count = 0;
 
          for (int i = 0; i < 10; i++) {
             String slotKey = "Slot" + i;
-            if (ghostSlots.method_10545(slotKey)) {
-               NbtCompound slotData = ghostSlots.method_10562(slotKey);
-               if (slotData.method_10577("occupied")) {
+            if (ghostSlots.contains(slotKey)) {
+               NbtCompound slotData = ghostSlots.getCompound(slotKey);
+               if (slotData.getBoolean("occupied")) {
                   count++;
                }
             }
@@ -120,12 +120,12 @@ class SpecialQuestStrategy implements QuestDetectionStrategy {
    }
 
    private int getGhostCaptureCount(PlayerEntity player) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int count = 0;
 
-      for (int i = 0; i < inventory.method_5439(); i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && stack.method_7909() == ModItems.GOLDEN_CONTAINER && GoldenContainerItem.hasGhost(stack)) {
+      for (int i = 0; i < inventory.size(); i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && stack.getItem() == ModItems.GOLDEN_CONTAINER && GoldenContainerItem.hasGhost(stack)) {
             count++;
          }
       }
@@ -143,27 +143,27 @@ class SpecialQuestStrategy implements QuestDetectionStrategy {
 
    private boolean isPlayerInStructure(ServerPlayerEntity player, String structureId) {
       try {
-         BlockPos playerPos = player.method_24515();
-         ServerWorld serverWorld = player.method_51469();
-         TagKey<Structure> structureTag = TagKey.method_40092(RegistryKeys.field_41246, new Identifier("smfs", structureId));
-         BlockPos structurePos = serverWorld.method_8487(structureTag, playerPos, 5000, false);
+         BlockPos playerPos = player.getBlockPos();
+         ServerWorld serverWorld = player.getServerWorld();
+         TagKey<Structure> structureTag = TagKey.of(RegistryKeys.STRUCTURE, new Identifier("smfs", structureId));
+         BlockPos structurePos = serverWorld.locateStructure(structureTag, playerPos, 5000, false);
          if (structurePos != null) {
-            double distance = playerPos.method_10262(structurePos);
+            double distance = playerPos.getSquaredDistance(structurePos);
             int detectionRadius = 200;
             if (distance <= detectionRadius * detectionRadius) {
-               LOGGER.info("玩家 {} 进入{}结构，距离: {}", player.method_5477().getString(), structureId, Math.sqrt(distance));
+               LOGGER.info("玩家 {} 进入{}结构，距离: {}", player.getName().getString(), structureId, Math.sqrt(distance));
                return true;
             }
 
-            LOGGER.info("玩家 {} 距离{}结构过远，距离: {} (需要 <= {})", player.method_5477().getString(), structureId, Math.sqrt(distance), detectionRadius);
+            LOGGER.info("玩家 {} 距离{}结构过远，距离: {} (需要 <= {})", player.getName().getString(), structureId, Math.sqrt(distance), detectionRadius);
          } else {
-            LOGGER.info("玩家 {} 附近5000格内未找到{}结构", player.method_5477().getString(), structureId);
+            LOGGER.info("玩家 {} 附近5000格内未找到{}结构", player.getName().getString(), structureId);
             structurePos = this.findStructureAlternative(player, structureId);
             if (structurePos != null) {
-               double distance = playerPos.method_10262(structurePos);
+               double distance = playerPos.getSquaredDistance(structurePos);
                int detectionRadius = 200;
                if (distance <= detectionRadius * detectionRadius) {
-                  LOGGER.info("玩家 {} 通过备选方案进入{}结构，距离: {}", player.method_5477().getString(), structureId, Math.sqrt(distance));
+                  LOGGER.info("玩家 {} 通过备选方案进入{}结构，距离: {}", player.getName().getString(), structureId, Math.sqrt(distance));
                   return true;
                }
             }
@@ -177,30 +177,30 @@ class SpecialQuestStrategy implements QuestDetectionStrategy {
 
    private BlockPos findStructureAlternative(ServerPlayerEntity player, String structureId) {
       try {
-         BlockPos playerPos = player.method_24515();
-         ServerWorld serverWorld = player.method_51469();
-         Registry<Structure> structureRegistry = serverWorld.method_30349().method_30530(RegistryKeys.field_41246);
+         BlockPos playerPos = player.getBlockPos();
+         ServerWorld serverWorld = player.getServerWorld();
+         Registry<Structure> structureRegistry = serverWorld.getRegistryManager().get(RegistryKeys.STRUCTURE);
          Identifier structureIdentifier = new Identifier("smfs", structureId);
-         Structure structure = (Structure)structureRegistry.method_10223(structureIdentifier);
+         Structure structure = (Structure)structureRegistry.get(structureIdentifier);
          if (structure == null) {
             LOGGER.warn("{}结构未注册: {}", structureId, structureIdentifier);
             return null;
          }
 
-         RegistryEntry<Structure> structureEntry = structureRegistry.method_47983(structure);
+         RegistryEntry<Structure> structureEntry = structureRegistry.getEntry(structure);
          if (structureEntry == null) {
             LOGGER.warn("无法获取{}结构的注册表条目", structureId);
             return null;
          }
 
-         Direct<Structure> structureList = RegistryEntryList.method_40246(new RegistryEntry[]{structureEntry});
-         ChunkGenerator chunkGenerator = serverWorld.method_14178().method_12129();
-         Pair<BlockPos, RegistryEntry<Structure>> structureResult = chunkGenerator.method_12103(serverWorld, structureList, playerPos, 5000, false);
+         Direct<Structure> structureList = RegistryEntryList.of(new RegistryEntry[]{structureEntry});
+         ChunkGenerator chunkGenerator = serverWorld.getChunkManager().getChunkGenerator();
+         Pair<BlockPos, RegistryEntry<Structure>> structureResult = chunkGenerator.locateStructure(serverWorld, structureList, playerPos, 5000, false);
          if (structureResult != null) {
             BlockPos structurePos = (BlockPos)structureResult.getFirst();
-            int centerY = serverWorld.method_8624(Type.field_13202, structurePos.method_10263(), structurePos.method_10260());
-            LOGGER.debug("通过备选方案找到{}结构，坐标: {}, {}, {}", structureId, structurePos.method_10263(), centerY, structurePos.method_10260());
-            return new BlockPos(structurePos.method_10263(), centerY, structurePos.method_10260());
+            int centerY = serverWorld.getTopY(Type.WORLD_SURFACE, structurePos.getX(), structurePos.getZ());
+            LOGGER.debug("通过备选方案找到{}结构，坐标: {}, {}, {}", structureId, structurePos.getX(), centerY, structurePos.getZ());
+            return new BlockPos(structurePos.getX(), centerY, structurePos.getZ());
          }
       } catch (Exception e) {
          LOGGER.error("备选方案搜索{}结构时发生错误", structureId, e);
@@ -215,12 +215,12 @@ class SpecialQuestStrategy implements QuestDetectionStrategy {
 
    private int getWangXiaoMingTradeCount(PlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      if (data.method_10545("wangxiaoming_trade_count")) {
-         int count = data.method_10550("wangxiaoming_trade_count");
-         LOGGER.info("玩家 {} 与王小明的交易次数: {}", player.method_5477().getString(), count);
+      if (data.contains("wangxiaoming_trade_count")) {
+         int count = data.getInt("wangxiaoming_trade_count");
+         LOGGER.info("玩家 {} 与王小明的交易次数: {}", player.getName().getString(), count);
          return count;
       } else {
-         LOGGER.info("玩家 {} 尚未与王小明进行过交易", player.method_5477().getString());
+         LOGGER.info("玩家 {} 尚未与王小明进行过交易", player.getName().getString());
          return 0;
       }
    }

@@ -33,7 +33,7 @@ public class GhostAbilityPopupScreen extends Screen {
    }
 
    public GhostAbilityPopupScreen(String title, int titleColor, float titleScale, List<String> contents, boolean twoColumnLayout) {
-      super(Text.method_43471("screen.smfs.ghost_ability_popup"));
+      super(Text.translatable("screen.smfs.ghost_ability_popup"));
       this.title = title;
       this.titleColor = titleColor;
       this.titleScale = titleScale;
@@ -41,31 +41,27 @@ public class GhostAbilityPopupScreen extends Screen {
       this.twoColumnLayout = twoColumnLayout;
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      this.windowX = (this.field_22789 - 256) / 2;
-      this.windowY = (this.field_22790 - 200) / 2;
+   protected void init() {
+      super.init();
+      this.windowX = (this.width - 256) / 2;
+      this.windowY = (this.height - 200) / 2;
       int buttonX = this.windowX + 88;
       int buttonY = this.windowY + 200 - 20 - 10;
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("button.smfs.confirm"), button -> this.method_25419())
-            .method_46434(buttonX, buttonY, 80, 20)
-            .method_46431()
-      );
+      this.addDrawableChild(ButtonWidget.builder(Text.translatable("button.smfs.confirm"), button -> this.close()).dimensions(buttonX, buttonY, 80, 20).build());
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      context.method_25302(BACKGROUND_TEXTURE, this.windowX, this.windowY, 0, 0, 256, 200);
-      TextRenderer textRenderer = this.field_22793;
-      Text mainTitle = Text.method_43470(this.title);
-      int mainTitleScaledWidth = (int)(textRenderer.method_27525(mainTitle) * this.titleScale);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      context.drawTexture(BACKGROUND_TEXTURE, this.windowX, this.windowY, 0, 0, 256, 200);
+      TextRenderer textRenderer = this.textRenderer;
+      Text mainTitle = Text.literal(this.title);
+      int mainTitleScaledWidth = (int)(textRenderer.getWidth(mainTitle) * this.titleScale);
       int mainTitleX = this.windowX + (256 - mainTitleScaledWidth) / 2;
-      context.method_51448().method_22903();
-      context.method_51448().method_46416(mainTitleX, this.windowY + 0 + 5, 0.0F);
-      context.method_51448().method_22905(this.titleScale, this.titleScale, 1.0F);
-      context.method_51439(textRenderer, mainTitle, 0, 0, this.titleColor, true);
-      context.method_51448().method_22909();
+      context.getMatrices().push();
+      context.getMatrices().translate(mainTitleX, this.windowY + 0 + 5, 0.0F);
+      context.getMatrices().scale(this.titleScale, this.titleScale, 1.0F);
+      context.drawText(textRenderer, mainTitle, 0, 0, this.titleColor, true);
+      context.getMatrices().pop();
       int currentY = this.windowY + 26;
       if (this.twoColumnLayout) {
          int columnWidth = 113;
@@ -77,28 +73,28 @@ public class GhostAbilityPopupScreen extends Screen {
             int textColor = 14540253;
             String displayContent = rawContent;
             if (rawContent.length() >= 2 && rawContent.charAt(0) == 167) {
-               Formatting formatting = Formatting.method_544(rawContent.charAt(1));
-               if (formatting != null && formatting.method_543()) {
-                  textColor = formatting.method_532();
+               Formatting formatting = Formatting.byCode(rawContent.charAt(1));
+               if (formatting != null && formatting.isColor()) {
+                  textColor = formatting.getColorValue();
                   displayContent = rawContent.substring(2);
                }
             }
 
-            Text contentText = Text.method_43470(displayContent);
+            Text contentText = Text.literal(displayContent);
             if (i % 2 == 0) {
-               context.method_51448().method_22903();
+               context.getMatrices().push();
                float textScale = 0.8F;
-               context.method_51448().method_46416(leftColumnX, currentY, 0.0F);
-               context.method_51448().method_22905(textScale, textScale, 1.0F);
-               context.method_51439(textRenderer, contentText, 0, 0, textColor, false);
-               context.method_51448().method_22909();
+               context.getMatrices().translate(leftColumnX, currentY, 0.0F);
+               context.getMatrices().scale(textScale, textScale, 1.0F);
+               context.drawText(textRenderer, contentText, 0, 0, textColor, false);
+               context.getMatrices().pop();
             } else {
-               context.method_51448().method_22903();
+               context.getMatrices().push();
                float textScale = 0.8F;
-               context.method_51448().method_46416(rightColumnX, currentY, 0.0F);
-               context.method_51448().method_22905(textScale, textScale, 1.0F);
-               context.method_51439(textRenderer, contentText, 0, 0, textColor, false);
-               context.method_51448().method_22909();
+               context.getMatrices().translate(rightColumnX, currentY, 0.0F);
+               context.getMatrices().scale(textScale, textScale, 1.0F);
+               context.drawText(textRenderer, contentText, 0, 0, textColor, false);
+               context.getMatrices().pop();
                currentY += 10;
             }
          }
@@ -114,44 +110,44 @@ public class GhostAbilityPopupScreen extends Screen {
             int textColor = 14540253;
             String displayContent = rawContent;
             if (rawContent.length() >= 2 && rawContent.charAt(0) == 167) {
-               Formatting formatting = Formatting.method_544(rawContent.charAt(1));
-               if (formatting != null && formatting.method_543()) {
-                  textColor = formatting.method_532();
+               Formatting formatting = Formatting.byCode(rawContent.charAt(1));
+               if (formatting != null && formatting.isColor()) {
+                  textColor = formatting.getColorValue();
                   displayContent = rawContent.substring(2);
                }
             }
 
-            Text contentText = Text.method_43470(displayContent);
-            int contentScaledWidth = (int)(textRenderer.method_27525(contentText) * textScale);
+            Text contentText = Text.literal(displayContent);
+            int contentScaledWidth = (int)(textRenderer.getWidth(contentText) * textScale);
             int contentX = this.windowX + (256 - contentScaledWidth) / 2;
-            context.method_51448().method_22903();
-            context.method_51448().method_46416(contentX, currentY, 0.0F);
-            context.method_51448().method_22905(textScale, textScale, 1.0F);
-            context.method_51439(textRenderer, contentText, 0, 0, textColor, false);
-            context.method_51448().method_22909();
+            context.getMatrices().push();
+            context.getMatrices().translate(contentX, currentY, 0.0F);
+            context.getMatrices().scale(textScale, textScale, 1.0F);
+            context.drawText(textRenderer, contentText, 0, 0, textColor, false);
+            context.getMatrices().pop();
             currentY += lineHeightForSingleColumn;
          }
       }
 
-      super.method_25394(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 
-   public boolean method_25404(int keyCode, int scanCode, int modifiers) {
+   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
       if (keyCode == 256) {
-         this.method_25419();
+         this.close();
          return true;
       } else {
-         return super.method_25404(keyCode, scanCode, modifiers);
+         return super.keyPressed(keyCode, scanCode, modifiers);
       }
    }
 
-   public void method_25419() {
-      if (this.field_22787 != null) {
-         this.field_22787.method_1507(null);
+   public void close() {
+      if (this.client != null) {
+         this.client.setScreen(null);
       }
    }
 
@@ -161,11 +157,11 @@ public class GhostAbilityPopupScreen extends Screen {
 
    public static void showPopup(String title, int titleColor, float titleScale, List<String> contents, boolean twoColumnLayout) {
       try {
-         MinecraftClient client = MinecraftClient.method_1551();
+         MinecraftClient client = MinecraftClient.getInstance();
          if (client != null) {
             client.execute(() -> {
                try {
-                  client.method_1507(new GhostAbilityPopupScreen(title, titleColor, titleScale, contents, twoColumnLayout));
+                  client.setScreen(new GhostAbilityPopupScreen(title, titleColor, titleScale, contents, twoColumnLayout));
                } catch (Exception ex) {
                   System.err.println("[SMFS] GhostAbilityPopupScreen: Error setting screen: " + ex.getMessage());
                   ex.printStackTrace();

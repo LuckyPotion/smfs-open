@@ -7,11 +7,11 @@ import net.minecraft.structure.processor.StructureProcessorType;
 import net.minecraft.util.Identifier;
 
 public class ModStructureProcessors {
-   public static final StructureProcessorType<ChestLootProcessor> CHEST_LOOT_PROCESSOR = (StructureProcessorType<ChestLootProcessor>)Registry.method_10230(
-      Registries.field_41161, new Identifier("smfs", "chest_loot_processor"), (StructureProcessorType)() -> ChestLootProcessor.CODEC
+   public static final StructureProcessorType<ChestLootProcessor> CHEST_LOOT_PROCESSOR = (StructureProcessorType<ChestLootProcessor>)Registry.register(
+      Registries.STRUCTURE_PROCESSOR, new Identifier("smfs", "chest_loot_processor"), (StructureProcessorType)() -> ChestLootProcessor.CODEC
    );
-   public static final StructureProcessorType<GhostSpawnProcessor> GHOST_SPAWN_PROCESSOR = (StructureProcessorType<GhostSpawnProcessor>)Registry.method_10230(
-      Registries.field_41161, new Identifier("smfs", "ghost_spawn"), (StructureProcessorType)() -> GhostSpawnProcessor.CODEC
+   public static final StructureProcessorType<GhostSpawnProcessor> GHOST_SPAWN_PROCESSOR = (StructureProcessorType<GhostSpawnProcessor>)Registry.register(
+      Registries.STRUCTURE_PROCESSOR, new Identifier("smfs", "ghost_spawn"), (StructureProcessorType)() -> GhostSpawnProcessor.CODEC
    );
 
    public static void register() {

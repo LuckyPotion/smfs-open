@@ -21,8 +21,8 @@ public class OpenCreditsCommand implements Command<FabricClientCommandSource> {
       CommandRegistrationCallback.EVENT
          .register(
             (CommandRegistrationCallback)(dispatcher, registryAccess, environment) -> dispatcher.register(
-               (LiteralArgumentBuilder)CommandManager.method_9247("xie").then(CommandManager.method_9247("credits").executes(context -> {
-                  ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+               (LiteralArgumentBuilder)CommandManager.literal("xie").then(CommandManager.literal("credits").executes(context -> {
+                  ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                   if (player != null) {
                      openCreditsScreen(player);
                      return 1;
@@ -40,13 +40,13 @@ public class OpenCreditsCommand implements Command<FabricClientCommandSource> {
    }
 
    public static void openCreditsScreen(ServerPlayerEntity player) {
-      if (player.method_37908().field_9236) {
+      if (player.getWorld().isClient) {
          CreditsScreen.show();
       }
    }
 
    public static int execute(CommandContext<ServerCommandSource> context) {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
       if (player != null) {
          openCreditsScreen(player);
          return 1;

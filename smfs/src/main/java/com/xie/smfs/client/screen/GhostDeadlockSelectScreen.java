@@ -30,23 +30,23 @@ public class GhostDeadlockSelectScreen extends Screen {
    private boolean selectionMade = false;
 
    public GhostDeadlockSelectScreen() {
-      super(Text.method_43471("screen.smfs.ghost_deadlock_select"));
+      super(Text.translatable("screen.smfs.ghost_deadlock_select"));
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      this.guiX = (this.field_22789 - 177) / 2;
-      this.guiY = (this.field_22790 - 183) / 2;
+   protected void init() {
+      super.init();
+      this.guiX = (this.width - 177) / 2;
+      this.guiY = (this.height - 183) / 2;
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
       boolean isAberration = this.isPlayerAberration();
       Identifier bg = isAberration ? BACKGROUND_TEXTURE : BACKGROUND_TEXTURE2;
-      context.method_25302(bg, this.guiX, this.guiY, 0, 0, 177, 183);
+      context.drawTexture(bg, this.guiX, this.guiY, 0, 0, 177, 183);
       int centerX = this.guiX + 87;
       int centerY = this.guiY + 73;
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+      if (this.client != null && this.client.player != null) {
          for (int i = 0; i < 6; i++) {
             double angle = (Math.PI * 2) * i / 6.0;
             int x = centerX + (int)(30.0 * Math.cos(angle)) - 8;
@@ -66,41 +66,41 @@ public class GhostDeadlockSelectScreen extends Screen {
 
          this.drawTooltip(context, mouseX, mouseY);
          this.drawTitle(context);
-         super.method_25394(context, mouseX, mouseY, delta);
+         super.render(context, mouseX, mouseY, delta);
       }
    }
 
    private void drawSlot(DrawContext context, int x, int y, int slotIndex) {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-         NbtCompound ghostSlots = PlayerEvents.getGhostSlots(this.field_22787.field_1724);
+      if (this.client != null && this.client.player != null) {
+         NbtCompound ghostSlots = PlayerEvents.getGhostSlots(this.client.player);
          String slotKey = "Slot" + slotIndex;
          boolean isUnlocked = true;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            isUnlocked = slotData.method_10577("unlocked");
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            isUnlocked = slotData.getBoolean("unlocked");
          }
 
          if (!isUnlocked) {
-            context.method_25302(LOCK_TEXTURE, x, y, 0, 0, 18, 18);
+            context.drawTexture(LOCK_TEXTURE, x, y, 0, 0, 18, 18);
          } else {
-            ItemStack itemStack = PlayerEvents.getGhostSlotItem(this.field_22787.field_1724, slotIndex);
-            boolean isOccupied = PlayerEvents.isGhostSlotOccupied(this.field_22787.field_1724, slotIndex);
-            if (isOccupied && !itemStack.method_7960()) {
-               context.method_51427(itemStack, x + 1, y + 1);
-               context.method_51431(this.field_22793, itemStack, x + 1, y + 1);
+            ItemStack itemStack = PlayerEvents.getGhostSlotItem(this.client.player, slotIndex);
+            boolean isOccupied = PlayerEvents.isGhostSlotOccupied(this.client.player, slotIndex);
+            if (isOccupied && !itemStack.isEmpty()) {
+               context.drawItem(itemStack, x + 1, y + 1);
+               context.drawItemInSlot(this.textRenderer, itemStack, x + 1, y + 1);
             }
          }
       }
    }
 
    private void drawTitle(DrawContext context) {
-      Text title = Text.method_43471("screen.smfs.ghost_deadlock_select.title");
-      int titleWidth = this.field_22793.method_27525(title);
-      context.method_51439(this.field_22793, title, this.guiX + (177 - titleWidth) / 2, this.guiY + 130, 16777215, true);
+      Text title = Text.translatable("screen.smfs.ghost_deadlock_select.title");
+      int titleWidth = this.textRenderer.getWidth(title);
+      context.drawText(this.textRenderer, title, this.guiX + (177 - titleWidth) / 2, this.guiY + 130, 16777215, true);
    }
 
    private void drawTooltip(DrawContext context, int mouseX, int mouseY) {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+      if (this.client != null && this.client.player != null) {
          int centerX = this.guiX + 87;
          int centerY = this.guiY + 73;
 
@@ -110,9 +110,9 @@ public class GhostDeadlockSelectScreen extends Screen {
             int y = centerY + (int)(30.0 * Math.sin(angle)) - 8;
             if (mouseX >= x && mouseX <= x + 18 && mouseY >= y && mouseY <= y + 18) {
                if (this.isSlotSelectable(i)) {
-                  context.method_51438(this.field_22793, Text.method_43471("screen.smfs.ghost_deadlock_select.click"), mouseX, mouseY);
-               } else if (PlayerEvents.isGhostSlotOccupied(this.field_22787.field_1724, i)) {
-                  context.method_51438(this.field_22793, Text.method_43471("screen.smfs.ghost_deadlock_select.deadlocked"), mouseX, mouseY);
+                  context.drawTooltip(this.textRenderer, Text.translatable("screen.smfs.ghost_deadlock_select.click"), mouseX, mouseY);
+               } else if (PlayerEvents.isGhostSlotOccupied(this.client.player, i)) {
+                  context.drawTooltip(this.textRenderer, Text.translatable("screen.smfs.ghost_deadlock_select.deadlocked"), mouseX, mouseY);
                }
 
                return;
@@ -128,9 +128,9 @@ public class GhostDeadlockSelectScreen extends Screen {
             int y = this.guiY + customY[index];
             if (mouseX >= x && mouseX <= x + 18 && mouseY >= y && mouseY <= y + 18) {
                if (this.isSlotSelectable(i)) {
-                  context.method_51438(this.field_22793, Text.method_43471("screen.smfs.ghost_deadlock_select.click"), mouseX, mouseY);
-               } else if (PlayerEvents.isGhostSlotOccupied(this.field_22787.field_1724, i)) {
-                  context.method_51438(this.field_22793, Text.method_43471("screen.smfs.ghost_deadlock_select.deadlocked"), mouseX, mouseY);
+                  context.drawTooltip(this.textRenderer, Text.translatable("screen.smfs.ghost_deadlock_select.click"), mouseX, mouseY);
+               } else if (PlayerEvents.isGhostSlotOccupied(this.client.player, i)) {
+                  context.drawTooltip(this.textRenderer, Text.translatable("screen.smfs.ghost_deadlock_select.deadlocked"), mouseX, mouseY);
                }
 
                return;
@@ -140,20 +140,20 @@ public class GhostDeadlockSelectScreen extends Screen {
    }
 
    private boolean isPlayerAberration() {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-         NbtCompound ghostSlots = PlayerEvents.getGhostSlots(this.field_22787.field_1724);
+      if (this.client != null && this.client.player != null) {
+         NbtCompound ghostSlots = PlayerEvents.getGhostSlots(this.client.player);
          String slot0Key = "Slot0";
          String slot3Key = "Slot3";
-         return ghostSlots.method_10545(slot0Key) && ghostSlots.method_10545(slot3Key)
-            ? ghostSlots.method_10562(slot0Key).method_10577("unlocked") && ghostSlots.method_10562(slot3Key).method_10577("unlocked")
+         return ghostSlots.contains(slot0Key) && ghostSlots.contains(slot3Key)
+            ? ghostSlots.getCompound(slot0Key).getBoolean("unlocked") && ghostSlots.getCompound(slot3Key).getBoolean("unlocked")
             : false;
       } else {
          return false;
       }
    }
 
-   public boolean method_25402(double mouseX, double mouseY, int button) {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+      if (this.client != null && this.client.player != null) {
          int centerX = this.guiX + 87;
          int centerY = this.guiY + 73;
 
@@ -164,7 +164,7 @@ public class GhostDeadlockSelectScreen extends Screen {
             if (mouseX >= x && mouseX <= x + 18 && mouseY >= y && mouseY <= y + 18 && this.isSlotSelectable(i)) {
                this.selectionMade = true;
                this.sendSelection(i);
-               this.method_25419();
+               this.close();
                return true;
             }
          }
@@ -179,27 +179,27 @@ public class GhostDeadlockSelectScreen extends Screen {
             if (mouseX >= x && mouseX <= x + 18 && mouseY >= y && mouseY <= y + 18 && this.isSlotSelectable(i)) {
                this.selectionMade = true;
                this.sendSelection(i);
-               this.method_25419();
+               this.close();
                return true;
             }
          }
 
-         return super.method_25402(mouseX, mouseY, button);
+         return super.mouseClicked(mouseX, mouseY, button);
       } else {
          return false;
       }
    }
 
    private boolean isSlotSelectable(int slotIndex) {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-         NbtCompound ghostSlots = PlayerEvents.getGhostSlots(this.field_22787.field_1724);
+      if (this.client != null && this.client.player != null) {
+         NbtCompound ghostSlots = PlayerEvents.getGhostSlots(this.client.player);
          String slotKey = "Slot" + slotIndex;
-         if (!ghostSlots.method_10545(slotKey)) {
+         if (!ghostSlots.contains(slotKey)) {
             return false;
          }
 
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         return slotData.method_10577("occupied") && !slotData.method_10577("slotDeadlocked");
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         return slotData.getBoolean("occupied") && !slotData.getBoolean("slotDeadlocked");
       } else {
          return false;
       }
@@ -211,21 +211,21 @@ public class GhostDeadlockSelectScreen extends Screen {
       ClientPlayNetworking.send(new Identifier("smfs", "ghost_deadlock_select"), buf);
    }
 
-   public void method_25419() {
+   public void close() {
       if (!this.selectionMade) {
          PacketByteBuf buf = PacketByteBufs.create();
          buf.writeInt(-1);
          ClientPlayNetworking.send(new Identifier("smfs", "ghost_deadlock_select"), buf);
       }
 
-      super.method_25419();
+      super.close();
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return true;
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 }

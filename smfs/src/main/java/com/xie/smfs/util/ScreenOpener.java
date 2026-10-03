@@ -18,48 +18,48 @@ import net.minecraft.util.Identifier;
 
 public class ScreenOpener {
    public static void openTamingScreen(PlayerEntity player) {
-      if (player.method_37908().field_9236) {
+      if (player.getWorld().isClient) {
          ClientPlayNetworking.send(new Identifier("smfs", "open_taming_screen"), PacketByteBufs.empty());
       } else {
          ItemStack containerStack = new ItemStack(ModItems.GOLDEN_CONTAINER);
-         player.method_17355(new GhostTamingScreenHandler.GhostTamingFactory(containerStack));
+         player.openHandledScreen(new GhostTamingScreenHandler.GhostTamingFactory(containerStack));
       }
    }
 
    public static void openQuestScreen(PlayerEntity player) {
-      if (player.method_37908().field_9236) {
-         MinecraftClient client = MinecraftClient.method_1551();
+      if (player.getWorld().isClient) {
+         MinecraftClient client = MinecraftClient.getInstance();
          client.execute(
-            () -> client.method_1507(
-               new QuestHandledScreen(new QuestScreenHandler(0, player.method_31548()), player.method_31548(), Text.method_43471("screen.smfs.quest"))
+            () -> client.setScreen(
+               new QuestHandledScreen(new QuestScreenHandler(0, player.getInventory()), player.getInventory(), Text.translatable("screen.smfs.quest"))
             )
          );
       } else {
-         player.method_17355(new QuestScreenHandler.QuestScreenFactory());
+         player.openHandledScreen(new QuestScreenHandler.QuestScreenFactory());
       }
    }
 
    public static void openGhostControlScreen(PlayerEntity player) {
-      if (player.method_37908().field_9236) {
-         MinecraftClient client = MinecraftClient.method_1551();
+      if (player.getWorld().isClient) {
+         MinecraftClient client = MinecraftClient.getInstance();
          client.execute(
-            () -> client.method_1507(
+            () -> client.setScreen(
                new GhostControlScreen(
-                  new GhostControlScreenHandler(0, player.method_31548(), new SimpleInventory(10)),
-                  player.method_31548(),
-                  Text.method_43471("container.ghost_control")
+                  new GhostControlScreenHandler(0, player.getInventory(), new SimpleInventory(10)),
+                  player.getInventory(),
+                  Text.translatable("container.ghost_control")
                )
             )
          );
       } else {
-         player.method_17355(new GhostControlScreenHandler.GhostControlFactory());
+         player.openHandledScreen(new GhostControlScreenHandler.GhostControlFactory());
       }
    }
 
    public static void openInfoScreen(PlayerEntity player) {
-      if (player.method_37908().field_9236) {
-         MinecraftClient client = MinecraftClient.method_1551();
-         client.execute(() -> client.method_1507(new PlayerInfoScreen(player)));
+      if (player.getWorld().isClient) {
+         MinecraftClient client = MinecraftClient.getInstance();
+         client.execute(() -> client.setScreen(new PlayerInfoScreen(player)));
       }
    }
 }

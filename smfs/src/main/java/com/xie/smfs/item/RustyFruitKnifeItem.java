@@ -21,21 +21,21 @@ public class RustyFruitKnifeItem extends SwordItem implements SpiritWeapon {
    private static final Logger LOGGER = LoggerFactory.getLogger(RustyFruitKnifeItem.class);
 
    public RustyFruitKnifeItem(Settings settings) {
-      super(ToolMaterials.field_8923, 3, -2.4F, settings);
+      super(ToolMaterials.IRON, 3, -2.4F, settings);
    }
 
    @Override
    public void onSpiritWeaponAttack(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-      float baseDamage = this.method_8020();
+      float baseDamage = this.getAttackDamage();
       float spiritDamage = baseDamage + this.getSpiritDamageBonus() * this.getSpiritDamageMultiplier();
-      if (!attacker.method_37908().method_8608()) {
+      if (!attacker.getWorld().isClient()) {
          ModEvents.processingSpiritDamage.set(true);
 
          try {
             if (attacker instanceof PlayerEntity player) {
-               PlayerEvents.handleSpiritDamage(player, spiritDamage, spiritDamage, ModDamageSources.ghost(attacker.method_37908()));
+               PlayerEvents.handleSpiritDamage(player, spiritDamage, spiritDamage, ModDamageSources.ghost(attacker.getWorld()));
             } else {
-               attacker.method_5643(ModDamageSources.ghost(attacker.method_37908()), spiritDamage);
+               attacker.damage(ModDamageSources.ghost(attacker.getWorld()), spiritDamage);
             }
          } finally {
             ModEvents.processingSpiritDamage.set(false);
@@ -53,13 +53,13 @@ public class RustyFruitKnifeItem extends SwordItem implements SpiritWeapon {
       return 0.5F;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.rusty_fruit_knife.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_fruit_knife.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_fruit_knife.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_fruit_knife.effect.self_damage"));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.rusty_fruit_knife.description.source"));
+      tooltip.add(Text.translatable("item.smfs.rusty_fruit_knife.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.rusty_fruit_knife.description.type"));
+      tooltip.add(Text.translatable("item.smfs.rusty_fruit_knife.effect.self_damage"));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
    }
 }

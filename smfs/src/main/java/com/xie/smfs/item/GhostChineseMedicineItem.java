@@ -16,22 +16,22 @@ import org.jetbrains.annotations.Nullable;
 
 public class GhostChineseMedicineItem extends Item {
    public GhostChineseMedicineItem(Settings settings) {
-      super(settings.method_19265(new Builder().method_19238(1).method_19237(0.1F).method_19240().method_19242()));
+      super(settings.food(new Builder().hunger(1).saturationModifier(0.1F).alwaysEdible().build()));
    }
 
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (!world.field_9236 && user instanceof PlayerEntity player) {
-         player.method_6092(new StatusEffectInstance(ModEffects.GHOST_SUPPRESSION, 12000, 0, false, false));
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (!world.isClient && user instanceof PlayerEntity player) {
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.GHOST_SUPPRESSION, 12000, 0, false, false));
       }
 
-      return super.method_7861(stack, world, user);
+      return super.finishUsing(stack, world, user);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_chinese_medicine.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_chinese_medicine.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_chinese_medicine.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_chinese_medicine.description.side_effect"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_chinese_medicine.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_chinese_medicine.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_chinese_medicine.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_chinese_medicine.description.side_effect"));
    }
 }

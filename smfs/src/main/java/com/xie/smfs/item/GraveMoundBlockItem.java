@@ -25,8 +25,8 @@ public class GraveMoundBlockItem extends BlockItem implements GeoItem {
       super(block, settings);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
    }
 
    @Override

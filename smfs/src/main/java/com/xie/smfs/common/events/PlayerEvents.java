@@ -101,40 +101,32 @@ public class PlayerEvents {
 
    public static void register() {
       ServerPlayConnectionEvents.JOIN.register((Join)(handler, sender, server) -> {
-         ServerPlayerEntity player = handler.method_32311();
+         ServerPlayerEntity player = handler.getPlayer();
          loadPlayerDataToCache(player);
          initPlayerAttributes(player);
       });
       ServerPlayConnectionEvents.DISCONNECT.register((Disconnect)(handler, server) -> {
-         ServerPlayerEntity player = handler.method_32311();
-         NbtCompound data = PLAYER_DATA_CACHE.get(player.method_5667());
+         ServerPlayerEntity player = handler.getPlayer();
+         NbtCompound data = PLAYER_DATA_CACHE.get(player.getUuid());
          if (data != null) {
             saveDataToPlayer(player, data);
-            LOGGER.info("玩家 {} 断开连接，已保存灵异数据", player.method_5477().getString());
+            LOGGER.info("玩家 {} 断开连接，已保存灵异数据", player.getName().getString());
          }
 
-         PLAYER_DATA_CACHE.remove(player.method_5667());
+         PLAYER_DATA_CACHE.remove(player.getUuid());
       });
       ServerPlayerEvents.COPY_FROM.register((CopyFrom)(oldPlayer, newPlayer, alive) -> {
          copySpiritAttributes(oldPlayer, newPlayer);
          initPlayerAttributes(newPlayer);
       });
-      ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD
-         .register(
-            (AfterPlayerChange)(player, origin, destination) -> {
-               LOGGER.info(
-                  "玩家 {} 从维度 {} 传送到维度 {}，同步灵异数据",
-                  player.method_5477().getString(),
-                  origin.method_27983().method_29177(),
-                  destination.method_27983().method_29177()
-               );
-               loadPlayerDataToCache(player);
-               initPlayerAttributes(player);
-            }
-         );
+      ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((AfterPlayerChange)(player, origin, destination) -> {
+         LOGGER.info("玩家 {} 从维度 {} 传送到维度 {}，同步灵异数据", player.getName().getString(), origin.getRegistryKey().getValue(), destination.getRegistryKey().getValue());
+         loadPlayerDataToCache(player);
+         initPlayerAttributes(player);
+      });
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         if (world.method_8510() % 100L == 0L) {
-            for (PlayerEntity player : world.method_18456()) {
+         if (world.getTime() % 100L == 0L) {
+            for (PlayerEntity player : world.getPlayers()) {
                if (GhostDomainManager.hasGhostEntitiesInRange(player, 32)) {
                   GhostDomainManager.sendGhostEyeWarning(player);
                }
@@ -142,38 +134,38 @@ public class PlayerEvents {
          }
       });
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         for (PlayerEntity player : world.method_18456()) {
+         for (PlayerEntity player : world.getPlayers()) {
             if (player instanceof ServerPlayerEntity serverPlayer) {
                int mainSlot = MainGhostManager.getMainGhostSlot(serverPlayer);
                String mainGhostType = getGhostTypeInSlot(serverPlayer, mainSlot);
-               if (!serverPlayer.method_5715() || !"giant_shadow_ghost".equals(mainGhostType) && !"complete_shadow_ghost".equals(mainGhostType)) {
-                  if (!serverPlayer.method_5715() && ("giant_shadow_ghost".equals(mainGhostType) || "complete_shadow_ghost".equals(mainGhostType))) {
+               if (!serverPlayer.isSneaking() || !"giant_shadow_ghost".equals(mainGhostType) && !"complete_shadow_ghost".equals(mainGhostType)) {
+                  if (!serverPlayer.isSneaking() && ("giant_shadow_ghost".equals(mainGhostType) || "complete_shadow_ghost".equals(mainGhostType))) {
                      NbtCompound data = getCachedData(serverPlayer);
-                     if (data.method_10577("smfs:giant_shadow_sneaking")) {
-                        long sneakStart = data.method_10537("smfs:giant_shadow_sneak_start");
-                        long sneakDuration = world.method_8510() - sneakStart;
+                     if (data.getBoolean("smfs:giant_shadow_sneaking")) {
+                        long sneakStart = data.getLong("smfs:giant_shadow_sneak_start");
+                        long sneakDuration = world.getTime() - sneakStart;
                         GhostSkillManager.handleGiantShadowGhostAreaAttack(serverPlayer, 5.0, sneakDuration);
-                        data.method_10556("smfs:giant_shadow_sneaking", false);
-                        data.method_10544("smfs:giant_shadow_sneak_start", 0L);
+                        data.putBoolean("smfs:giant_shadow_sneaking", false);
+                        data.putLong("smfs:giant_shadow_sneak_start", 0L);
                      }
                   }
                } else {
                   NbtCompound data = getCachedData(serverPlayer);
-                  if (!data.method_10577("smfs:giant_shadow_sneaking")) {
-                     data.method_10544("smfs:giant_shadow_sneak_start", world.method_8510());
-                     data.method_10556("smfs:giant_shadow_sneaking", true);
+                  if (!data.getBoolean("smfs:giant_shadow_sneaking")) {
+                     data.putLong("smfs:giant_shadow_sneak_start", world.getTime());
+                     data.putBoolean("smfs:giant_shadow_sneaking", true);
                   }
                }
             }
          }
       });
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         if (world.method_8510() % 20L == 0L) {
-            for (PlayerEntity player : world.method_18456()) {
+         if (world.getTime() % 20L == 0L) {
+            for (PlayerEntity player : world.getPlayers()) {
                NbtCompound spiritAttributes = getSpiritAttributes(player);
-               float currentSpirit = spiritAttributes.method_10545("currentSpirit") ? (float)spiritAttributes.method_10574("currentSpirit") : 0.0F;
-               float maxSpirit = spiritAttributes.method_10545("maxSpirit") ? (float)spiritAttributes.method_10574("maxSpirit") : 0.0F;
-               float revivalFactor = spiritAttributes.method_10545("revivalFactor") ? (float)spiritAttributes.method_10574("revivalFactor") : 0.0F;
+               float currentSpirit = spiritAttributes.contains("currentSpirit") ? (float)spiritAttributes.getDouble("currentSpirit") : 0.0F;
+               float maxSpirit = spiritAttributes.contains("maxSpirit") ? (float)spiritAttributes.getDouble("maxSpirit") : 0.0F;
+               float revivalFactor = spiritAttributes.contains("revivalFactor") ? (float)spiritAttributes.getDouble("revivalFactor") : 0.0F;
                if (currentSpirit > maxSpirit) {
                   setCurrentSpirit(player, maxSpirit);
                } else if (currentSpirit < maxSpirit && revivalFactor > 0.0F) {
@@ -188,23 +180,23 @@ public class PlayerEvents {
       ServerTickEvents.END_WORLD_TICK
          .register(
             (EndWorldTick)world -> {
-               if (world.method_8510() % 20L == 0L) {
+               if (world.getTime() % 20L == 0L) {
                   ModConfig config = ModConfig.getInstance();
                   if (!config.enableSanitySystem) {
                      return;
                   }
 
-                  for (PlayerEntity player : world.method_18456()) {
-                     GameMode gameMode = player.method_37908().method_8608() ? null : ((ServerPlayerEntity)player).field_13974.method_14257();
-                     if (gameMode != GameMode.field_9219 && gameMode != GameMode.field_9220) {
+                  for (PlayerEntity player : world.getPlayers()) {
+                     GameMode gameMode = player.getWorld().isClient() ? null : ((ServerPlayerEntity)player).interactionManager.getGameMode();
+                     if (gameMode != GameMode.SPECTATOR && gameMode != GameMode.CREATIVE) {
                         NbtCompound spiritAttributes = getSpiritAttributes(player);
-                        float currentSanity = spiritAttributes.method_10545("sanity") ? (float)spiritAttributes.method_10574("sanity") : 100.0F;
-                        float maxSanity = spiritAttributes.method_10545("maxSanity") ? (float)spiritAttributes.method_10574("maxSanity") : 100.0F;
+                        float currentSanity = spiritAttributes.contains("sanity") ? (float)spiritAttributes.getDouble("sanity") : 100.0F;
+                        float maxSanity = spiritAttributes.contains("maxSanity") ? (float)spiritAttributes.getDouble("maxSanity") : 100.0F;
                         if (currentSanity > maxSanity) {
                            setCurrentSanity(player, maxSanity);
                         } else {
                            if (currentSanity <= 0.0F && player instanceof ServerPlayerEntity serverPlayer) {
-                              DamageSource sanityZeroDamage = ModDamageSources.sanityZero(serverPlayer.method_37908());
+                              DamageSource sanityZeroDamage = ModDamageSources.sanityZero(serverPlayer.getWorld());
                               InstantKillUtil.executePlayerSelfKill(serverPlayer, sanityZeroDamage, true, true);
                            }
 
@@ -213,8 +205,8 @@ public class PlayerEvents {
                               isPlayerProtected = RedGhostCandleItem.isHoldingCandle(serverPlayer)
                                  || CoffinEffectManager.isPlayerInGoldCoffin(serverPlayer)
                                  || GoldBlockProtectionManager.isPlayerInGoldBlockShelter(serverPlayer)
-                                 || SpectateModePacket.isInSpectatorMode(serverPlayer.method_5667())
-                                 || serverPlayer.method_6059(ModEffects.SPIRIT_IMMUNITY);
+                                 || SpectateModePacket.isInSpectatorMode(serverPlayer.getUuid())
+                                 || serverPlayer.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY);
                            }
 
                            List<LivingEntity> ghostEntities = GhostDomainManager.findGhostEntitiesInRange(player, 16);
@@ -242,13 +234,13 @@ public class PlayerEvents {
                                     boolean isOwnGhost = false;
                                     if (ghost instanceof PlayerGhostEntity playerGhost) {
                                        String ghostPlayerUuid = playerGhost.getPlayerUuid();
-                                       if (ghostPlayerUuid != null && ghostPlayerUuid.equals(player.method_5845())) {
+                                       if (ghostPlayerUuid != null && ghostPlayerUuid.equals(player.getUuidAsString())) {
                                           isOwnGhost = true;
                                        }
                                     }
 
                                     if (!isOwnGhost) {
-                                       double distance = player.method_19538().method_1022(ghost.method_19538());
+                                       double distance = player.getPos().distanceTo(ghost.getPos());
                                        if (distance < nearestDistance) {
                                           nearestDistance = distance;
                                           nearestGhost = ghost;
@@ -269,7 +261,7 @@ public class PlayerEvents {
                                     float newSanity = Math.max(currentSanity - sanityReduction, 0.0F);
                                     setCurrentSanity(player, newSanity);
                                     if (newSanity <= 0.0F && player instanceof ServerPlayerEntity serverPlayer) {
-                                       DamageSource sanityZeroDamage = ModDamageSources.sanityZero(serverPlayer.method_37908());
+                                       DamageSource sanityZeroDamage = ModDamageSources.sanityZero(serverPlayer.getWorld());
                                        InstantKillUtil.executePlayerSelfKill(serverPlayer, sanityZeroDamage, true, true);
                                     }
                                  }
@@ -283,25 +275,25 @@ public class PlayerEvents {
          );
       ServerTickEvents.END_WORLD_TICK.register(PassiveSkillManager::triggerAllPlayersPassiveSkills);
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         for (PlayerEntity player : world.method_18456()) {
-            if (!player.method_29504()) {
+         for (PlayerEntity player : world.getPlayers()) {
+            if (!player.isDead()) {
                NbtCompound data = getCachedData(player);
-               long survivalTime = data.method_10537("survivalTime");
-               long totalTime = data.method_10537("totalTime");
-               data.method_10544("survivalTime", survivalTime + 1L);
-               data.method_10544("totalTime", totalTime + 1L);
+               long survivalTime = data.getLong("survivalTime");
+               long totalTime = data.getLong("totalTime");
+               data.putLong("survivalTime", survivalTime + 1L);
+               data.putLong("totalTime", totalTime + 1L);
             }
          }
       });
       ServerEntityEvents.EQUIPMENT_CHANGE.register((EquipmentChange)(livingEntity, equipmentSlot, previous, next) -> {
-         if (livingEntity instanceof PlayerEntity player && !livingEntity.method_37908().method_8608()) {
+         if (livingEntity instanceof PlayerEntity player && !livingEntity.getWorld().isClient()) {
             handleEquipmentChange(player, equipmentSlot, previous, next);
             handleHumanSkinPaperEquip(player, equipmentSlot, next);
          }
       });
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         for (PlayerEntity player : world.method_18456()) {
-            if (player.method_5715()) {
+         for (PlayerEntity player : world.getPlayers()) {
+            if (player.isSneaking()) {
                int mainSlot = MainGhostManager.getMainGhostSlot(player);
                String mainGhostType = getGhostTypeInSlot(player, mainSlot);
                boolean isGiantShadowGhostMain = "giant_shadow_ghost".equals(mainGhostType) || "complete_shadow_ghost".equals(mainGhostType);
@@ -316,8 +308,8 @@ public class PlayerEvents {
                boolean isGiantShadowGhostMain = "giant_shadow_ghost".equals(mainGhostType) || "complete_shadow_ghost".equals(mainGhostType);
                if (player instanceof ServerPlayerEntity serverPlayer && isGiantShadowGhostMain) {
                   GiantShadowGhostStopScaleS2CPacket.sendToClient(serverPlayer);
-                  player.method_6016(StatusEffects.field_5904);
-                  player.method_6016(StatusEffects.field_5905);
+                  player.removeStatusEffect(StatusEffects.SPEED);
+                  player.removeStatusEffect(StatusEffects.INVISIBILITY);
                }
             }
          }
@@ -330,145 +322,145 @@ public class PlayerEvents {
 
       for (int i = 0; i < 10; i++) {
          NbtCompound slotData = new NbtCompound();
-         slotData.method_10556("occupied", false);
-         slotData.method_10566("item", ItemStack.field_8037.method_7953(new NbtCompound()));
-         slotData.method_10569("level", 1);
-         slotData.method_10569("revivalDegree", 0);
-         slotData.method_10569("requiredRevivalDegree", 1000);
-         slotData.method_10556("unlocked", i != 0 && i != 3 && i < 6);
-         slotData.method_10556("slotDeadlocked", false);
-         ghostSlots.method_10566("Slot" + i, slotData);
+         slotData.putBoolean("occupied", false);
+         slotData.put("item", ItemStack.EMPTY.writeNbt(new NbtCompound()));
+         slotData.putInt("level", 1);
+         slotData.putInt("revivalDegree", 0);
+         slotData.putInt("requiredRevivalDegree", 1000);
+         slotData.putBoolean("unlocked", i != 0 && i != 3 && i < 6);
+         slotData.putBoolean("slotDeadlocked", false);
+         ghostSlots.put("Slot" + i, slotData);
       }
 
-      data.method_10566("GhostSlots", ghostSlots);
-      data.method_10549("spiritResistance", 0.0);
-      data.method_10549("spiritDamage", 0.0);
-      data.method_10549("maxSpirit", 0.0);
-      data.method_10549("currentSpirit", 0.0);
-      data.method_10549("revivalFactor", 0.0);
-      data.method_10549("sanity", 100.0);
-      data.method_10549("maxSanity", 100.0);
-      data.method_10549("maxHealth", 20.0);
-      data.method_10549("tempSpiritResistance", 0.0);
-      data.method_10549("tempSpiritResistanceMultiplier", 1.0);
-      data.method_10549("tempSpiritDamage", 0.0);
-      data.method_10549("tempSpiritDamageMultiplier", 1.0);
-      data.method_10549("tempMaxSpirit", 0.0);
-      data.method_10549("tempSanity", 0.0);
-      data.method_10569("ghostEyeRecoveryPoints", 0);
+      data.put("GhostSlots", ghostSlots);
+      data.putDouble("spiritResistance", 0.0);
+      data.putDouble("spiritDamage", 0.0);
+      data.putDouble("maxSpirit", 0.0);
+      data.putDouble("currentSpirit", 0.0);
+      data.putDouble("revivalFactor", 0.0);
+      data.putDouble("sanity", 100.0);
+      data.putDouble("maxSanity", 100.0);
+      data.putDouble("maxHealth", 20.0);
+      data.putDouble("tempSpiritResistance", 0.0);
+      data.putDouble("tempSpiritResistanceMultiplier", 1.0);
+      data.putDouble("tempSpiritDamage", 0.0);
+      data.putDouble("tempSpiritDamageMultiplier", 1.0);
+      data.putDouble("tempMaxSpirit", 0.0);
+      data.putDouble("tempSanity", 0.0);
+      data.putInt("ghostEyeRecoveryPoints", 0);
       NbtCompound questData = new NbtCompound();
-      questData.method_10566("activeQuests", new NbtList());
-      questData.method_10566("completedQuests", new NbtList());
-      data.method_10566("questData", questData);
-      data.method_10556("humanSkinPaperUnlocked", false);
-      data.method_10544("survivalTime", 0L);
-      data.method_10544("totalTime", 0L);
-      data.method_10544("lastSurvivalTime", 0L);
+      questData.put("activeQuests", new NbtList());
+      questData.put("completedQuests", new NbtList());
+      data.put("questData", questData);
+      data.putBoolean("humanSkinPaperUnlocked", false);
+      data.putLong("survivalTime", 0L);
+      data.putLong("totalTime", 0L);
+      data.putLong("lastSurvivalTime", 0L);
       initializeServantsData(data);
-      data.method_10569("BonusSuppressionSlots", 0);
+      data.putInt("BonusSuppressionSlots", 0);
       return data;
    }
 
    private static void loadPlayerDataToCache(PlayerEntity player) {
-      NbtCompound playerNbt = player.method_5647(new NbtCompound());
-      if (playerNbt.method_10545("smfs_spirit_data")) {
-         NbtCompound existingData = playerNbt.method_10562("smfs_spirit_data");
-         if (!existingData.method_10545("GhostSlots")) {
+      NbtCompound playerNbt = player.writeNbt(new NbtCompound());
+      if (playerNbt.contains("smfs_spirit_data")) {
+         NbtCompound existingData = playerNbt.getCompound("smfs_spirit_data");
+         if (!existingData.contains("GhostSlots")) {
             NbtCompound defaultData = createDefaultSpiritData();
 
-            for (String key : defaultData.method_10541()) {
-               if (!existingData.method_10545(key)) {
-                  existingData.method_10566(key, defaultData.method_10580(key).method_10707());
+            for (String key : defaultData.getKeys()) {
+               if (!existingData.contains(key)) {
+                  existingData.put(key, defaultData.get(key).copy());
                }
             }
 
             saveDataToPlayer(player, existingData);
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), existingData.method_10553());
+         PLAYER_DATA_CACHE.put(player.getUuid(), existingData.copy());
          syncAttributesFromNbt(player, existingData);
       } else {
          NbtCompound spiritData = createDefaultSpiritData();
-         PLAYER_DATA_CACHE.put(player.method_5667(), spiritData);
+         PLAYER_DATA_CACHE.put(player.getUuid(), spiritData);
          saveDataToPlayer(player, spiritData);
       }
    }
 
    public static void syncAttributesFromNbt(PlayerEntity player, NbtCompound data) {
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.SPIRIT_RESISTANCE);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.SPIRIT_RESISTANCE);
       if (instance != null) {
-         instance.method_6192((float)data.method_10574("spiritResistance"));
+         instance.setBaseValue((float)data.getDouble("spiritResistance"));
       }
 
-      instance = player.method_5996(SpiritAttributes.SPIRIT_DAMAGE);
+      instance = player.getAttributeInstance(SpiritAttributes.SPIRIT_DAMAGE);
       if (instance != null) {
-         instance.method_6192((float)data.method_10574("spiritDamage"));
+         instance.setBaseValue((float)data.getDouble("spiritDamage"));
       }
 
-      instance = player.method_5996(SpiritAttributes.CURRENT_SPIRIT);
+      instance = player.getAttributeInstance(SpiritAttributes.CURRENT_SPIRIT);
       if (instance != null) {
-         instance.method_6192((float)data.method_10574("currentSpirit"));
+         instance.setBaseValue((float)data.getDouble("currentSpirit"));
       }
 
-      instance = player.method_5996(SpiritAttributes.MAX_SPIRIT);
+      instance = player.getAttributeInstance(SpiritAttributes.MAX_SPIRIT);
       if (instance != null) {
-         instance.method_6192((float)data.method_10574("maxSpirit"));
+         instance.setBaseValue((float)data.getDouble("maxSpirit"));
       }
 
-      instance = player.method_5996(SpiritAttributes.REVIVAL_FACTOR);
+      instance = player.getAttributeInstance(SpiritAttributes.REVIVAL_FACTOR);
       if (instance != null) {
-         instance.method_6192((float)data.method_10574("revivalFactor"));
+         instance.setBaseValue((float)data.getDouble("revivalFactor"));
       }
 
-      instance = player.method_5996(SpiritAttributes.SANITY);
+      instance = player.getAttributeInstance(SpiritAttributes.SANITY);
       if (instance != null) {
-         double sanityValue = data.method_10545("sanity") ? data.method_10574("sanity") : 100.0;
-         instance.method_6192((float)sanityValue);
+         double sanityValue = data.contains("sanity") ? data.getDouble("sanity") : 100.0;
+         instance.setBaseValue((float)sanityValue);
       }
 
-      instance = player.method_5996(SpiritAttributes.MAX_SANITY);
+      instance = player.getAttributeInstance(SpiritAttributes.MAX_SANITY);
       if (instance != null) {
-         double maxSanityValue = data.method_10545("maxSanity") ? data.method_10574("maxSanity") : 100.0;
-         instance.method_6192((float)maxSanityValue);
+         double maxSanityValue = data.contains("maxSanity") ? data.getDouble("maxSanity") : 100.0;
+         instance.setBaseValue((float)maxSanityValue);
       }
 
       NbtCompound cachedData = getCachedData(player);
-      cachedData.method_10549("spiritResistance", data.method_10574("spiritResistance"));
-      cachedData.method_10549("spiritDamage", data.method_10574("spiritDamage"));
-      cachedData.method_10549("currentSpirit", data.method_10574("currentSpirit"));
-      cachedData.method_10549("maxSpirit", data.method_10574("maxSpirit"));
-      cachedData.method_10549("revivalFactor", data.method_10574("revivalFactor"));
-      double sanityValue = data.method_10545("sanity") ? data.method_10574("sanity") : 100.0;
-      cachedData.method_10549("sanity", sanityValue);
-      double maxSanityValue = data.method_10545("maxSanity") ? data.method_10574("maxSanity") : 100.0;
-      cachedData.method_10549("maxSanity", maxSanityValue);
-      if (data.method_10545("GhostSlots")) {
-         cachedData.method_10566("GhostSlots", data.method_10562("GhostSlots").method_10553());
+      cachedData.putDouble("spiritResistance", data.getDouble("spiritResistance"));
+      cachedData.putDouble("spiritDamage", data.getDouble("spiritDamage"));
+      cachedData.putDouble("currentSpirit", data.getDouble("currentSpirit"));
+      cachedData.putDouble("maxSpirit", data.getDouble("maxSpirit"));
+      cachedData.putDouble("revivalFactor", data.getDouble("revivalFactor"));
+      double sanityValue = data.contains("sanity") ? data.getDouble("sanity") : 100.0;
+      cachedData.putDouble("sanity", sanityValue);
+      double maxSanityValue = data.contains("maxSanity") ? data.getDouble("maxSanity") : 100.0;
+      cachedData.putDouble("maxSanity", maxSanityValue);
+      if (data.contains("GhostSlots")) {
+         cachedData.put("GhostSlots", data.getCompound("GhostSlots").copy());
       }
 
-      if (data.method_10545("wangCurseUnlocked")) {
-         cachedData.method_10556("wangCurseUnlocked", data.method_10577("wangCurseUnlocked"));
+      if (data.contains("wangCurseUnlocked")) {
+         cachedData.putBoolean("wangCurseUnlocked", data.getBoolean("wangCurseUnlocked"));
       }
 
-      if (data.method_10545("servants")) {
-         cachedData.method_10566("servants", data.method_10554("servants", 11).method_10612());
+      if (data.contains("servants")) {
+         cachedData.put("servants", data.getList("servants", 11).copy());
       }
 
-      PLAYER_DATA_CACHE.put(player.method_5667(), cachedData);
+      PLAYER_DATA_CACHE.put(player.getUuid(), cachedData);
    }
 
    public static NbtCompound getCachedData(PlayerEntity player) {
-      if (!PLAYER_DATA_CACHE.containsKey(player.method_5667())) {
+      if (!PLAYER_DATA_CACHE.containsKey(player.getUuid())) {
          loadPlayerDataToCache(player);
       }
 
-      return PLAYER_DATA_CACHE.get(player.method_5667());
+      return PLAYER_DATA_CACHE.get(player.getUuid());
    }
 
    public static void saveDataToPlayer(PlayerEntity player, NbtCompound spiritData) {
-      PLAYER_DATA_CACHE.put(player.method_5667(), spiritData);
+      PLAYER_DATA_CACHE.put(player.getUuid(), spiritData);
       if (player instanceof IPlayerData) {
-         ((IPlayerData)player).setSpiritData(spiritData.method_10553());
+         ((IPlayerData)player).setSpiritData(spiritData.copy());
       }
 
       if (player instanceof ServerPlayerEntity serverPlayer) {
@@ -478,8 +470,8 @@ public class PlayerEvents {
 
    private static void copySpiritAttributes(PlayerEntity oldPlayer, PlayerEntity newPlayer) {
       NbtCompound oldData = getCachedData(oldPlayer);
-      PLAYER_DATA_CACHE.put(newPlayer.method_5667(), oldData.method_10553());
-      saveDataToPlayer(newPlayer, oldData.method_10553());
+      PLAYER_DATA_CACHE.put(newPlayer.getUuid(), oldData.copy());
+      saveDataToPlayer(newPlayer, oldData.copy());
    }
 
    public static void initPlayerAttributes(PlayerEntity player) {
@@ -496,111 +488,111 @@ public class PlayerEvents {
       setDefaultAttribute(player, SpiritAttributes.SANITY, 100.0);
       setDefaultAttribute(player, SpiritAttributes.TEMP_SANITY, 0.0);
       setDefaultAttribute(player, SpiritAttributes.MAX_SANITY, 100.0);
-      LOGGER.debug("已初始化玩家 {} 的灵异属性", player.method_5477().getString());
+      LOGGER.debug("已初始化玩家 {} 的灵异属性", player.getName().getString());
    }
 
    private static void setDefaultAttribute(PlayerEntity player, EntityAttribute attribute, double defaultValue) {
-      EntityAttributeInstance instance = player.method_5996(attribute);
+      EntityAttributeInstance instance = player.getAttributeInstance(attribute);
       if (instance != null) {
-         instance.method_6192(defaultValue);
+         instance.setBaseValue(defaultValue);
       }
    }
 
    public static float getSpiritAttribute(PlayerEntity player, EntityAttribute attribute) {
-      EntityAttributeInstance instance = player.method_5996(attribute);
-      return instance != null ? (float)instance.method_6201() : 0.0F;
+      EntityAttributeInstance instance = player.getAttributeInstance(attribute);
+      return instance != null ? (float)instance.getBaseValue() : 0.0F;
    }
 
    public static void setSpiritAttribute(PlayerEntity player, EntityAttribute attribute, float value) {
-      EntityAttributeInstance instance = player.method_5996(attribute);
+      EntityAttributeInstance instance = player.getAttributeInstance(attribute);
       if (instance != null) {
-         instance.method_6192(value);
+         instance.setBaseValue(value);
       }
 
       NbtCompound data = getCachedData(player);
       if (attribute == SpiritAttributes.SPIRIT_RESISTANCE) {
-         double currentValue = data.method_10545("spiritResistance") ? data.method_10574("spiritResistance") : 0.0;
-         data.method_10549("spiritResistance", currentValue + value);
+         double currentValue = data.contains("spiritResistance") ? data.getDouble("spiritResistance") : 0.0;
+         data.putDouble("spiritResistance", currentValue + value);
       } else if (attribute == SpiritAttributes.SPIRIT_DAMAGE) {
-         double currentValue = data.method_10545("spiritDamage") ? data.method_10574("spiritDamage") : 0.0;
-         data.method_10549("spiritDamage", currentValue + value);
+         double currentValue = data.contains("spiritDamage") ? data.getDouble("spiritDamage") : 0.0;
+         data.putDouble("spiritDamage", currentValue + value);
       } else if (attribute == SpiritAttributes.CURRENT_SPIRIT) {
-         double currentValue = data.method_10545("currentSpirit") ? data.method_10574("currentSpirit") : 0.0;
-         data.method_10549("currentSpirit", currentValue + value);
+         double currentValue = data.contains("currentSpirit") ? data.getDouble("currentSpirit") : 0.0;
+         data.putDouble("currentSpirit", currentValue + value);
       } else if (attribute == SpiritAttributes.MAX_SPIRIT) {
-         double currentValue = data.method_10545("maxSpirit") ? data.method_10574("maxSpirit") : 0.0;
-         data.method_10549("maxSpirit", currentValue + value);
+         double currentValue = data.contains("maxSpirit") ? data.getDouble("maxSpirit") : 0.0;
+         data.putDouble("maxSpirit", currentValue + value);
       } else if (attribute == SpiritAttributes.REVIVAL_FACTOR) {
-         double currentValue = data.method_10545("revivalFactor") ? data.method_10574("revivalFactor") : 0.0;
-         data.method_10549("revivalFactor", currentValue + value);
+         double currentValue = data.contains("revivalFactor") ? data.getDouble("revivalFactor") : 0.0;
+         data.putDouble("revivalFactor", currentValue + value);
       } else if (attribute == SpiritAttributes.SANITY) {
-         double currentValue = data.method_10545("sanity") ? data.method_10574("sanity") : 100.0;
-         data.method_10549("sanity", currentValue + value);
+         double currentValue = data.contains("sanity") ? data.getDouble("sanity") : 100.0;
+         data.putDouble("sanity", currentValue + value);
       } else if (attribute == SpiritAttributes.MAX_SANITY) {
-         double currentValue = data.method_10545("maxSanity") ? data.method_10574("maxSanity") : 100.0;
-         data.method_10549("maxSanity", currentValue + value);
+         double currentValue = data.contains("maxSanity") ? data.getDouble("maxSanity") : 100.0;
+         data.putDouble("maxSanity", currentValue + value);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_RESISTANCE) {
-         data.method_10549("tempSpiritResistance", value);
+         data.putDouble("tempSpiritResistance", value);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_RESISTANCE_MULTIPLIER) {
-         data.method_10549("tempSpiritResistanceMultiplier", value);
+         data.putDouble("tempSpiritResistanceMultiplier", value);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_DAMAGE) {
-         data.method_10549("tempSpiritDamage", value);
+         data.putDouble("tempSpiritDamage", value);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_DAMAGE_MULTIPLIER) {
-         data.method_10549("tempSpiritDamageMultiplier", value);
+         data.putDouble("tempSpiritDamageMultiplier", value);
       } else if (attribute == SpiritAttributes.TEMP_MAX_SPIRIT) {
-         data.method_10549("tempMaxSpirit", value);
+         data.putDouble("tempMaxSpirit", value);
       } else if (attribute == SpiritAttributes.TEMP_SANITY) {
-         data.method_10549("tempSanity", value);
+         data.putDouble("tempSanity", value);
       }
 
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
       setSpiritAttributes(player, data);
    }
 
    public static void subtractSpiritAttributeValue(PlayerEntity player, EntityAttribute attribute, float value) {
-      EntityAttributeInstance instance = player.method_5996(attribute);
+      EntityAttributeInstance instance = player.getAttributeInstance(attribute);
       if (instance != null) {
-         float currentValue = (float)instance.method_6201();
-         instance.method_6192(Math.max(0.0F, currentValue - value));
+         float currentValue = (float)instance.getBaseValue();
+         instance.setBaseValue(Math.max(0.0F, currentValue - value));
       }
 
       NbtCompound data = getCachedData(player);
       if (attribute == SpiritAttributes.SPIRIT_RESISTANCE) {
-         double currentValue = data.method_10545("spiritResistance") ? data.method_10574("spiritResistance") : 0.0;
-         data.method_10549("spiritResistance", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("spiritResistance") ? data.getDouble("spiritResistance") : 0.0;
+         data.putDouble("spiritResistance", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.SPIRIT_DAMAGE) {
-         double currentValue = data.method_10545("spiritDamage") ? data.method_10574("spiritDamage") : 0.0;
-         data.method_10549("spiritDamage", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("spiritDamage") ? data.getDouble("spiritDamage") : 0.0;
+         data.putDouble("spiritDamage", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.CURRENT_SPIRIT) {
-         double currentValue = data.method_10545("currentSpirit") ? data.method_10574("currentSpirit") : 0.0;
-         data.method_10549("currentSpirit", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("currentSpirit") ? data.getDouble("currentSpirit") : 0.0;
+         data.putDouble("currentSpirit", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.MAX_SPIRIT) {
-         double currentValue = data.method_10545("maxSpirit") ? data.method_10574("maxSpirit") : 0.0;
-         data.method_10549("maxSpirit", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("maxSpirit") ? data.getDouble("maxSpirit") : 0.0;
+         data.putDouble("maxSpirit", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.MAX_SANITY) {
-         double currentValue = data.method_10545("maxSanity") ? data.method_10574("maxSanity") : 100.0;
-         data.method_10549("maxSanity", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("maxSanity") ? data.getDouble("maxSanity") : 100.0;
+         data.putDouble("maxSanity", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.REVIVAL_FACTOR) {
-         double currentValue = data.method_10545("revivalFactor") ? data.method_10574("revivalFactor") : 0.0;
-         data.method_10549("revivalFactor", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("revivalFactor") ? data.getDouble("revivalFactor") : 0.0;
+         data.putDouble("revivalFactor", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.SANITY) {
-         double currentValue = data.method_10545("sanity") ? data.method_10574("sanity") : 100.0;
-         data.method_10549("sanity", Math.max(0.0, currentValue - value));
+         double currentValue = data.contains("sanity") ? data.getDouble("sanity") : 100.0;
+         data.putDouble("sanity", Math.max(0.0, currentValue - value));
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_RESISTANCE) {
-         data.method_10549("tempSpiritResistance", 0.0);
+         data.putDouble("tempSpiritResistance", 0.0);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_RESISTANCE_MULTIPLIER) {
-         data.method_10549("tempSpiritResistanceMultiplier", 1.0);
+         data.putDouble("tempSpiritResistanceMultiplier", 1.0);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_DAMAGE) {
-         data.method_10549("tempSpiritDamage", 0.0);
+         data.putDouble("tempSpiritDamage", 0.0);
       } else if (attribute == SpiritAttributes.TEMP_SPIRIT_DAMAGE_MULTIPLIER) {
-         data.method_10549("tempSpiritDamageMultiplier", 1.0);
+         data.putDouble("tempSpiritDamageMultiplier", 1.0);
       } else if (attribute == SpiritAttributes.TEMP_MAX_SPIRIT) {
-         data.method_10549("tempMaxSpirit", 0.0);
+         data.putDouble("tempMaxSpirit", 0.0);
       } else if (attribute == SpiritAttributes.TEMP_SANITY) {
-         data.method_10549("tempSanity", 0.0);
+         data.putDouble("tempSanity", 0.0);
       }
 
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
       setSpiritAttributes(player, data);
    }
 
@@ -628,13 +620,11 @@ public class PlayerEvents {
 
    public static float getMaxSpirit(PlayerEntity player) {
       NbtCompound spiritAttributes = getSpiritAttributes(player);
-      if (spiritAttributes.method_10545("maxSpirit")) {
-         if (spiritAttributes.method_10573("maxSpirit", 3)) {
-            return spiritAttributes.method_10550("maxSpirit");
+      if (spiritAttributes.contains("maxSpirit")) {
+         if (spiritAttributes.contains("maxSpirit", 3)) {
+            return spiritAttributes.getInt("maxSpirit");
          } else {
-            return spiritAttributes.method_10573("maxSpirit", 6)
-               ? (float)spiritAttributes.method_10574("maxSpirit")
-               : spiritAttributes.method_10583("maxSpirit");
+            return spiritAttributes.contains("maxSpirit", 6) ? (float)spiritAttributes.getDouble("maxSpirit") : spiritAttributes.getFloat("maxSpirit");
          }
       } else {
          return 0.0F;
@@ -643,13 +633,11 @@ public class PlayerEvents {
 
    public static float getMaxSanity(PlayerEntity player) {
       NbtCompound spiritAttributes = getSpiritAttributes(player);
-      if (spiritAttributes.method_10545("maxSanity")) {
-         if (spiritAttributes.method_10573("maxSanity", 3)) {
-            return spiritAttributes.method_10550("maxSanity");
+      if (spiritAttributes.contains("maxSanity")) {
+         if (spiritAttributes.contains("maxSanity", 3)) {
+            return spiritAttributes.getInt("maxSanity");
          } else {
-            return spiritAttributes.method_10573("maxSanity", 6)
-               ? (float)spiritAttributes.method_10574("maxSanity")
-               : spiritAttributes.method_10583("maxSanity");
+            return spiritAttributes.contains("maxSanity", 6) ? (float)spiritAttributes.getDouble("maxSanity") : spiritAttributes.getFloat("maxSanity");
          }
       } else {
          return 100.0F;
@@ -657,66 +645,66 @@ public class PlayerEvents {
    }
 
    public static long getSurvivalTime(PlayerEntity player) {
-      return getCachedData(player).method_10537("survivalTime");
+      return getCachedData(player).getLong("survivalTime");
    }
 
    public static long getTotalTime(PlayerEntity player) {
-      return getCachedData(player).method_10537("totalTime");
+      return getCachedData(player).getLong("totalTime");
    }
 
    public static void saveLastSurvivalTime(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      data.method_10544("lastSurvivalTime", data.method_10537("survivalTime"));
+      data.putLong("lastSurvivalTime", data.getLong("survivalTime"));
    }
 
    public static void resetSurvivalTime(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      data.method_10544("survivalTime", 0L);
+      data.putLong("survivalTime", 0L);
    }
 
    public static void restoreSurvivalTime(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      long lastSurvivalTime = data.method_10537("lastSurvivalTime");
-      data.method_10544("survivalTime", lastSurvivalTime);
+      long lastSurvivalTime = data.getLong("lastSurvivalTime");
+      data.putLong("survivalTime", lastSurvivalTime);
    }
 
    public static void setCurrentSpirit(PlayerEntity player, float value) {
       float maxSpirit = getMaxSpirit(player);
       float finalValue = Math.min(value, maxSpirit);
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.CURRENT_SPIRIT);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.CURRENT_SPIRIT);
       if (instance != null) {
-         instance.method_6192(finalValue);
+         instance.setBaseValue(finalValue);
       }
 
       NbtCompound data = getCachedData(player);
-      data.method_10549("currentSpirit", finalValue);
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("currentSpirit", finalValue);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
       setSpiritAttributes(player, data);
    }
 
    public static void setCurrentSanity(PlayerEntity player, float value) {
       float maxSanity = getMaxSanity(player);
       float finalValue = Math.min(value, maxSanity);
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.SANITY);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.SANITY);
       if (instance != null) {
-         instance.method_6192(finalValue);
+         instance.setBaseValue(finalValue);
       }
 
       NbtCompound data = getCachedData(player);
-      data.method_10549("sanity", finalValue);
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("sanity", finalValue);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
       setSpiritAttributes(player, data);
    }
 
    public static void setMaxSpirit(PlayerEntity player, float value) {
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.MAX_SPIRIT);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.MAX_SPIRIT);
       if (instance != null) {
-         instance.method_6192(value);
+         instance.setBaseValue(value);
       }
 
       NbtCompound data = getCachedData(player);
-      data.method_10549("maxSpirit", value);
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("maxSpirit", value);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
       float current = getCurrentSpirit(player);
       if (current > value) {
          setCurrentSpirit(player, value);
@@ -726,29 +714,29 @@ public class PlayerEvents {
    }
 
    public static NbtCompound getSpiritAttributes(PlayerEntity player) {
-      return getCachedData(player).method_10553();
+      return getCachedData(player).copy();
    }
 
    public static void setSpiritAttributes(PlayerEntity player, NbtCompound data) {
-      PLAYER_DATA_CACHE.put(player.method_5667(), data.method_10553());
+      PLAYER_DATA_CACHE.put(player.getUuid(), data.copy());
       if (player instanceof ServerPlayerEntity serverPlayer) {
          sendSpiritDataToClient(serverPlayer);
       }
 
       saveDataToPlayer(player, data);
-      LOGGER.debug("玩家 {} 的灵异属性已更新到缓存并同步到客户端", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 的灵异属性已更新到缓存并同步到客户端", player.getName().getString());
    }
 
    private static void sendSpiritDataToClient(ServerPlayerEntity player) {
-      NbtCompound data = PLAYER_DATA_CACHE.get(player.method_5667());
+      NbtCompound data = PLAYER_DATA_CACHE.get(player.getUuid());
       if (data != null) {
          SpiritNetworkHandler.syncSpiritData(player);
       }
    }
 
    public static void initSpiritData(PlayerEntity player) {
-      if (!PLAYER_DATA_CACHE.containsKey(player.method_5667())) {
-         PLAYER_DATA_CACHE.put(player.method_5667(), createDefaultSpiritData());
+      if (!PLAYER_DATA_CACHE.containsKey(player.getUuid())) {
+         PLAYER_DATA_CACHE.put(player.getUuid(), createDefaultSpiritData());
       }
    }
 
@@ -758,25 +746,25 @@ public class PlayerEvents {
 
    public static int getGhostSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (!slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (!slotData.getBoolean("occupied")) {
                return i;
             }
          }
@@ -787,26 +775,26 @@ public class PlayerEvents {
 
    public static int getUnlockedGhostSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            boolean unlocked = slotData.method_10577("unlocked");
-            boolean occupied = slotData.method_10577("occupied");
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            boolean unlocked = slotData.getBoolean("unlocked");
+            boolean occupied = slotData.getBoolean("occupied");
             if (unlocked && !occupied) {
                return i;
             }
@@ -819,42 +807,42 @@ public class PlayerEvents {
    public static void setGhostSlotData(PlayerEntity player, int slotIndex, ItemStack itemStack) {
       if (slotIndex >= 0 && slotIndex < 10) {
          NbtCompound data = getCachedData(player);
-         if (!data.method_10545("GhostSlots")) {
+         if (!data.contains("GhostSlots")) {
             NbtCompound defaultData = createDefaultSpiritData();
 
-            for (String key : defaultData.method_10541()) {
-               if (!data.method_10545(key)) {
-                  data.method_10566(key, defaultData.method_10580(key).method_10707());
+            for (String key : defaultData.getKeys()) {
+               if (!data.contains(key)) {
+                  data.put(key, defaultData.get(key).copy());
                }
             }
 
-            PLAYER_DATA_CACHE.put(player.method_5667(), data);
+            PLAYER_DATA_CACHE.put(player.getUuid(), data);
          }
 
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          String slotKey = "Slot" + slotIndex;
          boolean isUnlocked = true;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound existingSlotData = ghostSlots.method_10562(slotKey);
-            isUnlocked = existingSlotData.method_10577("unlocked");
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound existingSlotData = ghostSlots.getCompound(slotKey);
+            isUnlocked = existingSlotData.getBoolean("unlocked");
          } else {
             isUnlocked = slotIndex != 0 && slotIndex != 3 && slotIndex < 6;
          }
 
          if (isUnlocked) {
             NbtCompound slotData = new NbtCompound();
-            slotData.method_10556("occupied", true);
-            slotData.method_10566("item", itemStack.method_7953(new NbtCompound()));
+            slotData.putBoolean("occupied", true);
+            slotData.put("item", itemStack.writeNbt(new NbtCompound()));
             int appliedLevel = 1;
             int appliedRevivalDegree = 0;
-            NbtCompound itemNbt = itemStack.method_7969();
+            NbtCompound itemNbt = itemStack.getNbt();
             if (itemNbt != null) {
-               if (itemNbt.method_10545("StoredLevel")) {
-                  appliedLevel = itemNbt.method_10550("StoredLevel");
+               if (itemNbt.contains("StoredLevel")) {
+                  appliedLevel = itemNbt.getInt("StoredLevel");
                }
 
-               if (itemNbt.method_10545("StoredRevivalDegree")) {
-                  appliedRevivalDegree = itemNbt.method_10550("StoredRevivalDegree");
+               if (itemNbt.contains("StoredRevivalDegree")) {
+                  appliedRevivalDegree = itemNbt.getInt("StoredRevivalDegree");
                }
             }
 
@@ -862,14 +850,14 @@ public class PlayerEvents {
                appliedLevel = Math.max(appliedLevel, 10);
             }
 
-            slotData.method_10569("level", appliedLevel);
-            slotData.method_10569("revivalDegree", appliedRevivalDegree);
-            slotData.method_10569("requiredRevivalDegree", 1000);
-            slotData.method_10556("unlocked", isUnlocked);
-            slotData.method_10556("slotDeadlocked", false);
-            ghostSlots.method_10566(slotKey, slotData);
-            data.method_10566("GhostSlots", ghostSlots);
-            if (itemStack.method_7909() instanceof BaseGhostEyeItem ghostEyeItem) {
+            slotData.putInt("level", appliedLevel);
+            slotData.putInt("revivalDegree", appliedRevivalDegree);
+            slotData.putInt("requiredRevivalDegree", 1000);
+            slotData.putBoolean("unlocked", isUnlocked);
+            slotData.putBoolean("slotDeadlocked", false);
+            ghostSlots.put(slotKey, slotData);
+            data.put("GhostSlots", ghostSlots);
+            if (itemStack.getItem() instanceof BaseGhostEyeItem ghostEyeItem) {
                float levelBonusMultiplier;
                if (appliedLevel < 10) {
                   levelBonusMultiplier = 0.5F + (appliedLevel - 1) * 0.05F;
@@ -894,49 +882,49 @@ public class PlayerEvents {
 
    public static ItemStack getGhostSlotItem(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-            return ItemStack.method_7915(slotData.method_10562("item"));
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+            return ItemStack.fromNbt(slotData.getCompound("item"));
          }
       }
 
-      return ItemStack.field_8037;
+      return ItemStack.EMPTY;
    }
 
    public static boolean isGhostSlotOccupied(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         return slotData.method_10577("occupied");
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         return slotData.getBoolean("occupied");
       } else {
          return false;
       }
@@ -944,24 +932,24 @@ public class PlayerEvents {
 
    public static String getGhostTypeInSlot(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-            ItemStack itemStack = ItemStack.method_7915(slotData.method_10562("item"));
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+            ItemStack itemStack = ItemStack.fromNbt(slotData.getCompound("item"));
 
             try {
                TameableItemAPI api = TameableItemAPI.getInstance();
@@ -973,80 +961,80 @@ public class PlayerEvents {
                LOGGER.warn("使用TameableItemAPI获取鬼类型失败，将回退到硬编码检查: {}", e.getMessage());
             }
 
-            if (itemStack.method_7909() == ModItems.GHOST_FIRE) {
+            if (itemStack.getItem() == ModItems.GHOST_FIRE) {
                return "ghost_fire";
             }
 
-            if (itemStack.method_7909() == ModItems.FOG_GHOST) {
+            if (itemStack.getItem() == ModItems.FOG_GHOST) {
                return "fog_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.BLOCK_GHOST) {
+            if (itemStack.getItem() == ModItems.BLOCK_GHOST) {
                return "block_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.FOOD_GHOST) {
+            if (itemStack.getItem() == ModItems.FOOD_GHOST) {
                return "food_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.QIAOMEN_GHOST) {
+            if (itemStack.getItem() == ModItems.QIAOMEN_GHOST) {
                return "qiaomen_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.VILLAGER_GHOST) {
+            if (itemStack.getItem() == ModItems.VILLAGER_GHOST) {
                return "villager_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.SILENT_GHOST_EYE) {
+            if (itemStack.getItem() == ModItems.SILENT_GHOST_EYE) {
                return "silent_ghost_eye";
             }
 
-            if (itemStack.method_7909() == ModItems.TAITOU_GHOST) {
+            if (itemStack.getItem() == ModItems.TAITOU_GHOST) {
                return "taitou_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.DITOU_GHOST) {
+            if (itemStack.getItem() == ModItems.DITOU_GHOST) {
                return "ditou_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.BOX_GHOST) {
+            if (itemStack.getItem() == ModItems.BOX_GHOST) {
                return "box_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.JUMP_GHOST) {
+            if (itemStack.getItem() == ModItems.JUMP_GHOST) {
                return "jump_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.UNTOUCHABLE_GHOST) {
+            if (itemStack.getItem() == ModItems.UNTOUCHABLE_GHOST) {
                return "untouchable_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.DEATH_SIGHT_GHOST) {
+            if (itemStack.getItem() == ModItems.DEATH_SIGHT_GHOST) {
                return "death_sight_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.GHOST_MERCHANT) {
+            if (itemStack.getItem() == ModItems.GHOST_MERCHANT) {
                return "ghost_merchant";
             }
 
-            if (itemStack.method_7909() == ModItems.LOST_GHOST) {
+            if (itemStack.getItem() == ModItems.LOST_GHOST) {
                return "lost_ghost";
             }
 
-            if (itemStack.method_7909() == ModItems.GHOST_FIST) {
+            if (itemStack.getItem() == ModItems.GHOST_FIST) {
                return "ghost_fist";
             }
 
-            if (itemStack.method_7909() == ModItems.GHOST_BLOOD) {
+            if (itemStack.getItem() == ModItems.GHOST_BLOOD) {
                return "ghost_blood";
             }
 
-            if (itemStack.method_7909() == ModItems.GIANT_SHADOW_GHOST) {
+            if (itemStack.getItem() == ModItems.GIANT_SHADOW_GHOST) {
                return "giant_shadow_ghost";
             }
 
-            if (itemStack.method_7909() instanceof BaseGhostEyeItem) {
-               return itemStack.method_7909().toString().toLowerCase();
+            if (itemStack.getItem() instanceof BaseGhostEyeItem) {
+               return itemStack.getItem().toString().toLowerCase();
             }
          }
       }
@@ -1097,10 +1085,10 @@ public class PlayerEvents {
       } else {
          try {
             NbtCompound data = getCachedData(player);
-            if (data != null && data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
-               if (ghostSlots.method_10545("Slot6")) {
-                  return ghostSlots.method_10562("Slot6").method_10577("unlocked");
+            if (data != null && data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
+               if (ghostSlots.contains("Slot6")) {
+                  return ghostSlots.getCompound("Slot6").getBoolean("unlocked");
                }
             }
          } catch (Exception var3) {
@@ -1111,24 +1099,24 @@ public class PlayerEvents {
    }
 
    private static void handleGiantShadowGhostSneakEffect(PlayerEntity player) {
-      player.method_6092(new StatusEffectInstance(StatusEffects.field_5904, 20, 55, false, false));
-      player.method_6092(new StatusEffectInstance(StatusEffects.field_5905, 20, 0, false, false));
+      player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 20, 55, false, false));
+      player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 20, 0, false, false));
       if (player instanceof ServerPlayerEntity serverPlayer) {
          GiantShadowGhostScaleS2CPacket.sendToClient(serverPlayer);
       }
    }
 
    private static void formDefenseFormationOnSneak(PlayerEntity player) {
-      List<PlayerGhostEntity> nearbyPlayerGhosts = player.method_37908()
-         .method_8390(
+      List<PlayerGhostEntity> nearbyPlayerGhosts = player.getWorld()
+         .getEntitiesByClass(
             PlayerGhostEntity.class,
-            player.method_5829().method_1014(20.0),
+            player.getBoundingBox().expand(20.0),
             ghostx -> ghostx instanceof PlayerGhostEntity
-               && ghostx.method_5805()
+               && ghostx.isAlive()
                && !ghostx.isDeadlocked()
                && ghostx.isServantMode()
                && ghostx.getMasterUuid() != null
-               && ghostx.getMasterUuid().equals(player.method_5667())
+               && ghostx.getMasterUuid().equals(player.getUuid())
          );
       List<GhostEntity> playerGhosts = new ArrayList<>();
 
@@ -1144,7 +1132,7 @@ public class PlayerEvents {
    private static void formDefenseFormation(PlayerEntity player, List<GhostEntity> ghosts) {
       int ghostCount = ghosts.size();
       double radius = 1.0;
-      double playerYaw = player.method_36454() * Math.PI / 180.0;
+      double playerYaw = player.getYaw() * Math.PI / 180.0;
 
       for (int i = 0; i < ghostCount; i++) {
          double angle;
@@ -1160,33 +1148,33 @@ public class PlayerEvents {
             angle = playerYaw + (Math.PI * 2) * i / ghostCount;
          }
 
-         double x = player.method_23317() + radius * Math.cos(angle);
-         double z = player.method_23321() + radius * Math.sin(angle);
-         double y = player.method_23318();
+         double x = player.getX() + radius * Math.cos(angle);
+         double z = player.getZ() + radius * Math.sin(angle);
+         double y = player.getY();
          GhostEntity ghost = ghosts.get(i);
-         ghost.method_20620(x, y, z);
+         ghost.teleport(x, y, z);
       }
    }
 
    public static int getGhostSlotLevel(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         return slotData.method_10550("level");
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         return slotData.getInt("level");
       } else {
          return 1;
       }
@@ -1194,23 +1182,23 @@ public class PlayerEvents {
 
    public static int getGhostSlotRevivalDegree(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         return slotData.method_10550("revivalDegree");
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         return slotData.getInt("revivalDegree");
       } else {
          return 0;
       }
@@ -1218,23 +1206,23 @@ public class PlayerEvents {
 
    public static int getGhostSlotRequiredRevivalDegree(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
-         return slotData.method_10550("requiredRevivalDegree");
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
+         return slotData.getInt("requiredRevivalDegree");
       } else {
          return 1000;
       }
@@ -1242,14 +1230,14 @@ public class PlayerEvents {
 
    public static boolean isSlotDeadlocked(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          return false;
       } else {
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          String slotKey = "Slot" + slotIndex;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            return slotData.method_10577("slotDeadlocked");
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            return slotData.getBoolean("slotDeadlocked");
          } else {
             return false;
          }
@@ -1258,14 +1246,14 @@ public class PlayerEvents {
 
    public static void setSlotDeadlocked(PlayerEntity player, int slotIndex, boolean deadlocked) {
       NbtCompound data = getCachedData(player);
-      if (data.method_10545("GhostSlots")) {
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      if (data.contains("GhostSlots")) {
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          String slotKey = "Slot" + slotIndex;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            slotData.method_10556("slotDeadlocked", deadlocked);
-            ghostSlots.method_10566(slotKey, slotData);
-            data.method_10566("GhostSlots", ghostSlots);
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            slotData.putBoolean("slotDeadlocked", deadlocked);
+            ghostSlots.put(slotKey, slotData);
+            data.put("GhostSlots", ghostSlots);
             setSpiritAttributes(player, data);
          }
       }
@@ -1273,46 +1261,46 @@ public class PlayerEvents {
 
    public static NbtCompound getGhostSlots(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (!slotData.method_10545("unlocked")) {
-               slotData.method_10556("unlocked", i != 0 && i != 3 && i < 6);
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (!slotData.contains("unlocked")) {
+               slotData.putBoolean("unlocked", i != 0 && i != 3 && i < 6);
             }
 
-            if (!slotData.method_10545("slotDeadlocked")) {
-               slotData.method_10556("slotDeadlocked", false);
+            if (!slotData.contains("slotDeadlocked")) {
+               slotData.putBoolean("slotDeadlocked", false);
             }
          } else {
             NbtCompound slotData = new NbtCompound();
-            slotData.method_10556("occupied", false);
-            slotData.method_10566("item", ItemStack.field_8037.method_7953(new NbtCompound()));
-            slotData.method_10569("level", 1);
-            slotData.method_10569("revivalDegree", 0);
-            slotData.method_10569("requiredRevivalDegree", 1000);
-            slotData.method_10556("unlocked", i != 0 && i != 3 && i < 6);
-            slotData.method_10556("slotDeadlocked", false);
-            ghostSlots.method_10566(slotKey, slotData);
+            slotData.putBoolean("occupied", false);
+            slotData.put("item", ItemStack.EMPTY.writeNbt(new NbtCompound()));
+            slotData.putInt("level", 1);
+            slotData.putInt("revivalDegree", 0);
+            slotData.putInt("requiredRevivalDegree", 1000);
+            slotData.putBoolean("unlocked", i != 0 && i != 3 && i < 6);
+            slotData.putBoolean("slotDeadlocked", false);
+            ghostSlots.put(slotKey, slotData);
          }
       }
 
-      data.method_10566("GhostSlots", ghostSlots);
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.put("GhostSlots", ghostSlots);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
       return ghostSlots;
    }
 
@@ -1321,9 +1309,9 @@ public class PlayerEvents {
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (!slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (!slotData.getBoolean("occupied")) {
                return i;
             }
          }
@@ -1335,40 +1323,40 @@ public class PlayerEvents {
    public static boolean addTamedGhostToSlot(PlayerEntity player, NbtCompound ghostData, int slotIndex) {
       if (slotIndex >= 0 && slotIndex < 10) {
          NbtCompound data = getCachedData(player);
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          String slotKey = "Slot" + slotIndex;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                return false;
             }
          }
 
-         ItemStack tamedGhostStack = new ItemStack(Items.field_8407);
+         ItemStack tamedGhostStack = new ItemStack(Items.PAPER);
          NbtCompound itemNbt = new NbtCompound();
-         itemNbt.method_10566("TamedGhost", ghostData.method_10553());
-         tamedGhostStack.method_7980(itemNbt);
-         if (ghostData.method_10545("CustomName")) {
-            tamedGhostStack.method_7977(Serializer.method_10877(ghostData.method_10558("CustomName")));
+         itemNbt.put("TamedGhost", ghostData.copy());
+         tamedGhostStack.setNbt(itemNbt);
+         if (ghostData.contains("CustomName")) {
+            tamedGhostStack.setCustomName(Serializer.fromJson(ghostData.getString("CustomName")));
          } else {
-            tamedGhostStack.method_7977(Text.method_43471("item.smfs.tamed_ghost"));
+            tamedGhostStack.setCustomName(Text.translatable("item.smfs.tamed_ghost"));
          }
 
          NbtCompound slotData = new NbtCompound();
-         slotData.method_10556("occupied", true);
-         slotData.method_10566("item", tamedGhostStack.method_7953(new NbtCompound()));
+         slotData.putBoolean("occupied", true);
+         slotData.put("item", tamedGhostStack.writeNbt(new NbtCompound()));
          int initialLevel = isGhostChildFused(player) ? 10 : 1;
-         slotData.method_10569("level", initialLevel);
-         slotData.method_10569("revivalDegree", 0);
-         slotData.method_10569("requiredRevivalDegree", 1000);
-         if (ghostData.method_10545("Type")) {
-            slotData.method_10582("ghostType", ghostData.method_10558("Type"));
+         slotData.putInt("level", initialLevel);
+         slotData.putInt("revivalDegree", 0);
+         slotData.putInt("requiredRevivalDegree", 1000);
+         if (ghostData.contains("Type")) {
+            slotData.putString("ghostType", ghostData.getString("Type"));
          }
 
-         ghostSlots.method_10566(slotKey, slotData);
-         data.method_10566("GhostSlots", ghostSlots);
+         ghostSlots.put(slotKey, slotData);
+         data.put("GhostSlots", ghostSlots);
          setSpiritAttributes(player, data);
-         LOGGER.info("玩家 {} 成功驾驭厉鬼到槽位 {}", player.method_5477().getString(), slotIndex + 1);
+         LOGGER.info("玩家 {} 成功驾驭厉鬼到槽位 {}", player.getName().getString(), slotIndex + 1);
          if (countOccupiedGhostSlots(player) == 1) {
             MainGhostManager.setMainGhostSlot(player, slotIndex);
          }
@@ -1381,20 +1369,20 @@ public class PlayerEvents {
    }
 
    public static void showGhostAbilityPopup(PlayerEntity player, NbtCompound ghostData) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          try {
             if (ghostData == null) {
                System.err.println("[SMFS] showGhostAbilityPopup: ghostData is null");
                return;
             }
 
-            if (!ghostData.method_10545("Type")) {
+            if (!ghostData.contains("Type")) {
                System.err.println("[SMFS] showGhostAbilityPopup: ghostData missing 'Type' field");
                return;
             }
 
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.method_10794(ghostData);
+            buf.writeNbt(ghostData);
             ServerPlayNetworking.send((ServerPlayerEntity)player, GhostAbilityPopupS2CPacket.ID, buf);
          } catch (Exception e) {
             System.err.println("[SMFS] showGhostAbilityPopup: Error sending packet: " + e.getMessage());
@@ -1409,27 +1397,27 @@ public class PlayerEvents {
 
    public static int findEquippedItemSlot(PlayerEntity player, Class<? extends Item> itemClass) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (itemClass.isInstance(item.method_7909())) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (itemClass.isInstance(item.getItem())) {
                   return i;
                }
             }
@@ -1441,27 +1429,27 @@ public class PlayerEvents {
 
    public static int findEquippedGhostFireSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.GHOST_FIRE) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.GHOST_FIRE) {
                   return i;
                }
             }
@@ -1473,27 +1461,27 @@ public class PlayerEvents {
 
    public static int findEquippedThickFogSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.FOG_GHOST) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.FOG_GHOST) {
                   return i;
                }
             }
@@ -1505,27 +1493,27 @@ public class PlayerEvents {
 
    public static int findEquippedBlockGhostSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.BLOCK_GHOST) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.BLOCK_GHOST) {
                   return i;
                }
             }
@@ -1537,27 +1525,27 @@ public class PlayerEvents {
 
    public static int findEquippedFoodGhostSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.FOOD_GHOST) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.FOOD_GHOST) {
                   return i;
                }
             }
@@ -1569,27 +1557,27 @@ public class PlayerEvents {
 
    public static int findEquippedQiaomenGhostSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.QIAOMEN_GHOST) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.QIAOMEN_GHOST) {
                   return i;
                }
             }
@@ -1601,27 +1589,27 @@ public class PlayerEvents {
 
    public static int findEquippedVillagerGhostSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.VILLAGER_GHOST) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.VILLAGER_GHOST) {
                   return i;
                }
             }
@@ -1633,27 +1621,27 @@ public class PlayerEvents {
 
    public static int findEquippedGhostWindSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.GHOST_WIND) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.GHOST_WIND) {
                   return i;
                }
             }
@@ -1665,27 +1653,27 @@ public class PlayerEvents {
 
    public static int findEquippedGhostOfficerSlot(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
-               ItemStack item = ItemStack.method_7915(slotData.method_10562("item"));
-               if (item.method_7909() == ModItems.GHOST_OFFICER) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
+               ItemStack item = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (item.getItem() == ModItems.GHOST_OFFICER) {
                   return i;
                }
             }
@@ -1701,17 +1689,17 @@ public class PlayerEvents {
 
    public static void increaseRevivalDegreeDaily(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (data.method_10545("GhostSlots")) {
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      if (data.contains("GhostSlots")) {
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          boolean anyIncreased = false;
 
          for (int i = 0; i < 10; i++) {
             String slotKey = "Slot" + i;
-            if (ghostSlots.method_10545(slotKey)) {
-               NbtCompound slotData = ghostSlots.method_10562(slotKey);
-               if (slotData.method_10577("occupied")) {
-                  int currentDegree = slotData.method_10550("revivalDegree");
-                  int requiredDegree = slotData.method_10550("requiredRevivalDegree");
+            if (ghostSlots.contains(slotKey)) {
+               NbtCompound slotData = ghostSlots.getCompound(slotKey);
+               if (slotData.getBoolean("occupied")) {
+                  int currentDegree = slotData.getInt("revivalDegree");
+                  int requiredDegree = slotData.getInt("requiredRevivalDegree");
                   if (requiredDegree != 1000) {
                      updateGhostSlotValue(player, i, "requiredRevivalDegree", 1000);
                      requiredDegree = 1000;
@@ -1726,8 +1714,8 @@ public class PlayerEvents {
          }
 
          if (anyIncreased) {
-            player.method_7353(Text.method_43471("message.smfs.revival_increase_daily"), true);
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5916, 60, 0, false, true));
+            player.sendMessage(Text.translatable("message.smfs.revival_increase_daily"), true);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0, false, true));
             if (player instanceof ServerPlayerEntity serverPlayer) {
                ScreenEffectS2CPacket.sendTextHallucination(serverPlayer);
             }
@@ -1739,46 +1727,46 @@ public class PlayerEvents {
 
    public static void updateGhostSlotValue(PlayerEntity player, int slotIndex, String valueKey, int newValue) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
       String slotKey = "Slot" + slotIndex;
-      if (ghostSlots.method_10545(slotKey)) {
-         NbtCompound slotData = ghostSlots.method_10562(slotKey);
+      if (ghostSlots.contains(slotKey)) {
+         NbtCompound slotData = ghostSlots.getCompound(slotKey);
          if ("revivalDegree".equals(valueKey)) {
-            int currentDegree = slotData.method_10550("revivalDegree");
-            int currentLevel = slotData.method_10550("level");
-            slotData.method_10569(valueKey, newValue);
-            int requiredDegree = slotData.method_10550("requiredRevivalDegree");
+            int currentDegree = slotData.getInt("revivalDegree");
+            int currentLevel = slotData.getInt("level");
+            slotData.putInt(valueKey, newValue);
+            int requiredDegree = slotData.getInt("requiredRevivalDegree");
             int newRevivalLevel = Math.min((int)Math.floor((double)newValue / requiredDegree * 10.0) + 1, 10);
             if (newRevivalLevel > currentLevel) {
-               slotData.method_10569("level", newRevivalLevel);
+               slotData.putInt("level", newRevivalLevel);
                recalculateSpiritAttributesForSlot(player, slotIndex, currentLevel, newRevivalLevel);
             }
          } else {
-            slotData.method_10569(valueKey, newValue);
+            slotData.putInt(valueKey, newValue);
          }
 
-         ghostSlots.method_10566(slotKey, slotData);
-         data.method_10566("GhostSlots", ghostSlots);
+         ghostSlots.put(slotKey, slotData);
+         data.put("GhostSlots", ghostSlots);
          setSpiritAttributes(player, data);
       }
    }
 
    public static void updateRevivalDegreeInGhostDomain(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          int targetSlotIndex = -1;
-         if (player.method_6059(ModEffects.RED_GHOST_DOMAIN)) {
+         if (player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN)) {
             targetSlotIndex = findEquippedGhostEyeSlot(player);
             if (targetSlotIndex != -1) {
                int currentDegree = getGhostSlotRevivalDegree(player, targetSlotIndex);
@@ -1788,7 +1776,7 @@ public class PlayerEvents {
             }
          }
 
-         if (player.method_6059(ModEffects.GREEN_GHOST_DOMAIN)) {
+         if (player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN)) {
             targetSlotIndex = findEquippedGhostFireSlot(player);
             if (targetSlotIndex != -1) {
                int currentDegree = getGhostSlotRevivalDegree(player, targetSlotIndex);
@@ -1798,12 +1786,12 @@ public class PlayerEvents {
             }
          }
 
-         if (player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN)) {
+         if (player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN)) {
             GoldenGhostDomainEffect.updateRevivalDegreeInGhostDomain(player);
             return;
          }
 
-         if (player.method_6059(ModEffects.THICK_FOG)) {
+         if (player.hasStatusEffect(ModEffects.THICK_FOG)) {
             targetSlotIndex = findEquippedThickFogSlot(player);
             if (targetSlotIndex != -1) {
                int currentDegree = getGhostSlotRevivalDegree(player, targetSlotIndex);
@@ -1813,7 +1801,7 @@ public class PlayerEvents {
             }
          }
 
-         if (player.method_6059(ModEffects.BLACK_GHOST_DOMAIN)) {
+         if (player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN)) {
             if (MainGhostManager.isMainGhostType(player, BlockGhostItem.class)) {
                targetSlotIndex = findEquippedBlockGhostSlot(player);
             } else if (MainGhostManager.isMainGhostType(player, FoodGhostItem.class)) {
@@ -1851,7 +1839,7 @@ public class PlayerEvents {
             }
          }
 
-         if (player.method_6059(ModEffects.CYAN_GHOST_DOMAIN)) {
+         if (player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN)) {
             targetSlotIndex = findEquippedGhostWindSlot(player);
             if (targetSlotIndex != -1) {
                int currentDegree = getGhostSlotRevivalDegree(player, targetSlotIndex);
@@ -1861,7 +1849,7 @@ public class PlayerEvents {
             }
          }
 
-         if (player.method_6059(ModEffects.GRAY_GHOST_DOMAIN)) {
+         if (player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN)) {
             targetSlotIndex = findEquippedGhostSmokeSlot(player);
             if (targetSlotIndex != -1) {
                int currentDegree = getGhostSlotRevivalDegree(player, targetSlotIndex);
@@ -1889,14 +1877,14 @@ public class PlayerEvents {
 
    public static void recalculateSpiritAttributesForSlot(PlayerEntity player, int slotIndex, int oldLevel, int newLevel) {
       NbtCompound data = getCachedData(player);
-      if (data.method_10545("GhostSlots")) {
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      if (data.contains("GhostSlots")) {
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          String slotKey = "Slot" + slotIndex;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-               ItemStack itemStack = ItemStack.method_7915(slotData.method_10562("item"));
-               if (itemStack.method_7909() instanceof BaseGhostEyeItem ghostEyeItem) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+               ItemStack itemStack = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (itemStack.getItem() instanceof BaseGhostEyeItem ghostEyeItem) {
                   float oldLevelBonusMultiplier;
                   if (oldLevel < 10) {
                      oldLevelBonusMultiplier = 0.5F + (oldLevel - 1) * 0.05F;
@@ -1934,7 +1922,7 @@ public class PlayerEvents {
                      float newMaxSanity = getMaxSanity(player);
                      LOGGER.debug(
                         "玩家 {} 的槽位 {} 等级从 {} 提升至 {}，属性加成比例从 {}% 更新为: {}%",
-                        player.method_5477().getString(),
+                        player.getName().getString(),
                         slotIndex + 1,
                         oldLevel,
                         newLevel,
@@ -1952,16 +1940,16 @@ public class PlayerEvents {
 
    public static void clearGhostSlot(PlayerEntity player, int slotIndex) {
       NbtCompound data = getCachedData(player);
-      if (data.method_10545("GhostSlots")) {
-         NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      if (data.contains("GhostSlots")) {
+         NbtCompound ghostSlots = data.getCompound("GhostSlots");
          String slotKey = "Slot" + slotIndex;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-               ItemStack itemStack = ItemStack.method_7915(slotData.method_10562("item"));
-               if (itemStack.method_7909() instanceof BaseGhostEyeItem) {
-                  BaseGhostEyeItem ghostEyeItem = (BaseGhostEyeItem)itemStack.method_7909();
-                  int currentLevel = slotData.method_10550("level");
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+               ItemStack itemStack = ItemStack.fromNbt(slotData.getCompound("item"));
+               if (itemStack.getItem() instanceof BaseGhostEyeItem) {
+                  BaseGhostEyeItem ghostEyeItem = (BaseGhostEyeItem)itemStack.getItem();
+                  int currentLevel = slotData.getInt("level");
                   float levelBonusMultiplier;
                   if (currentLevel < 10) {
                      levelBonusMultiplier = 0.5F + (currentLevel - 1) * 0.05F;
@@ -1989,15 +1977,15 @@ public class PlayerEvents {
             }
 
             NbtCompound emptySlot = new NbtCompound();
-            emptySlot.method_10556("occupied", false);
-            emptySlot.method_10566("item", new NbtCompound());
-            emptySlot.method_10569("level", 0);
-            emptySlot.method_10569("revivalDegree", 0);
-            emptySlot.method_10569("requiredRevivalDegree", 1000);
-            boolean wasUnlocked = slotData.method_10577("unlocked");
-            emptySlot.method_10556("unlocked", wasUnlocked);
-            ghostSlots.method_10566(slotKey, emptySlot);
-            data.method_10566("GhostSlots", ghostSlots);
+            emptySlot.putBoolean("occupied", false);
+            emptySlot.put("item", new NbtCompound());
+            emptySlot.putInt("level", 0);
+            emptySlot.putInt("revivalDegree", 0);
+            emptySlot.putInt("requiredRevivalDegree", 1000);
+            boolean wasUnlocked = slotData.getBoolean("unlocked");
+            emptySlot.putBoolean("unlocked", wasUnlocked);
+            ghostSlots.put(slotKey, emptySlot);
+            data.put("GhostSlots", ghostSlots);
             setSpiritAttributes(player, data);
          }
       }
@@ -2030,41 +2018,41 @@ public class PlayerEvents {
       setSpiritAttribute(player, SpiritAttributes.TEMP_MAX_SPIRIT, 0.0F);
       setSpiritAttribute(player, SpiritAttributes.TEMP_SANITY, 0.0F);
       NbtCompound data = getCachedData(player);
-      data.method_10549("spiritResistance", 0.0);
-      data.method_10549("spiritDamage", 0.0);
-      data.method_10549("currentSpirit", 0.0);
-      data.method_10549("maxSpirit", 0.0);
-      data.method_10549("revivalFactor", 0.0);
-      data.method_10549("sanity", 100.0);
-      data.method_10549("maxSanity", 100.0);
-      data.method_10549("tempSpiritResistance", 0.0);
-      data.method_10549("tempSpiritResistanceMultiplier", 1.0);
-      data.method_10549("tempSpiritDamage", 0.0);
-      data.method_10549("tempSpiritDamageMultiplier", 1.0);
-      data.method_10549("tempMaxSpirit", 0.0);
-      data.method_10549("tempSanity", 0.0);
+      data.putDouble("spiritResistance", 0.0);
+      data.putDouble("spiritDamage", 0.0);
+      data.putDouble("currentSpirit", 0.0);
+      data.putDouble("maxSpirit", 0.0);
+      data.putDouble("revivalFactor", 0.0);
+      data.putDouble("sanity", 100.0);
+      data.putDouble("maxSanity", 100.0);
+      data.putDouble("tempSpiritResistance", 0.0);
+      data.putDouble("tempSpiritResistanceMultiplier", 1.0);
+      data.putDouble("tempSpiritDamage", 0.0);
+      data.putDouble("tempSpiritDamageMultiplier", 1.0);
+      data.putDouble("tempMaxSpirit", 0.0);
+      data.putDouble("tempSanity", 0.0);
       setSpiritAttributes(player, data);
-      LOGGER.info("玩家 {} 的所有灵异属性已清空", player.method_5477().getString());
+      LOGGER.info("玩家 {} 的所有灵异属性已清空", player.getName().getString());
    }
 
    public static void recalculateAllSpiritAttributesFromSlots(PlayerEntity player) {
       NbtCompound cachedData = getCachedData(player);
-      double cachedMaxSpirit = cachedData.method_10545("maxSpirit") ? cachedData.method_10574("maxSpirit") : 0.0;
-      double cachedCurrentSpirit = cachedData.method_10545("currentSpirit") ? cachedData.method_10574("currentSpirit") : 0.0;
+      double cachedMaxSpirit = cachedData.contains("maxSpirit") ? cachedData.getDouble("maxSpirit") : 0.0;
+      double cachedCurrentSpirit = cachedData.contains("currentSpirit") ? cachedData.getDouble("currentSpirit") : 0.0;
       if (cachedMaxSpirit > 0.0 && cachedCurrentSpirit == 0.0) {
          clearSpiritAttributes(player);
          NbtCompound data = getCachedData(player);
-         if (data.method_10545("GhostSlots")) {
-            NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         if (data.contains("GhostSlots")) {
+            NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
             for (int i = 0; i < 10; i++) {
                String slotKey = "Slot" + i;
-               if (ghostSlots.method_10545(slotKey)) {
-                  NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                  if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-                     ItemStack itemStack = ItemStack.method_7915(slotData.method_10562("item"));
-                     if (itemStack.method_7909() instanceof BaseGhostEyeItem ghostEyeItem) {
-                        int level = slotData.method_10550("level");
+               if (ghostSlots.contains(slotKey)) {
+                  NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                  if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+                     ItemStack itemStack = ItemStack.fromNbt(slotData.getCompound("item"));
+                     if (itemStack.getItem() instanceof BaseGhostEyeItem ghostEyeItem) {
+                        int level = slotData.getInt("level");
                         float levelBonusMultiplier;
                         if (level < 10) {
                            levelBonusMultiplier = 0.5F + (level - 1) * 0.05F;
@@ -2094,10 +2082,10 @@ public class PlayerEvents {
       }
 
       NbtCompound spiritAttributes = getSpiritAttributes(player);
-      float spiritResistance = spiritAttributes.method_10545("spiritResistance") ? (float)spiritAttributes.method_10574("spiritResistance") : 0.0F;
-      float tempSpiritResistance = spiritAttributes.method_10545("tempSpiritResistance") ? (float)spiritAttributes.method_10574("tempSpiritResistance") : 0.0F;
-      float tempSpiritResistanceMultiplier = spiritAttributes.method_10545("tempSpiritResistanceMultiplier")
-         ? (float)spiritAttributes.method_10574("tempSpiritResistanceMultiplier")
+      float spiritResistance = spiritAttributes.contains("spiritResistance") ? (float)spiritAttributes.getDouble("spiritResistance") : 0.0F;
+      float tempSpiritResistance = spiritAttributes.contains("tempSpiritResistance") ? (float)spiritAttributes.getDouble("tempSpiritResistance") : 0.0F;
+      float tempSpiritResistanceMultiplier = spiritAttributes.contains("tempSpiritResistanceMultiplier")
+         ? (float)spiritAttributes.getDouble("tempSpiritResistanceMultiplier")
          : 1.0F;
       float totalResistance = spiritResistance * tempSpiritResistanceMultiplier + tempSpiritResistance;
       float actualSpiritDamage = calculateSpiritDamage(spiritDamageAmount, totalResistance);
@@ -2108,29 +2096,29 @@ public class PlayerEvents {
             float damageThreshold = maxSpirit * 0.1F;
             if (actualSpiritDamage > damageThreshold) {
                actualSpiritDamage = damageThreshold;
-               if (!player.method_37908().method_8608()) {
-                  LOGGER.debug("玩家 {} 触发高大鬼影被动技能：免疫溢出伤害，最大伤害限制为 {}", player.method_5477().getString(), damageThreshold);
+               if (!player.getWorld().isClient()) {
+                  LOGGER.debug("玩家 {} 触发高大鬼影被动技能：免疫溢出伤害，最大伤害限制为 {}", player.getName().getString(), damageThreshold);
                }
             }
          }
       }
 
-      if (actualSpiritDamage > 0.0F && !player.method_37908().method_8608()) {
+      if (actualSpiritDamage > 0.0F && !player.getWorld().isClient()) {
          spawnSpiritDamageParticles(player);
       }
 
-      if (player.method_5715()) {
+      if (player.isSneaking()) {
          float remainingDamage = actualSpiritDamage;
-         List<PlayerGhostEntity> nearbyPlayerGhosts = player.method_37908()
-            .method_8390(
+         List<PlayerGhostEntity> nearbyPlayerGhosts = player.getWorld()
+            .getEntitiesByClass(
                PlayerGhostEntity.class,
-               player.method_5829().method_1014(20.0),
+               player.getBoundingBox().expand(20.0),
                ghost -> ghost instanceof PlayerGhostEntity
-                  && ghost.method_5805()
+                  && ghost.isAlive()
                   && !ghost.isDeadlocked()
                   && ghost.isServantMode()
                   && ghost.getMasterUuid() != null
-                  && ghost.getMasterUuid().equals(player.method_5667())
+                  && ghost.getMasterUuid().equals(player.getUuid())
             );
          nearbyPlayerGhosts.sort((g1, g2) -> Integer.compare(g1.getSpiritualStrength(), g2.getSpiritualStrength()));
 
@@ -2144,14 +2132,14 @@ public class PlayerEvents {
                int damageToGhost = (int)Math.min(remainingDamage, ghostSpirit);
                ghost.setSpiritualStrength(ghostSpirit - damageToGhost);
                remainingDamage -= damageToGhost;
-               if (damageToGhost > 0 && !player.method_37908().method_8608()) {
+               if (damageToGhost > 0 && !player.getWorld().isClient()) {
                   spawnSpiritDamageParticles(ghost);
                }
             }
          }
 
          if (remainingDamage > 0.0F) {
-            float currentSpirit = spiritAttributes.method_10545("currentSpirit") ? (float)spiritAttributes.method_10574("currentSpirit") : 0.0F;
+            float currentSpirit = spiritAttributes.contains("currentSpirit") ? (float)spiritAttributes.getDouble("currentSpirit") : 0.0F;
             if (currentSpirit > 0.0F) {
                float finalRemainingDamage = Math.max(0.0F, remainingDamage - currentSpirit);
                setCurrentSpirit(player, Math.max(0.0F, currentSpirit - remainingDamage));
@@ -2175,7 +2163,7 @@ public class PlayerEvents {
             }
          }
       } else {
-         float currentSpirit = spiritAttributes.method_10545("currentSpirit") ? (float)spiritAttributes.method_10574("currentSpirit") : 0.0F;
+         float currentSpirit = spiritAttributes.contains("currentSpirit") ? (float)spiritAttributes.getDouble("currentSpirit") : 0.0F;
          if (currentSpirit > 0.0F) {
             float remainingDamage = Math.max(0.0F, actualSpiritDamage - currentSpirit);
             setCurrentSpirit(player, Math.max(0.0F, currentSpirit - actualSpiritDamage));
@@ -2199,7 +2187,7 @@ public class PlayerEvents {
          }
       }
 
-      if (actualSpiritDamage > 0.0F && !player.method_37908().method_8608()) {
+      if (actualSpiritDamage > 0.0F && !player.getWorld().isClient()) {
          sendSpiritDamagePacketWithDetails(player, baseAmount, actualSpiritDamage);
       }
 
@@ -2207,21 +2195,21 @@ public class PlayerEvents {
    }
 
    private static void applySpiritDamageWithPenetration(PlayerEntity player, DamageSource source, float damageAmount) {
-      if (!(player.method_6032() - damageAmount <= 0.0F) || !ScapegoatGhostItem.handleScapegoatPassiveSkill(player, source, damageAmount)) {
-         float healthBefore = player.method_6032();
-         player.method_5643(source, damageAmount);
-         float actualDamage = healthBefore - player.method_6032();
-         if ((!player.method_7337() || ModConfig.getInstance().penetrateCreativeMode)
-            && (!player.method_7325() || ModConfig.getInstance().penetrateSpectatorMode)) {
+      if (!(player.getHealth() - damageAmount <= 0.0F) || !ScapegoatGhostItem.handleScapegoatPassiveSkill(player, source, damageAmount)) {
+         float healthBefore = player.getHealth();
+         player.damage(source, damageAmount);
+         float actualDamage = healthBefore - player.getHealth();
+         if ((!player.isCreative() || ModConfig.getInstance().penetrateCreativeMode)
+            && (!player.isSpectator() || ModConfig.getInstance().penetrateSpectatorMode)) {
             float penetrationThreshold = (float)ModConfig.getInstance().spiritDamagePenetrationThreshold;
             float threshold = damageAmount * penetrationThreshold;
-            if (actualDamage < threshold && actualDamage >= 0.0F && player.method_5805()) {
+            if (actualDamage < threshold && actualDamage >= 0.0F && player.isAlive()) {
                float missingDamage = damageAmount - actualDamage;
-               if (player.method_6032() - missingDamage <= 0.0F && ScapegoatGhostItem.handleScapegoatPassiveSkill(player, source, missingDamage)) {
+               if (player.getHealth() - missingDamage <= 0.0F && ScapegoatGhostItem.handleScapegoatPassiveSkill(player, source, missingDamage)) {
                   return;
                }
 
-               player.method_6033(Math.max(0.0F, player.method_6032() - missingDamage));
+               player.setHealth(Math.max(0.0F, player.getHealth() - missingDamage));
             }
          }
       }
@@ -2231,8 +2219,8 @@ public class PlayerEvents {
       boolean wearingGhostShroud = false;
 
       for (EquipmentSlot slot : EquipmentSlot.values()) {
-         ItemStack stack = player.method_6118(slot);
-         if (stack.method_7909() instanceof GhostShroudArmorItem) {
+         ItemStack stack = player.getEquippedStack(slot);
+         if (stack.getItem() instanceof GhostShroudArmorItem) {
             wearingGhostShroud = true;
             break;
          }
@@ -2242,7 +2230,7 @@ public class PlayerEvents {
          return false;
       }
 
-      UUID playerUuid = player.method_5667();
+      UUID playerUuid = player.getUuid();
       long currentTime = System.currentTimeMillis();
       Long lastUseTime = GHOST_SHROUD_COOLDOWN.get(playerUuid);
       if (lastUseTime != null && currentTime < lastUseTime) {
@@ -2256,56 +2244,52 @@ public class PlayerEvents {
 
       if (isAberration) {
          GHOST_SHROUD_COOLDOWN.put(playerUuid, currentTime + 5000L);
-         player.method_7353(Text.method_43470("§7鬼寿衣抵御了一次灵异袭击"), true);
-         LOGGER.debug("玩家 {}（异类）触发鬼寿衣效果：直接免疫灵异伤害", player.method_5477().getString());
+         player.sendMessage(Text.literal("§7鬼寿衣抵御了一次灵异袭击"), true);
+         LOGGER.debug("玩家 {}（异类）触发鬼寿衣效果：直接免疫灵异伤害", player.getName().getString());
          return true;
       }
 
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          ModEvents.processingSpiritDamage.set(true);
 
          try {
-            player.method_5643(ModDamageSources.ghostShroud(player.method_37908()), 4.0F);
+            player.damage(ModDamageSources.ghostShroud(player.getWorld()), 4.0F);
          } finally {
             ModEvents.processingSpiritDamage.set(false);
          }
       }
 
-      player.method_7353(Text.method_43470("§7鬼寿衣抵御了一次灵异袭击"), true);
-      LOGGER.debug("玩家 {}（非异类）触发鬼寿衣效果：免疫灵异伤害，扣除4点生命", player.method_5477().getString());
+      player.sendMessage(Text.literal("§7鬼寿衣抵御了一次灵异袭击"), true);
+      LOGGER.debug("玩家 {}（非异类）触发鬼寿衣效果：免疫灵异伤害，扣除4点生命", player.getName().getString());
       return true;
    }
 
    public static void spawnSpiritDamageParticles(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
-         ServerWorld serverWorld = (ServerWorld)player.method_37908();
-         Vec3d pos = player.method_19538();
-         serverWorld.method_43128(null, pos.field_1352, pos.field_1351, pos.field_1350, SoundEvents.field_15115, SoundCategory.field_15248, 1.0F, 1.0F);
+      if (!player.getWorld().isClient()) {
+         ServerWorld serverWorld = (ServerWorld)player.getWorld();
+         Vec3d pos = player.getPos();
+         serverWorld.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_PLAYER_HURT, SoundCategory.PLAYERS, 1.0F, 1.0F);
 
          for (int i = 0; i < 15; i++) {
-            double offsetX = (player.method_6051().method_43058() - 0.5) * 2.0;
-            double offsetY = player.method_6051().method_43058() * 2.0;
-            double offsetZ = (player.method_6051().method_43058() - 0.5) * 2.0;
-            serverWorld.method_14199(
-               ParticleTypes.field_11249, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.0, 0.0, 0.1
-            );
+            double offsetX = (player.getRandom().nextDouble() - 0.5) * 2.0;
+            double offsetY = player.getRandom().nextDouble() * 2.0;
+            double offsetZ = (player.getRandom().nextDouble() - 0.5) * 2.0;
+            serverWorld.spawnParticles(ParticleTypes.WITCH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.0, 0.0, 0.1);
          }
       }
    }
 
    public static void spawnSpiritDamageParticles(GhostEntity ghost) {
-      if (!ghost.method_37908().method_8608()) {
-         ServerWorld serverWorld = (ServerWorld)ghost.method_37908();
-         Vec3d pos = ghost.method_19538();
-         serverWorld.method_43128(null, pos.field_1352, pos.field_1351, pos.field_1350, SoundEvents.field_15088, SoundCategory.field_15251, 1.0F, 1.0F);
+      if (!ghost.getWorld().isClient()) {
+         ServerWorld serverWorld = (ServerWorld)ghost.getWorld();
+         Vec3d pos = ghost.getPos();
+         serverWorld.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_ZOMBIE_HURT, SoundCategory.HOSTILE, 1.0F, 1.0F);
 
          for (int i = 0; i < 15; i++) {
-            double offsetX = (ghost.method_6051().method_43058() - 0.5) * 2.0;
-            double offsetY = ghost.method_6051().method_43058() * 2.0;
-            double offsetZ = (ghost.method_6051().method_43058() - 0.5) * 2.0;
-            serverWorld.method_14199(
-               ParticleTypes.field_11249, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.0, 0.0, 0.1
-            );
+            double offsetX = (ghost.getRandom().nextDouble() - 0.5) * 2.0;
+            double offsetY = ghost.getRandom().nextDouble() * 2.0;
+            double offsetZ = (ghost.getRandom().nextDouble() - 0.5) * 2.0;
+            serverWorld.spawnParticles(ParticleTypes.WITCH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.0, 0.0, 0.1);
          }
       }
    }
@@ -2333,77 +2317,77 @@ public class PlayerEvents {
 
    public static void validateGhostSlots(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          NbtCompound defaultData = createDefaultSpiritData();
 
-         for (String key : defaultData.method_10541()) {
-            if (!data.method_10545(key)) {
-               data.method_10566(key, defaultData.method_10580(key).method_10707());
+         for (String key : defaultData.getKeys()) {
+            if (!data.contains(key)) {
+               data.put(key, defaultData.get(key).copy());
             }
          }
 
-         PLAYER_DATA_CACHE.put(player.method_5667(), data);
+         PLAYER_DATA_CACHE.put(player.getUuid(), data);
       }
 
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (!ghostSlots.method_10545(slotKey)) {
+         if (!ghostSlots.contains(slotKey)) {
             NbtCompound emptySlot = new NbtCompound();
-            emptySlot.method_10556("occupied", false);
-            emptySlot.method_10566("item", new NbtCompound());
-            emptySlot.method_10569("level", 0);
-            emptySlot.method_10569("revivalDegree", 0);
-            emptySlot.method_10569("requiredRevivalDegree", 1000);
-            ghostSlots.method_10566(slotKey, emptySlot);
+            emptySlot.putBoolean("occupied", false);
+            emptySlot.put("item", new NbtCompound());
+            emptySlot.putInt("level", 0);
+            emptySlot.putInt("revivalDegree", 0);
+            emptySlot.putInt("requiredRevivalDegree", 1000);
+            ghostSlots.put(slotKey, emptySlot);
          } else {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (!slotData.method_10545("occupied")) {
-               slotData.method_10556("occupied", false);
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (!slotData.contains("occupied")) {
+               slotData.putBoolean("occupied", false);
             }
 
-            if (!slotData.method_10545("item")) {
-               slotData.method_10566("item", new NbtCompound());
+            if (!slotData.contains("item")) {
+               slotData.put("item", new NbtCompound());
             }
 
-            if (!slotData.method_10545("level")) {
-               slotData.method_10569("level", 0);
+            if (!slotData.contains("level")) {
+               slotData.putInt("level", 0);
             }
 
-            if (!slotData.method_10545("revivalDegree")) {
-               slotData.method_10569("revivalDegree", 0);
+            if (!slotData.contains("revivalDegree")) {
+               slotData.putInt("revivalDegree", 0);
             }
 
-            if (!slotData.method_10545("requiredRevivalDegree")) {
-               slotData.method_10569("requiredRevivalDegree", 1000);
+            if (!slotData.contains("requiredRevivalDegree")) {
+               slotData.putInt("requiredRevivalDegree", 1000);
             }
 
-            ghostSlots.method_10566(slotKey, slotData);
+            ghostSlots.put(slotKey, slotData);
          }
       }
 
-      data.method_10566("GhostSlots", ghostSlots);
-      PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.put("GhostSlots", ghostSlots);
+      PLAYER_DATA_CACHE.put(player.getUuid(), data);
    }
 
    public static void decreaseAllSlotRevivalDegree(PlayerEntity player, int amount) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          NbtCompound data = getCachedData(player);
-         if (data.method_10545("GhostSlots")) {
-            NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         if (data.contains("GhostSlots")) {
+            NbtCompound ghostSlots = data.getCompound("GhostSlots");
             boolean anyDecreased = false;
 
             for (int i = 0; i < 10; i++) {
                String slotKey = "Slot" + i;
-               if (ghostSlots.method_10545(slotKey)) {
-                  NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                  if (slotData.method_10577("occupied")) {
-                     int currentDegree = slotData.method_10550("revivalDegree");
+               if (ghostSlots.contains(slotKey)) {
+                  NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                  if (slotData.getBoolean("occupied")) {
+                     int currentDegree = slotData.getInt("revivalDegree");
                      int newDegree = Math.max(0, currentDegree - amount);
                      if (newDegree != currentDegree) {
-                        slotData.method_10569("revivalDegree", newDegree);
-                        ghostSlots.method_10566(slotKey, slotData);
+                        slotData.putInt("revivalDegree", newDegree);
+                        ghostSlots.put(slotKey, slotData);
                         anyDecreased = true;
                      }
                   }
@@ -2411,7 +2395,7 @@ public class PlayerEvents {
             }
 
             if (anyDecreased) {
-               data.method_10566("GhostSlots", ghostSlots);
+               data.put("GhostSlots", ghostSlots);
                setSpiritAttributes(player, data);
             }
          }
@@ -2428,7 +2412,7 @@ public class PlayerEvents {
    }
 
    public static void balanceRevivalDegree(PlayerEntity player, int increaseAmount, int decreaseAmount) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          if (player instanceof ServerPlayerEntity serverPlayer && AdvancementManager.hasAdvancement(serverPlayer, "smfs:become_aberration")) {
             increaseAmount = Math.max(1, (int)Math.floor(increaseAmount * 0.5));
          }
@@ -2444,50 +2428,50 @@ public class PlayerEvents {
             }
 
             if (firstOccupiedSlot < 0) {
-               LOGGER.debug("玩家 {} 尝试使用平衡复苏机制但没有任何鬼魂", player.method_5477().getString());
+               LOGGER.debug("玩家 {} 尝试使用平衡复苏机制但没有任何鬼魂", player.getName().getString());
                return;
             }
 
             MainGhostManager.setMainGhostSlot(player, firstOccupiedSlot);
-            LOGGER.debug("玩家 {} 没有主鬼，自动设置槽位 {} 为主鬼", player.method_5477().getString(), firstOccupiedSlot);
+            LOGGER.debug("玩家 {} 没有主鬼，自动设置槽位 {} 为主鬼", player.getName().getString(), firstOccupiedSlot);
          }
 
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          NbtCompound data = getCachedData(player);
-         if (data.method_10545("GhostSlots")) {
-            NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         if (data.contains("GhostSlots")) {
+            NbtCompound ghostSlots = data.getCompound("GhostSlots");
             boolean anyChanged = false;
 
             for (int i = 0; i < 10; i++) {
                String slotKey = "Slot" + i;
-               if (ghostSlots.method_10545(slotKey)) {
-                  NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                  if (slotData.method_10577("occupied")) {
-                     int currentDegree = slotData.method_10550("revivalDegree");
-                     int requiredDegree = slotData.method_10550("requiredRevivalDegree");
+               if (ghostSlots.contains(slotKey)) {
+                  NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                  if (slotData.getBoolean("occupied")) {
+                     int currentDegree = slotData.getInt("revivalDegree");
+                     int requiredDegree = slotData.getInt("requiredRevivalDegree");
                      if (i == mainSlot) {
                         int newDegree = Math.min(currentDegree + increaseAmount, requiredDegree);
                         if (newDegree != currentDegree) {
-                           slotData.method_10569("revivalDegree", newDegree);
-                           int currentLevel = slotData.method_10550("level");
+                           slotData.putInt("revivalDegree", newDegree);
+                           int currentLevel = slotData.getInt("level");
                            int newRevivalLevel = (int)Math.floor((double)newDegree / requiredDegree * 10.0) + 1;
                            if (newRevivalLevel > 10) {
                               newRevivalLevel = 10;
                            }
 
                            if (newRevivalLevel > currentLevel) {
-                              slotData.method_10569("level", newRevivalLevel);
+                              slotData.putInt("level", newRevivalLevel);
                               recalculateSpiritAttributesForSlot(player, i, currentLevel, newRevivalLevel);
                            }
 
-                           ghostSlots.method_10566(slotKey, slotData);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      } else {
                         int newDegree = Math.max(0, currentDegree - decreaseAmount);
                         if (newDegree != currentDegree) {
-                           slotData.method_10569("revivalDegree", newDegree);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", newDegree);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      }
@@ -2496,7 +2480,7 @@ public class PlayerEvents {
             }
 
             if (anyChanged) {
-               data.method_10566("GhostSlots", ghostSlots);
+               data.put("GhostSlots", ghostSlots);
                setSpiritAttributes(player, data);
                GhostDomainManager.checkRevivalDegree(player);
             }
@@ -2506,20 +2490,20 @@ public class PlayerEvents {
 
    public static boolean isDeadlockedByTaitouAndDitouGhosts(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          return false;
       }
 
       int taitouCount = 0;
       int ditouCount = 0;
       boolean hasNonDeadlockGhost = false;
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                String ghostType = getGhostTypeInSlot(player, i);
                if (ghostType == null) {
                   hasNonDeadlockGhost = true;
@@ -2549,30 +2533,30 @@ public class PlayerEvents {
    }
 
    public static void enforceDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          boolean isDeadlocked = isDeadlockedByTaitouAndDitouGhosts(player);
          if (isDeadlocked) {
             NbtCompound data = getCachedData(player);
-            if (data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
+            if (data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
                boolean anyChanged = false;
                boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
                for (int i = 0; i < 10; i++) {
                   String slotKey = "Slot" + i;
-                  if (ghostSlots.method_10545(slotKey)) {
-                     NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                     if (slotData.method_10577("occupied")) {
-                        int currentDegree = slotData.method_10550("revivalDegree");
+                  if (ghostSlots.contains(slotKey)) {
+                     NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                     if (slotData.getBoolean("occupied")) {
+                        int currentDegree = slotData.getInt("revivalDegree");
                         if (hardcoreMode) {
                            if (currentDegree != 0) {
-                              slotData.method_10569("revivalDegree", 0);
-                              ghostSlots.method_10566(slotKey, slotData);
+                              slotData.putInt("revivalDegree", 0);
+                              ghostSlots.put(slotKey, slotData);
                               anyChanged = true;
                            }
                         } else if (currentDegree > 900) {
-                           slotData.method_10569("revivalDegree", 900);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", 900);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      }
@@ -2580,7 +2564,7 @@ public class PlayerEvents {
                }
 
                if (anyChanged) {
-                  data.method_10566("GhostSlots", ghostSlots);
+                  data.put("GhostSlots", ghostSlots);
                   setSpiritAttributes(player, data);
                }
             }
@@ -2590,20 +2574,20 @@ public class PlayerEvents {
 
    public static boolean isDeadlockedByBurnAndWaterGhosts(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          return false;
       }
 
       int burnCount = 0;
       int waterCount = 0;
       boolean hasNonDeadlockGhost = false;
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                String ghostType = getGhostTypeInSlot(player, i);
                if (ghostType == null) {
                   hasNonDeadlockGhost = true;
@@ -2633,30 +2617,30 @@ public class PlayerEvents {
    }
 
    public static void enforceBurnWaterDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          boolean isDeadlocked = isDeadlockedByBurnAndWaterGhosts(player);
          if (isDeadlocked) {
             NbtCompound data = getCachedData(player);
-            if (data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
+            if (data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
                boolean anyChanged = false;
                boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
                for (int i = 0; i < 10; i++) {
                   String slotKey = "Slot" + i;
-                  if (ghostSlots.method_10545(slotKey)) {
-                     NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                     if (slotData.method_10577("occupied")) {
-                        int currentDegree = slotData.method_10550("revivalDegree");
+                  if (ghostSlots.contains(slotKey)) {
+                     NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                     if (slotData.getBoolean("occupied")) {
+                        int currentDegree = slotData.getInt("revivalDegree");
                         if (hardcoreMode) {
                            if (currentDegree != 0) {
-                              slotData.method_10569("revivalDegree", 0);
-                              ghostSlots.method_10566(slotKey, slotData);
+                              slotData.putInt("revivalDegree", 0);
+                              ghostSlots.put(slotKey, slotData);
                               anyChanged = true;
                            }
                         } else if (currentDegree > 900) {
-                           slotData.method_10569("revivalDegree", 900);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", 900);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      }
@@ -2664,7 +2648,7 @@ public class PlayerEvents {
                }
 
                if (anyChanged) {
-                  data.method_10566("GhostSlots", ghostSlots);
+                  data.put("GhostSlots", ghostSlots);
                   setSpiritAttributes(player, data);
                }
             }
@@ -2675,7 +2659,7 @@ public class PlayerEvents {
    public static boolean hasGhostBlood(PlayerEntity player) {
       for (int i = 0; i < 10; i++) {
          ItemStack ghostItem = getGhostSlotItem(player, i);
-         if (!ghostItem.method_7960() && ghostItem.method_7909() == ModItems.GHOST_BLOOD) {
+         if (!ghostItem.isEmpty() && ghostItem.getItem() == ModItems.GHOST_BLOOD) {
             return true;
          }
       }
@@ -2684,12 +2668,12 @@ public class PlayerEvents {
    }
 
    public static void enforceGhostBloodDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          boolean hasGhostBlood = hasGhostBlood(player);
          if (hasGhostBlood) {
             NbtCompound data = getCachedData(player);
-            if (data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
+            if (data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
                boolean anyChanged = false;
                boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
@@ -2697,19 +2681,19 @@ public class PlayerEvents {
                   String ghostType = getGhostTypeInSlot(player, i);
                   if (!"ghost_blood".equals(ghostType)) {
                      String slotKey = "Slot" + i;
-                     if (ghostSlots.method_10545(slotKey)) {
-                        NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                        if (slotData.method_10577("occupied")) {
-                           int currentDegree = slotData.method_10550("revivalDegree");
+                     if (ghostSlots.contains(slotKey)) {
+                        NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                        if (slotData.getBoolean("occupied")) {
+                           int currentDegree = slotData.getInt("revivalDegree");
                            if (hardcoreMode) {
                               if (currentDegree != 0) {
-                                 slotData.method_10569("revivalDegree", 0);
-                                 ghostSlots.method_10566(slotKey, slotData);
+                                 slotData.putInt("revivalDegree", 0);
+                                 ghostSlots.put(slotKey, slotData);
                                  anyChanged = true;
                               }
                            } else if (currentDegree > 900) {
-                              slotData.method_10569("revivalDegree", 900);
-                              ghostSlots.method_10566(slotKey, slotData);
+                              slotData.putInt("revivalDegree", 900);
+                              ghostSlots.put(slotKey, slotData);
                               anyChanged = true;
                            }
                         }
@@ -2718,7 +2702,7 @@ public class PlayerEvents {
                }
 
                if (anyChanged) {
-                  data.method_10566("GhostSlots", ghostSlots);
+                  data.put("GhostSlots", ghostSlots);
                   setSpiritAttributes(player, data);
                }
             }
@@ -2728,20 +2712,20 @@ public class PlayerEvents {
 
    public static boolean isDeadlockedByWishGhostAndSilentGhostEye(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          return false;
       }
 
       int wishGhostCount = 0;
       int silentGhostEyeCount = 0;
       boolean hasNonDeadlockGhost = false;
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                String ghostType = getGhostTypeInSlot(player, i);
                if (ghostType == null) {
                   hasNonDeadlockGhost = true;
@@ -2771,30 +2755,30 @@ public class PlayerEvents {
    }
 
    public static void enforceWishGhostSilentGhostEyeDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          boolean isDeadlocked = isDeadlockedByWishGhostAndSilentGhostEye(player);
          if (isDeadlocked) {
             NbtCompound data = getCachedData(player);
-            if (data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
+            if (data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
                boolean anyChanged = false;
                boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
                for (int i = 0; i < 10; i++) {
                   String slotKey = "Slot" + i;
-                  if (ghostSlots.method_10545(slotKey)) {
-                     NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                     if (slotData.method_10577("occupied")) {
-                        int currentDegree = slotData.method_10550("revivalDegree");
+                  if (ghostSlots.contains(slotKey)) {
+                     NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                     if (slotData.getBoolean("occupied")) {
+                        int currentDegree = slotData.getInt("revivalDegree");
                         if (hardcoreMode) {
                            if (currentDegree != 0) {
-                              slotData.method_10569("revivalDegree", 0);
-                              ghostSlots.method_10566(slotKey, slotData);
+                              slotData.putInt("revivalDegree", 0);
+                              ghostSlots.put(slotKey, slotData);
                               anyChanged = true;
                            }
                         } else if (currentDegree > 900) {
-                           slotData.method_10569("revivalDegree", 900);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", 900);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      }
@@ -2802,7 +2786,7 @@ public class PlayerEvents {
                }
 
                if (anyChanged) {
-                  data.method_10566("GhostSlots", ghostSlots);
+                  data.put("GhostSlots", ghostSlots);
                   setSpiritAttributes(player, data);
                }
             }
@@ -2812,20 +2796,20 @@ public class PlayerEvents {
 
    public static boolean isDeadlockedBySneakAndJumpGhosts(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      if (!data.method_10545("GhostSlots")) {
+      if (!data.contains("GhostSlots")) {
          return false;
       }
 
       int sneakGhostCount = 0;
       int jumpGhostCount = 0;
       boolean hasNonDeadlockGhost = false;
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                String ghostType = getGhostTypeInSlot(player, i);
                if (ghostType == null) {
                   hasNonDeadlockGhost = true;
@@ -2855,30 +2839,30 @@ public class PlayerEvents {
    }
 
    public static void enforceSneakJumpDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          boolean isDeadlocked = isDeadlockedBySneakAndJumpGhosts(player);
          if (isDeadlocked) {
             NbtCompound data = getCachedData(player);
-            if (data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
+            if (data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
                boolean anyChanged = false;
                boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
                for (int i = 0; i < 10; i++) {
                   String slotKey = "Slot" + i;
-                  if (ghostSlots.method_10545(slotKey)) {
-                     NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                     if (slotData.method_10577("occupied")) {
-                        int currentDegree = slotData.method_10550("revivalDegree");
+                  if (ghostSlots.contains(slotKey)) {
+                     NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                     if (slotData.getBoolean("occupied")) {
+                        int currentDegree = slotData.getInt("revivalDegree");
                         if (hardcoreMode) {
                            if (currentDegree != 0) {
-                              slotData.method_10569("revivalDegree", 0);
-                              ghostSlots.method_10566(slotKey, slotData);
+                              slotData.putInt("revivalDegree", 0);
+                              ghostSlots.put(slotKey, slotData);
                               anyChanged = true;
                            }
                         } else if (currentDegree > 900) {
-                           slotData.method_10569("revivalDegree", 900);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", 900);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      }
@@ -2886,7 +2870,7 @@ public class PlayerEvents {
                }
 
                if (anyChanged) {
-                  data.method_10566("GhostSlots", ghostSlots);
+                  data.put("GhostSlots", ghostSlots);
                   setSpiritAttributes(player, data);
                }
             }
@@ -2895,28 +2879,28 @@ public class PlayerEvents {
    }
 
    public static void enforceSlotDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          NbtCompound data = getCachedData(player);
-         if (data.method_10545("GhostSlots")) {
-            NbtCompound ghostSlots = data.method_10562("GhostSlots");
+         if (data.contains("GhostSlots")) {
+            NbtCompound ghostSlots = data.getCompound("GhostSlots");
             boolean anyChanged = false;
             boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
             for (int i = 0; i < 10; i++) {
                String slotKey = "Slot" + i;
-               if (ghostSlots.method_10545(slotKey)) {
-                  NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                  if (slotData.method_10577("occupied") && slotData.method_10577("slotDeadlocked")) {
-                     int currentDegree = slotData.method_10550("revivalDegree");
+               if (ghostSlots.contains(slotKey)) {
+                  NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                  if (slotData.getBoolean("occupied") && slotData.getBoolean("slotDeadlocked")) {
+                     int currentDegree = slotData.getInt("revivalDegree");
                      if (hardcoreMode) {
                         if (currentDegree != 0) {
-                           slotData.method_10569("revivalDegree", 0);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", 0);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      } else if (currentDegree > 900) {
-                        slotData.method_10569("revivalDegree", 900);
-                        ghostSlots.method_10566(slotKey, slotData);
+                        slotData.putInt("revivalDegree", 900);
+                        ghostSlots.put(slotKey, slotData);
                         anyChanged = true;
                      }
                   }
@@ -2924,7 +2908,7 @@ public class PlayerEvents {
             }
 
             if (anyChanged) {
-               data.method_10566("GhostSlots", ghostSlots);
+               data.put("GhostSlots", ghostSlots);
                setSpiritAttributes(player, data);
             }
          }
@@ -2932,29 +2916,29 @@ public class PlayerEvents {
    }
 
    public static void enforceGhostChildFusionDeadlockRevivalState(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          if (isGhostChildFused(player)) {
             NbtCompound data = getCachedData(player);
-            if (data.method_10545("GhostSlots")) {
-               NbtCompound ghostSlots = data.method_10562("GhostSlots");
+            if (data.contains("GhostSlots")) {
+               NbtCompound ghostSlots = data.getCompound("GhostSlots");
                boolean anyChanged = false;
                boolean hardcoreMode = ModConfig.getInstance().hardcoreDeadlockMode;
 
                for (int i = 0; i < 10; i++) {
                   String slotKey = "Slot" + i;
-                  if (ghostSlots.method_10545(slotKey)) {
-                     NbtCompound slotData = ghostSlots.method_10562(slotKey);
-                     if (slotData.method_10577("occupied")) {
-                        int currentDegree = slotData.method_10550("revivalDegree");
+                  if (ghostSlots.contains(slotKey)) {
+                     NbtCompound slotData = ghostSlots.getCompound(slotKey);
+                     if (slotData.getBoolean("occupied")) {
+                        int currentDegree = slotData.getInt("revivalDegree");
                         if (hardcoreMode) {
                            if (currentDegree != 0) {
-                              slotData.method_10569("revivalDegree", 0);
-                              ghostSlots.method_10566(slotKey, slotData);
+                              slotData.putInt("revivalDegree", 0);
+                              ghostSlots.put(slotKey, slotData);
                               anyChanged = true;
                            }
                         } else if (currentDegree > 900) {
-                           slotData.method_10569("revivalDegree", 900);
-                           ghostSlots.method_10566(slotKey, slotData);
+                           slotData.putInt("revivalDegree", 900);
+                           ghostSlots.put(slotKey, slotData);
                            anyChanged = true;
                         }
                      }
@@ -2962,7 +2946,7 @@ public class PlayerEvents {
                }
 
                if (anyChanged) {
-                  data.method_10566("GhostSlots", ghostSlots);
+                  data.put("GhostSlots", ghostSlots);
                   setSpiritAttributes(player, data);
                }
             }
@@ -2983,16 +2967,16 @@ public class PlayerEvents {
    public static float getSpiritAttribute(ServerPlayerEntity player, String attributeName, float defaultValue) {
       try {
          NbtCompound spiritAttributes = getSpiritAttributes(player);
-         if (spiritAttributes.method_10545(attributeName)) {
-            if (spiritAttributes.method_10573(attributeName, 3)) {
-               return spiritAttributes.method_10550(attributeName);
+         if (spiritAttributes.contains(attributeName)) {
+            if (spiritAttributes.contains(attributeName, 3)) {
+               return spiritAttributes.getInt(attributeName);
             }
 
-            if (spiritAttributes.method_10573(attributeName, 6)) {
-               return (float)spiritAttributes.method_10574(attributeName);
+            if (spiritAttributes.contains(attributeName, 6)) {
+               return (float)spiritAttributes.getDouble(attributeName);
             }
 
-            return spiritAttributes.method_10583(attributeName);
+            return spiritAttributes.getFloat(attributeName);
          }
 
          LOGGER.warn("属性 {} 未在NBT中找到，使用默认值: {}", attributeName, defaultValue);
@@ -3005,7 +2989,7 @@ public class PlayerEvents {
    }
 
    public static void sendSpiritDamagePacketWithDetails(PlayerEntity player, float baseAmount, float actualSpiritDamage) {
-      if (player != null && !(actualSpiritDamage <= 0.0F) && !player.method_37908().method_8608()) {
+      if (player != null && !(actualSpiritDamage <= 0.0F) && !player.getWorld().isClient()) {
          if (player instanceof ServerPlayerEntity serverPlayer) {
             try {
                PacketByteBuf buf = PacketByteBufs.create();
@@ -3035,15 +3019,15 @@ public class PlayerEvents {
    }
 
    public static void applyBodyEnhancement(PlayerEntity player, int resistanceLevel) {
-      if (player != null && !player.method_37908().method_8608()) {
+      if (player != null && !player.getWorld().isClient()) {
          if (resistanceLevel >= 0) {
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5907, 30, resistanceLevel, false, false, true));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 30, resistanceLevel, false, false, true));
          }
       }
    }
 
    public static void updatePlayerSpiritAttributes(PlayerEntity player) {
-      if (player != null && !player.method_37908().method_8608()) {
+      if (player != null && !player.getWorld().isClient()) {
          int mode = ModConfig.getInstance().bodyEnhancementMode;
          switch (mode) {
             case 0:
@@ -3056,18 +3040,18 @@ public class PlayerEvents {
                break;
             case 2:
                NbtCompound spiritAttributes = getSpiritAttributes(player);
-               int spiritualStrength = (int)spiritAttributes.method_10574("currentSpirit");
+               int spiritualStrength = (int)spiritAttributes.getDouble("currentSpirit");
                if (spiritualStrength > 1000) {
-                  player.method_6092(new StatusEffectInstance(StatusEffects.field_5907, 30, 4, false, false, true));
-                  player.method_6092(new StatusEffectInstance(StatusEffects.field_5915, 1, 255, false, false, true));
+                  player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 30, 4, false, false, true));
+                  player.addStatusEffect(new StatusEffectInstance(StatusEffects.INSTANT_HEALTH, 1, 255, false, false, true));
                }
          }
       }
    }
 
    private static void handleHumanSkinPaperEquip(PlayerEntity player, EquipmentSlot equipmentSlot, ItemStack next) {
-      if (equipmentSlot == EquipmentSlot.field_6169) {
-         if (next.method_31574(ModItems.HUMAN_SKIN_PAPER)) {
+      if (equipmentSlot == EquipmentSlot.HEAD) {
+         if (next.isOf(ModItems.HUMAN_SKIN_PAPER)) {
             if (player instanceof ServerPlayerEntity serverPlayer) {
                ServerPlayNetworking.send(serverPlayer, OpenHumanSkinPaperEndingS2CPacket.ID, OpenHumanSkinPaperEndingS2CPacket.create());
             }
@@ -3076,36 +3060,36 @@ public class PlayerEvents {
    }
 
    private static void handleEquipmentChange(PlayerEntity player, EquipmentSlot equipmentSlot, ItemStack previous, ItemStack next) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          double resistanceChange = calculateEquipmentResistanceChange(previous, next, equipmentSlot);
          double maxSanityChange = calculateEquipmentMaxSanityChange(previous, next, equipmentSlot);
          double maxSpiritChange = calculateEquipmentMaxSpiritChange(previous, next, equipmentSlot);
          setSpiritAttribute(player, SpiritAttributes.SPIRIT_RESISTANCE, (float)resistanceChange);
          setSpiritAttribute(player, SpiritAttributes.MAX_SANITY, (float)maxSanityChange);
          setSpiritAttribute(player, SpiritAttributes.MAX_SPIRIT, (float)maxSpiritChange);
-         EntityAttributeInstance sanityInstance = player.method_5996(SpiritAttributes.SANITY);
-         EntityAttributeInstance maxSanityInstance = player.method_5996(SpiritAttributes.MAX_SANITY);
-         EntityAttributeInstance maxSpiritInstance = player.method_5996(SpiritAttributes.MAX_SPIRIT);
-         EntityAttributeInstance currentSpiritInstance = player.method_5996(SpiritAttributes.CURRENT_SPIRIT);
+         EntityAttributeInstance sanityInstance = player.getAttributeInstance(SpiritAttributes.SANITY);
+         EntityAttributeInstance maxSanityInstance = player.getAttributeInstance(SpiritAttributes.MAX_SANITY);
+         EntityAttributeInstance maxSpiritInstance = player.getAttributeInstance(SpiritAttributes.MAX_SPIRIT);
+         EntityAttributeInstance currentSpiritInstance = player.getAttributeInstance(SpiritAttributes.CURRENT_SPIRIT);
          if (sanityInstance != null && maxSanityInstance != null) {
-            float currentSanity = (float)sanityInstance.method_6201();
-            float newMaxSanityValue = (float)maxSanityInstance.method_6201();
+            float currentSanity = (float)sanityInstance.getBaseValue();
+            float newMaxSanityValue = (float)maxSanityInstance.getBaseValue();
             if (currentSanity > newMaxSanityValue) {
-               sanityInstance.method_6192(newMaxSanityValue);
+               sanityInstance.setBaseValue(newMaxSanityValue);
                NbtCompound data = getCachedData(player);
-               data.method_10549("sanity", newMaxSanityValue);
-               PLAYER_DATA_CACHE.put(player.method_5667(), data);
+               data.putDouble("sanity", newMaxSanityValue);
+               PLAYER_DATA_CACHE.put(player.getUuid(), data);
             }
          }
 
          if (maxSpiritInstance != null && currentSpiritInstance != null) {
-            float currentSpirit = (float)currentSpiritInstance.method_6201();
-            float newMaxSpiritValue = (float)maxSpiritInstance.method_6201();
+            float currentSpirit = (float)currentSpiritInstance.getBaseValue();
+            float newMaxSpiritValue = (float)maxSpiritInstance.getBaseValue();
             if (currentSpirit > newMaxSpiritValue) {
-               currentSpiritInstance.method_6192(newMaxSpiritValue);
+               currentSpiritInstance.setBaseValue(newMaxSpiritValue);
                NbtCompound data = getCachedData(player);
-               data.method_10549("currentSpirit", newMaxSpiritValue);
-               PLAYER_DATA_CACHE.put(player.method_5667(), data);
+               data.putDouble("currentSpirit", newMaxSpiritValue);
+               PLAYER_DATA_CACHE.put(player.getUuid(), data);
             }
          }
 
@@ -3117,11 +3101,11 @@ public class PlayerEvents {
 
    private static double calculateEquipmentResistanceChange(ItemStack previous, ItemStack next, EquipmentSlot equipmentSlot) {
       double change = 0.0;
-      if (!previous.method_7960() && previous.method_7909() instanceof DefiledArmorItem) {
+      if (!previous.isEmpty() && previous.getItem() instanceof DefiledArmorItem) {
          change -= getDefiledArmorResistance(previous, equipmentSlot);
       }
 
-      if (!next.method_7960() && next.method_7909() instanceof DefiledArmorItem) {
+      if (!next.isEmpty() && next.getItem() instanceof DefiledArmorItem) {
          change += getDefiledArmorResistance(next, equipmentSlot);
       }
 
@@ -3130,11 +3114,11 @@ public class PlayerEvents {
 
    private static double calculateEquipmentMaxSanityChange(ItemStack previous, ItemStack next, EquipmentSlot equipmentSlot) {
       double change = 0.0;
-      if (!previous.method_7960() && previous.method_7909() instanceof DefiledArmorItem) {
+      if (!previous.isEmpty() && previous.getItem() instanceof DefiledArmorItem) {
          change -= getDefiledArmorMaxSanity(previous, equipmentSlot);
       }
 
-      if (!next.method_7960() && next.method_7909() instanceof DefiledArmorItem) {
+      if (!next.isEmpty() && next.getItem() instanceof DefiledArmorItem) {
          change += getDefiledArmorMaxSanity(next, equipmentSlot);
       }
 
@@ -3143,11 +3127,11 @@ public class PlayerEvents {
 
    private static double calculateEquipmentMaxSpiritChange(ItemStack previous, ItemStack next, EquipmentSlot equipmentSlot) {
       double change = 0.0;
-      if (!previous.method_7960() && previous.method_7909() instanceof DefiledArmorItem) {
+      if (!previous.isEmpty() && previous.getItem() instanceof DefiledArmorItem) {
          change -= getDefiledArmorMaxSpirit(previous, equipmentSlot);
       }
 
-      if (!next.method_7960() && next.method_7909() instanceof DefiledArmorItem) {
+      if (!next.isEmpty() && next.getItem() instanceof DefiledArmorItem) {
          change += getDefiledArmorMaxSpirit(next, equipmentSlot);
       }
 
@@ -3156,13 +3140,13 @@ public class PlayerEvents {
 
    private static double getDefiledArmorResistance(ItemStack armorStack, EquipmentSlot equipmentSlot) {
       switch (equipmentSlot) {
-         case field_6169:
+         case HEAD:
             return 10.0;
-         case field_6174:
+         case CHEST:
             return 20.0;
-         case field_6172:
+         case LEGS:
             return 15.0;
-         case field_6166:
+         case FEET:
             return 10.0;
          default:
             return 0.0;
@@ -3171,13 +3155,13 @@ public class PlayerEvents {
 
    private static double getDefiledArmorMaxSanity(ItemStack armorStack, EquipmentSlot equipmentSlot) {
       switch (equipmentSlot) {
-         case field_6169:
+         case HEAD:
             return 5.0;
-         case field_6174:
+         case CHEST:
             return 10.0;
-         case field_6172:
+         case LEGS:
             return 7.5;
-         case field_6166:
+         case FEET:
             return 5.0;
          default:
             return 0.0;
@@ -3186,13 +3170,13 @@ public class PlayerEvents {
 
    private static double getDefiledArmorMaxSpirit(ItemStack armorStack, EquipmentSlot equipmentSlot) {
       switch (equipmentSlot) {
-         case field_6169:
+         case HEAD:
             return 100.0;
-         case field_6174:
+         case CHEST:
             return 200.0;
-         case field_6172:
+         case LEGS:
             return 150.0;
-         case field_6166:
+         case FEET:
             return 50.0;
          default:
             return 0.0;
@@ -3201,7 +3185,7 @@ public class PlayerEvents {
 
    public static boolean hasWangCurseUnlocked(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      return data.method_10577("wangCurseUnlocked");
+      return data.getBoolean("wangCurseUnlocked");
    }
 
    public static boolean unlockWangCurse(PlayerEntity player) {
@@ -3210,20 +3194,20 @@ public class PlayerEvents {
       }
 
       NbtCompound data = getCachedData(player);
-      data.method_10556("wangCurseUnlocked", true);
+      data.putBoolean("wangCurseUnlocked", true);
       saveDataToPlayer(player, data);
-      LOGGER.info("玩家 {} 解锁了王家诅咒", player.method_5477().getString());
+      LOGGER.info("玩家 {} 解锁了王家诅咒", player.getName().getString());
       return true;
    }
 
    public static List<UUID> getServants(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      NbtList servantsList = data.method_10554("servants", 11);
+      NbtList servantsList = data.getList("servants", 11);
       List<UUID> servants = new ArrayList<>();
 
       for (NbtElement element : servantsList) {
          if (element instanceof NbtIntArray uuidArray) {
-            int[] uuidInts = uuidArray.method_10588();
+            int[] uuidInts = uuidArray.getIntArray();
             if (uuidInts.length == 4) {
                UUID uuid = new UUID((long)uuidInts[0] << 32 | uuidInts[1] & 4294967295L, (long)uuidInts[2] << 32 | uuidInts[3] & 4294967295L);
                servants.add(uuid);
@@ -3240,11 +3224,11 @@ public class PlayerEvents {
       }
 
       NbtCompound data = getCachedData(player);
-      NbtList servantsList = data.method_10554("servants", 11);
+      NbtList servantsList = data.getList("servants", 11);
       int maxServants = getMaxServants(player);
       if (servantsList.size() >= maxServants) {
-         if (!player.method_37908().method_8608()) {
-            player.method_43496(Text.method_43470("§c你的厉鬼数量已达到上限！"));
+         if (!player.getWorld().isClient()) {
+            player.sendMessage(Text.literal("§c你的厉鬼数量已达到上限！"));
          }
 
          return false;
@@ -3253,7 +3237,7 @@ public class PlayerEvents {
          long leastSigBits = servantUuid.getLeastSignificantBits();
          int[] uuidInts = new int[]{(int)(mostSigBits >> 32), (int)mostSigBits, (int)(leastSigBits >> 32), (int)leastSigBits};
          servantsList.add(new NbtIntArray(uuidInts));
-         data.method_10566("servants", servantsList);
+         data.put("servants", servantsList);
          saveDataToPlayer(player, data);
          return true;
       }
@@ -3261,20 +3245,20 @@ public class PlayerEvents {
 
    public static boolean removeServant(PlayerEntity player, UUID servantUuid) {
       NbtCompound data = getCachedData(player);
-      NbtList servantsList = data.method_10554("servants", 11);
+      NbtList servantsList = data.getList("servants", 11);
 
       for (int i = 0; i < servantsList.size(); i++) {
-         if (servantsList.method_10534(i) instanceof NbtIntArray uuidArray) {
-            int[] uuidInts = uuidArray.method_10588();
+         if (servantsList.get(i) instanceof NbtIntArray uuidArray) {
+            int[] uuidInts = uuidArray.getIntArray();
             if (uuidInts.length == 4) {
                UUID uuid = new UUID((long)uuidInts[0] << 32 | uuidInts[1] & 4294967295L, (long)uuidInts[2] << 32 | uuidInts[3] & 4294967295L);
                if (uuid.equals(servantUuid)) {
-                  servantsList.method_10536(i);
-                  data.method_10566("servants", servantsList);
-                  NbtCompound servantsData = data.method_10562("servantsData");
-                  if (servantsData.method_10545(servantUuid.toString())) {
-                     servantsData.method_10551(servantUuid.toString());
-                     data.method_10566("servantsData", servantsData);
+                  servantsList.remove(i);
+                  data.put("servants", servantsList);
+                  NbtCompound servantsData = data.getCompound("servantsData");
+                  if (servantsData.contains(servantUuid.toString())) {
+                     servantsData.remove(servantUuid.toString());
+                     data.put("servantsData", servantsData);
                   }
 
                   saveDataToPlayer(player, data);
@@ -3301,17 +3285,17 @@ public class PlayerEvents {
    }
 
    public static boolean isPlayerServant(PlayerEntity player, Entity entity) {
-      return hasServant(player, entity.method_5667());
+      return hasServant(player, entity.getUuid());
    }
 
    public static Entity getEntityByUuid(PlayerEntity player, UUID uuid) {
-      if (!player.method_37908().method_8608()) {
-         return player.method_37908() instanceof ServerWorld serverWorld ? serverWorld.method_14190(uuid) : null;
+      if (!player.getWorld().isClient()) {
+         return player.getWorld() instanceof ServerWorld serverWorld ? serverWorld.getEntity(uuid) : null;
       }
 
-      if (player.method_37908() instanceof ClientWorld clientWorld) {
-         for (Entity entity : clientWorld.method_18112()) {
-            if (entity.method_5667().equals(uuid)) {
+      if (player.getWorld() instanceof ClientWorld clientWorld) {
+         for (Entity entity : clientWorld.getEntities()) {
+            if (entity.getUuid().equals(uuid)) {
                return entity;
             }
          }
@@ -3325,23 +3309,23 @@ public class PlayerEvents {
          return false;
       } else {
          return playerGhost.isServantMode() && playerGhost.getMasterUuid() != null
-            ? player.method_5667().equals(playerGhost.getMasterUuid())
-            : hasServant(player, playerGhost.method_5667());
+            ? player.getUuid().equals(playerGhost.getMasterUuid())
+            : hasServant(player, playerGhost.getUuid());
       }
    }
 
    public static boolean restoreServantFromStoredData(PlayerEntity master, UUID servantUuid, PlayerGhostEntity playerGhost) {
       if (!hasServant(master, servantUuid)) {
-         LOGGER.warn("玩家 {} 尝试恢复不存在的奴仆 {}", master.method_5477().getString(), servantUuid);
+         LOGGER.warn("玩家 {} 尝试恢复不存在的奴仆 {}", master.getName().getString(), servantUuid);
          return false;
       }
 
       NbtCompound data = getCachedData(master);
-      NbtCompound servantsData = data.method_10562("servantsData");
-      if (!servantsData.method_10545(servantUuid.toString())) {
-         LOGGER.warn("玩家 {} 的奴仆 {} 没有存储数据，使用默认设置", master.method_5477().getString(), servantUuid);
-         playerGhost.method_5665(Text.method_43470("王家奴仆"));
-         playerGhost.method_5880(true);
+      NbtCompound servantsData = data.getCompound("servantsData");
+      if (!servantsData.contains(servantUuid.toString())) {
+         LOGGER.warn("玩家 {} 的奴仆 {} 没有存储数据，使用默认设置", master.getName().getString(), servantUuid);
+         playerGhost.setCustomName(Text.literal("王家奴仆"));
+         playerGhost.setCustomNameVisible(true);
          playerGhost.setGhostDomainColor(String.valueOf(8388736));
          playerGhost.setGhostDomainLevel(1);
          playerGhost.setGhostDomainRadius(8.0F);
@@ -3353,17 +3337,17 @@ public class PlayerEvents {
          return true;
       }
 
-      NbtCompound servantData = servantsData.method_10562(servantUuid.toString());
-      LOGGER.debug("找到玩家 {} 的奴仆 {} 的存储数据: {}", master.method_5477().getString(), servantUuid, servantData.toString());
-      if (servantData.method_10545("playerName")) {
-         String playerName = servantData.method_10558("playerName");
-         playerGhost.method_5665(Text.method_43470(playerName));
-         playerGhost.method_5880(true);
+      NbtCompound servantData = servantsData.getCompound(servantUuid.toString());
+      LOGGER.debug("找到玩家 {} 的奴仆 {} 的存储数据: {}", master.getName().getString(), servantUuid, servantData.toString());
+      if (servantData.contains("playerName")) {
+         String playerName = servantData.getString("playerName");
+         playerGhost.setCustomName(Text.literal(playerName));
+         playerGhost.setCustomNameVisible(true);
          playerGhost.setPlayerName(playerName);
       }
 
-      if (servantData.method_10545("playerUuid")) {
-         String uuidStr = servantData.method_10558("playerUuid");
+      if (servantData.contains("playerUuid")) {
+         String uuidStr = servantData.getString("playerUuid");
 
          try {
             UUID originalPlayerUuid = UUID.fromString(uuidStr);
@@ -3373,48 +3357,48 @@ public class PlayerEvents {
          }
       }
 
-      if (servantData.method_10545("ghostDomainColor")) {
-         String ghostDomainColor = servantData.method_10558("ghostDomainColor");
+      if (servantData.contains("ghostDomainColor")) {
+         String ghostDomainColor = servantData.getString("ghostDomainColor");
          playerGhost.setGhostDomainColor(ghostDomainColor);
       }
 
-      if (servantData.method_10545("ghostDomainLevel")) {
-         int ghostDomainLevel = servantData.method_10550("ghostDomainLevel");
+      if (servantData.contains("ghostDomainLevel")) {
+         int ghostDomainLevel = servantData.getInt("ghostDomainLevel");
          playerGhost.setGhostDomainLevel(ghostDomainLevel);
       }
 
-      if (servantData.method_10545("ghostDomainRadius")) {
-         float ghostDomainRadius = servantData.method_10583("ghostDomainRadius");
+      if (servantData.contains("ghostDomainRadius")) {
+         float ghostDomainRadius = servantData.getFloat("ghostDomainRadius");
          playerGhost.setGhostDomainRadius(ghostDomainRadius);
       }
 
-      if (servantData.method_10545("SpiritualStrength")) {
-         int spiritualStrength = servantData.method_10550("SpiritualStrength");
+      if (servantData.contains("SpiritualStrength")) {
+         int spiritualStrength = servantData.getInt("SpiritualStrength");
          playerGhost.setSpiritualStrength(spiritualStrength);
       }
 
-      if (servantData.method_10545("MaxSpiritualStrength")) {
-         int maxSpiritualStrength = servantData.method_10550("MaxSpiritualStrength");
+      if (servantData.contains("MaxSpiritualStrength")) {
+         int maxSpiritualStrength = servantData.getInt("MaxSpiritualStrength");
          playerGhost.setMaxSpiritualStrength(maxSpiritualStrength);
       }
 
-      if (servantData.method_10545("SpiritualResistance")) {
-         int spiritualResistance = servantData.method_10550("SpiritualResistance");
+      if (servantData.contains("SpiritualResistance")) {
+         int spiritualResistance = servantData.getInt("SpiritualResistance");
          playerGhost.setSpiritualResistance(spiritualResistance);
       }
 
-      if (servantData.method_10545("SpiritualDamage")) {
-         int spiritualDamage = servantData.method_10550("SpiritualDamage");
+      if (servantData.contains("SpiritualDamage")) {
+         int spiritualDamage = servantData.getInt("SpiritualDamage");
          playerGhost.setSpiritualDamage(spiritualDamage);
       }
 
-      if (servantData.method_10545("RecoveryFactor")) {
-         float recoveryFactor = servantData.method_10583("RecoveryFactor");
+      if (servantData.contains("RecoveryFactor")) {
+         float recoveryFactor = servantData.getFloat("RecoveryFactor");
          playerGhost.setRecoveryFactor(recoveryFactor);
       }
 
-      if (servantData.method_10545("tamedGhosts")) {
-         NbtList tamedGhostsList = servantData.method_10554("tamedGhosts", 10);
+      if (servantData.contains("tamedGhosts")) {
+         NbtList tamedGhostsList = servantData.getList("tamedGhosts", 10);
          new ArrayList();
 
          for (NbtElement element : tamedGhostsList) {
@@ -3429,57 +3413,55 @@ public class PlayerEvents {
 
    public static boolean recallServant(PlayerEntity master, PlayerGhostEntity servant) {
       if (!hasWangCurseUnlocked(master)) {
-         LOGGER.warn("玩家 {} 未解锁王家诅咒，无法收回奴仆", master.method_5477().getString());
+         LOGGER.warn("玩家 {} 未解锁王家诅咒，无法收回奴仆", master.getName().getString());
          return false;
       }
 
       if (!servant.isServantMode()) {
-         LOGGER.warn("玩家 {} 尝试收回非奴仆模式的玩家鬼 {}", master.method_5477().getString(), servant.getPlayerName());
+         LOGGER.warn("玩家 {} 尝试收回非奴仆模式的玩家鬼 {}", master.getName().getString(), servant.getPlayerName());
          return false;
       }
 
       if (servant.getMasterUuid() == null) {
-         LOGGER.warn("玩家 {} 尝试收回没有主人的奴仆 {}", master.method_5477().getString(), servant.getPlayerName());
+         LOGGER.warn("玩家 {} 尝试收回没有主人的奴仆 {}", master.getName().getString(), servant.getPlayerName());
          return false;
       }
 
       if (!isPlayerMasterOfServant(master, servant)) {
-         LOGGER.warn("玩家 {} 尝试收回不属于自己的奴仆 {}", master.method_5477().getString(), servant.getPlayerName());
+         LOGGER.warn("玩家 {} 尝试收回不属于自己的奴仆 {}", master.getName().getString(), servant.getPlayerName());
          return false;
       }
 
       try {
-         UUID servantUuid = servant.getOriginalServantUuid() != null ? servant.getOriginalServantUuid() : servant.method_5667();
+         UUID servantUuid = servant.getOriginalServantUuid() != null ? servant.getOriginalServantUuid() : servant.getUuid();
          NbtCompound data = getCachedData(master);
-         NbtCompound servantsData = data.method_10562("servantsData");
-         LOGGER.debug(
-            "玩家 {} 尝试收回奴仆 {}，servantsData中是否包含该UUID: {}", master.method_5477().getString(), servantUuid, servantsData.method_10545(servantUuid.toString())
-         );
+         NbtCompound servantsData = data.getCompound("servantsData");
+         LOGGER.debug("玩家 {} 尝试收回奴仆 {}，servantsData中是否包含该UUID: {}", master.getName().getString(), servantUuid, servantsData.contains(servantUuid.toString()));
          String key = servantUuid.toString();
-         if (servantsData.method_10545(key)) {
-            NbtCompound servantData = servantsData.method_10562(key);
-            LOGGER.debug("奴仆 {} 的数据: {}, 是否包含released标记: {}", servantUuid, servantData, servantData.method_10545("released"));
-            servantData.method_10556("released", false);
-            servantsData.method_10566(key, servantData);
-            data.method_10566("servantsData", servantsData);
+         if (servantsData.contains(key)) {
+            NbtCompound servantData = servantsData.getCompound(key);
+            LOGGER.debug("奴仆 {} 的数据: {}, 是否包含released标记: {}", servantUuid, servantData, servantData.contains("released"));
+            servantData.putBoolean("released", false);
+            servantsData.put(key, servantData);
+            data.put("servantsData", servantsData);
             saveDataToPlayer(master, data);
             LOGGER.debug("已清除奴仆 {} 的已释放标记，更新后的数据: {}", servantUuid, servantData);
          } else {
             LOGGER.debug("servantsData中没有奴仆 {} 的数据，创建新数据", servantUuid);
             NbtCompound servantData = new NbtCompound();
-            servantData.method_10556("released", false);
-            servantsData.method_10566(key, servantData);
-            data.method_10566("servantsData", servantsData);
+            servantData.putBoolean("released", false);
+            servantsData.put(key, servantData);
+            data.put("servantsData", servantsData);
             saveDataToPlayer(master, data);
          }
 
-         if (!master.method_37908().method_8608()) {
-            master.method_7353(Text.method_43470("成功收回奴仆 " + servant.getPlayerName()), true);
+         if (!master.getWorld().isClient()) {
+            master.sendMessage(Text.literal("成功收回奴仆 " + servant.getPlayerName()), true);
          }
 
          return true;
       } catch (Exception e) {
-         LOGGER.error("玩家 {} 收回奴仆 {} 时发生错误", master.method_5477().getString(), servant.getPlayerName(), e);
+         LOGGER.error("玩家 {} 收回奴仆 {} 时发生错误", master.getName().getString(), servant.getPlayerName(), e);
          return false;
       }
    }
@@ -3487,13 +3469,13 @@ public class PlayerEvents {
    public static List<UUID> getReleasedServants(PlayerEntity player) {
       List<UUID> releasedServants = new ArrayList<>();
       NbtCompound data = getCachedData(player);
-      NbtCompound servantsData = data.method_10562("servantsData");
+      NbtCompound servantsData = data.getCompound("servantsData");
 
-      for (String key : servantsData.method_10541()) {
+      for (String key : servantsData.getKeys()) {
          try {
             UUID servantUuid = UUID.fromString(key);
-            NbtCompound servantData = servantsData.method_10562(key);
-            if (servantData.method_10573("released", 1) && servantData.method_10577("released")) {
+            NbtCompound servantData = servantsData.getCompound(key);
+            if (servantData.contains("released", 1) && servantData.getBoolean("released")) {
                releasedServants.add(servantUuid);
             }
          } catch (IllegalArgumentException e) {
@@ -3506,11 +3488,11 @@ public class PlayerEvents {
 
    public static boolean isServantReleased(PlayerEntity player, UUID servantUuid) {
       NbtCompound data = getCachedData(player);
-      NbtCompound servantsData = data.method_10562("servantsData");
+      NbtCompound servantsData = data.getCompound("servantsData");
       String key = servantUuid.toString();
-      if (servantsData.method_10545(key)) {
-         NbtCompound servantData = servantsData.method_10562(key);
-         return servantData.method_10577("released");
+      if (servantsData.contains(key)) {
+         NbtCompound servantData = servantsData.getCompound(key);
+         return servantData.getBoolean("released");
       } else {
          return false;
       }
@@ -3519,46 +3501,46 @@ public class PlayerEvents {
    public static void markServantAsReleased(PlayerEntity player, UUID servantUuid) {
       try {
          NbtCompound data = getCachedData(player);
-         NbtCompound servantsData = data.method_10562("servantsData");
+         NbtCompound servantsData = data.getCompound("servantsData");
          String key = servantUuid.toString();
          NbtCompound servantData;
-         if (servantsData.method_10545(key)) {
-            servantData = servantsData.method_10562(key);
+         if (servantsData.contains(key)) {
+            servantData = servantsData.getCompound(key);
          } else {
             servantData = new NbtCompound();
          }
 
-         servantData.method_10556("released", true);
-         servantsData.method_10566(key, servantData);
-         data.method_10566("servantsData", servantsData);
+         servantData.putBoolean("released", true);
+         servantsData.put(key, servantData);
+         data.put("servantsData", servantsData);
          saveDataToPlayer(player, data);
       } catch (Exception e) {
-         LOGGER.error("玩家 {} 标记奴仆 {} 为已释放时发生错误", player.method_5477().getString(), servantUuid, e);
+         LOGGER.error("玩家 {} 标记奴仆 {} 为已释放时发生错误", player.getName().getString(), servantUuid, e);
       }
    }
 
    private static void initializeServantsData(NbtCompound data) {
-      if (!data.method_10545("servants")) {
-         data.method_10566("servants", new NbtList());
+      if (!data.contains("servants")) {
+         data.put("servants", new NbtList());
       }
 
-      if (!data.method_10545("wangCurseUnlocked")) {
-         data.method_10556("wangCurseUnlocked", false);
+      if (!data.contains("wangCurseUnlocked")) {
+         data.putBoolean("wangCurseUnlocked", false);
       }
 
-      if (!data.method_10573("servantsData", 10)) {
-         data.method_10566("servantsData", new NbtCompound());
+      if (!data.contains("servantsData", 10)) {
+         data.put("servantsData", new NbtCompound());
       }
    }
 
    public static int getBonusSuppressionSlots(PlayerEntity player) {
       NbtCompound data = getCachedData(player);
-      return data.method_10545("BonusSuppressionSlots") ? data.method_10550("BonusSuppressionSlots") : 0;
+      return data.contains("BonusSuppressionSlots") ? data.getInt("BonusSuppressionSlots") : 0;
    }
 
    public static void setBonusSuppressionSlots(PlayerEntity player, int slots) {
       NbtCompound data = getCachedData(player);
-      data.method_10569("BonusSuppressionSlots", slots);
+      data.putInt("BonusSuppressionSlots", slots);
       saveDataToPlayer(player, data);
    }
 

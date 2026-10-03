@@ -22,94 +22,94 @@ import net.minecraft.util.Formatting;
 public class QuestCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
       dispatcher.register(
-         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
+         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal(
                               "quest"
                            )
-                           .then(CommandManager.method_9247("list").executes(QuestCommand::listQuests)))
+                           .then(CommandManager.literal("list").executes(QuestCommand::listQuests)))
                         .then(
-                           CommandManager.method_9247("start")
-                              .then(CommandManager.method_9244("questId", StringArgumentType.string()).executes(QuestCommand::startQuest))
+                           CommandManager.literal("start")
+                              .then(CommandManager.argument("questId", StringArgumentType.string()).executes(QuestCommand::startQuest))
                         ))
                      .then(
-                        CommandManager.method_9247("abandon")
-                           .then(CommandManager.method_9244("questId", StringArgumentType.string()).executes(QuestCommand::abandonQuest))
+                        CommandManager.literal("abandon")
+                           .then(CommandManager.argument("questId", StringArgumentType.string()).executes(QuestCommand::abandonQuest))
                      ))
                   .then(
-                     ((LiteralArgumentBuilder)CommandManager.method_9247("info").executes(QuestCommand::questInfoActive))
-                        .then(CommandManager.method_9244("questId", StringArgumentType.string()).executes(QuestCommand::questInfo))
+                     ((LiteralArgumentBuilder)CommandManager.literal("info").executes(QuestCommand::questInfoActive))
+                        .then(CommandManager.argument("questId", StringArgumentType.string()).executes(QuestCommand::questInfo))
                   ))
                .then(
-                  ((LiteralArgumentBuilder)CommandManager.method_9247("complete").executes(QuestCommand::completeActiveQuest))
-                     .then(CommandManager.method_9244("questId", StringArgumentType.string()).executes(QuestCommand::completeQuest))
+                  ((LiteralArgumentBuilder)CommandManager.literal("complete").executes(QuestCommand::completeActiveQuest))
+                     .then(CommandManager.argument("questId", StringArgumentType.string()).executes(QuestCommand::completeQuest))
                ))
-            .then(CommandManager.method_9247("reset").executes(QuestCommand::resetAllQuests))
+            .then(CommandManager.literal("reset").executes(QuestCommand::resetAllQuests))
       );
    }
 
    public static int listQuests(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
       boolean hasActiveQuests = false;
       boolean hasCompletedQuests = false;
-      if (questData != null && questData.method_10545("activeQuests")) {
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+      if (questData != null && questData.contains("activeQuests")) {
+         NbtList activeList = questData.getList("activeQuests", 10);
          if (!activeList.isEmpty()) {
             hasActiveQuests = true;
-            ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("=== 进行中的任务 ===").method_27692(Formatting.field_1065), false);
+            ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("=== 进行中的任务 ===").formatted(Formatting.GOLD), false);
 
             for (int i = 0; i < activeList.size(); i++) {
-               NbtCompound questInfo = activeList.method_10602(i);
-               String questId = questInfo.method_10558("id");
-               String questName = questInfo.method_10558("name");
+               NbtCompound questInfo = activeList.getCompound(i);
+               String questId = questInfo.getString("id");
+               String questName = questInfo.getString("name");
                ((ServerCommandSource)context.getSource())
-                  .method_9226(() -> Text.method_43470("• " + questName + " (ID: " + questId + ")").method_27692(Formatting.field_1054), false);
+                  .sendFeedback(() -> Text.literal("• " + questName + " (ID: " + questId + ")").formatted(Formatting.YELLOW), false);
             }
          }
       }
 
-      if (questData != null && questData.method_10545("completedQuests")) {
-         NbtList completedList = questData.method_10554("completedQuests", 8);
+      if (questData != null && questData.contains("completedQuests")) {
+         NbtList completedList = questData.getList("completedQuests", 8);
          if (!completedList.isEmpty()) {
             hasCompletedQuests = true;
-            ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("=== 已完成的任务 ===").method_27692(Formatting.field_1060), false);
+            ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("=== 已完成的任务 ===").formatted(Formatting.GREEN), false);
 
             for (int i = 0; i < completedList.size(); i++) {
-               String questId = completedList.method_10608(i);
-               ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("• " + questId).method_27692(Formatting.field_1060), false);
+               String questId = completedList.getString(i);
+               ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("• " + questId).formatted(Formatting.GREEN), false);
             }
          }
       }
 
       if (!hasActiveQuests && !hasCompletedQuests) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("暂无任务记录").method_27692(Formatting.field_1080), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("暂无任务记录").formatted(Formatting.GRAY), false);
       }
 
       return 1;
    }
 
    public static int startQuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       String questId = StringArgumentType.getString(context, "questId");
       if (!QuestManager.getQuest(questId).isPresent()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务不存在: " + questId).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务不存在: " + questId).formatted(Formatting.RED), false);
          return 0;
       }
 
       IPlayerData playerData = (IPlayerData)player;
       if (playerData.hasCompletedQuest(questId)) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("你已经完成过这个任务了").method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("你已经完成过这个任务了").formatted(Formatting.RED), false);
          return 0;
       }
 
       NbtCompound questData = playerData.getQuestData();
-      if (questData.method_10545("activeQuests")) {
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+      if (questData.contains("activeQuests")) {
+         NbtList activeList = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeList.size(); i++) {
-            NbtCompound questInfo = activeList.method_10602(i);
-            if (questInfo.method_10558("id").equals(questId)) {
-               ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("你已经在进行这个任务了").method_27692(Formatting.field_1061), false);
+            NbtCompound questInfo = activeList.getCompound(i);
+            if (questInfo.getString("id").equals(questId)) {
+               ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("你已经在进行这个任务了").formatted(Formatting.RED), false);
                return 0;
             }
          }
@@ -117,22 +117,22 @@ public class QuestCommand {
 
       QuestManager.startQuest(player, questId);
       ((ServerCommandSource)context.getSource())
-         .method_9226(() -> Text.method_43470("任务开始: " + QuestManager.getQuest(questId).get().getName()).method_27692(Formatting.field_1060), false);
+         .sendFeedback(() -> Text.literal("任务开始: " + QuestManager.getQuest(questId).get().getName()).formatted(Formatting.GREEN), false);
       return 1;
    }
 
    public static int abandonQuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       String questId = StringArgumentType.getString(context, "questId");
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
       boolean hasActiveQuest = false;
-      if (questData.method_10545("activeQuests")) {
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+      if (questData.contains("activeQuests")) {
+         NbtList activeList = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeList.size(); i++) {
-            NbtCompound questInfo = activeList.method_10602(i);
-            if (questInfo.method_10558("id").equals(questId)) {
+            NbtCompound questInfo = activeList.getCompound(i);
+            if (questInfo.getString("id").equals(questId)) {
                hasActiveQuest = true;
                break;
             }
@@ -140,40 +140,37 @@ public class QuestCommand {
       }
 
       if (!hasActiveQuest) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("你没有在进行这个任务").method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("你没有在进行这个任务").formatted(Formatting.RED), false);
          return 0;
       } else {
          QuestManager.abandonQuest(player, questId);
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务已放弃").method_27692(Formatting.field_1054), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务已放弃").formatted(Formatting.YELLOW), false);
          return 1;
       }
    }
 
    public static int questInfo(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       String questId = StringArgumentType.getString(context, "questId");
       if (!QuestManager.getQuest(questId).isPresent()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务不存在: " + questId).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务不存在: " + questId).formatted(Formatting.RED), false);
          return 0;
       }
 
       QuestManager.QuestTemplate quest = QuestManager.getQuest(questId).get();
-      ((ServerCommandSource)context.getSource())
-         .method_9226(() -> Text.method_43470("=== " + quest.getName() + " ===").method_27692(Formatting.field_1065), false);
-      ((ServerCommandSource)context.getSource())
-         .method_9226(() -> Text.method_43470("描述: " + quest.getDescription()).method_27692(Formatting.field_1068), false);
-      ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("目标:").method_27692(Formatting.field_1054), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("=== " + quest.getName() + " ===").formatted(Formatting.GOLD), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("描述: " + quest.getDescription()).formatted(Formatting.WHITE), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("目标:").formatted(Formatting.YELLOW), false);
 
       for (QuestManager.QuestObjective objective : quest.getObjectives()) {
-         ((ServerCommandSource)context.getSource())
-            .method_9226(() -> Text.method_43470("• " + objective.getDescription()).method_27692(Formatting.field_1080), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("• " + objective.getDescription()).formatted(Formatting.GRAY), false);
       }
 
-      ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("奖励:").method_27692(Formatting.field_1060), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("奖励:").formatted(Formatting.GREEN), false);
 
       for (Entry<String, Object> entry : quest.getRewards().entrySet()) {
          String rewardDesc = getRewardDescription(entry.getKey(), entry.getValue());
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("• " + rewardDesc).method_27692(Formatting.field_1060), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("• " + rewardDesc).formatted(Formatting.GREEN), false);
       }
 
       return 1;
@@ -195,23 +192,23 @@ public class QuestCommand {
    }
 
    public static int completeQuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       String questId = StringArgumentType.getString(context, "questId");
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
       if (!QuestManager.getQuest(questId).isPresent()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务不存在: " + questId).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务不存在: " + questId).formatted(Formatting.RED), false);
          return 0;
       }
 
       boolean isActive = false;
       NbtCompound activeQuest = null;
-      if (questData.method_10545("activeQuests")) {
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+      if (questData.contains("activeQuests")) {
+         NbtList activeList = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeList.size(); i++) {
-            NbtCompound questInfo = activeList.method_10602(i);
-            if (questInfo.method_10558("id").equals(questId)) {
+            NbtCompound questInfo = activeList.getCompound(i);
+            if (questInfo.getString("id").equals(questId)) {
                isActive = true;
                activeQuest = questInfo;
                break;
@@ -220,230 +217,219 @@ public class QuestCommand {
       }
 
       if (!isActive) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("你没有在进行这个任务").method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("你没有在进行这个任务").formatted(Formatting.RED), false);
          return 0;
       }
 
-      if (questData.method_10545("completedQuests")) {
-         NbtList completedList = questData.method_10554("completedQuests", 8);
+      if (questData.contains("completedQuests")) {
+         NbtList completedList = questData.getList("completedQuests", 8);
 
          for (int i = 0; i < completedList.size(); i++) {
-            if (completedList.method_10608(i).equals(questId)) {
-               ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("你已经完成过这个任务了").method_27692(Formatting.field_1061), false);
+            if (completedList.getString(i).equals(questId)) {
+               ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("你已经完成过这个任务了").formatted(Formatting.RED), false);
                return 0;
             }
          }
       }
 
       try {
-         activeQuest.method_10569("status", 2);
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+         activeQuest.putInt("status", 2);
+         NbtList activeList = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeList.size(); i++) {
-            NbtCompound questInfo = activeList.method_10602(i);
-            if (questInfo.method_10558("id").equals(questId)) {
-               activeList.method_10536(i);
+            NbtCompound questInfo = activeList.getCompound(i);
+            if (questInfo.getString("id").equals(questId)) {
+               activeList.remove(i);
                break;
             }
          }
 
-         questData.method_10566("activeQuests", activeList);
+         questData.put("activeQuests", activeList);
          NbtList completedList;
-         if (questData.method_10545("completedQuests")) {
-            completedList = questData.method_10554("completedQuests", 8);
+         if (questData.contains("completedQuests")) {
+            completedList = questData.getList("completedQuests", 8);
          } else {
             completedList = new NbtList();
          }
 
-         completedList.add(NbtString.method_23256(questId));
-         questData.method_10566("completedQuests", completedList);
+         completedList.add(NbtString.of(questId));
+         questData.put("completedQuests", completedList);
          QuestManager.saveQuestData(player, questData);
          QuestManager.giveQuestRewards(player, questId);
          QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
          if (template != null) {
-            player.method_7353(Text.method_43470("§6任务完成: " + template.title + " - 奖励已发放"), false);
-            ((ServerCommandSource)context.getSource())
-               .method_9226(() -> Text.method_43470("任务完成: " + template.title).method_27692(Formatting.field_1060), false);
+            player.sendMessage(Text.literal("§6任务完成: " + template.title + " - 奖励已发放"), false);
+            ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务完成: " + template.title).formatted(Formatting.GREEN), false);
          }
 
          return 1;
       } catch (Exception e) {
-         ((ServerCommandSource)context.getSource())
-            .method_9226(() -> Text.method_43470("完成任务时发生错误: " + e.getMessage()).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("完成任务时发生错误: " + e.getMessage()).formatted(Formatting.RED), false);
          return 0;
       }
    }
 
    public static int completeAllActiveQuests(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
-      if (!questData.method_10545("activeQuests")) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有进行中的任务").method_27692(Formatting.field_1054), false);
+      if (!questData.contains("activeQuests")) {
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有进行中的任务").formatted(Formatting.YELLOW), false);
          return 0;
       }
 
-      NbtList activeList = questData.method_10554("activeQuests", 10);
+      NbtList activeList = questData.getList("activeQuests", 10);
       if (activeList.isEmpty()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有进行中的任务").method_27692(Formatting.field_1054), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有进行中的任务").formatted(Formatting.YELLOW), false);
          return 0;
       }
 
       int completedCount = 0;
 
       for (int i = activeList.size() - 1; i >= 0; i--) {
-         NbtCompound questInfo = activeList.method_10602(i);
-         String questId = questInfo.method_10558("id");
+         NbtCompound questInfo = activeList.getCompound(i);
+         String questId = questInfo.getString("id");
          if (!QuestManager.getQuest(questId).isPresent()) {
-            ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务不存在，跳过: " + questId).method_27692(Formatting.field_1061), false);
+            ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务不存在，跳过: " + questId).formatted(Formatting.RED), false);
          } else {
-            if (questData.method_10545("completedQuests")) {
-               NbtList completedList = questData.method_10554("completedQuests", 8);
+            if (questData.contains("completedQuests")) {
+               NbtList completedList = questData.getList("completedQuests", 8);
                boolean alreadyCompleted = false;
 
                for (int j = 0; j < completedList.size(); j++) {
-                  if (completedList.method_10608(j).equals(questId)) {
+                  if (completedList.getString(j).equals(questId)) {
                      alreadyCompleted = true;
                      break;
                   }
                }
 
                if (alreadyCompleted) {
-                  ((ServerCommandSource)context.getSource())
-                     .method_9226(() -> Text.method_43470("任务已完成，跳过: " + questId).method_27692(Formatting.field_1054), false);
+                  ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务已完成，跳过: " + questId).formatted(Formatting.YELLOW), false);
                   continue;
                }
             }
 
             try {
-               questInfo.method_10569("status", 2);
-               activeList.method_10536(i);
+               questInfo.putInt("status", 2);
+               activeList.remove(i);
                NbtList completedList;
-               if (questData.method_10545("completedQuests")) {
-                  completedList = questData.method_10554("completedQuests", 8);
+               if (questData.contains("completedQuests")) {
+                  completedList = questData.getList("completedQuests", 8);
                } else {
                   completedList = new NbtList();
                }
 
-               completedList.add(NbtString.method_23256(questId));
-               questData.method_10566("completedQuests", completedList);
+               completedList.add(NbtString.of(questId));
+               questData.put("completedQuests", completedList);
                QuestManager.giveQuestRewards(player, questId);
                completedCount++;
                QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
                if (template != null) {
-                  ((ServerCommandSource)context.getSource())
-                     .method_9226(() -> Text.method_43470("任务完成: " + template.title).method_27692(Formatting.field_1060), false);
+                  ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务完成: " + template.title).formatted(Formatting.GREEN), false);
                }
             } catch (Exception e) {
                ((ServerCommandSource)context.getSource())
-                  .method_9226(() -> Text.method_43470("完成任务时发生错误: " + questId + " - " + e.getMessage()).method_27692(Formatting.field_1061), false);
+                  .sendFeedback(() -> Text.literal("完成任务时发生错误: " + questId + " - " + e.getMessage()).formatted(Formatting.RED), false);
             }
          }
       }
 
-      questData.method_10566("activeQuests", activeList);
+      questData.put("activeQuests", activeList);
       QuestManager.saveQuestData(player, questData);
       int finalCompletedCount = completedCount;
       if (finalCompletedCount > 0) {
          ((ServerCommandSource)context.getSource())
-            .method_9226(() -> Text.method_43470("§a成功完成 " + finalCompletedCount + " 个任务").method_27692(Formatting.field_1060), false);
-         player.method_7353(Text.method_43470("§6所有进行中的任务已完成，奖励已发放"), false);
+            .sendFeedback(() -> Text.literal("§a成功完成 " + finalCompletedCount + " 个任务").formatted(Formatting.GREEN), false);
+         player.sendMessage(Text.literal("§6所有进行中的任务已完成，奖励已发放"), false);
       } else {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有可完成的任务").method_27692(Formatting.field_1054), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有可完成的任务").formatted(Formatting.YELLOW), false);
       }
 
       return 1;
    }
 
    public static int resetAllQuests(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
       int activeCount = 0;
       int completedCount = 0;
-      if (questData.method_10545("activeQuests")) {
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+      if (questData.contains("activeQuests")) {
+         NbtList activeList = questData.getList("activeQuests", 10);
          activeCount = activeList.size();
       }
 
-      if (questData.method_10545("completedQuests")) {
-         NbtList completedList = questData.method_10554("completedQuests", 8);
+      if (questData.contains("completedQuests")) {
+         NbtList completedList = questData.getList("completedQuests", 8);
          completedCount = completedList.size();
       }
 
-      questData.method_10566("activeQuests", new NbtList());
-      questData.method_10566("completedQuests", new NbtList());
-      questData.method_10551("dailyQuests");
-      questData.method_10551("lastDailyAssignDay");
-      questData.method_10551("eventQuests");
-      questData.method_10551("lastEventAssignDay");
+      questData.put("activeQuests", new NbtList());
+      questData.put("completedQuests", new NbtList());
+      questData.remove("dailyQuests");
+      questData.remove("lastDailyAssignDay");
+      questData.remove("eventQuests");
+      questData.remove("lastEventAssignDay");
       QuestManager.saveQuestData(player, questData);
-      ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("§a所有任务已重置").method_27692(Formatting.field_1060), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("§a所有任务已重置").formatted(Formatting.GREEN), false);
       int finalActiveCount = activeCount;
       int finalCompletedCount = completedCount;
       ((ServerCommandSource)context.getSource())
-         .method_9226(
-            () -> Text.method_43470("§7清除了 " + finalActiveCount + " 个进行中任务和 " + finalCompletedCount + " 个已完成任务").method_27692(Formatting.field_1080), false
-         );
-      player.method_7353(Text.method_43470("§a所有任务数据已重置，你可以重新开始任务了"), false);
+         .sendFeedback(() -> Text.literal("§7清除了 " + finalActiveCount + " 个进行中任务和 " + finalCompletedCount + " 个已完成任务").formatted(Formatting.GRAY), false);
+      player.sendMessage(Text.literal("§a所有任务数据已重置，你可以重新开始任务了"), false);
       return 1;
    }
 
    public static int questInfoActive(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
-      if (!questData.method_10545("activeQuests")) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有进行中的任务").method_27692(Formatting.field_1054), false);
+      if (!questData.contains("activeQuests")) {
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有进行中的任务").formatted(Formatting.YELLOW), false);
          return 0;
       }
 
-      NbtList activeList = questData.method_10554("activeQuests", 10);
+      NbtList activeList = questData.getList("activeQuests", 10);
       if (activeList.isEmpty()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有进行中的任务").method_27692(Formatting.field_1054), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有进行中的任务").formatted(Formatting.YELLOW), false);
          return 0;
       }
 
-      NbtCompound firstQuest = activeList.method_10602(0);
-      String questId = firstQuest.method_10558("id");
+      NbtCompound firstQuest = activeList.getCompound(0);
+      String questId = firstQuest.getString("id");
       if (!QuestManager.getQuest(questId).isPresent()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务不存在: " + questId).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务不存在: " + questId).formatted(Formatting.RED), false);
          return 0;
       }
 
       QuestManager.QuestTemplate quest = QuestManager.getQuest(questId).get();
-      ((ServerCommandSource)context.getSource())
-         .method_9226(() -> Text.method_43470("=== " + quest.getName() + " ===").method_27692(Formatting.field_1065), false);
-      ((ServerCommandSource)context.getSource())
-         .method_9226(() -> Text.method_43470("描述: " + quest.getDescription()).method_27692(Formatting.field_1068), false);
-      ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("目标:").method_27692(Formatting.field_1054), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("=== " + quest.getName() + " ===").formatted(Formatting.GOLD), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("描述: " + quest.getDescription()).formatted(Formatting.WHITE), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("目标:").formatted(Formatting.YELLOW), false);
 
       for (QuestManager.QuestObjective objective : quest.getObjectives()) {
-         ((ServerCommandSource)context.getSource())
-            .method_9226(() -> Text.method_43470("• " + objective.getDescription()).method_27692(Formatting.field_1080), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("• " + objective.getDescription()).formatted(Formatting.GRAY), false);
       }
 
-      ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("奖励:").method_27692(Formatting.field_1060), false);
+      ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("奖励:").formatted(Formatting.GREEN), false);
 
       for (Entry<String, Object> entry : quest.getRewards().entrySet()) {
          String rewardDesc = getRewardDescription(entry.getKey(), entry.getValue());
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("• " + rewardDesc).method_27692(Formatting.field_1060), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("• " + rewardDesc).formatted(Formatting.GREEN), false);
       }
 
-      if (firstQuest.method_10545("progress")) {
-         NbtCompound progress = firstQuest.method_10562("progress");
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("当前进度:").method_27692(Formatting.field_1078), false);
+      if (firstQuest.contains("progress")) {
+         NbtCompound progress = firstQuest.getCompound("progress");
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("当前进度:").formatted(Formatting.BLUE), false);
 
-         for (String key : progress.method_10541()) {
-            int current = progress.method_10550(key);
+         for (String key : progress.getKeys()) {
+            int current = progress.getInt(key);
 
             for (QuestManager.QuestObjective objective : quest.getObjectives()) {
                if (objective.getType().equals(key)) {
                   int target = objective.getTargetCount();
                   ((ServerCommandSource)context.getSource())
-                     .method_9226(
-                        () -> Text.method_43470("• " + objective.getDescription() + ": " + current + "/" + target).method_27692(Formatting.field_1078), false
-                     );
+                     .sendFeedback(() -> Text.literal("• " + objective.getDescription() + ": " + current + "/" + target).formatted(Formatting.BLUE), false);
                   break;
                }
             }
@@ -454,64 +440,62 @@ public class QuestCommand {
    }
 
    public static int completeActiveQuest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
       IPlayerData playerData = (IPlayerData)player;
       NbtCompound questData = playerData.getQuestData();
-      if (!questData.method_10545("activeQuests")) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有进行中的任务").method_27692(Formatting.field_1054), false);
+      if (!questData.contains("activeQuests")) {
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有进行中的任务").formatted(Formatting.YELLOW), false);
          return 0;
       }
 
-      NbtList activeList = questData.method_10554("activeQuests", 10);
+      NbtList activeList = questData.getList("activeQuests", 10);
       if (activeList.isEmpty()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("没有进行中的任务").method_27692(Formatting.field_1054), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("没有进行中的任务").formatted(Formatting.YELLOW), false);
          return 0;
       }
 
-      NbtCompound firstQuest = activeList.method_10602(0);
-      String questId = firstQuest.method_10558("id");
+      NbtCompound firstQuest = activeList.getCompound(0);
+      String questId = firstQuest.getString("id");
       if (!QuestManager.getQuest(questId).isPresent()) {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("任务不存在: " + questId).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务不存在: " + questId).formatted(Formatting.RED), false);
          return 0;
       }
 
-      if (questData.method_10545("completedQuests")) {
-         NbtList completedList = questData.method_10554("completedQuests", 8);
+      if (questData.contains("completedQuests")) {
+         NbtList completedList = questData.getList("completedQuests", 8);
 
          for (int i = 0; i < completedList.size(); i++) {
-            if (completedList.method_10608(i).equals(questId)) {
-               ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("你已经完成过这个任务了").method_27692(Formatting.field_1061), false);
+            if (completedList.getString(i).equals(questId)) {
+               ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("你已经完成过这个任务了").formatted(Formatting.RED), false);
                return 0;
             }
          }
       }
 
       try {
-         firstQuest.method_10569("status", 2);
-         activeList.method_10536(0);
-         questData.method_10566("activeQuests", activeList);
+         firstQuest.putInt("status", 2);
+         activeList.remove(0);
+         questData.put("activeQuests", activeList);
          NbtList completedList;
-         if (questData.method_10545("completedQuests")) {
-            completedList = questData.method_10554("completedQuests", 8);
+         if (questData.contains("completedQuests")) {
+            completedList = questData.getList("completedQuests", 8);
          } else {
             completedList = new NbtList();
          }
 
-         completedList.add(NbtString.method_23256(questId));
-         questData.method_10566("completedQuests", completedList);
+         completedList.add(NbtString.of(questId));
+         questData.put("completedQuests", completedList);
          QuestManager.saveQuestData(player, questData);
          QuestManager.giveQuestRewards(player, questId);
          QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
          if (template != null) {
-            player.method_7353(Text.method_43470("§6任务完成: " + template.title + " - 奖励已发放"), false);
-            ((ServerCommandSource)context.getSource())
-               .method_9226(() -> Text.method_43470("任务完成: " + template.title).method_27692(Formatting.field_1060), false);
+            player.sendMessage(Text.literal("§6任务完成: " + template.title + " - 奖励已发放"), false);
+            ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("任务完成: " + template.title).formatted(Formatting.GREEN), false);
          }
 
          return 1;
       } catch (Exception e) {
-         ((ServerCommandSource)context.getSource())
-            .method_9226(() -> Text.method_43470("完成任务时发生错误: " + e.getMessage()).method_27692(Formatting.field_1061), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("完成任务时发生错误: " + e.getMessage()).formatted(Formatting.RED), false);
          return 0;
       }
    }

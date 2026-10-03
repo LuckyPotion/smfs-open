@@ -33,9 +33,9 @@ public class ServerTutorialManager extends TutorialManager {
 
    @Override
    public int calculateCurrentDay() {
-      World world = this.server.method_30002();
+      World world = this.server.getOverworld();
       if (world != null) {
-         long totalTime = world.method_8510();
+         long totalTime = world.getTime();
          int day = (int)(totalTime / 24000L) + 1;
          return Math.max(day, 1);
       } else {
@@ -94,7 +94,7 @@ public class ServerTutorialManager extends TutorialManager {
    }
 
    public String getPlayerName(ServerPlayerEntity player) {
-      return player != null ? player.method_5477().getString() : "Player";
+      return player != null ? player.getName().getString() : "Player";
    }
 
    @Override

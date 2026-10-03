@@ -32,9 +32,9 @@ public class SpearRemoteAttackC2SPacket {
             int targetEntityId = buf.readInt();
             server.execute(
                () -> {
-                  ItemStack stack = player.method_6047();
+                  ItemStack stack = player.getMainHandStack();
                   SpiritWeapon weapon = null;
-                  if (stack.method_7909() instanceof FissuredSpearPurpleItem) {
+                  if (stack.getItem() instanceof FissuredSpearPurpleItem) {
                      String mode = FissuredSpearPurpleItem.getThrowMode(stack);
                      if (!mode.equals("wish")) {
                         return;
@@ -45,9 +45,9 @@ public class SpearRemoteAttackC2SPacket {
                         return;
                      }
 
-                     weapon = (SpiritWeapon)stack.method_7909();
+                     weapon = (SpiritWeapon)stack.getItem();
                   } else {
-                     if (!(stack.method_7909() instanceof RustyOldBroadswordItem)) {
+                     if (!(stack.getItem() instanceof RustyOldBroadswordItem)) {
                         return;
                      }
 
@@ -55,36 +55,27 @@ public class SpearRemoteAttackC2SPacket {
                         return;
                      }
 
-                     weapon = (SpiritWeapon)stack.method_7909();
+                     weapon = (SpiritWeapon)stack.getItem();
                   }
 
-                  if (!player.method_7357().method_7904(stack.method_7909())) {
-                     if (player.method_37908().method_8469(targetEntityId) instanceof LivingEntity target && target != player && target.method_5805()) {
+                  if (!player.getItemCooldownManager().isCoolingDown(stack.getItem())) {
+                     if (player.getWorld().getEntityById(targetEntityId) instanceof LivingEntity target && target != player && target.isAlive()) {
                         float weaponDamageBonus = weapon.getSpiritDamageBonus();
                         float damageMultiplier = weapon.getSpiritDamageMultiplier();
                         NbtCompound attackerData = PlayerEvents.getSpiritAttributes(player);
-                        float playerSpiritDamage = attackerData.method_10545("spiritDamage") ? (float)attackerData.method_10574("spiritDamage") : 0.0F;
-                        float tempSpiritDamage = attackerData.method_10545("tempSpiritDamage") ? (float)attackerData.method_10574("tempSpiritDamage") : 0.0F;
-                        float tempSpiritDamageMultiplier = attackerData.method_10545("tempSpiritDamageMultiplier")
-                           ? (float)attackerData.method_10574("tempSpiritDamageMultiplier")
+                        float playerSpiritDamage = attackerData.contains("spiritDamage") ? (float)attackerData.getDouble("spiritDamage") : 0.0F;
+                        float tempSpiritDamage = attackerData.contains("tempSpiritDamage") ? (float)attackerData.getDouble("tempSpiritDamage") : 0.0F;
+                        float tempSpiritDamageMultiplier = attackerData.contains("tempSpiritDamageMultiplier")
+                           ? (float)attackerData.getDouble("tempSpiritDamageMultiplier")
                            : 1.0F;
                         float totalSpiritDamage = playerSpiritDamage * tempSpiritDamageMultiplier + tempSpiritDamage;
                         float spiritDamage = weaponDamageBonus + totalSpiritDamage * damageMultiplier;
-                        target.method_5643(player.method_48923().method_48802(player), spiritDamage);
-                        player.method_37908()
-                           .method_43128(
-                              null,
-                              player.method_23317(),
-                              player.method_23318(),
-                              player.method_23321(),
-                              ModSounds.SWING_ATTACK_SOUND,
-                              SoundCategory.field_15251,
-                              1.0F,
-                              1.0F
-                           );
-                        player.method_7357().method_7906(stack.method_7909(), 10);
-                        if (stack.method_7909() instanceof FissuredSpearPurpleItem && FissuredSpearPurpleItem.isShowWishText(stack)) {
-                           player.method_7353(Text.method_43470("§6我说这一刀砍下必定命中眼前生物"), false);
+                        target.damage(player.getDamageSources().playerAttack(player), spiritDamage);
+                        player.getWorld()
+                           .playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.SWING_ATTACK_SOUND, SoundCategory.HOSTILE, 1.0F, 1.0F);
+                        player.getItemCooldownManager().set(stack.getItem(), 10);
+                        if (stack.getItem() instanceof FissuredSpearPurpleItem && FissuredSpearPurpleItem.isShowWishText(stack)) {
+                           player.sendMessage(Text.literal("§6我说这一刀砍下必定命中眼前生物"), false);
                         }
                      }
                   }

@@ -31,47 +31,47 @@ import org.jetbrains.annotations.Nullable;
 public class DefiledArmorItem extends ArmorItem {
    private static final EnumMap<Type, UUID> ARMOR_MODIFIER_IDS = new EnumMap<>(Type.class);
    public static final ArmorMaterial DEFILED_ARMOR_MATERIAL = new ArmorMaterial() {
-      public int method_48402(Type type) {
+      public int getDurability(Type type) {
          return switch (type) {
-            case field_41934 -> 363;
-            case field_41935 -> 528;
-            case field_41936 -> 495;
-            case field_41937 -> 429;
+            case HELMET -> 363;
+            case CHESTPLATE -> 528;
+            case LEGGINGS -> 495;
+            case BOOTS -> 429;
             default -> throw new IncompatibleClassChangeError();
          };
       }
 
-      public int method_48403(Type type) {
+      public int getProtection(Type type) {
          return switch (type) {
-            case field_41934 -> 3;
-            case field_41935 -> 8;
-            case field_41936 -> 6;
-            case field_41937 -> 3;
+            case HELMET -> 3;
+            case CHESTPLATE -> 8;
+            case LEGGINGS -> 6;
+            case BOOTS -> 3;
             default -> throw new IncompatibleClassChangeError();
          };
       }
 
-      public int method_7699() {
+      public int getEnchantability() {
          return 10;
       }
 
-      public SoundEvent method_7698() {
-         return SoundEvents.field_15103;
+      public SoundEvent getEquipSound() {
+         return SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND;
       }
 
-      public Ingredient method_7695() {
-         return Ingredient.method_8091(new ItemConvertible[]{(ItemConvertible)Registries.field_41178.method_10223(new Identifier("smfs", "defiled_ingot"))});
+      public Ingredient getRepairIngredient() {
+         return Ingredient.ofItems(new ItemConvertible[]{(ItemConvertible)Registries.ITEM.get(new Identifier("smfs", "defiled_ingot"))});
       }
 
-      public String method_7694() {
+      public String getName() {
          return "smfs:defiled";
       }
 
-      public float method_7700() {
+      public float getToughness() {
          return 2.0F;
       }
 
-      public float method_24355() {
+      public float getKnockbackResistance() {
          return 0.0F;
       }
    };
@@ -81,56 +81,56 @@ public class DefiledArmorItem extends ArmorItem {
       super(DEFILED_ARMOR_MATERIAL, type, settings);
    }
 
-   public Multimap<EntityAttribute, EntityAttributeModifier> method_7844(EquipmentSlot slot) {
-      if (slot == this.field_41933.method_48399()) {
+   public Multimap<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(EquipmentSlot slot) {
+      if (slot == this.type.getEquipmentSlot()) {
          Builder<EntityAttribute, EntityAttributeModifier> builder = ImmutableMultimap.builder();
-         builder.putAll(super.method_7844(slot));
+         builder.putAll(super.getAttributeModifiers(slot));
          return builder.build();
       } else {
-         return super.method_7844(slot);
+         return super.getAttributeModifiers(slot);
       }
    }
 
-   public void method_7888(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-      super.method_7888(stack, world, entity, slot, selected);
-      if (!world.method_8608() && entity instanceof PlayerEntity player) {
+   public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+      super.inventoryTick(stack, world, entity, slot, selected);
+      if (!world.isClient() && entity instanceof PlayerEntity player) {
          EquipmentSlot equipmentSlot = null;
          if (slot >= 0 && slot < 4) {
-            equipmentSlot = EquipmentSlot.method_20234(net.minecraft.entity.EquipmentSlot.Type.field_6178, slot);
+            equipmentSlot = EquipmentSlot.fromTypeIndex(net.minecraft.entity.EquipmentSlot.Type.ARMOR, slot);
          }
 
-         if (equipmentSlot != null && equipmentSlot == this.field_41933.method_48399()) {
+         if (equipmentSlot != null && equipmentSlot == this.type.getEquipmentSlot()) {
             PlayerEvents.getSpiritAttributes(player);
          }
       }
    }
 
-   public boolean method_7846() {
+   public boolean isDamageable() {
       return false;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
 
-      String itemKey = switch (this.field_41933) {
-         case field_41934 -> "defiled_helmet";
-         case field_41935 -> "defiled_chestplate";
-         case field_41936 -> "defiled_leggings";
-         case field_41937 -> "defiled_boots";
+      String itemKey = switch (this.type) {
+         case HELMET -> "defiled_helmet";
+         case CHESTPLATE -> "defiled_chestplate";
+         case LEGGINGS -> "defiled_leggings";
+         case BOOTS -> "defiled_boots";
          default -> throw new IncompatibleClassChangeError();
       };
-      tooltip.add(Text.method_43471("item.smfs." + itemKey + ".description.source"));
-      tooltip.add(Text.method_43471("item.smfs." + itemKey + ".description.desc"));
-      tooltip.add(Text.method_43471("item.smfs." + itemKey + ".description.type"));
-      tooltip.add(Text.method_43471("item.smfs." + itemKey + ".effect.spirit_resistance"));
-      tooltip.add(Text.method_43471("item.smfs." + itemKey + ".effect.max_sanity"));
-      tooltip.add(Text.method_43471("item.smfs." + itemKey + ".effect.max_spirit"));
+      tooltip.add(Text.translatable("item.smfs." + itemKey + ".description.source"));
+      tooltip.add(Text.translatable("item.smfs." + itemKey + ".description.desc"));
+      tooltip.add(Text.translatable("item.smfs." + itemKey + ".description.type"));
+      tooltip.add(Text.translatable("item.smfs." + itemKey + ".effect.spirit_resistance"));
+      tooltip.add(Text.translatable("item.smfs." + itemKey + ".effect.max_sanity"));
+      tooltip.add(Text.translatable("item.smfs." + itemKey + ".effect.max_spirit"));
    }
 
    static {
-      ARMOR_MODIFIER_IDS.put(Type.field_41937, UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"));
-      ARMOR_MODIFIER_IDS.put(Type.field_41936, UUID.fromString("D8499B04-0E66-4726-AB29-64490D7C3B51"));
-      ARMOR_MODIFIER_IDS.put(Type.field_41935, UUID.fromString("9F3D476D-C118-4C66-A356-95C4C6D8C7B2"));
-      ARMOR_MODIFIER_IDS.put(Type.field_41934, UUID.fromString("2AD3F246-FEE1-4ECB-ACB6-7F4B2A7F5F3A"));
+      ARMOR_MODIFIER_IDS.put(Type.BOOTS, UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B6B"));
+      ARMOR_MODIFIER_IDS.put(Type.LEGGINGS, UUID.fromString("D8499B04-0E66-4726-AB29-64490D7C3B51"));
+      ARMOR_MODIFIER_IDS.put(Type.CHESTPLATE, UUID.fromString("9F3D476D-C118-4C66-A356-95C4C6D8C7B2"));
+      ARMOR_MODIFIER_IDS.put(Type.HELMET, UUID.fromString("2AD3F246-FEE1-4ECB-ACB6-7F4B2A7F5F3A"));
    }
 }

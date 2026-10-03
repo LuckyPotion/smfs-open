@@ -25,7 +25,7 @@ public class RequestJoinFactionC2SPacket {
    public static void handle(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
       int entityId = buf.readInt();
       server.execute(() -> {
-         Entity entity = player.method_37908().method_8469(entityId);
+         Entity entity = player.getWorld().getEntityById(entityId);
          if (entity != null) {
             PlayerFaction targetFaction = FactionManager.getFactionForEntity(entity);
             if (targetFaction != null) {

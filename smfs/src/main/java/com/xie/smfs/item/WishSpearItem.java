@@ -26,19 +26,19 @@ public class WishSpearItem extends BoundSpearItem {
    }
 
    @Override
-   public void method_7888(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-      super.method_7888(stack, world, entity, slot, selected);
-      if (!stack.method_7985() || !stack.method_7948().method_10545("ThrowMode")) {
+   public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+      super.inventoryTick(stack, world, entity, slot, selected);
+      if (!stack.hasNbt() || !stack.getOrCreateNbt().contains("ThrowMode")) {
          setThrowMode(stack, "medium");
       }
    }
 
    @Override
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43471("item.smfs.wish_spear.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.wish_spear.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.wish_spear.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.wish_spear.skill.description"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.translatable("item.smfs.wish_spear.description.source"));
+      tooltip.add(Text.translatable("item.smfs.wish_spear.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.wish_spear.description.type"));
+      tooltip.add(Text.translatable("item.smfs.wish_spear.skill.description"));
       String mode = getThrowMode(stack);
 
       String modeText = switch (mode) {
@@ -46,7 +46,7 @@ public class WishSpearItem extends BoundSpearItem {
          case "wish" -> "§d许愿模式";
          default -> "§7未知";
       };
-      tooltip.add(Text.method_43470("当前模式: " + modeText));
+      tooltip.add(Text.literal("当前模式: " + modeText));
       if (mode.equals("wish")) {
          String preset = getWishPreset(stack);
 
@@ -55,15 +55,15 @@ public class WishSpearItem extends BoundSpearItem {
             case "remote_attack" -> "§e远程攻击";
             default -> "§7未设置";
          };
-         tooltip.add(Text.method_43470("许愿预设: " + presetText));
+         tooltip.add(Text.literal("许愿预设: " + presetText));
       }
 
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
       if (this.isBound(stack)) {
-         tooltip.add(Text.method_43470("已认主").method_27692(Formatting.field_1054));
+         tooltip.add(Text.literal("已认主").formatted(Formatting.YELLOW));
       } else {
-         tooltip.add(Text.method_43470("未认主").method_27692(Formatting.field_1080));
+         tooltip.add(Text.literal("未认主").formatted(Formatting.GRAY));
       }
    }
 }

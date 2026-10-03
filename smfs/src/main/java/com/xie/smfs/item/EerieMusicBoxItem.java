@@ -35,43 +35,43 @@ public class EerieMusicBoxItem extends Item implements GeoItem {
       super(new FabricItemSettings().maxCount(1));
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity player, Hand hand) {
-      ItemStack stack = player.method_5998(hand);
-      if (!world.field_9236) {
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (!world.isClient) {
          if (this.isOnCooldown(stack)) {
             long remainingTicks = this.getRemainingCooldown(stack);
             int remainingSeconds = (int)(remainingTicks / 20L);
-            player.method_7353(Text.method_43471("item.smfs.eerie_music_box.on_cooldown").method_10852(Text.method_43470(" (" + remainingSeconds + "秒)")), true);
-            return TypedActionResult.method_22430(stack);
+            user.sendMessage(Text.translatable("item.smfs.eerie_music_box.on_cooldown").append(Text.literal(" (" + remainingSeconds + "秒)")), true);
+            return TypedActionResult.pass(stack);
          }
 
-         this.openMusicBox(player, stack, world);
+         this.openMusicBox(user, stack, world);
       }
 
-      return TypedActionResult.method_22427(stack);
+      return TypedActionResult.success(stack);
    }
 
    private boolean isMusicBoxOpen(ItemStack stack) {
-      NbtCompound nbt = stack.method_7948();
-      return nbt.method_10577("IsOpen");
+      NbtCompound nbt = stack.getOrCreateNbt();
+      return nbt.getBoolean("IsOpen");
    }
 
    public void setMusicBoxOpen(ItemStack stack, boolean open) {
-      NbtCompound nbt = stack.method_7948();
-      nbt.method_10556("IsOpen", open);
+      NbtCompound nbt = stack.getOrCreateNbt();
+      nbt.putBoolean("IsOpen", open);
    }
 
    private void openMusicBox(PlayerEntity player, ItemStack stack, World world) {
       this.setMusicBoxOpen(stack, true);
-      player.method_6092(new StatusEffectInstance(ModEffects.MUSIC_BOX_CURSE, 18000, 0));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.MUSIC_BOX_CURSE, 18000, 0));
       this.setCooldown(stack, 18000);
-      player.method_7353(Text.method_43471("item.smfs.eerie_music_box.opened"), true);
+      player.sendMessage(Text.translatable("item.smfs.eerie_music_box.opened"), true);
    }
 
    public boolean isOnCooldown(ItemStack stack) {
-      NbtCompound nbt = stack.method_7969();
-      if (nbt != null && nbt.method_10545("CooldownEnd")) {
-         long cooldownEnd = nbt.method_10537("CooldownEnd");
+      NbtCompound nbt = stack.getNbt();
+      if (nbt != null && nbt.contains("CooldownEnd")) {
+         long cooldownEnd = nbt.getLong("CooldownEnd");
          return cooldownEnd > 0L && this.getCurrentTick() < cooldownEnd;
       } else {
          return false;
@@ -79,9 +79,9 @@ public class EerieMusicBoxItem extends Item implements GeoItem {
    }
 
    private long getRemainingCooldown(ItemStack stack) {
-      NbtCompound nbt = stack.method_7969();
-      if (nbt != null && nbt.method_10545("CooldownEnd")) {
-         long cooldownEnd = nbt.method_10537("CooldownEnd");
+      NbtCompound nbt = stack.getNbt();
+      if (nbt != null && nbt.contains("CooldownEnd")) {
+         long cooldownEnd = nbt.getLong("CooldownEnd");
          long remaining = cooldownEnd - this.getCurrentTick();
          return Math.max(0L, remaining);
       } else {
@@ -90,25 +90,25 @@ public class EerieMusicBoxItem extends Item implements GeoItem {
    }
 
    private void setCooldown(ItemStack stack, int durationTicks) {
-      NbtCompound nbt = stack.method_7948();
-      nbt.method_10544("CooldownEnd", this.getCurrentTick() + durationTicks);
+      NbtCompound nbt = stack.getOrCreateNbt();
+      nbt.putLong("CooldownEnd", this.getCurrentTick() + durationTicks);
    }
 
    private long getCurrentTick() {
       return System.currentTimeMillis() / 50L;
    }
 
-   public ActionResult method_7884(ItemUsageContext context) {
-      return ActionResult.field_5811;
+   public ActionResult useOnBlock(ItemUsageContext context) {
+      return ActionResult.PASS;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.eerie_music_box.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_music_box.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_music_box.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_music_box.description.effect"));
-      tooltip.add(Text.method_43471("item.smfs.eerie_music_box.description.side_effect"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.eerie_music_box.description.source"));
+      tooltip.add(Text.translatable("item.smfs.eerie_music_box.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.eerie_music_box.description.type"));
+      tooltip.add(Text.translatable("item.smfs.eerie_music_box.description.effect"));
+      tooltip.add(Text.translatable("item.smfs.eerie_music_box.description.side_effect"));
    }
 
    @Override

@@ -14,11 +14,11 @@ public class CorpseOilItem extends Item {
       super(settings);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.corpse_oil.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.corpse_oil.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.corpse_oil.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.brewable_material"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.corpse_oil.description.source"));
+      tooltip.add(Text.translatable("item.smfs.corpse_oil.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.corpse_oil.description.type"));
+      tooltip.add(Text.translatable("item.smfs.brewable_material"));
    }
 }

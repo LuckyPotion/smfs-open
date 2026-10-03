@@ -19,8 +19,8 @@ public class QuestUIManager {
    public static List<QuestUIManager.QuestInfo> getAvailableQuests(PlayerEntity player) {
       List<QuestUIManager.QuestInfo> availableQuests = new ArrayList<>();
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (Entry<String, QuestManager.QuestTemplate> entry : QuestManager.QUEST_TEMPLATES.entrySet()) {
          String questId = entry.getKey();
@@ -29,8 +29,8 @@ public class QuestUIManager {
             boolean alreadyHasQuest = false;
 
             for (int i = 0; i < activeQuests.size(); i++) {
-               NbtCompound quest = activeQuests.method_10602(i);
-               if (quest.method_10558("id").equals(questId)) {
+               NbtCompound quest = activeQuests.getCompound(i);
+               if (quest.getString("id").equals(questId)) {
                   alreadyHasQuest = true;
                   break;
                }
@@ -39,8 +39,8 @@ public class QuestUIManager {
             boolean alreadyCompleted = false;
 
             for (int i = 0; i < completedQuests.size(); i++) {
-               NbtCompound quest = completedQuests.method_10602(i);
-               if (quest.method_10558("id").equals(questId)) {
+               NbtCompound quest = completedQuests.getCompound(i);
+               if (quest.getString("id").equals(questId)) {
                   alreadyCompleted = true;
                   break;
                }
@@ -53,8 +53,8 @@ public class QuestUIManager {
                   boolean prerequisiteCompleted = false;
 
                   for (int i = 0; i < completedQuests.size(); i++) {
-                     NbtCompound completedQuest = completedQuests.method_10602(i);
-                     if (completedQuest.method_10558("id").equals(prerequisite)) {
+                     NbtCompound completedQuest = completedQuests.getCompound(i);
+                     if (completedQuest.getString("id").equals(prerequisite)) {
                         prerequisiteCompleted = true;
                         break;
                      }
@@ -104,12 +104,12 @@ public class QuestUIManager {
       }
 
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList availableQuests = questData.method_10554("availableQuests", 10);
+      NbtList availableQuests = questData.getList("availableQuests", 10);
 
       for (int i = 0; i < availableQuests.size(); i++) {
-         NbtCompound quest = availableQuests.method_10602(i);
-         String questId = quest.method_10558("id");
-         String questType = quest.method_10558("type");
+         NbtCompound quest = availableQuests.getCompound(i);
+         String questId = quest.getString("id");
+         String questType = quest.getString("type");
          if ("daily".equals(questType)) {
             dailyQuests.add(questId);
          }
@@ -125,12 +125,12 @@ public class QuestUIManager {
       }
 
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList availableQuests = questData.method_10554("availableQuests", 10);
+      NbtList availableQuests = questData.getList("availableQuests", 10);
 
       for (int i = 0; i < availableQuests.size(); i++) {
-         NbtCompound quest = availableQuests.method_10602(i);
-         String questId = quest.method_10558("id");
-         String questType = quest.method_10558("type");
+         NbtCompound quest = availableQuests.getCompound(i);
+         String questId = quest.getString("id");
+         String questType = quest.getString("type");
          if ("side".equals(questType)) {
             eventQuests.add(questId);
          }
@@ -143,11 +143,11 @@ public class QuestUIManager {
       Map<String, List<String>> categorizedQuests = new LinkedHashMap<>();
       List<String> mainQuests = new ArrayList<>();
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String questId = quest.method_10558("id");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String questId = quest.getString("id");
          if (QuestConfig.getMainQuestIds().contains(questId)) {
             mainQuests.add(questId);
          }
@@ -170,9 +170,9 @@ public class QuestUIManager {
       List<String> newbieQuests = new ArrayList<>();
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         String questId = quest.method_10558("id");
-         String questType = quest.method_10558("type");
+         NbtCompound quest = activeQuests.getCompound(i);
+         String questId = quest.getString("id");
+         String questType = quest.getString("type");
          if ("newbie".equals(questType)) {
             newbieQuests.add(questId);
          }
@@ -249,9 +249,9 @@ public class QuestUIManager {
    public static Map<String, Integer> getQuestStatistics(PlayerEntity player) {
       Map<String, Integer> statistics = new HashMap<>();
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       statistics.put("activeQuests", activeQuests.size());
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
       statistics.put("completedQuests", completedQuests.size());
       statistics.put("dailyQuests", DailyQuestManager.getCurrentDailyQuestCount(player));
       statistics.put("eventQuests", DailyQuestManager.getCurrentEventQuestCount(player));
@@ -265,20 +265,20 @@ public class QuestUIManager {
       }
 
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
             return false;
          }
       }
 
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int i = 0; i < completedQuests.size(); i++) {
-         NbtCompound quest = completedQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
+         NbtCompound quest = completedQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
             return false;
          }
       }
@@ -287,8 +287,8 @@ public class QuestUIManager {
          boolean prerequisiteCompleted = false;
 
          for (int i = 0; i < completedQuests.size(); i++) {
-            NbtCompound completedQuest = completedQuests.method_10602(i);
-            if (completedQuest.method_10558("id").equals(prerequisite)) {
+            NbtCompound completedQuest = completedQuests.getCompound(i);
+            if (completedQuest.getString("id").equals(prerequisite)) {
                prerequisiteCompleted = true;
                break;
             }
@@ -329,22 +329,22 @@ public class QuestUIManager {
       details.put("prerequisites", template.prerequisites);
       details.put("canAccept", canAcceptQuest(player, questId));
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       boolean isActive = false;
 
       for (int i = 0; i < activeQuests.size(); i++) {
-         NbtCompound quest = activeQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
+         NbtCompound quest = activeQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
             isActive = true;
-            NbtList questObjectives = quest.method_10554("objectives", 10);
+            NbtList questObjectives = quest.getList("objectives", 10);
             List<Map<String, Object>> progressInfo = new ArrayList<>();
 
             for (int j = 0; j < questObjectives.size(); j++) {
-               NbtCompound objective = questObjectives.method_10602(j);
+               NbtCompound objective = questObjectives.getCompound(j);
                Map<String, Object> progress = new HashMap<>();
-               progress.put("id", objective.method_10558("id"));
-               progress.put("progress", objective.method_10550("progress"));
-               progress.put("target", objective.method_10550("target"));
+               progress.put("id", objective.getString("id"));
+               progress.put("progress", objective.getInt("progress"));
+               progress.put("target", objective.getInt("target"));
                progressInfo.add(progress);
             }
 
@@ -360,12 +360,12 @@ public class QuestUIManager {
    public static Text getQuestDisplayText(PlayerEntity player, String questId) {
       QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
       if (template == null) {
-         return Text.method_43470("未知任务");
+         return Text.literal("未知任务");
       }
 
       String prefix = "";
 
-      return Text.method_43470(switch (template.type) {
+      return Text.literal(switch (template.type) {
          case "main" -> "§6[主线]§r ";
          case "side" -> "§5[事件]§r ";
          case "daily" -> "§a[日常]§r ";
@@ -375,7 +375,7 @@ public class QuestUIManager {
 
    public static Text getQuestDescriptionText(PlayerEntity player, String questId) {
       QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
-      return template == null ? Text.method_43470("任务描述不可用") : Text.method_43470("§7" + template.description);
+      return template == null ? Text.literal("任务描述不可用") : Text.literal("§7" + template.description);
    }
 
    public static class QuestInfo {

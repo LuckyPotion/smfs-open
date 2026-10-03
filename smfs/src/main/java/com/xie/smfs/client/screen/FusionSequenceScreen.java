@@ -21,20 +21,20 @@ public class FusionSequenceScreen extends Screen {
    private float rotationAngle = 0.0F;
 
    public FusionSequenceScreen() {
-      super(Text.method_43470(""));
+      super(Text.literal(""));
    }
 
-   protected void method_25426() {
+   protected void init() {
       this.startTime = System.currentTimeMillis();
       FusionCameraManager.startZoom();
       this.sequenceComplete = false;
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client != null && client.field_1724 != null) {
-         client.field_1724.method_5783(ModSounds.YANG_JIAN_ENTRANCE, 1.0F, 1.0F);
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client != null && client.player != null) {
+         client.player.playSound(ModSounds.YANG_JIAN_ENTRANCE, 1.0F, 1.0F);
       }
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
       long elapsed = System.currentTimeMillis() - this.startTime;
       float elapsedSeconds = (float)elapsed / 1000.0F;
       if (!this.sequenceComplete) {
@@ -46,19 +46,19 @@ public class FusionSequenceScreen extends Screen {
             this.renderSequenceBackground(context, progress);
             this.spawnParticles();
             if (elapsedSeconds >= 9.0F) {
-               float blackAlpha = MathHelper.method_15363((elapsedSeconds - 9.0F) / 3.0F, 0.0F, 1.0F);
+               float blackAlpha = MathHelper.clamp((elapsedSeconds - 9.0F) / 3.0F, 0.0F, 1.0F);
                int alpha = (int)(blackAlpha * 255.0F);
-               context.method_25294(0, 0, this.field_22789, this.field_22790, alpha << 24 | 0);
+               context.fill(0, 0, this.width, this.height, alpha << 24 | 0);
             }
          }
       }
 
-      super.method_25394(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    private void renderSequenceBackground(DrawContext context, float progress) {
       int vignetteAlpha = (int)(progress * 80.0F);
-      context.method_25294(0, 0, this.field_22789, this.field_22790, vignetteAlpha << 24);
+      context.fill(0, 0, this.width, this.height, vignetteAlpha << 24);
    }
 
    private void spawnParticles() {
@@ -68,11 +68,11 @@ public class FusionSequenceScreen extends Screen {
       WorldConfig worldConfig = WorldConfig.loadDefault();
       boolean isLinear = "linear".equals(worldConfig.endingMode);
       if (isLinear) {
-         MinecraftClient client = MinecraftClient.method_1551();
+         MinecraftClient client = MinecraftClient.getInstance();
          if (client != null) {
             client.execute(() -> {
                FusionCameraManager.stopZoom();
-               client.method_1507(new LinearEndingOverlay());
+               client.setScreen(new LinearEndingOverlay());
             });
          }
       } else {
@@ -91,7 +91,7 @@ public class FusionSequenceScreen extends Screen {
          } catch (InterruptedException var2) {
          }
 
-         MinecraftClient client = MinecraftClient.method_1551();
+         MinecraftClient client = MinecraftClient.getInstance();
          if (client != null) {
             client.execute(this::showSuccessPopup);
          }
@@ -99,7 +99,7 @@ public class FusionSequenceScreen extends Screen {
    }
 
    private void showSuccessPopup() {
-      MinecraftClient client = MinecraftClient.method_1551();
+      MinecraftClient client = MinecraftClient.getInstance();
       if (client != null) {
          client.execute(() -> {
             List<String> contents = Arrays.asList("", "你为了一个极其特殊的存在", "继承鬼童的全部属性", "可驾驭灵异数量+4", "不再担心厉鬼复苏且驾驭的厉鬼均达到全盛状态", "没有承受极限，使用灵异力量将不再有技能冷却");
@@ -108,16 +108,16 @@ public class FusionSequenceScreen extends Screen {
       }
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return false;
    }
 
-   public void method_25419() {
+   public void close() {
       FusionCameraManager.stopZoom();
-      super.method_25419();
+      super.close();
    }
 }

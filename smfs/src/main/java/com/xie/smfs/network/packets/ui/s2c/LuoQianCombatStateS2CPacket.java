@@ -25,7 +25,7 @@ public class LuoQianCombatStateS2CPacket {
    }
 
    public static void sendToAllPlayers(ServerWorld world, boolean isInCombat, int currentPower, int maxPower, boolean isInvincible, float recoveryFactor) {
-      for (PlayerEntity player : world.method_18456()) {
+      for (PlayerEntity player : world.getPlayers()) {
          sendToPlayer((ServerPlayerEntity)player, isInCombat, currentPower, maxPower, isInvincible, recoveryFactor);
       }
    }

@@ -46,14 +46,14 @@ public class PlayerEntityMixin implements IPlayerData {
    @Override
    public void setSpiritResistance(float value) {
       PlayerEntity player = (PlayerEntity)this;
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.SPIRIT_RESISTANCE);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.SPIRIT_RESISTANCE);
       if (instance != null) {
-         instance.method_6192(value);
+         instance.setBaseValue(value);
       }
 
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10549("spiritResistance", value);
-      PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("spiritResistance", value);
+      PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), data);
       PlayerEvents.setSpiritAttributes(player, data);
    }
 
@@ -66,14 +66,14 @@ public class PlayerEntityMixin implements IPlayerData {
    @Override
    public void setSpiritDamage(float value) {
       PlayerEntity player = (PlayerEntity)this;
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.SPIRIT_DAMAGE);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.SPIRIT_DAMAGE);
       if (instance != null) {
-         instance.method_6192(value);
+         instance.setBaseValue(value);
       }
 
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10549("spiritDamage", value);
-      PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("spiritDamage", value);
+      PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), data);
       PlayerEvents.setSpiritAttributes(player, data);
    }
 
@@ -110,14 +110,14 @@ public class PlayerEntityMixin implements IPlayerData {
    @Override
    public void setRevivalFactor(double value) {
       PlayerEntity player = (PlayerEntity)this;
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.REVIVAL_FACTOR);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.REVIVAL_FACTOR);
       if (instance != null) {
-         instance.method_6192((float)value);
+         instance.setBaseValue((float)value);
       }
 
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10549("revivalFactor", value);
-      PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("revivalFactor", value);
+      PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), data);
       PlayerEvents.setSpiritAttributes(player, data);
    }
 
@@ -130,14 +130,14 @@ public class PlayerEntityMixin implements IPlayerData {
    @Override
    public void setSanity(float value) {
       PlayerEntity player = (PlayerEntity)this;
-      EntityAttributeInstance instance = player.method_5996(SpiritAttributes.SANITY);
+      EntityAttributeInstance instance = player.getAttributeInstance(SpiritAttributes.SANITY);
       if (instance != null) {
-         instance.method_6192(value);
+         instance.setBaseValue(value);
       }
 
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10549("sanity", value);
-      PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.putDouble("sanity", value);
+      PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), data);
       PlayerEvents.setSpiritAttributes(player, data);
    }
 
@@ -148,7 +148,7 @@ public class PlayerEntityMixin implements IPlayerData {
 
    @Override
    public void setSpiritData(NbtCompound data) {
-      this.spiritData = data.method_10553();
+      this.spiritData = data.copy();
    }
 
    @Override
@@ -161,22 +161,22 @@ public class PlayerEntityMixin implements IPlayerData {
       this.setMaxSpirit(other.getMaxSpirit());
       this.setRevivalFactor(other.getRevivalFactor());
       this.setSanity(other.getSanity());
-      this.setSpiritData(other.getSpiritData().method_10553());
+      this.setSpiritData(other.getSpiritData().copy());
    }
 
    @Override
    public NbtCompound getQuestData() {
       PlayerEntity player = (PlayerEntity)this;
       NbtCompound data = PlayerEvents.getCachedData(player);
-      return data.method_10545("questData") ? data.method_10562("questData") : new NbtCompound();
+      return data.contains("questData") ? data.getCompound("questData") : new NbtCompound();
    }
 
    @Override
    public void setQuestData(NbtCompound questData) {
       PlayerEntity player = (PlayerEntity)this;
       NbtCompound data = PlayerEvents.getCachedData(player);
-      data.method_10566("questData", questData.method_10553());
-      PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), data);
+      data.put("questData", questData.copy());
+      PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), data);
       PlayerEvents.setSpiritAttributes(player, data);
    }
 
@@ -185,11 +185,11 @@ public class PlayerEntityMixin implements IPlayerData {
       PlayerEntity player = (PlayerEntity)this;
       NbtCompound questData = this.getQuestData();
       List<NbtCompound> activeQuests = new ArrayList<>();
-      if (questData.method_10545("activeQuests")) {
-         NbtList activeList = questData.method_10554("activeQuests", 10);
+      if (questData.contains("activeQuests")) {
+         NbtList activeList = questData.getList("activeQuests", 10);
 
          for (int i = 0; i < activeList.size(); i++) {
-            activeQuests.add(activeList.method_10602(i));
+            activeQuests.add(activeList.getCompound(i));
          }
       }
 
@@ -200,11 +200,11 @@ public class PlayerEntityMixin implements IPlayerData {
    public boolean hasCompletedQuest(String questId) {
       PlayerEntity player = (PlayerEntity)this;
       NbtCompound questData = this.getQuestData();
-      if (questData.method_10545("completedQuests")) {
-         NbtList completedList = questData.method_10554("completedQuests", 8);
+      if (questData.contains("completedQuests")) {
+         NbtList completedList = questData.getList("completedQuests", 8);
 
          for (int i = 0; i < completedList.size(); i++) {
-            if (completedList.method_10608(i).equals(questId)) {
+            if (completedList.getString(i).equals(questId)) {
                return true;
             }
          }
@@ -218,43 +218,43 @@ public class PlayerEntityMixin implements IPlayerData {
       PlayerEntity player = (PlayerEntity)this;
       NbtCompound spiritData = this.spiritData;
 
-      for (String key : spiritData.method_10541()) {
-         NbtElement element = spiritData.method_10580(key);
+      for (String key : spiritData.getKeys()) {
+         NbtElement element = spiritData.get(key);
          if (key.equals("GhostSlots")) {
             NbtCompound ghostSlots = (NbtCompound)element;
             int occupiedCount = 0;
 
-            for (String slotKey : ghostSlots.method_10541()) {
-               NbtCompound slot = ghostSlots.method_10562(slotKey);
-               if (slot.method_10577("occupied")) {
+            for (String slotKey : ghostSlots.getKeys()) {
+               NbtCompound slot = ghostSlots.getCompound(slotKey);
+               if (slot.getBoolean("occupied")) {
                   occupiedCount++;
                }
             }
          }
       }
 
-      nbt.method_10566("smfs_spirit_data", spiritData);
-      nbt.method_10569("customProperty", this.customProperty);
+      nbt.put("smfs_spirit_data", spiritData);
+      nbt.putInt("customProperty", this.customProperty);
    }
 
    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
    private void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
       PlayerEntity player = (PlayerEntity)this;
-      if (nbt.method_10545("smfs_spirit_data")) {
-         this.spiritData = nbt.method_10562("smfs_spirit_data").method_10553();
+      if (nbt.contains("smfs_spirit_data")) {
+         this.spiritData = nbt.getCompound("smfs_spirit_data").copy();
 
-         for (String key : this.spiritData.method_10541()) {
-            NbtElement var6 = this.spiritData.method_10580(key);
+         for (String key : this.spiritData.getKeys()) {
+            NbtElement var6 = this.spiritData.get(key);
          }
 
-         PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), this.spiritData.method_10553());
+         PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), this.spiritData.copy());
          PlayerEvents.syncAttributesFromNbt(player, this.spiritData);
-         this.customProperty = nbt.method_10550("customProperty");
+         this.customProperty = nbt.getInt("customProperty");
       } else {
          PlayerEvents.initSpiritData(player);
-         this.spiritData = PlayerEvents.getSpiritAttributes(player).method_10553();
+         this.spiritData = PlayerEvents.getSpiritAttributes(player).copy();
          LOGGER.info("已为玩家初始化新的灵异数据");
-         nbt.method_10566("smfs_spirit_data", this.spiritData.method_10553());
+         nbt.put("smfs_spirit_data", this.spiritData.copy());
       }
    }
 }

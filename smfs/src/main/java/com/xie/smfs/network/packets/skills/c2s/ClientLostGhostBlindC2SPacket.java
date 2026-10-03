@@ -34,7 +34,7 @@ public class ClientLostGhostBlindC2SPacket {
    ) {
       server.execute(() -> {
          try {
-            LOGGER.info("玩家 {} 执行遗忘鬼G键技能：打乱目标玩家物品栏", player.method_5477().getString());
+            LOGGER.info("玩家 {} 执行遗忘鬼G键技能：打乱目标玩家物品栏", player.getName().getString());
             PlayerEvents.balanceRevivalDegree(player);
             handleLostGhostShuffleSkill(player);
          } catch (Exception e) {
@@ -46,43 +46,43 @@ public class ClientLostGhostBlindC2SPacket {
    private static void handleLostGhostShuffleSkill(ServerPlayerEntity player) {
       LivingEntity bestTarget = TargetingUtil.findEntityInLookDirection(player, 4.0, 0.5, e -> e instanceof ServerPlayerEntity);
       if (bestTarget == null) {
-         LOGGER.warn("玩家 {} 准星位置没有其他玩家，无法使用打乱物品栏技能", player.method_5477().getString());
+         LOGGER.warn("玩家 {} 准星位置没有其他玩家，无法使用打乱物品栏技能", player.getName().getString());
       } else {
          ServerPlayerEntity targetPlayer = (ServerPlayerEntity)bestTarget;
          shufflePlayerInventory(targetPlayer);
-         LOGGER.debug("玩家 {} 成功对玩家 {} 使用打乱物品栏技能", player.method_5477().getString(), bestTarget.method_5477().getString());
+         LOGGER.debug("玩家 {} 成功对玩家 {} 使用打乱物品栏技能", player.getName().getString(), bestTarget.getName().getString());
          spawnSkillParticles(player, targetPlayer);
       }
    }
 
    private static void shufflePlayerInventory(ServerPlayerEntity player) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       List<ItemStack> allStacks = new ArrayList<>();
 
-      for (int i = 0; i < inventory.field_7547.size(); i++) {
-         ItemStack stack = (ItemStack)inventory.field_7547.get(i);
-         if (!stack.method_7960()) {
-            allStacks.add(stack.method_7972());
-            inventory.field_7547.set(i, ItemStack.field_8037);
+      for (int i = 0; i < inventory.main.size(); i++) {
+         ItemStack stack = (ItemStack)inventory.main.get(i);
+         if (!stack.isEmpty()) {
+            allStacks.add(stack.copy());
+            inventory.main.set(i, ItemStack.EMPTY);
          }
       }
 
-      for (int i = 0; i < inventory.field_7548.size(); i++) {
-         ItemStack stack = (ItemStack)inventory.field_7548.get(i);
-         if (!stack.method_7960()) {
-            allStacks.add(stack.method_7972());
-            inventory.field_7548.set(i, ItemStack.field_8037);
+      for (int i = 0; i < inventory.armor.size(); i++) {
+         ItemStack stack = (ItemStack)inventory.armor.get(i);
+         if (!stack.isEmpty()) {
+            allStacks.add(stack.copy());
+            inventory.armor.set(i, ItemStack.EMPTY);
          }
       }
 
-      ItemStack offhandStack = (ItemStack)inventory.field_7544.get(0);
-      if (!offhandStack.method_7960()) {
-         allStacks.add(offhandStack.method_7972());
-         inventory.field_7544.set(0, ItemStack.field_8037);
+      ItemStack offhandStack = (ItemStack)inventory.offHand.get(0);
+      if (!offhandStack.isEmpty()) {
+         allStacks.add(offhandStack.copy());
+         inventory.offHand.set(0, ItemStack.EMPTY);
       }
 
       Collections.shuffle(allStacks, new Random());
-      int totalSlots = inventory.field_7547.size() + inventory.field_7548.size() + 1;
+      int totalSlots = inventory.main.size() + inventory.armor.size() + 1;
       List<Integer> slotIndices = new ArrayList<>();
 
       for (int i = 0; i < totalSlots; i++) {
@@ -93,25 +93,25 @@ public class ClientLostGhostBlindC2SPacket {
 
       for (int i = 0; i < allStacks.size() && i < slotIndices.size(); i++) {
          int targetSlot = slotIndices.get(i);
-         if (targetSlot < inventory.field_7547.size()) {
-            inventory.field_7547.set(targetSlot, allStacks.get(i));
-         } else if (targetSlot < inventory.field_7547.size() + inventory.field_7548.size()) {
-            inventory.field_7548.set(targetSlot - inventory.field_7547.size(), allStacks.get(i));
+         if (targetSlot < inventory.main.size()) {
+            inventory.main.set(targetSlot, allStacks.get(i));
+         } else if (targetSlot < inventory.main.size() + inventory.armor.size()) {
+            inventory.armor.set(targetSlot - inventory.main.size(), allStacks.get(i));
          } else {
-            inventory.field_7544.set(0, allStacks.get(i));
+            inventory.offHand.set(0, allStacks.get(i));
          }
       }
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player, ServerPlayerEntity targetPlayer) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            player.method_23318() + world.field_9229.method_43058() * 2.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            player.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            player.getY() + world.random.nextDouble() * 2.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0
@@ -119,11 +119,11 @@ public class ClientLostGhostBlindC2SPacket {
       }
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            targetPlayer.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            targetPlayer.method_23318() + world.field_9229.method_43058() * 2.0,
-            targetPlayer.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            targetPlayer.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            targetPlayer.getY() + world.random.nextDouble() * 2.0,
+            targetPlayer.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0

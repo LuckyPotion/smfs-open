@@ -48,9 +48,9 @@ public class SpiritDamageS2CPacket {
    }
 
    private static void showActionBarMessage(MinecraftClient client, float baseDamage, float actualDamage) {
-      if (client.field_1724 != null) {
+      if (client.player != null) {
          if (ModConfig.getInstance().showDamageTakenText) {
-            if (client.field_1724 == null || ClientModConfig.getInstance().showDamageTakenText(client.field_1724.method_5667())) {
+            if (client.player == null || ClientModConfig.getInstance().showDamageTakenText(client.player.getUuid())) {
                long currentTime = System.currentTimeMillis();
                if (Math.abs(actualDamage - lastDamage) < 0.1F && currentTime - lastDamageTime <= 3000L) {
                   consecutiveDamageCount++;
@@ -65,24 +65,24 @@ public class SpiritDamageS2CPacket {
                   damageText = damageText + " §bx " + consecutiveDamageCount;
                }
 
-               Text message = Text.method_43470(damageText);
-               client.field_1724.method_7353(message, true);
+               Text message = Text.literal(damageText);
+               client.player.sendMessage(message, true);
             }
          }
       }
    }
 
    private static void handleSpiritDamageEffects(MinecraftClient client, float damage) {
-      if (client.field_1724 != null && !(damage <= 0.0F)) {
-         playSpiritDamageSounds(damage, client.field_1724);
+      if (client.player != null && !(damage <= 0.0F)) {
+         playSpiritDamageSounds(damage, client.player);
          setScreenEffects(damage);
-         float shakeIntensity = client.field_1724 != null ? ClientModConfig.getInstance().getScreenShakeIntensity(client.field_1724.method_5667()) : 1.0F;
+         float shakeIntensity = client.player != null ? ClientModConfig.getInstance().getScreenShakeIntensity(client.player.getUuid()) : 1.0F;
          EffectRenderHandler.setScreenShake(shakeIntensity, 0);
       }
    }
 
    private static void playSpiritDamageSounds(float damageAmount, PlayerEntity player) {
-      player.method_5783(SoundEvents.field_15115, 0.8F, 0.9F);
+      player.playSound(SoundEvents.ENTITY_PLAYER_HURT, 0.8F, 0.9F);
    }
 
    private static void setScreenEffects(float damageAmount) {
@@ -108,15 +108,15 @@ public class SpiritDamageS2CPacket {
    }
 
    private static void renderSpiritDamageEffects(DrawContext context, float tickDelta) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
-         int width = client.method_22683().method_4486();
-         int height = client.method_22683().method_4502();
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
+         int width = client.getWindow().getScaledWidth();
+         int height = client.getWindow().getScaledHeight();
          if (screenOverlayIntensity > 0.0F) {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             int color = (int)(screenOverlayIntensity * 255.0F) << 24 | 8388736;
-            context.method_25294(0, 0, width, height, color);
+            context.fill(0, 0, width, height, color);
             RenderSystem.disableBlend();
          }
       }

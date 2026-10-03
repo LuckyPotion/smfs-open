@@ -39,52 +39,52 @@ public class RoyalCurseServantData {
    }
 
    public RoyalCurseServantData(NbtCompound nbt) {
-      if (nbt.method_10545("uuid")) {
-         this.uuid = UUID.fromString(nbt.method_10558("uuid"));
+      if (nbt.contains("uuid")) {
+         this.uuid = UUID.fromString(nbt.getString("uuid"));
       }
 
-      this.playerName = nbt.method_10558("playerName");
-      this.playerUuid = nbt.method_10558("playerUuid");
-      this.released = nbt.method_10577("released");
-      this.ghostDomainColor = nbt.method_10558("ghostDomainColor");
-      this.ghostDomainLevel = nbt.method_10550("ghostDomainLevel");
-      this.ghostDomainRadius = nbt.method_10583("ghostDomainRadius");
-      this.spiritualResistance = nbt.method_10550("SpiritualResistance");
-      this.spiritualDamage = nbt.method_10550("SpiritualDamage");
-      this.spiritualStrength = nbt.method_10550("SpiritualStrength");
-      this.maxSpiritualStrength = nbt.method_10550("MaxSpiritualStrength");
-      this.recoveryFactor = nbt.method_10583("RecoveryFactor");
+      this.playerName = nbt.getString("playerName");
+      this.playerUuid = nbt.getString("playerUuid");
+      this.released = nbt.getBoolean("released");
+      this.ghostDomainColor = nbt.getString("ghostDomainColor");
+      this.ghostDomainLevel = nbt.getInt("ghostDomainLevel");
+      this.ghostDomainRadius = nbt.getFloat("ghostDomainRadius");
+      this.spiritualResistance = nbt.getInt("SpiritualResistance");
+      this.spiritualDamage = nbt.getInt("SpiritualDamage");
+      this.spiritualStrength = nbt.getInt("SpiritualStrength");
+      this.maxSpiritualStrength = nbt.getInt("MaxSpiritualStrength");
+      this.recoveryFactor = nbt.getFloat("RecoveryFactor");
       this.playerGhosts = new ArrayList<>();
-      if (nbt.method_10545("playerGhosts")) {
-         NbtList ghostsList = nbt.method_10554("playerGhosts", 8);
+      if (nbt.contains("playerGhosts")) {
+         NbtList ghostsList = nbt.getList("playerGhosts", 8);
 
          for (int i = 0; i < ghostsList.size(); i++) {
-            this.playerGhosts.add(ghostsList.method_10608(i));
+            this.playerGhosts.add(ghostsList.getString(i));
          }
       }
    }
 
    public NbtCompound toNbt() {
       NbtCompound nbt = new NbtCompound();
-      nbt.method_10582("uuid", this.uuid.toString());
-      nbt.method_10582("playerName", this.playerName);
-      nbt.method_10582("playerUuid", this.playerUuid);
-      nbt.method_10556("released", this.released);
-      nbt.method_10582("ghostDomainColor", this.ghostDomainColor);
-      nbt.method_10569("ghostDomainLevel", this.ghostDomainLevel);
-      nbt.method_10548("ghostDomainRadius", this.ghostDomainRadius);
-      nbt.method_10569("SpiritualResistance", this.spiritualResistance);
-      nbt.method_10569("SpiritualDamage", this.spiritualDamage);
-      nbt.method_10569("SpiritualStrength", this.spiritualStrength);
-      nbt.method_10569("MaxSpiritualStrength", this.maxSpiritualStrength);
-      nbt.method_10548("RecoveryFactor", this.recoveryFactor);
+      nbt.putString("uuid", this.uuid.toString());
+      nbt.putString("playerName", this.playerName);
+      nbt.putString("playerUuid", this.playerUuid);
+      nbt.putBoolean("released", this.released);
+      nbt.putString("ghostDomainColor", this.ghostDomainColor);
+      nbt.putInt("ghostDomainLevel", this.ghostDomainLevel);
+      nbt.putFloat("ghostDomainRadius", this.ghostDomainRadius);
+      nbt.putInt("SpiritualResistance", this.spiritualResistance);
+      nbt.putInt("SpiritualDamage", this.spiritualDamage);
+      nbt.putInt("SpiritualStrength", this.spiritualStrength);
+      nbt.putInt("MaxSpiritualStrength", this.maxSpiritualStrength);
+      nbt.putFloat("RecoveryFactor", this.recoveryFactor);
       NbtList ghostsList = new NbtList();
 
       for (String ghost : this.playerGhosts) {
-         ghostsList.add(NbtString.method_23256(ghost));
+         ghostsList.add(NbtString.of(ghost));
       }
 
-      nbt.method_10566("playerGhosts", ghostsList);
+      nbt.put("playerGhosts", ghostsList);
       return nbt;
    }
 

@@ -21,17 +21,17 @@ public class ShadowGhostEntity extends GhostEntity {
    private static final int LIGHT_THRESHOLD = 9;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 75000.0)
-         .method_26868(EntityAttributes.field_23719, 0.3)
-         .method_26868(EntityAttributes.field_23721, 6.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 75000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 6.0);
    }
 
    public ShadowGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 1850, 180, 40, 0.12F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(75000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.3);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(6.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(75000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.3);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(6.0);
    }
 
    @Override
@@ -40,7 +40,7 @@ public class ShadowGhostEntity extends GhostEntity {
          return false;
       } else if (CoffinEffectManager.isPlayerInGoldCoffin(player)) {
          return false;
-      } else if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      } else if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       } else {
          return !this.isPlayerInRange(player) ? false : this.isPlayerInLowLight(player);
@@ -48,26 +48,26 @@ public class ShadowGhostEntity extends GhostEntity {
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 
    private boolean isPlayerInLowLight(PlayerEntity player) {
-      BlockPos playerPos = player.method_24515();
-      World world = player.method_37908();
-      int lightLevel = world.method_22339(playerPos);
+      BlockPos playerPos = player.getBlockPos();
+      World world = player.getWorld();
+      int lightLevel = world.getLightLevel(playerPos);
       return lightLevel < 9;
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       this.updateVisibilityBasedOnLight();
    }
 
    private void updateVisibilityBasedOnLight() {
-      BlockPos pos = this.method_24515();
-      World world = this.method_37908();
-      int currentLight = world.method_22339(pos);
+      BlockPos pos = this.getBlockPos();
+      World world = this.getWorld();
+      int currentLight = world.getLightLevel(pos);
       boolean shouldBeVisible = currentLight >= 9;
       this.setVisible(shouldBeVisible);
    }

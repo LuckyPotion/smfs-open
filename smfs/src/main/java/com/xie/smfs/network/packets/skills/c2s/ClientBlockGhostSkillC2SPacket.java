@@ -29,7 +29,7 @@ public class ClientBlockGhostSkillC2SPacket {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "block_ghost", ModItems.BLOCK_GHOST, -1);
             if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-               player.method_7353(Text.method_43470("§c您没有驾驭方块鬼，无法使用此技能"), true);
+               player.sendMessage(Text.literal("§c您没有驾驭方块鬼，无法使用此技能"), true);
             } else {
                GhostDomainManager.handleBlockGhostSkill(player);
                PlayerEvents.balanceRevivalDegree(player);

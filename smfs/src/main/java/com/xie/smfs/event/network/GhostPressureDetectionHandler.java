@@ -24,29 +24,29 @@ public class GhostPressureDetectionHandler {
 
    public static void register() {
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         if (world.method_8510() % 10L == 0L) {
+         if (world.getTime() % 10L == 0L) {
             detectGhostPressureEffects(world);
          }
       });
    }
 
    private static void detectGhostPressureEffects(World world) {
-      if (!world.method_8608()) {
-         MinecraftServer server = world.method_8503();
+      if (!world.isClient()) {
+         MinecraftServer server = world.getServer();
          if (server != null) {
-            for (ServerPlayerEntity player : server.method_3760().method_14571()) {
-               Box detectionBox = new Box(player.method_24515()).method_1014(32.0);
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+               Box detectionBox = new Box(player.getBlockPos()).expand(32.0);
 
-               for (LivingEntity entity : world.method_8390(LivingEntity.class, detectionBox, e -> true)) {
+               for (LivingEntity entity : world.getEntitiesByClass(LivingEntity.class, detectionBox, e -> true)) {
                   if (entity != player) {
                      boolean hasGhostPressure = checkEntityHasGhostPressure(entity);
-                     UUID entityId = entity.method_5667();
+                     UUID entityId = entity.getUuid();
                      boolean lastResult = lastDetectionResults.getOrDefault(entityId, false);
                      if (hasGhostPressure != lastResult) {
                         GhostPressureDetectionPacket.sendToClient(player, entityId, hasGhostPressure);
                         lastDetectionResults.put(entityId, hasGhostPressure);
                         if (hasGhostPressure) {
-                           LOGGER.debug("服务端检测到实体 {} 有鬼压人buff，通知玩家 {}", entity.method_5477().getString(), player.method_5477().getString());
+                           LOGGER.debug("服务端检测到实体 {} 有鬼压人buff，通知玩家 {}", entity.getName().getString(), player.getName().getString());
                         }
                      }
                   }
@@ -59,16 +59,16 @@ public class GhostPressureDetectionHandler {
    }
 
    public static boolean checkEntityHasGhostPressure(LivingEntity entity) {
-      if (entity.method_6059(ModEffects.GHOST_PRESSURE)) {
+      if (entity.hasStatusEffect(ModEffects.GHOST_PRESSURE)) {
          return true;
       }
 
-      if (entity.method_6112(ModEffects.GHOST_PRESSURE) != null) {
+      if (entity.getStatusEffect(ModEffects.GHOST_PRESSURE) != null) {
          return true;
       }
 
-      for (StatusEffectInstance effectInstance : entity.method_6026()) {
-         if (effectInstance.method_5579() == ModEffects.GHOST_PRESSURE) {
+      for (StatusEffectInstance effectInstance : entity.getStatusEffects()) {
+         if (effectInstance.getEffectType() == ModEffects.GHOST_PRESSURE) {
             return true;
          }
       }
@@ -82,20 +82,20 @@ public class GhostPressureDetectionHandler {
          if (!(world instanceof ServerWorld serverWorld)) {
             return true;
          } else {
-            LivingEntity entity = (LivingEntity)serverWorld.method_14190(entityId);
-            return entity == null || !entity.method_5805();
+            LivingEntity entity = (LivingEntity)serverWorld.getEntity(entityId);
+            return entity == null || !entity.isAlive();
          }
       });
    }
 
    public static void forceCheckAndSend(PlayerEntity player, LivingEntity entity) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          boolean hasGhostPressure = checkEntityHasGhostPressure(entity);
-         UUID entityId = entity.method_5667();
+         UUID entityId = entity.getUuid();
          if (player instanceof ServerPlayerEntity serverPlayer) {
             GhostPressureDetectionPacket.sendToClient(serverPlayer, entityId, hasGhostPressure);
             lastDetectionResults.put(entityId, hasGhostPressure);
-            LOGGER.debug("强制检查实体 {} 鬼压人buff状态：{}，通知玩家 {}", entity.method_5477().getString(), hasGhostPressure, player.method_5477().getString());
+            LOGGER.debug("强制检查实体 {} 鬼压人buff状态：{}，通知玩家 {}", entity.getName().getString(), hasGhostPressure, player.getName().getString());
          }
       }
    }

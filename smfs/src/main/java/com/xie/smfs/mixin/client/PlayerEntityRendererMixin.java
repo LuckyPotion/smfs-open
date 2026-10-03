@@ -36,7 +36,7 @@ public abstract class PlayerEntityRendererMixin {
       AbstractClientPlayerEntity player, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci
    ) {
       if (ClientGhostUtils.isGiantShadowGhostScaling()) {
-         matrixStack.method_22903();
+         matrixStack.push();
          float scale = ClientGhostUtils.getScale();
          scale *= 0.95F;
          if (scale < 0.01F) {
@@ -44,7 +44,7 @@ public abstract class PlayerEntityRendererMixin {
          }
 
          ClientGhostUtils.setScale(scale);
-         matrixStack.method_22905(scale, scale, scale);
+         matrixStack.scale(scale, scale, scale);
          float transparency = ClientGhostUtils.getTransparency();
          transparency *= 0.95F;
          if (transparency < 0.01F) {
@@ -66,33 +66,33 @@ public abstract class PlayerEntityRendererMixin {
    ) {
       this.smfs$restoreGhostShroudPlayerLayers();
       if (ClientGhostUtils.isGiantShadowGhostScaling()) {
-         matrixStack.method_22909();
+         matrixStack.pop();
       }
    }
 
    @Unique
    private void smfs$hideGhostShroudPlayerLayers(AbstractClientPlayerEntity player) {
-      if (!(player.method_6118(EquipmentSlot.field_6174).method_7909() instanceof GhostShroudArmorItem)) {
+      if (!(player.getEquippedStack(EquipmentSlot.CHEST).getItem() instanceof GhostShroudArmorItem)) {
          this.smfs$ghostShroudLayersHidden = false;
       } else {
-         PlayerEntityModel<AbstractClientPlayerEntity> model = (PlayerEntityModel<AbstractClientPlayerEntity>)((PlayerEntityRenderer)this).method_4038();
+         PlayerEntityModel<AbstractClientPlayerEntity> model = (PlayerEntityModel<AbstractClientPlayerEntity>)((PlayerEntityRenderer)this).getModel();
          this.smfs$ghostShroudLayersHidden = true;
-         this.smfs$rightSleeveVisible = model.field_3486.field_3665;
-         this.smfs$leftSleeveVisible = model.field_3484.field_3665;
-         this.smfs$jacketVisible = model.field_3483.field_3665;
-         model.field_3486.field_3665 = false;
-         model.field_3484.field_3665 = false;
-         model.field_3483.field_3665 = false;
+         this.smfs$rightSleeveVisible = model.rightSleeve.visible;
+         this.smfs$leftSleeveVisible = model.leftSleeve.visible;
+         this.smfs$jacketVisible = model.jacket.visible;
+         model.rightSleeve.visible = false;
+         model.leftSleeve.visible = false;
+         model.jacket.visible = false;
       }
    }
 
    @Unique
    private void smfs$restoreGhostShroudPlayerLayers() {
       if (this.smfs$ghostShroudLayersHidden) {
-         PlayerEntityModel<AbstractClientPlayerEntity> model = (PlayerEntityModel<AbstractClientPlayerEntity>)((PlayerEntityRenderer)this).method_4038();
-         model.field_3486.field_3665 = this.smfs$rightSleeveVisible;
-         model.field_3484.field_3665 = this.smfs$leftSleeveVisible;
-         model.field_3483.field_3665 = this.smfs$jacketVisible;
+         PlayerEntityModel<AbstractClientPlayerEntity> model = (PlayerEntityModel<AbstractClientPlayerEntity>)((PlayerEntityRenderer)this).getModel();
+         model.rightSleeve.visible = this.smfs$rightSleeveVisible;
+         model.leftSleeve.visible = this.smfs$leftSleeveVisible;
+         model.jacket.visible = this.smfs$jacketVisible;
          this.smfs$ghostShroudLayersHidden = false;
       }
    }

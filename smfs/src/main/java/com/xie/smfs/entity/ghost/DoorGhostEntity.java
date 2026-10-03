@@ -39,17 +39,17 @@ public class DoorGhostEntity extends GhostEntity {
    private static final int DOOR_TARGET_TIMEOUT = 600;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 95000.0)
-         .method_26868(EntityAttributes.field_23719, 0.22)
-         .method_26868(EntityAttributes.field_23721, 12.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 95000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.22)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 12.0);
    }
 
    public DoorGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, false, 1, 32.0, 'B', 1500, 550, 60, 0.08F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(95000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.22);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(12.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(95000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.22);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(12.0);
    }
 
    @Override
@@ -58,7 +58,7 @@ public class DoorGhostEntity extends GhostEntity {
          return false;
       } else if (CoffinEffectManager.isPlayerInGoldCoffin(player)) {
          return false;
-      } else if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      } else if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       } else if (this.attackCooldown > 0) {
          return false;
@@ -68,19 +68,19 @@ public class DoorGhostEntity extends GhostEntity {
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 
    private boolean hasAlivePlayersNearby() {
-      World world = this.method_37908();
-      Box searchBox = this.method_5829().method_1014(32.0);
-      List<PlayerEntity> nearbyPlayers = world.method_8390(PlayerEntity.class, searchBox, player -> player.method_5805() && !player.method_7325());
+      World world = this.getWorld();
+      Box searchBox = this.getBoundingBox().expand(32.0);
+      List<PlayerEntity> nearbyPlayers = world.getEntitiesByClass(PlayerEntity.class, searchBox, player -> player.isAlive() && !player.isSpectator());
       return !nearbyPlayers.isEmpty();
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.attackCooldown > 0) {
          this.attackCooldown--;
       }
@@ -95,13 +95,13 @@ public class DoorGhostEntity extends GhostEntity {
          this.doorTargetTimer = 0;
       }
 
-      if (!this.method_37908().method_8608()) {
+      if (!this.getWorld().isClient()) {
          if (this.isSuppressed() || this.isDeadlocked() || !this.hasAlivePlayersNearby()) {
             this.currentDoorTarget = null;
             this.doorTargetTimer = 0;
          } else if (this.currentDoorTarget != null) {
             this.moveToDoor();
-         } else if (this.field_6012 % 20 == 0 && this.doorSearchCooldown <= 0) {
+         } else if (this.age % 20 == 0 && this.doorSearchCooldown <= 0) {
             this.searchAndOpenDoors();
          }
       }
@@ -109,16 +109,16 @@ public class DoorGhostEntity extends GhostEntity {
 
    private void searchAndOpenDoors() {
       if (!this.isSuppressed() && !this.isDeadlocked() && this.hasAlivePlayersNearby()) {
-         BlockPos centerPos = this.method_24515();
-         World world = this.method_37908();
+         BlockPos centerPos = this.getBlockPos();
+         World world = this.getWorld();
 
          for (int x = -32; x <= 32.0; x++) {
             for (int y = -32; y <= 32.0; y++) {
                for (int z = -32; z <= 32.0; z++) {
-                  BlockPos checkPos = centerPos.method_10069(x, y, z);
-                  BlockState blockState = world.method_8320(checkPos);
-                  if (blockState.method_26204() instanceof DoorBlock && !(Boolean)blockState.method_11654(DoorBlock.field_10945)) {
-                     double distanceToDoor = centerPos.method_10262(checkPos);
+                  BlockPos checkPos = centerPos.add(x, y, z);
+                  BlockState blockState = world.getBlockState(checkPos);
+                  if (blockState.getBlock() instanceof DoorBlock && !(Boolean)blockState.get(DoorBlock.OPEN)) {
+                     double distanceToDoor = centerPos.getSquaredDistance(checkPos);
                      if (distanceToDoor <= 9.0) {
                         this.openDoor(world, checkPos, blockState);
                         this.damageNearbyEntities(world, checkPos);
@@ -148,9 +148,9 @@ public class DoorGhostEntity extends GhostEntity {
          this.doorTargetTimer = 0;
          this.doorSearchCooldown = 40;
       } else if (this.currentDoorTarget != null) {
-         World world = this.method_37908();
-         BlockState blockState = world.method_8320(this.currentDoorTarget);
-         if (!(blockState.method_26204() instanceof DoorBlock) || (Boolean)blockState.method_11654(DoorBlock.field_10945)) {
+         World world = this.getWorld();
+         BlockState blockState = world.getBlockState(this.currentDoorTarget);
+         if (!(blockState.getBlock() instanceof DoorBlock) || (Boolean)blockState.get(DoorBlock.OPEN)) {
             this.currentDoorTarget = null;
             this.doorTargetTimer = 0;
          } else if (this.doorTargetTimer > 600) {
@@ -160,8 +160,8 @@ public class DoorGhostEntity extends GhostEntity {
             this.doorTargetTimer = 0;
             this.doorSearchCooldown = 40;
          } else {
-            Vec3d doorCenter = Vec3d.method_24953(this.currentDoorTarget);
-            double distanceToDoor = this.method_5707(doorCenter);
+            Vec3d doorCenter = Vec3d.ofCenter(this.currentDoorTarget);
+            double distanceToDoor = this.squaredDistanceTo(doorCenter);
             if (distanceToDoor <= 9.0) {
                this.openDoor(world, this.currentDoorTarget, blockState);
                this.damageNearbyEntities(world, this.currentDoorTarget);
@@ -169,40 +169,35 @@ public class DoorGhostEntity extends GhostEntity {
                this.doorTargetTimer = 0;
                this.doorSearchCooldown = 40;
             } else {
-               this.method_5942().method_6337(doorCenter.field_1352, doorCenter.field_1351, doorCenter.field_1350, 1.0);
+               this.getNavigation().startMovingTo(doorCenter.x, doorCenter.y, doorCenter.z, 1.0);
             }
          }
       }
    }
 
    private void openDoor(World world, BlockPos pos, BlockState state) {
-      world.method_8501(pos, (BlockState)state.method_11657(DoorBlock.field_10945, true));
-      world.method_8396(null, pos, SoundEvents.field_14664, SoundCategory.field_15245, 1.0F, 1.0F);
-      if (state.method_11654(DoorBlock.field_10946) == DoubleBlockHalf.field_12607) {
-         BlockPos upperPos = pos.method_10084();
-         BlockState upperState = world.method_8320(upperPos);
-         if (upperState.method_26204() instanceof DoorBlock) {
-            world.method_8501(upperPos, (BlockState)upperState.method_11657(DoorBlock.field_10945, true));
+      world.setBlockState(pos, (BlockState)state.with(DoorBlock.OPEN, true));
+      world.playSound(null, pos, SoundEvents.BLOCK_WOODEN_DOOR_OPEN, SoundCategory.BLOCKS, 1.0F, 1.0F);
+      if (state.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER) {
+         BlockPos upperPos = pos.up();
+         BlockState upperState = world.getBlockState(upperPos);
+         if (upperState.getBlock() instanceof DoorBlock) {
+            world.setBlockState(upperPos, (BlockState)upperState.with(DoorBlock.OPEN, true));
          }
-      } else if (state.method_11654(DoorBlock.field_10946) == DoubleBlockHalf.field_12609) {
-         BlockPos lowerPos = pos.method_10074();
-         BlockState lowerState = world.method_8320(lowerPos);
-         if (lowerState.method_26204() instanceof DoorBlock) {
-            world.method_8501(lowerPos, (BlockState)lowerState.method_11657(DoorBlock.field_10945, true));
+      } else if (state.get(DoorBlock.HALF) == DoubleBlockHalf.UPPER) {
+         BlockPos lowerPos = pos.down();
+         BlockState lowerState = world.getBlockState(lowerPos);
+         if (lowerState.getBlock() instanceof DoorBlock) {
+            world.setBlockState(lowerPos, (BlockState)lowerState.with(DoorBlock.OPEN, true));
          }
       }
    }
 
    private void damageNearbyEntities(World world, BlockPos doorPos) {
       Box damageBox = new Box(
-         doorPos.method_10263() - 16.0,
-         doorPos.method_10264() - 16.0,
-         doorPos.method_10260() - 16.0,
-         doorPos.method_10263() + 16.0,
-         doorPos.method_10264() + 16.0,
-         doorPos.method_10260() + 16.0
+         doorPos.getX() - 16.0, doorPos.getY() - 16.0, doorPos.getZ() - 16.0, doorPos.getX() + 16.0, doorPos.getY() + 16.0, doorPos.getZ() + 16.0
       );
-      List<LivingEntity> nearbyEntities = world.method_8390(LivingEntity.class, damageBox, entityx -> entityx != this && entityx instanceof PlayerEntity);
+      List<LivingEntity> nearbyEntities = world.getEntitiesByClass(LivingEntity.class, damageBox, entityx -> entityx != this && entityx instanceof PlayerEntity);
       DamageSource damageSource = ModDamageSources.ghost(world);
 
       for (LivingEntity entity : nearbyEntities) {

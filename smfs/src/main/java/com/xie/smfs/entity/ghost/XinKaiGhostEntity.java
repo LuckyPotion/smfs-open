@@ -20,26 +20,26 @@ public class XinKaiGhostEntity extends GhostEntity {
    }
 
    private void initAttributes() {
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(100000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.25);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(8.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23717)).method_6192(8.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(100000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.25);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(8.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE)).setBaseValue(8.0);
    }
 
    @Override
-   protected void method_5959() {
-      this.field_6201.method_6277(1, new MeleeAttackGoal(this, 1.8, false));
-      this.field_6185.method_6277(1, new ActiveTargetGoal(this, PlayerEntity.class, 10, true, false, entity -> {
+   protected void initGoals() {
+      this.goalSelector.add(1, new MeleeAttackGoal(this, 1.8, false));
+      this.targetSelector.add(1, new ActiveTargetGoal(this, PlayerEntity.class, 10, true, false, entity -> {
          if (this.isSuppressed() || this.isDeadlocked()) {
             return false;
          } else {
-            return this.attackCooldown > 0 ? false : this.method_5858(entity) <= 64.0;
+            return this.attackCooldown > 0 ? false : this.squaredDistanceTo(entity) <= 64.0;
          }
       }));
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      return this.attackCooldown > 0 ? false : this.method_5858(player) <= 64.0;
+      return this.attackCooldown > 0 ? false : this.squaredDistanceTo(player) <= 64.0;
    }
 }

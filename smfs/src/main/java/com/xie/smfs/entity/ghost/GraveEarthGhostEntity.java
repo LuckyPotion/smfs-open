@@ -28,66 +28,66 @@ public class GraveEarthGhostEntity extends GhostEntity {
    }
 
    private void initGraveEarthGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(80000.0);
+         healthAttribute.setBaseValue(80000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.2);
+         speedAttribute.setBaseValue(0.2);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(6.0);
+         attackDamageAttribute.setBaseValue(6.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.0);
+         attackKnockbackAttribute.setBaseValue(0.0);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(20.0);
+         followRangeAttribute.setBaseValue(20.0);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          if (!this.isSuppressed() && !this.isDeadlocked() && !this.isMovementDisabled()) {
-            if (this.field_6012 % 120 == 0 && this.getGhostRandom().nextBoolean()) {
+            if (this.age % 120 == 0 && this.getGhostRandom().nextBoolean()) {
                double radius = 10.0;
-               double x = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-               double z = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-               this.method_5942().method_6337(x, this.method_23318(), z, 0.8);
+               double x = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+               double z = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+               this.getNavigation().startMovingTo(x, this.getY(), z, 0.8);
             }
 
-            if (this.field_6012 % 20 == 0) {
+            if (this.age % 20 == 0) {
                this.checkStationaryPlayers();
             }
          } else {
-            this.method_18799(Vec3d.field_1353);
-            this.method_5942().method_6340();
+            this.setVelocity(Vec3d.ZERO);
+            this.getNavigation().stop();
          }
       }
    }
 
    private void checkStationaryPlayers() {
-      if (this.method_37908() instanceof ServerWorld serverWorld) {
+      if (this.getWorld() instanceof ServerWorld serverWorld) {
          double var8 = 20.0;
 
-         for (PlayerEntity player : this.method_37908().method_18456()) {
-            if (!this.isPlayerProtected(player) && !(this.method_5858(player) > var8 * var8)) {
-               Vec3d currentPos = player.method_19538();
-               Vec3d prevPos = new Vec3d(player.field_6014, player.field_6036, player.field_5969);
-               if (currentPos.method_1025(prevPos) < 0.01) {
+         for (PlayerEntity player : this.getWorld().getPlayers()) {
+            if (!this.isPlayerProtected(player) && !(this.squaredDistanceTo(player) > var8 * var8)) {
+               Vec3d currentPos = player.getPos();
+               Vec3d prevPos = new Vec3d(player.prevX, player.prevY, player.prevZ);
+               if (currentPos.squaredDistanceTo(prevPos) < 0.01) {
                   this.stationaryPlayerTimer += 20;
                   if (this.stationaryPlayerTimer >= 60) {
-                     this.spawnGraveMoundAt(serverWorld, player.method_24515());
+                     this.spawnGraveMoundAt(serverWorld, player.getBlockPos());
                      this.stationaryPlayerTimer = 0;
                   }
                } else {
@@ -101,19 +101,19 @@ public class GraveEarthGhostEntity extends GhostEntity {
    private void spawnGraveMoundAt(ServerWorld world, BlockPos pos) {
       BlockPos groundPos = pos;
 
-      while (groundPos.method_10264() > world.method_31607() && world.method_8320(groundPos).method_26215()) {
-         groundPos = groundPos.method_10074();
+      while (groundPos.getY() > world.getBottomY() && world.getBlockState(groundPos).isAir()) {
+         groundPos = groundPos.down();
       }
 
-      BlockPos placePos = groundPos.method_10084();
-      if (world.method_8320(placePos).method_26215()) {
-         world.method_8501(placePos, ModBlocks.GRAVE_MOUND.method_9564());
+      BlockPos placePos = groundPos.up();
+      if (world.getBlockState(placePos).isAir()) {
+         world.setBlockState(placePos, ModBlocks.GRAVE_MOUND.getDefaultState());
       }
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      return !RedGhostCandleItem.isHoldingCandle(player) && this.method_5858(player) <= 400.0 && this.attackCooldown <= 0;
+      return !RedGhostCandleItem.isHoldingCandle(player) && this.squaredDistanceTo(player) <= 400.0 && this.attackCooldown <= 0;
    }
 
    @Override

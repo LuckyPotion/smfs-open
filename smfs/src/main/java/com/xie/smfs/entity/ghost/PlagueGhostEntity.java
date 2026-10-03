@@ -21,17 +21,17 @@ public class PlagueGhostEntity extends GhostEntity {
    private static final double PLAGUE_RANGE = 15.0;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 80000.0)
-         .method_26868(EntityAttributes.field_23719, 0.2)
-         .method_26868(EntityAttributes.field_23721, 3.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 80000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 3.0);
    }
 
    public PlagueGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 1800, 110, 35, 0.15F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(80000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.2);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(3.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(80000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.2);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(3.0);
    }
 
    @Override
@@ -40,40 +40,43 @@ public class PlagueGhostEntity extends GhostEntity {
          return false;
       } else if (CoffinEffectManager.isPlayerInGoldCoffin(player)) {
          return false;
-      } else if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      } else if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       } else {
-         return !this.isPlayerInRange(player) ? false : player.method_6059(ModEffects.PLAGUE);
+         return !this.isPlayerInRange(player) ? false : player.hasStatusEffect(ModEffects.PLAGUE);
       }
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 
    private boolean isPlayerHealthNotFull(PlayerEntity player) {
-      return player.method_6032() < player.method_6063();
+      return player.getHealth() < player.getMaxHealth();
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608() && this.field_6012 % 40 == 0) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient() && this.age % 40 == 0) {
          this.spreadPlagueToNearbyPlayers();
       }
    }
 
    private void spreadPlagueToNearbyPlayers() {
       if (!this.isSuppressed() && !this.isDeadlocked()) {
-         for (PlayerEntity player : this.method_37908().method_18456()) {
-            if (this.method_5858(player) <= 225.0 && this.method_6057(player) && this.isPlayerHealthNotFull(player) && !player.method_6059(ModEffects.PLAGUE)) {
-               player.method_6092(new StatusEffectInstance(ModEffects.PLAGUE, 600, 0));
+         for (PlayerEntity player : this.getWorld().getPlayers()) {
+            if (this.squaredDistanceTo(player) <= 225.0
+               && this.canSee(player)
+               && this.isPlayerHealthNotFull(player)
+               && !player.hasStatusEffect(ModEffects.PLAGUE)) {
+               player.addStatusEffect(new StatusEffectInstance(ModEffects.PLAGUE, 600, 0));
             }
          }
       }
    }
 
-   public boolean method_6049(StatusEffectInstance effectInstance) {
-      return effectInstance.method_5579() == ModEffects.PLAGUE ? false : super.method_6049(effectInstance);
+   public boolean canHaveStatusEffect(StatusEffectInstance effect) {
+      return effect.getEffectType() == ModEffects.PLAGUE ? false : super.canHaveStatusEffect(effect);
    }
 }

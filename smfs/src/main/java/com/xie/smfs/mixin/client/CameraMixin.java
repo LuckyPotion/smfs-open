@@ -33,7 +33,7 @@ public abstract class CameraMixin {
    private Entity smfs$redirectFocusedEntity(Entity focusedEntity) {
       if (GhostShadowHeadCameraManager.isCameraBound()) {
          Entity bound = GhostShadowHeadCameraManager.getBoundEntity();
-         if (bound != null && !bound.method_31481()) {
+         if (bound != null && !bound.isRemoved()) {
             return bound;
          }
       }

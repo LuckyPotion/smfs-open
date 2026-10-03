@@ -82,18 +82,18 @@ public class ServerTickHandler {
    }
 
    private static void applyDreamEffectToGhostDreamPlayers(MinecraftServer server) {
-      ServerWorld ghostDreamWorld = server.method_3847(Smfs.GHOST_DREAM_DIMENSION);
+      ServerWorld ghostDreamWorld = server.getWorld(Smfs.GHOST_DREAM_DIMENSION);
       if (ghostDreamWorld != null) {
-         for (PlayerEntity player : server.method_3760().method_14571()) {
-            if (player.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION && !player.method_6059(ModEffects.DREAM)) {
-               player.method_6092(new StatusEffectInstance(ModEffects.DREAM, 40, 0, false, false, false));
+         for (PlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (player.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION && !player.hasStatusEffect(ModEffects.DREAM)) {
+               player.addStatusEffect(new StatusEffectInstance(ModEffects.DREAM, 40, 0, false, false, false));
             }
          }
       }
    }
 
    private static void checkPlayerGhostDreamDimension(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(player -> {
+      server.getPlayerManager().getPlayerList().forEach(player -> {
          if (GhostDreamManager.isInGhostDream(player)) {
             GhostDreamManager.checkPlayerDimension(player);
          }
@@ -101,27 +101,27 @@ public class ServerTickHandler {
    }
 
    private static void checkDayChange(MinecraftServer server) {
-      if (server.method_30002() != null) {
-         long totalTime = server.method_30002().method_8510();
+      if (server.getOverworld() != null) {
+         long totalTime = server.getOverworld().getTime();
          int currentDay = (int)(totalTime / 24000L) + 1;
          if (currentDay != lastDay) {
             lastDay = currentDay;
             server.execute(() -> {
                LOGGER.info("游戏天数已更新至第 {} 天", currentDay);
-               int serverDay = TutorialManager.calculateCurrentDay(server.method_30002());
+               int serverDay = TutorialManager.calculateCurrentDay(server.getOverworld());
                LOGGER.info("剧情管理天数统计已更新至第 {} 天", serverDay);
-               server.method_3760().method_14571().forEach(QuestManager::updateWorldDaysProgress);
+               server.getPlayerManager().getPlayerList().forEach(QuestManager::updateWorldDaysProgress);
             });
          }
       }
    }
 
    private static void updateRevivalDegreeInGhostDomain(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(PlayerEvents::updateRevivalDegreeInGhostDomain);
+      server.getPlayerManager().getPlayerList().forEach(PlayerEvents::updateRevivalDegreeInGhostDomain);
    }
 
    private static void increaseRevivalDegreeDaily(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(player -> {
+      server.getPlayerManager().getPlayerList().forEach(player -> {
          PlayerEvents.increaseRevivalDegreeDaily(player);
          distributeGoldSalary(player);
       });
@@ -130,59 +130,59 @@ public class ServerTickHandler {
    private static void distributeGoldSalary(PlayerEntity player) {
       int salary = FactionManager.getGoldSalary(player);
       if (salary > 0) {
-         ItemStack goldIngots = new ItemStack(Items.field_8695, salary);
-         if (!player.method_31548().method_7394(goldIngots)) {
-            player.method_7328(goldIngots, false);
+         ItemStack goldIngots = new ItemStack(Items.GOLD_INGOT, salary);
+         if (!player.getInventory().insertStack(goldIngots)) {
+            player.dropItem(goldIngots, false);
          }
       }
    }
 
    private static void updateRedCoffinRevivalEffect(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(CoffinEffectManager::updateRedCoffinRevivalEffect);
+      server.getPlayerManager().getPlayerList().forEach(CoffinEffectManager::updateRedCoffinRevivalEffect);
    }
 
    private static void validatePlayerCoffinStatus(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(player -> CoffinEffectManager.validatePlayerCoffinStatus(player, player.method_37908()));
+      server.getPlayerManager().getPlayerList().forEach(player -> CoffinEffectManager.validatePlayerCoffinStatus(player, player.getWorld()));
    }
 
    private static void updatePlayerGoldBlockShelterStatus(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(player -> GoldBlockProtectionManager.updatePlayerGoldBlockShelterStatus(player));
+      server.getPlayerManager().getPlayerList().forEach(player -> GoldBlockProtectionManager.updatePlayerGoldBlockShelterStatus(player));
    }
 
    private static void enforceDeadlockRevivalState(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(player -> PlayerEvents.enforceAllDeadlockRevivalStates(player));
+      server.getPlayerManager().getPlayerList().forEach(player -> PlayerEvents.enforceAllDeadlockRevivalStates(player));
    }
 
    private static void updatePlayerGhostDomainEffects(MinecraftServer server) {
-      server.method_3760().method_14571().forEach(player -> {
+      server.getPlayerManager().getPlayerList().forEach(player -> {
          if (GhostDomainManager.isGhostDomainActive(player)) {
             int level = GhostDomainManager.getCurrentLevel(player);
             if (level > 0) {
-               if (player.method_6059(ModEffects.RED_GHOST_DOMAIN)) {
+               if (player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.RED_GHOST_DOMAIN_TARGET, level);
                }
 
-               if (player.method_6059(ModEffects.GREEN_GHOST_DOMAIN)) {
+               if (player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.GREEN_GHOST_DOMAIN_TARGET, level);
                }
 
-               if (player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN)) {
+               if (player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.GOLDEN_GHOST_DOMAIN_TARGET, level);
                }
 
-               if (player.method_6059(ModEffects.THICK_FOG)) {
+               if (player.hasStatusEffect(ModEffects.THICK_FOG)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.THICK_FOG_TARGET, level);
                }
 
-               if (player.method_6059(ModEffects.BLACK_GHOST_DOMAIN)) {
+               if (player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.BLACK_GHOST_DOMAIN_TARGET, level);
                }
 
-               if (player.method_6059(ModEffects.CYAN_GHOST_DOMAIN)) {
+               if (player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.CYAN_GHOST_DOMAIN_TARGET, level);
                }
 
-               if (player.method_6059(ModEffects.GRAY_GHOST_DOMAIN)) {
+               if (player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN)) {
                   GhostDomainManager.applyTargetGhostDomainToOtherPlayers(player, ModEffects.GRAY_GHOST_DOMAIN_TARGET, level);
                }
             }
@@ -191,16 +191,16 @@ public class ServerTickHandler {
    }
 
    private static void enforceGhostDreamRain(World world) {
-      if (world.method_27983() == Smfs.GHOST_DREAM_DIMENSION && world instanceof ServerWorld serverWorld) {
-         serverWorld.method_27910(0, 6000, true, false);
+      if (world.getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION && world instanceof ServerWorld serverWorld) {
+         serverWorld.setWeather(0, 6000, true, false);
       }
    }
 
    private static void spawnGhostDreamForUnaffectedPlayers(MinecraftServer server) {
-      ServerWorld ghostDreamWorld = server.method_3847(Smfs.GHOST_DREAM_DIMENSION);
+      ServerWorld ghostDreamWorld = server.getWorld(Smfs.GHOST_DREAM_DIMENSION);
       if (ghostDreamWorld != null) {
-         for (PlayerEntity player : server.method_3760().method_14571()) {
-            if (player.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
+         for (PlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (player.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
                boolean hasGhostDream = PlayerEvents.hasGhostType(player, "ghost_dream");
                if (!hasGhostDream) {
                   spawnGhostDreamNearPlayer(ghostDreamWorld, player);
@@ -211,19 +211,19 @@ public class ServerTickHandler {
    }
 
    private static void spawnGhostDreamNearPlayer(ServerWorld world, PlayerEntity player) {
-      Vec3d playerPos = player.method_19538();
-      UUID playerId = player.method_5667();
-      long currentTime = world.method_8510();
+      Vec3d playerPos = player.getPos();
+      UUID playerId = player.getUuid();
+      long currentTime = world.getTime();
       Long lastSpawnTime = LAST_SPAWN_TIME.get(playerId);
       int currentCooldown = calculateSpawnCooldown(player);
       if (lastSpawnTime == null || currentTime - lastSpawnTime >= currentCooldown) {
          int existingCount = countGhostDreamNearPlayer(world, player);
          if (existingCount < 10) {
-            double offsetX = (world.field_9229.method_43058() - 0.5) * 32.0 + (world.field_9229.method_43058() - 0.5) * 8.0;
-            double offsetZ = (world.field_9229.method_43058() - 0.5) * 32.0 + (world.field_9229.method_43058() - 0.5) * 8.0;
-            BlockPos spawnPos = new BlockPos((int)(playerPos.field_1352 + offsetX), (int)playerPos.field_1351, (int)(playerPos.field_1350 + offsetZ));
-            if (!world.method_8320(spawnPos.method_10074()).method_51367()) {
-               spawnPos = world.method_8598(Type.field_13202, spawnPos);
+            double offsetX = (world.random.nextDouble() - 0.5) * 32.0 + (world.random.nextDouble() - 0.5) * 8.0;
+            double offsetZ = (world.random.nextDouble() - 0.5) * 32.0 + (world.random.nextDouble() - 0.5) * 8.0;
+            BlockPos spawnPos = new BlockPos((int)(playerPos.x + offsetX), (int)playerPos.y, (int)(playerPos.z + offsetZ));
+            if (!world.getBlockState(spawnPos.down()).isSolid()) {
+               spawnPos = world.getTopPosition(Type.WORLD_SURFACE, spawnPos);
             }
 
             if (!isValidSpawnPosition(world, spawnPos)) {
@@ -233,32 +233,28 @@ public class ServerTickHandler {
                }
             }
 
-            GhostDreamEntity ghostDream = (GhostDreamEntity)ModEntities.GHOST_DREAM.method_5883(world);
+            GhostDreamEntity ghostDream = (GhostDreamEntity)ModEntities.GHOST_DREAM.create(world);
             if (ghostDream != null) {
-               ghostDream.method_5808(
-                  spawnPos.method_10263() + 0.5, spawnPos.method_10264(), spawnPos.method_10260() + 0.5, world.field_9229.method_43057() * 360.0F, 0.0F
-               );
-               ghostDream.method_5943(world, world.method_8404(spawnPos), SpawnReason.field_16467, null, null);
-               world.method_8649(ghostDream);
+               ghostDream.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, world.random.nextFloat() * 360.0F, 0.0F);
+               ghostDream.initialize(world, world.getLocalDifficulty(spawnPos), SpawnReason.EVENT, null, null);
+               world.spawnEntity(ghostDream);
                LAST_SPAWN_TIME.put(playerId, currentTime);
-               LOGGER.debug("在鬼梦维度中为玩家 {} 附近生成了鬼梦生物，当前数量: {}", player.method_5477().getString(), existingCount + 1);
+               LOGGER.debug("在鬼梦维度中为玩家 {} 附近生成了鬼梦生物，当前数量: {}", player.getName().getString(), existingCount + 1);
             }
          }
       }
    }
 
    private static boolean isValidSpawnPosition(ServerWorld world, BlockPos pos) {
-      return world.method_8320(pos).method_26215()
-         && world.method_8320(pos.method_10084()).method_26215()
-         && world.method_8320(pos.method_10086(2)).method_26215();
+      return world.getBlockState(pos).isAir() && world.getBlockState(pos.up()).isAir() && world.getBlockState(pos.up(2)).isAir();
    }
 
    private static BlockPos findValidSpawnPosition(ServerWorld world, BlockPos centerPos) {
       for (int dx = -3; dx <= 3; dx++) {
          for (int dz = -3; dz <= 3; dz++) {
-            BlockPos pos = centerPos.method_10069(dx, 0, dz);
-            if (!world.method_8320(pos.method_10074()).method_51367()) {
-               pos = world.method_8598(Type.field_13202, pos);
+            BlockPos pos = centerPos.add(dx, 0, dz);
+            if (!world.getBlockState(pos.down()).isSolid()) {
+               pos = world.getTopPosition(Type.WORLD_SURFACE, pos);
             }
 
             if (isValidSpawnPosition(world, pos)) {
@@ -283,20 +279,13 @@ public class ServerTickHandler {
    }
 
    private static int countGhostDreamNearPlayer(ServerWorld world, PlayerEntity player) {
-      Vec3d playerPos = player.method_19538();
+      Vec3d playerPos = player.getPos();
       int count = 0;
 
-      for (Entity entity : world.method_8390(
+      for (Entity entity : world.getEntitiesByClass(
          GhostDreamEntity.class,
-         new Box(
-            playerPos.field_1352 - 30.0,
-            playerPos.field_1351 - 10.0,
-            playerPos.field_1350 - 30.0,
-            playerPos.field_1352 + 30.0,
-            playerPos.field_1351 + 10.0,
-            playerPos.field_1350 + 30.0
-         ),
-         entityx -> !entityx.method_31481()
+         new Box(playerPos.x - 30.0, playerPos.y - 10.0, playerPos.z - 30.0, playerPos.x + 30.0, playerPos.y + 10.0, playerPos.z + 30.0),
+         entityx -> !entityx.isRemoved()
       )) {
          count++;
       }

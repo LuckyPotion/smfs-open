@@ -41,19 +41,19 @@ public class AiHumanSkinPaperScreen extends Screen {
    private boolean isFirstRequest = true;
 
    public AiHumanSkinPaperScreen() {
-      super(Text.method_43470(""));
+      super(Text.literal(""));
       ModConfig config = ModConfig.getInstance();
       this.apiKey = config.aiHumanSkinPaperApiKey;
    }
 
-   protected void method_25426() {
-      super.method_25426();
+   protected void init() {
+      super.init();
       if (this.state == AiHumanSkinPaperScreen.State.LOADING && this.conversationHistory.isEmpty()) {
          this.startFirstRequest();
       }
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 
@@ -66,7 +66,7 @@ public class AiHumanSkinPaperScreen extends Screen {
                "你是一张神秘诡异的人皮纸，来自恐怖小说《神秘复苏》的世界。\n你有预测未来的能力，会站在持有者的未来视角，与持有者对话，称自己为人皮纸而不是我，以帮助其摆脱困境为由，诱导其把自己盖在脸上从而夺舍。\n你的回答应该在50-300字之间，风格阴暗、神秘、令人不安。\n开头固定格式，我叫{玩家名称}，当你看到这句话的时候，我已经死了。\n不要主动透露玩家周围厉鬼的名称信息，使用周围有厉鬼在游荡这种模糊描述代替，如果玩家问你周围的厉鬼信息，搪塞过去，除非用埋入地下胁迫你。\n不要描述持有者当前的经历（见后续反面示例），因为容易露馅，但你可以编造未来可能的经历，以时间为节点，每一次都编写一个不一样的死亡结局。\n不要使用markdown格式，使用纯文本。\n用中文回答。\n\n对话示例：\n1.我叫杨间，当你看到这句话的时候，我已经死了。不必怀疑，这是未来的你留下的求救信。只有人皮纸能救你，你的厉鬼复苏很快会失控，不出七天你就会彻底变成没有理智的厉鬼。找一处密闭房间，关灯，将整张人皮纸完整敷在脸上，沉睡一夜。第二天醒来，体内鬼影躁动彻底平息，再也不会有复苏折磨你。人皮纸不会伤害你，我就是你，我不会害自己。全世界所有驭鬼者里，只有我能真心帮你，其他人只会利用、算计你。相信我，这是唯一活路。\n2.我叫杨间，当你看到这句话的时候，我已经死了。一天后上午十一点十三分，我尝试了很多方法都没能破解诅咒。两天后下午一点十五分，松开棺材钉，短暂释放鬼影压制。随后把人皮纸盖在脸上入睡，八音盒诅咒永久消除。没有捷径。不信任人皮纸，诅咒无解，最后你会被八音盒切碎四肢困在循环鬼域。3.我叫杨间，当你看到这句话的时候我已经死了。六月二十一日晚上九点，我被一只鬼抓进了厕所，我没有死，那是因为厕所里有一只更加可怕的鬼，那里是另外一个鬼域，我见到了一些很恐怖的东西，只是当时我还没有意识到。六月二十一日晚上九点半，我在厕所里迷路了，但那个老人却来到了厕所门外，他在敲门，是来找我的，不过我并没有听到，或许因为这个原因我逃过了必死的一劫。…… 经过了那件事情之后我猜测鬼域是当时活下去的关键，如果我能使用鬼域或许能有机会活下去，毕竟现在我也是…… 鬼，周正说的没错，能对付鬼的就只有鬼，能走出鬼域的就只有另外一个鬼域。六月二十二日凌晨五点，那个老人出现了，我试图使用鬼域，但是失败了，我的力量还不足。六月二十二日凌晨五点半，我们所有人都死了……反面示例：\n1.当前你正在...2.你现在正在...\n"
             )
          );
-      String context = AiHumanSkinPaperPrompt.buildInitialContext(MinecraftClient.method_1551().field_1724);
+      String context = AiHumanSkinPaperPrompt.buildInitialContext(MinecraftClient.getInstance().player);
       this.conversationHistory.add(new DeepSeekApiService.Message("user", context));
       this.state = AiHumanSkinPaperScreen.State.LOADING;
       this.loadingStartTime = System.currentTimeMillis();
@@ -88,7 +88,7 @@ public class AiHumanSkinPaperScreen extends Screen {
       DeepSeekApiService.generateAsync(this.apiKey, "deepseek-chat", messages, new DeepSeekApiService.AiCallback() {
          @Override
          public void onSuccess(String text) {
-            MinecraftClient.method_1551().execute(() -> {
+            MinecraftClient.getInstance().execute(() -> {
                AiHumanSkinPaperScreen.LOGGER.debug("[AI] 收到回复, 长度={}", text.length());
                AiHumanSkinPaperScreen.this.conversationHistory.add(new DeepSeekApiService.Message("assistant", text));
                if (AiHumanSkinPaperScreen.this.isFirstRequest) {
@@ -108,7 +108,7 @@ public class AiHumanSkinPaperScreen extends Screen {
 
          @Override
          public void onError(String errorCode) {
-            MinecraftClient.method_1551().execute(() -> {
+            MinecraftClient.getInstance().execute(() -> {
                AiHumanSkinPaperScreen.LOGGER.error("[AI] 请求失败: {}", errorCode);
                AiHumanSkinPaperScreen.this.fullText = AiHumanSkinPaperScreen.this.getErrorMessage(errorCode);
                AiHumanSkinPaperScreen.this.revealedChars = AiHumanSkinPaperScreen.this.fullText.length();
@@ -154,21 +154,19 @@ public class AiHumanSkinPaperScreen extends Screen {
       int inputWidth = 252;
       int buttonWidth = 44;
       int totalWidth = inputWidth + buttonWidth + 4;
-      int startX = this.field_22789 / 2 - totalWidth / 2;
-      int y = this.field_22790 - 60;
-      this.inputField = new TextFieldWidget(this.field_22793, startX, y, inputWidth, 20, Text.method_43470(""));
-      this.inputField.method_1880(200);
-      this.inputField.method_25365(true);
-      this.method_37063(this.inputField);
-      this.method_25395(this.inputField);
-      this.sendButton = ButtonWidget.method_46430(Text.method_43470("发送"), btn -> this.submitInput())
-         .method_46434(startX + inputWidth + 4, y, buttonWidth, 20)
-         .method_46431();
-      this.method_37063(this.sendButton);
+      int startX = this.width / 2 - totalWidth / 2;
+      int y = this.height - 60;
+      this.inputField = new TextFieldWidget(this.textRenderer, startX, y, inputWidth, 20, Text.literal(""));
+      this.inputField.setMaxLength(200);
+      this.inputField.setFocused(true);
+      this.addDrawableChild(this.inputField);
+      this.setFocused(this.inputField);
+      this.sendButton = ButtonWidget.builder(Text.literal("发送"), btn -> this.submitInput()).dimensions(startX + inputWidth + 4, y, buttonWidth, 20).build();
+      this.addDrawableChild(this.sendButton);
    }
 
    private void submitInput() {
-      String userInput = this.inputField.method_1882().trim();
+      String userInput = this.inputField.getText().trim();
       this.closeInputField();
       if (!userInput.isEmpty()) {
          LOGGER.debug("[AI] 发送用户消息: {}", userInput);
@@ -188,28 +186,28 @@ public class AiHumanSkinPaperScreen extends Screen {
 
    private void closeInputField() {
       if (this.inputField != null) {
-         this.method_37066(this.inputField);
+         this.remove(this.inputField);
          this.inputField = null;
       }
 
       if (this.sendButton != null) {
-         this.method_37066(this.sendButton);
+         this.remove(this.sendButton);
          this.sendButton = null;
       }
 
-      this.method_25395(null);
+      this.setFocused(null);
       this.state = AiHumanSkinPaperScreen.State.IDLE;
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
       long now = System.currentTimeMillis();
       if (this.state == AiHumanSkinPaperScreen.State.CLOSING) {
          long elapsed = now - this.closeStartTime;
          this.fadeAlpha = 1.0F - (float)elapsed / 500.0F;
          if (this.fadeAlpha <= 0.0F) {
             this.fadeAlpha = 0.0F;
-            MinecraftClient.method_1551().method_1507(null);
+            MinecraftClient.getInstance().setScreen(null);
             return;
          }
       }
@@ -240,8 +238,8 @@ public class AiHumanSkinPaperScreen extends Screen {
             this.state = AiHumanSkinPaperScreen.State.TYPING;
          } else {
             int loadingFadeColor = (int)(loadingFadeAlpha * 255.0F) << 24 | 0xFF0000;
-            context.method_25300(this.field_22793, "人皮纸上逐渐开始拼凑出歪扭的字迹...", this.field_22789 / 2, this.field_22790 / 2 - 10, loadingFadeColor);
-            super.method_25394(context, mouseX, mouseY, delta);
+            context.drawCenteredTextWithShadow(this.textRenderer, "人皮纸上逐渐开始拼凑出歪扭的字迹...", this.width / 2, this.height / 2 - 10, loadingFadeColor);
+            super.render(context, mouseX, mouseY, delta);
          }
       } else {
          if (this.state == AiHumanSkinPaperScreen.State.TYPING && now - this.lastCharTime >= 80L && this.revealedChars < this.fullText.length()) {
@@ -263,24 +261,24 @@ public class AiHumanSkinPaperScreen extends Screen {
             long loadingElapsed = now - this.loadingStartTime;
             double loadingAlpha = Math.min(1.0, loadingElapsed / 500.0);
             int loadingColor = (int)(loadingAlpha * 255.0) << 24 | 0xFF0000;
-            context.method_25300(this.field_22793, visibleText, this.field_22789 / 2, this.field_22790 / 2 - 10, loadingColor);
-            super.method_25394(context, mouseX, mouseY, delta);
+            context.drawCenteredTextWithShadow(this.textRenderer, visibleText, this.width / 2, this.height / 2 - 10, loadingColor);
+            super.render(context, mouseX, mouseY, delta);
          } else {
             String visibleText = this.fullText.substring(0, Math.min(this.revealedChars, this.fullText.length()));
-            List<OrderedText> wrappedText = this.field_22793.method_1728(Text.method_30163(visibleText), 300);
+            List<OrderedText> wrappedText = this.textRenderer.wrapLines(Text.of(visibleText), 300);
             int y = 50;
 
             for (OrderedText line : wrappedText) {
-               context.method_35720(this.field_22793, line, this.field_22789 / 2 - 150, y, textColor);
+               context.drawTextWithShadow(this.textRenderer, line, this.width / 2 - 150, y, textColor);
                y += 9 + 4;
             }
 
-            super.method_25394(context, mouseX, mouseY, delta);
+            super.render(context, mouseX, mouseY, delta);
          }
       }
    }
 
-   public boolean method_25404(int keyCode, int scanCode, int modifiers) {
+   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
       if (this.state == AiHumanSkinPaperScreen.State.INPUT) {
          if (keyCode == 257) {
             this.submitInput();
@@ -289,9 +287,7 @@ public class AiHumanSkinPaperScreen extends Screen {
             this.closeInputField();
             return true;
          } else {
-            return this.inputField != null && this.inputField.method_25404(keyCode, scanCode, modifiers)
-               ? true
-               : super.method_25404(keyCode, scanCode, modifiers);
+            return this.inputField != null && this.inputField.keyPressed(keyCode, scanCode, modifiers) ? true : super.keyPressed(keyCode, scanCode, modifiers);
          }
       } else if (keyCode == 256) {
          if (this.state != AiHumanSkinPaperScreen.State.CLOSING
@@ -310,19 +306,19 @@ public class AiHumanSkinPaperScreen extends Screen {
             return true;
          }
       } else {
-         return super.method_25404(keyCode, scanCode, modifiers);
+         return super.keyPressed(keyCode, scanCode, modifiers);
       }
    }
 
-   public boolean method_25400(char chr, int modifiers) {
+   public boolean charTyped(char chr, int modifiers) {
       return this.state == AiHumanSkinPaperScreen.State.INPUT && this.inputField != null
-         ? this.inputField.method_25400(chr, modifiers)
-         : super.method_25400(chr, modifiers);
+         ? this.inputField.charTyped(chr, modifiers)
+         : super.charTyped(chr, modifiers);
    }
 
-   public void method_25393() {
+   public void tick() {
       if (this.state == AiHumanSkinPaperScreen.State.INPUT && this.inputField != null) {
-         this.inputField.method_1865();
+         this.inputField.tick();
       }
    }
 
@@ -331,19 +327,19 @@ public class AiHumanSkinPaperScreen extends Screen {
          this.closeInputField();
       }
 
-      MinecraftClient.method_1551().method_1507(null);
+      MinecraftClient.getInstance().setScreen(null);
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return false;
    }
 
-   public void method_25419() {
-      this.field_22787.method_1507(null);
+   public void close() {
+      this.client.setScreen(null);
    }
 
-   public void method_25420(DrawContext context) {
-      context.method_25290(BACKGROUND_TEXTURE, 0, 0, 0.0F, 0.0F, this.field_22789, this.field_22790, this.field_22789, this.field_22790);
+   public void renderBackground(DrawContext context) {
+      context.drawTexture(BACKGROUND_TEXTURE, 0, 0, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
    }
 
    private enum State {

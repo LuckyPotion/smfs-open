@@ -47,9 +47,9 @@ public class LostGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          if (this.attackCooldown > 0) {
             this.attackCooldown--;
          }
@@ -65,28 +65,28 @@ public class LostGhostEntity extends GhostEntity {
          && !RedGhostCandleItem.isHoldingCandle(player)
          && !CoffinEffectManager.isPlayerInGoldCoffin(player)
          && !GoldBlockProtectionManager.isPlayerInGoldBlockShelter(player)
-         && !player.method_6059(ModEffects.SPIRIT_IMMUNITY);
+         && !player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY);
    }
 
    @Override
    protected void executeAttack(PlayerEntity player) {
       if (this.attackCooldown <= 0) {
          int effect = this.random.nextInt(6) + 1;
-         Text message = Text.method_43473();
+         Text message = Text.empty();
          switch (effect) {
             case 1:
-               message = Text.method_43470("你忘记了走路...");
-               player.method_6092(new StatusEffectInstance(StatusEffects.field_5909, Integer.MAX_VALUE, 255, false, false));
+               message = Text.literal("你忘记了走路...");
+               player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, Integer.MAX_VALUE, 255, false, false));
                break;
             case 2:
-               message = Text.method_43470("你忘记了你的眼睛...");
-               player.method_6092(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, Integer.MAX_VALUE, 255, false, false));
+               message = Text.literal("你忘记了你的眼睛...");
+               player.addStatusEffect(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, Integer.MAX_VALUE, 255, false, false));
                break;
             case 3:
-               message = Text.method_43470("你忘记了自己...");
-               EntityAttributeInstance sanityAttribute = player.method_5996(SpiritAttributes.SANITY);
+               message = Text.literal("你忘记了自己...");
+               EntityAttributeInstance sanityAttribute = player.getAttributeInstance(SpiritAttributes.SANITY);
                if (sanityAttribute != null) {
-                  sanityAttribute.method_6192(0.0);
+                  sanityAttribute.setBaseValue(0.0);
                   PlayerEvents.setSpiritAttribute(player, SpiritAttributes.SANITY, 0.0F);
                }
 
@@ -95,12 +95,12 @@ public class LostGhostEntity extends GhostEntity {
                }
                break;
             case 4:
-               message = Text.method_43470("你忘记了呼吸...");
-               DamageSource damageSource = this.method_37908().method_48963().method_48824();
-               RegistryEntry<DamageType> drownDamageType = (RegistryEntry<DamageType>)this.method_37908()
-                  .method_30349()
-                  .method_30530(RegistryKeys.field_42534)
-                  .method_40264(DamageTypes.field_42342)
+               message = Text.literal("你忘记了呼吸...");
+               DamageSource damageSource = this.getWorld().getDamageSources().drown();
+               RegistryEntry<DamageType> drownDamageType = (RegistryEntry<DamageType>)this.getWorld()
+                  .getRegistryManager()
+                  .get(RegistryKeys.DAMAGE_TYPE)
+                  .getEntry(DamageTypes.DROWN)
                   .orElse(null);
                if (drownDamageType != null) {
                   PlayerEvents.handleSpiritDamage(player, 99999.0F, 99999.0F, damageSource);
@@ -109,47 +109,47 @@ public class LostGhostEntity extends GhostEntity {
                }
                break;
             case 5:
-               message = Text.method_43470("你忘记了战斗...");
-               player.method_6092(new StatusEffectInstance(StatusEffects.field_5911, Integer.MAX_VALUE, 255, false, false));
+               message = Text.literal("你忘记了战斗...");
+               player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, Integer.MAX_VALUE, 255, false, false));
                break;
             case 6:
-               message = Text.method_43470("你忘记了秩序...");
+               message = Text.literal("你忘记了秩序...");
                this.shufflePlayerInventory(player);
          }
 
-         player.method_7353(message, true);
+         player.sendMessage(message, true);
          this.attackCooldown = 800;
       }
    }
 
    private void shufflePlayerInventory(PlayerEntity player) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       List<ItemStack> allStacks = new ArrayList<>();
 
-      for (int i = 0; i < inventory.field_7547.size(); i++) {
-         ItemStack stack = (ItemStack)inventory.field_7547.get(i);
-         if (!stack.method_7960()) {
-            allStacks.add(stack.method_7972());
-            inventory.field_7547.set(i, ItemStack.field_8037);
+      for (int i = 0; i < inventory.main.size(); i++) {
+         ItemStack stack = (ItemStack)inventory.main.get(i);
+         if (!stack.isEmpty()) {
+            allStacks.add(stack.copy());
+            inventory.main.set(i, ItemStack.EMPTY);
          }
       }
 
-      for (int i = 0; i < inventory.field_7548.size(); i++) {
-         ItemStack stack = (ItemStack)inventory.field_7548.get(i);
-         if (!stack.method_7960()) {
-            allStacks.add(stack.method_7972());
-            inventory.field_7548.set(i, ItemStack.field_8037);
+      for (int i = 0; i < inventory.armor.size(); i++) {
+         ItemStack stack = (ItemStack)inventory.armor.get(i);
+         if (!stack.isEmpty()) {
+            allStacks.add(stack.copy());
+            inventory.armor.set(i, ItemStack.EMPTY);
          }
       }
 
-      ItemStack offhandStack = (ItemStack)inventory.field_7544.get(0);
-      if (!offhandStack.method_7960()) {
-         allStacks.add(offhandStack.method_7972());
-         inventory.field_7544.set(0, ItemStack.field_8037);
+      ItemStack offhandStack = (ItemStack)inventory.offHand.get(0);
+      if (!offhandStack.isEmpty()) {
+         allStacks.add(offhandStack.copy());
+         inventory.offHand.set(0, ItemStack.EMPTY);
       }
 
       Collections.shuffle(allStacks, this.random);
-      int totalSlots = inventory.field_7547.size() + inventory.field_7548.size() + 1;
+      int totalSlots = inventory.main.size() + inventory.armor.size() + 1;
       List<Integer> slotIndices = new ArrayList<>();
 
       for (int i = 0; i < totalSlots; i++) {
@@ -160,12 +160,12 @@ public class LostGhostEntity extends GhostEntity {
 
       for (int i = 0; i < allStacks.size() && i < slotIndices.size(); i++) {
          int targetSlot = slotIndices.get(i);
-         if (targetSlot < inventory.field_7547.size()) {
-            inventory.field_7547.set(targetSlot, allStacks.get(i));
-         } else if (targetSlot < inventory.field_7547.size() + inventory.field_7548.size()) {
-            inventory.field_7548.set(targetSlot - inventory.field_7547.size(), allStacks.get(i));
+         if (targetSlot < inventory.main.size()) {
+            inventory.main.set(targetSlot, allStacks.get(i));
+         } else if (targetSlot < inventory.main.size() + inventory.armor.size()) {
+            inventory.armor.set(targetSlot - inventory.main.size(), allStacks.get(i));
          } else {
-            inventory.field_7544.set(0, allStacks.get(i));
+            inventory.offHand.set(0, allStacks.get(i));
          }
       }
    }
@@ -177,11 +177,11 @@ public class LostGhostEntity extends GhostEntity {
             this.isInvisible = false;
             this.visibilityCycleTimer = 0;
             this.teleportToRandomLocation();
-            this.method_5648(false);
-            if (this.method_37908() instanceof ServerWorld serverWorld) {
-               serverWorld.method_18456().forEach(player -> {
-                  if (player.method_5858(this) <= 1024.0) {
-                     player.method_7353(Text.method_43470("§c你想起来什么！"), true);
+            this.setInvisible(false);
+            if (this.getWorld() instanceof ServerWorld serverWorld) {
+               serverWorld.getPlayers().forEach(player -> {
+                  if (player.squaredDistanceTo(this) <= 1024.0) {
+                     player.sendMessage(Text.literal("§c你想起来什么！"), true);
                   }
                });
             }
@@ -191,11 +191,11 @@ public class LostGhostEntity extends GhostEntity {
       } else if (this.visibilityCycleTimer >= this.visibleDuration) {
          this.isInvisible = true;
          this.visibilityCycleTimer = 0;
-         this.method_5648(true);
-         if (this.method_37908() instanceof ServerWorld serverWorld) {
-            serverWorld.method_18456().forEach(player -> {
-               if (player.method_5858(this) <= 256.0) {
-                  player.method_7353(Text.method_43470("§7似乎忘记了什么..."), true);
+         this.setInvisible(true);
+         if (this.getWorld() instanceof ServerWorld serverWorld) {
+            serverWorld.getPlayers().forEach(player -> {
+               if (player.squaredDistanceTo(this) <= 256.0) {
+                  player.sendMessage(Text.literal("§7似乎忘记了什么..."), true);
                }
             });
          }
@@ -203,32 +203,33 @@ public class LostGhostEntity extends GhostEntity {
    }
 
    private void triggerAttackAfterInvisibility() {
-      if (!this.method_37908().field_9236) {
-         List<PlayerEntity> nearbyPlayers = this.method_37908().method_8390(PlayerEntity.class, this.method_5829().method_1014(48.0), this::shouldAttackPlayer);
+      if (!this.getWorld().isClient) {
+         List<PlayerEntity> nearbyPlayers = this.getWorld()
+            .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(48.0), this::shouldAttackPlayer);
          if (!nearbyPlayers.isEmpty()) {
             PlayerEntity target = nearbyPlayers.get(this.random.nextInt(nearbyPlayers.size()));
-            DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+            DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
             PlayerEvents.handleSpiritDamage(target, this.getSpiritualDamage(), this.getSpiritualDamage(), damageSource);
          }
       }
    }
 
    private void teleportToRandomLocation() {
-      if (!this.method_37908().field_9236) {
-         double newX = this.method_23317() + (this.random.nextDouble() - 0.5) * 32.0;
-         double newY = this.method_23318() + (this.random.nextDouble() - 0.5) * 8.0;
-         double newZ = this.method_23321() + (this.random.nextDouble() - 0.5) * 32.0;
+      if (!this.getWorld().isClient) {
+         double newX = this.getX() + (this.random.nextDouble() - 0.5) * 32.0;
+         double newY = this.getY() + (this.random.nextDouble() - 0.5) * 8.0;
+         double newZ = this.getZ() + (this.random.nextDouble() - 0.5) * 32.0;
          newY = Math.max(0.0, Math.min(256.0, newY));
          if (this.isSafeLocation(newX, newY, newZ)) {
-            this.method_20620(newX, newY, newZ);
+            this.teleport(newX, newY, newZ);
          } else {
             for (int i = 0; i < 10; i++) {
-               double tryX = this.method_23317() + (this.random.nextDouble() - 0.5) * 32.0;
-               double tryY = this.method_23318() + (this.random.nextDouble() - 0.5) * 8.0;
-               double tryZ = this.method_23321() + (this.random.nextDouble() - 0.5) * 32.0;
+               double tryX = this.getX() + (this.random.nextDouble() - 0.5) * 32.0;
+               double tryY = this.getY() + (this.random.nextDouble() - 0.5) * 8.0;
+               double tryZ = this.getZ() + (this.random.nextDouble() - 0.5) * 32.0;
                tryY = Math.max(0.0, Math.min(256.0, tryY));
                if (this.isSafeLocation(tryX, tryY, tryZ)) {
-                  this.method_20620(tryX, tryY, tryZ);
+                  this.teleport(tryX, tryY, tryZ);
                   break;
                }
             }
@@ -238,8 +239,8 @@ public class LostGhostEntity extends GhostEntity {
 
    private boolean isSafeLocation(double x, double y, double z) {
       BlockPos targetPos = new BlockPos((int)x, (int)y, (int)z);
-      BlockPos belowPos = targetPos.method_10074();
-      BlockPos abovePos = targetPos.method_10084();
-      return this.method_37908().method_22347(targetPos) && !this.method_37908().method_22347(belowPos) && this.method_37908().method_22347(abovePos);
+      BlockPos belowPos = targetPos.down();
+      BlockPos abovePos = targetPos.up();
+      return this.getWorld().isAir(targetPos) && !this.getWorld().isAir(belowPos) && this.getWorld().isAir(abovePos);
    }
 }

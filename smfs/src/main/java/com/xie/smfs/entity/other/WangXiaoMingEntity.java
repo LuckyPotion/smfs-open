@@ -39,109 +39,109 @@ public class WangXiaoMingEntity extends VillagerEntity implements Merchant {
 
    public WangXiaoMingEntity(EntityType<? extends VillagerEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5665(Text.method_43470("§6王小明"));
-      this.method_5880(true);
-      this.method_5803(true);
+      this.setCustomName(Text.literal("§6王小明"));
+      this.setCustomNameVisible(true);
+      this.setSilent(true);
       this.initTradeOffers();
    }
 
    private void initTradeOffers() {
       this.offers.clear();
-      int experience = this.method_19269();
+      int experience = this.getExperience();
       if (experience >= 0) {
          ItemStack goldenContainerBuy = new ItemStack(ModItems.GOLDEN_CONTAINER, 1);
-         goldenContainerBuy.method_7948().method_10556("HasGhost", true);
-         this.offers.add(new WangXiaoMingEntity.GhostTradeOffer(goldenContainerBuy, new ItemStack(Items.field_8494, 3), 3, 5, 0.05F));
-         ItemStack goldBlockInput1 = new ItemStack(Items.field_8494, 2);
+         goldenContainerBuy.getOrCreateNbt().putBoolean("HasGhost", true);
+         this.offers.add(new WangXiaoMingEntity.GhostTradeOffer(goldenContainerBuy, new ItemStack(Items.GOLD_BLOCK, 3), 3, 5, 0.05F));
+         ItemStack goldBlockInput1 = new ItemStack(Items.GOLD_BLOCK, 2);
          ItemStack whiteGhostCandleOutput = new ItemStack(ModItems.WHITE_GHOST_CANDLE, 1);
          this.offers.add(new TradeOffer(goldBlockInput1, whiteGhostCandleOutput, 8, 5, 0.05F));
-         ItemStack goldBlockInput2 = new ItemStack(Items.field_8494, 3);
+         ItemStack goldBlockInput2 = new ItemStack(Items.GOLD_BLOCK, 3);
          ItemStack ghostPorcelainOutput = new ItemStack(ModItems.GHOST_PORCELAIN, 1);
          this.offers.add(new TradeOffer(goldBlockInput2, ghostPorcelainOutput, 6, 5, 0.05F));
       }
 
       if (experience >= 10) {
-         ItemStack goldBlockInput3 = new ItemStack(Items.field_8494, 5);
+         ItemStack goldBlockInput3 = new ItemStack(Items.GOLD_BLOCK, 5);
          ItemStack redGhostCandleOutput = new ItemStack(ModItems.RED_GHOST_CANDLE, 1);
          this.offers.add(new TradeOffer(goldBlockInput3, redGhostCandleOutput, 4, 5, 0.05F));
       }
 
       if (experience >= 30) {
-         ItemStack goldBlockInput4 = new ItemStack(Items.field_8494, 3);
+         ItemStack goldBlockInput4 = new ItemStack(Items.GOLD_BLOCK, 3);
          ItemStack ghostFactionOutput = new ItemStack(ModItems.GHOST_FACTION, 1);
          this.offers.add(new TradeOffer(goldBlockInput4, ghostFactionOutput, 3, 5, 0.05F));
-         ItemStack goldBlockInput5 = new ItemStack(Items.field_8494, 1);
+         ItemStack goldBlockInput5 = new ItemStack(Items.GOLD_BLOCK, 1);
          ItemStack spiritSurgePotionOutput = new ItemStack(ModItems.SPIRIT_SURGE_POTION, 1);
          this.offers.add(new TradeOffer(goldBlockInput5, spiritSurgePotionOutput, 4, 5, 0.05F));
       }
 
       if (experience >= 60) {
-         ItemStack goldBlockInput6 = new ItemStack(Items.field_8494, 6);
+         ItemStack goldBlockInput6 = new ItemStack(Items.GOLD_BLOCK, 6);
          ItemStack ghostChineseMedicineOutput = new ItemStack(ModItems.GHOST_CHINESE_MEDICINE, 1);
          this.offers.add(new TradeOffer(goldBlockInput6, ghostChineseMedicineOutput, 6, 5, 0.05F));
       }
 
       if (experience >= 100) {
-         ItemStack goldBlockInput7 = new ItemStack(Items.field_8494, 8);
+         ItemStack goldBlockInput7 = new ItemStack(Items.GOLD_BLOCK, 8);
          ItemStack controlSlotOutput = new ItemStack(ModItems.CONTROL_SLOT, 1);
          this.offers.add(new TradeOffer(goldBlockInput7, controlSlotOutput, 2, 5, 0.05F));
-         ItemStack goldBlockInput9 = new ItemStack(Items.field_8494, 12);
+         ItemStack goldBlockInput9 = new ItemStack(Items.GOLD_BLOCK, 12);
          ItemStack ghostDoorOutput = new ItemStack(ModItems.NEW_GHOST_DOOR, 1);
          this.offers.add(new TradeOffer(goldBlockInput9, ghostDoorOutput, 1, 5, 0.05F));
       }
    }
 
    public static Builder createWangXiaoMingAttributes() {
-      return VillagerEntity.method_26955().method_26868(EntityAttributes.field_23716, 100.0);
+      return VillagerEntity.createVillagerAttributes().add(EntityAttributes.GENERIC_MAX_HEALTH, 100.0);
    }
 
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
-   public boolean method_7239() {
+   public boolean canBreed() {
       return false;
    }
 
-   public VillagerData method_7231() {
-      return new VillagerData(VillagerType.field_17073, VillagerProfession.field_17051, 1);
+   public VillagerData getVillagerData() {
+      return new VillagerData(VillagerType.PLAINS, VillagerProfession.NONE, 1);
    }
 
-   public void method_7195(VillagerData villagerData) {
+   public void setVillagerData(VillagerData villagerData) {
    }
 
-   public void method_8259(PlayerEntity customer) {
+   public void setCustomer(PlayerEntity customer) {
       this.customer = customer;
    }
 
-   public PlayerEntity method_8257() {
+   public PlayerEntity getCustomer() {
       return this.customer;
    }
 
-   public TradeOfferList method_8264() {
+   public TradeOfferList getOffers() {
       return this.offers;
    }
 
-   public void method_8261(TradeOfferList offers) {
+   public void setOffersFromServer(TradeOfferList offers) {
       this.offers = offers;
    }
 
-   public void method_8262(TradeOffer offer) {
-      if (!this.method_37908().field_9236) {
-         offer.method_8244();
-         int currentExperience = this.method_19269();
-         this.method_19271(currentExperience + 1);
+   public void trade(TradeOffer offer) {
+      if (!this.getWorld().isClient) {
+         offer.use();
+         int currentExperience = this.getExperience();
+         this.setExperienceFromServer(currentExperience + 1);
          this.initTradeOffers();
-         if (this.method_8257() instanceof ServerPlayerEntity serverPlayer) {
+         if (this.getCustomer() instanceof ServerPlayerEntity serverPlayer) {
             this.updateTradeQuestProgress(serverPlayer);
          }
       }
    }
 
-   public void method_8258(ItemStack stack) {
+   public void onSellingItem(ItemStack stack) {
    }
 
-   public int method_19269() {
+   public int getExperience() {
       return this.tradeExperience;
    }
 
@@ -149,19 +149,19 @@ public class WangXiaoMingEntity extends VillagerEntity implements Merchant {
       return this.faction;
    }
 
-   public void method_19271(int experience) {
+   public void setExperienceFromServer(int experience) {
       this.tradeExperience = experience;
    }
 
-   public boolean method_19270() {
+   public boolean isLeveledMerchant() {
       return false;
    }
 
-   public SoundEvent method_18010() {
+   public SoundEvent getYesSound() {
       return null;
    }
 
-   public boolean method_20708() {
+   public boolean canRefreshTrades() {
       return false;
    }
 
@@ -170,24 +170,24 @@ public class WangXiaoMingEntity extends VillagerEntity implements Merchant {
    }
 
    public void openTradeScreen(ServerPlayerEntity player) {
-      this.method_8259(player);
-      int experience = this.method_19269();
+      this.setCustomer(player);
+      int experience = this.getExperience();
       int level = this.calculateLevel(experience);
-      this.method_5665(Text.method_43470("§6王小明 §7(等级" + level + ")"));
-      player.method_17355(new NamedScreenHandlerFactory() {
+      this.setCustomName(Text.literal("§6王小明 §7(等级" + level + ")"));
+      player.openHandledScreen(new NamedScreenHandlerFactory() {
          public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity playerx) {
             return new MerchantScreenHandler(syncId, inventory, WangXiaoMingEntity.this);
          }
 
-         public Text method_5476() {
-            return WangXiaoMingEntity.this.method_5476();
+         public Text getDisplayName() {
+            return WangXiaoMingEntity.this.getDisplayName();
          }
       });
-      int syncId = player.field_7512 != null ? player.field_7512.field_7763 : 0;
-      player.field_13987
-         .method_14364(
+      int syncId = player.currentScreenHandler != null ? player.currentScreenHandler.syncId : 0;
+      player.networkHandler
+         .sendPacket(
             new SetTradeOffersS2CPacket(
-               syncId, this.offers, this.calculateLevelProgress(experience), this.method_19269(), this.method_19270(), this.method_20708()
+               syncId, this.offers, this.calculateLevelProgress(experience), this.getExperience(), this.isLeveledMerchant(), this.canRefreshTrades()
             )
          );
    }
@@ -218,30 +218,30 @@ public class WangXiaoMingEntity extends VillagerEntity implements Merchant {
       }
    }
 
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10569("TradeExperience", this.tradeExperience);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putInt("TradeExperience", this.tradeExperience);
    }
 
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("TradeExperience")) {
-         this.tradeExperience = nbt.method_10550("TradeExperience");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("TradeExperience")) {
+         this.tradeExperience = nbt.getInt("TradeExperience");
       }
 
       this.initTradeOffers();
    }
 
-   public boolean method_5679(DamageSource damageSource) {
-      return damageSource.method_5529() instanceof ZombieEntity ? true : super.method_5679(damageSource);
+   public boolean isInvulnerableTo(DamageSource damageSource) {
+      return damageSource.getAttacker() instanceof ZombieEntity ? true : super.isInvulnerableTo(damageSource);
    }
 
    private void updateTradeQuestProgress(ServerPlayerEntity player) {
       try {
          NbtCompound data = PlayerEvents.getCachedData(player);
          String tradeKey = "wangxiaoming_trade_count";
-         int currentCount = data.method_10545(tradeKey) ? data.method_10550(tradeKey) : 0;
-         data.method_10569(tradeKey, currentCount + 1);
+         int currentCount = data.contains(tradeKey) ? data.getInt(tradeKey) : 0;
+         data.putInt(tradeKey, currentCount + 1);
          PlayerEvents.saveDataToPlayer(player, data);
       } catch (Exception var5) {
       }
@@ -253,7 +253,7 @@ public class WangXiaoMingEntity extends VillagerEntity implements Merchant {
       }
 
       public boolean matches(ItemStack offeredStack) {
-         return offeredStack.method_31574(ModItems.GOLDEN_CONTAINER) && GoldenContainerItem.hasGhost(offeredStack);
+         return offeredStack.isOf(ModItems.GOLDEN_CONTAINER) && GoldenContainerItem.hasGhost(offeredStack);
       }
    }
 }

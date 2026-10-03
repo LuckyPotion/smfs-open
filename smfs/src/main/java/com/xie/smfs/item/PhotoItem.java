@@ -18,17 +18,17 @@ public class PhotoItem extends Item {
    }
 
    public static boolean isNamedPhoto(ItemStack stack) {
-      return stack.method_7909() instanceof PhotoItem && stack.method_7938();
+      return stack.getItem() instanceof PhotoItem && stack.hasCustomName();
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      return TypedActionResult.method_22430(user.method_5998(hand));
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      return TypedActionResult.pass(user.getStackInHand(hand));
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.photo.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.photo.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.photo.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.photo.description.source"));
+      tooltip.add(Text.translatable("item.smfs.photo.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.photo.description.type"));
    }
 }

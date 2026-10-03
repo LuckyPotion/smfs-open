@@ -25,23 +25,23 @@ public class PuppetGhostEntity extends GhostEntity {
    private static final int STATIONARY_THRESHOLD = 100;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 80000.0)
-         .method_26868(EntityAttributes.field_23719, 0.2)
-         .method_26868(EntityAttributes.field_23721, 4.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 80000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 4.0);
    }
 
    public PuppetGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 1800, 110, 140, 0.12F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(80000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.2);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(4.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(80000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.2);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(4.0);
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          this.updatePlayerPositions();
       }
    }
@@ -56,7 +56,7 @@ public class PuppetGhostEntity extends GhostEntity {
          return false;
       }
 
-      if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       }
 
@@ -64,14 +64,14 @@ public class PuppetGhostEntity extends GhostEntity {
          return false;
       }
 
-      PuppetGhostEntity.PlayerPositionInfo info = this.playerPositions.get(player.method_5667());
+      PuppetGhostEntity.PlayerPositionInfo info = this.playerPositions.get(player.getUuid());
       return info != null && info.isStationary();
    }
 
    private void updatePlayerPositions() {
-      for (PlayerEntity player : this.method_37908().method_18456()) {
-         UUID playerId = player.method_5667();
-         Vec3d currentPos = player.method_19538();
+      for (PlayerEntity player : this.getWorld().getPlayers()) {
+         UUID playerId = player.getUuid();
+         Vec3d currentPos = player.getPos();
          PuppetGhostEntity.PlayerPositionInfo info = this.playerPositions.get(playerId);
          if (info == null) {
             info = new PuppetGhostEntity.PlayerPositionInfo(currentPos);
@@ -81,11 +81,11 @@ public class PuppetGhostEntity extends GhostEntity {
          }
       }
 
-      this.playerPositions.keySet().removeIf(playerIdx -> this.method_37908().method_18470(playerIdx) == null);
+      this.playerPositions.keySet().removeIf(playerIdx -> this.getWorld().getPlayerByUuid(playerIdx) == null);
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 
    private static class PlayerPositionInfo {
@@ -98,7 +98,7 @@ public class PuppetGhostEntity extends GhostEntity {
       }
 
       public void update(Vec3d currentPosition) {
-         if (currentPosition.method_1022(this.lastPosition) > 0.1) {
+         if (currentPosition.distanceTo(this.lastPosition) > 0.1) {
             this.stationaryTicks = 0;
             this.lastPosition = currentPosition;
          } else {

@@ -44,7 +44,7 @@ public class GhostHunterTalkScreen extends Screen {
    }
 
    public GhostHunterTalkScreen(Entity targetEntity, List<String> dialogues, List<String> storyDialogues, boolean alreadyTalkedToYangXiao) {
-      super(Text.method_43470("对话"));
+      super(Text.literal("对话"));
       this.targetEntity = targetEntity;
       this.portraitTexture = this.getPortraitTexture(targetEntity);
       this.characterName = this.getCharacterName(targetEntity);
@@ -75,13 +75,13 @@ public class GhostHunterTalkScreen extends Screen {
    }
 
    private Identifier getPortraitTexture(Entity entity) {
-      Identifier entityId = Registries.field_41177.method_10221(entity.method_5864());
-      String portraitName = entityId.method_12832();
+      Identifier entityId = Registries.ENTITY_TYPE.getId(entity.getType());
+      String portraitName = entityId.getPath();
       return new Identifier("smfs", "textures/gui/portraits/" + portraitName + ".png");
    }
 
    private Text getCharacterName(Entity entity) {
-      return entity.method_5477();
+      return entity.getName();
    }
 
    private String getRandomDialogue() {
@@ -89,81 +89,75 @@ public class GhostHunterTalkScreen extends Screen {
       return this.dialogues != null && !this.dialogues.isEmpty() ? this.dialogues.get(random.nextInt(this.dialogues.size())) : "你好...";
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      int buttonY = this.field_22790 - 30;
+   protected void init() {
+      super.init();
+      int buttonY = this.height - 30;
       if (this.showingQuests) {
          Map<String, String> questList = this.getQuestListFromEntity();
          boolean hasQuests = !questList.isEmpty();
          int totalButtonWidth = 288;
-         int startX = this.field_22789 - totalButtonWidth - 20;
+         int startX = this.width - totalButtonWidth - 20;
          if (hasQuests) {
-            ButtonWidget acceptButton = ButtonWidget.method_46430(Text.method_43470("接受"), button -> this.onAcceptQuest())
-               .method_46434(startX + 120 + 32, buttonY, 60, 14)
-               .method_46431();
-            ButtonWidget leaveButton = ButtonWidget.method_46430(Text.method_43470("再见"), button -> this.onLeaveClicked())
-               .method_46434(startX + 180 + 48, buttonY, 60, 14)
-               .method_46431();
-            this.method_37063(acceptButton);
-            this.method_37063(leaveButton);
+            ButtonWidget acceptButton = ButtonWidget.builder(Text.literal("接受"), button -> this.onAcceptQuest())
+               .dimensions(startX + 120 + 32, buttonY, 60, 14)
+               .build();
+            ButtonWidget leaveButton = ButtonWidget.builder(Text.literal("再见"), button -> this.onLeaveClicked())
+               .dimensions(startX + 180 + 48, buttonY, 60, 14)
+               .build();
+            this.addDrawableChild(acceptButton);
+            this.addDrawableChild(leaveButton);
          } else {
-            ButtonWidget leaveButton = ButtonWidget.method_46430(Text.method_43470("再见"), button -> this.onLeaveClicked())
-               .method_46434(startX + 180 + 48, buttonY, 60, 14)
-               .method_46431();
-            this.method_37063(leaveButton);
+            ButtonWidget leaveButton = ButtonWidget.builder(Text.literal("再见"), button -> this.onLeaveClicked())
+               .dimensions(startX + 180 + 48, buttonY, 60, 14)
+               .build();
+            this.addDrawableChild(leaveButton);
          }
       } else if (this.isStoryMode()) {
          if (this.storyCompleted) {
-            ButtonWidget leaveButton = ButtonWidget.method_46430(Text.method_43470("关闭"), button -> this.onLeaveClicked())
-               .method_46434(this.field_22789 - 60 - 20, buttonY, 60, 14)
-               .method_46431();
-            this.method_37063(leaveButton);
+            ButtonWidget leaveButton = ButtonWidget.builder(Text.literal("关闭"), button -> this.onLeaveClicked())
+               .dimensions(this.width - 60 - 20, buttonY, 60, 14)
+               .build();
+            this.addDrawableChild(leaveButton);
          } else {
-            int startX = this.field_22789 - 120 - 16 - 20;
-            ButtonWidget talkButton = ButtonWidget.method_46430(Text.method_43470("交谈"), button -> this.onStoryTalkClicked())
-               .method_46434(startX, buttonY, 60, 14)
-               .method_46431();
-            ButtonWidget leaveButton = ButtonWidget.method_46430(Text.method_43470("关闭"), button -> this.onLeaveClicked())
-               .method_46434(startX + 60 + 16, buttonY, 60, 14)
-               .method_46431();
-            this.method_37063(talkButton);
-            this.method_37063(leaveButton);
+            int startX = this.width - 120 - 16 - 20;
+            ButtonWidget talkButton = ButtonWidget.builder(Text.literal("交谈"), button -> this.onStoryTalkClicked()).dimensions(startX, buttonY, 60, 14).build();
+            ButtonWidget leaveButton = ButtonWidget.builder(Text.literal("关闭"), button -> this.onLeaveClicked())
+               .dimensions(startX + 60 + 16, buttonY, 60, 14)
+               .build();
+            this.addDrawableChild(talkButton);
+            this.addDrawableChild(leaveButton);
          }
       } else if (this.showingJoinConfirm) {
          String factionName = FactionManager.getFactionDisplayName(this.targetEntity);
          int totalButtonWidth = 136;
-         int startX = this.field_22789 - totalButtonWidth - 20;
-         ButtonWidget confirmButton = ButtonWidget.method_46430(Text.method_43470("确定加入"), button -> this.onConfirmJoin())
-            .method_46434(startX, buttonY, 60, 14)
-            .method_46431();
-         ButtonWidget cancelButton = ButtonWidget.method_46430(Text.method_43470("取消"), button -> this.onCancelJoin())
-            .method_46434(startX + 60 + 16, buttonY, 60, 14)
-            .method_46431();
-         this.method_37063(confirmButton);
-         this.method_37063(cancelButton);
+         int startX = this.width - totalButtonWidth - 20;
+         ButtonWidget confirmButton = ButtonWidget.builder(Text.literal("确定加入"), button -> this.onConfirmJoin()).dimensions(startX, buttonY, 60, 14).build();
+         ButtonWidget cancelButton = ButtonWidget.builder(Text.literal("取消"), button -> this.onCancelJoin())
+            .dimensions(startX + 60 + 16, buttonY, 60, 14)
+            .build();
+         this.addDrawableChild(confirmButton);
+         this.addDrawableChild(cancelButton);
       } else {
          int totalButtonWidth = 288;
-         int startX = this.field_22789 - totalButtonWidth - 20;
-         ButtonWidget talkButton = ButtonWidget.method_46430(Text.method_43470("交谈"), button -> this.onTalkClicked())
-            .method_46434(startX, buttonY, 60, 14)
-            .method_46431();
-         ButtonWidget tradeButton = ButtonWidget.method_46430(Text.method_43470("交易"), button -> this.onTradeClicked())
-            .method_46434(startX + 60 + 16, buttonY, 60, 14)
-            .method_46431();
-         ButtonWidget questButton = ButtonWidget.method_46430(this.isFactionNpc ? Text.method_43470("组织") : Text.method_43470("委托"), button -> {
+         int startX = this.width - totalButtonWidth - 20;
+         ButtonWidget talkButton = ButtonWidget.builder(Text.literal("交谈"), button -> this.onTalkClicked()).dimensions(startX, buttonY, 60, 14).build();
+         ButtonWidget tradeButton = ButtonWidget.builder(Text.literal("交易"), button -> this.onTradeClicked())
+            .dimensions(startX + 60 + 16, buttonY, 60, 14)
+            .build();
+         ButtonWidget questButton = ButtonWidget.builder(this.isFactionNpc ? Text.literal("组织") : Text.literal("委托"), button -> {
             if (this.isFactionNpc) {
                this.onJoinClicked();
             } else {
                this.onQuestClicked();
             }
-         }).method_46434(startX + 120 + 32, buttonY, 60, 14).method_46431();
-         ButtonWidget leaveButton = ButtonWidget.method_46430(Text.method_43470("再见"), button -> this.onLeaveClicked())
-            .method_46434(startX + 180 + 48, buttonY, 60, 14)
-            .method_46431();
-         this.method_37063(talkButton);
-         this.method_37063(tradeButton);
-         this.method_37063(questButton);
-         this.method_37063(leaveButton);
+         }).dimensions(startX + 120 + 32, buttonY, 60, 14).build();
+         ButtonWidget leaveButton = ButtonWidget.builder(Text.literal("再见"), button -> this.onLeaveClicked())
+            .dimensions(startX + 180 + 48, buttonY, 60, 14)
+            .build();
+         this.addDrawableChild(talkButton);
+         this.addDrawableChild(tradeButton);
+         this.addDrawableChild(questButton);
+         this.addDrawableChild(leaveButton);
       }
    }
 
@@ -179,16 +173,16 @@ public class GhostHunterTalkScreen extends Screen {
          this.storyCompleted = true;
       }
 
-      this.method_37067();
-      this.method_25426();
+      this.clearChildren();
+      this.init();
    }
 
    private void onTradeClicked() {
       if (this.targetEntity != null) {
-         RequestTradeScreenC2SPacket.send(this.targetEntity.method_5628());
+         RequestTradeScreenC2SPacket.send(this.targetEntity.getId());
       }
 
-      this.method_25419();
+      this.close();
    }
 
    private void onQuestClicked() {
@@ -201,8 +195,8 @@ public class GhostHunterTalkScreen extends Screen {
          this.currentDialogue = questTexts.get(new Random().nextInt(questTexts.size()));
       }
 
-      this.method_37067();
-      this.method_25426();
+      this.clearChildren();
+      this.init();
    }
 
    private void loadQuestList() {
@@ -220,69 +214,69 @@ public class GhostHunterTalkScreen extends Screen {
    }
 
    private void onAcceptQuest() {
-      this.method_25419();
+      this.close();
    }
 
    private void onLeaveClicked() {
-      this.method_25419();
+      this.close();
    }
 
    private void onJoinClicked() {
       String factionName = FactionManager.getFactionDisplayName(this.targetEntity);
       this.currentDialogue = "确定要加入" + factionName + "吗？";
       this.showingJoinConfirm = true;
-      this.method_37067();
-      this.method_25426();
+      this.clearChildren();
+      this.init();
    }
 
    private void onConfirmJoin() {
       if (this.targetEntity != null) {
-         RequestJoinFactionC2SPacket.send(this.targetEntity.method_5628());
+         RequestJoinFactionC2SPacket.send(this.targetEntity.getId());
       }
 
-      this.method_25419();
+      this.close();
    }
 
    private void onCancelJoin() {
       this.currentDialogue = this.getRandomDialogue();
       this.showingJoinConfirm = false;
-      this.method_37067();
-      this.method_25426();
+      this.clearChildren();
+      this.init();
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      context.method_25294(0, 0, this.field_22789, this.field_22790, Integer.MIN_VALUE);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      context.fill(0, 0, this.width, this.height, Integer.MIN_VALUE);
       if (this.hasPortraitTexture()) {
-         int portraitWidth = this.field_22789 / 4;
+         int portraitWidth = this.width / 4;
          int portraitHeight = portraitWidth * 2;
-         int portraitX = this.field_22789 - portraitWidth - 20;
-         int portraitY = this.field_22790 - portraitHeight;
-         context.method_25290(this.portraitTexture, portraitX, portraitY, 0.0F, 0.0F, portraitWidth, portraitHeight, portraitWidth, portraitHeight);
+         int portraitX = this.width - portraitWidth - 20;
+         int portraitY = this.height - portraitHeight;
+         context.drawTexture(this.portraitTexture, portraitX, portraitY, 0.0F, 0.0F, portraitWidth, portraitHeight, portraitWidth, portraitHeight);
       }
 
       int blackBarHeight = 100;
-      int blackBarY = this.field_22790 - blackBarHeight;
-      context.method_25294(0, blackBarY, this.field_22789, this.field_22790, -872415232);
+      int blackBarY = this.height - blackBarHeight;
+      context.fill(0, blackBarY, this.width, this.height, -872415232);
       int characterNameX = 20;
       int characterNameY = blackBarY + 10;
-      context.method_27535(this.field_22793, this.characterName, characterNameX, characterNameY, 16777215);
+      context.drawTextWithShadow(this.textRenderer, this.characterName, characterNameX, characterNameY, 16777215);
       int textX = 20;
       int textY = blackBarY + 35;
-      context.method_51439(this.field_22793, Text.method_43470(this.currentDialogue), textX, textY, -1, false);
-      super.method_25394(context, mouseX, mouseY, delta);
+      context.drawText(this.textRenderer, Text.literal(this.currentDialogue), textX, textY, -1, false);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    private boolean hasPortraitTexture() {
-      ResourceManager resourceManager = MinecraftClient.method_1551().method_1478();
-      return resourceManager.method_14486(this.portraitTexture).isPresent();
+      ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
+      return resourceManager.getResource(this.portraitTexture).isPresent();
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return true;
    }
 
-   public void method_25419() {
-      super.method_25419();
+   public void close() {
+      super.close();
    }
 
    public Entity getTargetEntity() {

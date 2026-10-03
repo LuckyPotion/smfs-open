@@ -16,44 +16,44 @@ public class CyanGhostDomainEffect extends StatusEffect implements ICurseEffect 
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/CyanGhostDomainEffect");
 
    public CyanGhostDomainEffect() {
-      super(StatusEffectCategory.field_18272, 65535);
+      super(StatusEffectCategory.HARMFUL, 65535);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
       if (entity instanceof PlayerEntity player) {
-         boolean isTargetVersion = player.method_6059(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
+         boolean isTargetVersion = player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
          if (!isTargetVersion) {
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5925, 5, 0, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 5, 0, false, false, false));
          }
       }
 
       if (entity instanceof PlayerEntity player) {
-         boolean hasNonTargetVersion = player.method_6059(ModEffects.CYAN_GHOST_DOMAIN);
-         boolean hasTargetVersion = player.method_6059(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
+         boolean hasNonTargetVersion = player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN);
+         boolean hasTargetVersion = player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
          if (hasNonTargetVersion && !hasTargetVersion) {
             double radius = 32.0;
-            entity.method_37908()
-               .method_8390(
+            entity.getWorld()
+               .getEntitiesByClass(
                   LivingEntity.class,
-                  entity.method_5829().method_1014(radius),
-                  livingEntity -> livingEntity != entity && livingEntity.method_6059(ModEffects.CYAN_GHOST_DOMAIN_TARGET)
+                  entity.getBoundingBox().expand(radius),
+                  livingEntity -> livingEntity != entity && livingEntity.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET)
                )
-               .forEach(livingEntity -> livingEntity.method_6092(new StatusEffectInstance(StatusEffects.field_5902, 20, amplifier, false, false, false)));
+               .forEach(livingEntity -> livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, 20, amplifier, false, false, false)));
          }
       }
    }
 
    public static void updateRevivalDegreeInGhostDomain(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          PlayerEvents.balanceRevivalDegree(player, 3, 1);
       }
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      super.method_5562(entity, attributes, amplifier);
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      super.onRemoved(entity, attributes, amplifier);
    }
 }

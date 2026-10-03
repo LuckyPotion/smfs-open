@@ -23,7 +23,7 @@ public class RequestBoneTreeCoordinatesC2SPacket {
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
       server.execute(() -> {
-         LOGGER.info("收到玩家 {} 的白骨树坐标请求", player.method_5477().getString());
+         LOGGER.info("收到玩家 {} 的白骨树坐标请求", player.getName().getString());
          BoneTreeCoordinatesS2CPacket.sendCoordinates(player);
       });
    }

@@ -5,6 +5,6 @@ import net.minecraft.world.World;
 
 public class SchoolMysteryInfoItem extends StructureMysteryInfoItem {
    public SchoolMysteryInfoItem() {
-      super(new FabricItemSettings().maxCount(16), "school", World.field_25179);
+      super(new FabricItemSettings().maxCount(16), "school", World.OVERWORLD);
    }
 }

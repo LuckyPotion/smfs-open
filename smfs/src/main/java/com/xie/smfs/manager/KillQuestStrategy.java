@@ -14,7 +14,7 @@ class KillQuestStrategy implements QuestDetectionStrategy {
    public int getCurrentProgress(PlayerEntity player, String objectiveId) {
       NbtCompound data = PlayerEvents.getCachedData(player);
       String progressKey = "quest_kill_progress_" + objectiveId;
-      return data.method_10545(progressKey) ? data.method_10550(progressKey) : 0;
+      return data.contains(progressKey) ? data.getInt(progressKey) : 0;
    }
 
    @Override

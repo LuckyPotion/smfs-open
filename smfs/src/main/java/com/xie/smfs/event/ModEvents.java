@@ -98,21 +98,19 @@ public class ModEvents {
    }
 
    private static void spawnSpiritAttackParticles(LivingEntity target, float damageAmount) {
-      if (!(damageAmount <= 0.0F) && !target.method_37908().method_8608()) {
-         ServerWorld serverWorld = (ServerWorld)target.method_37908();
-         Vec3d pos = target.method_19538();
-         serverWorld.method_43128(null, pos.field_1352, pos.field_1351, pos.field_1350, SoundEvents.field_14858, SoundCategory.field_15251, 1.0F, 1.0F);
+      if (!(damageAmount <= 0.0F) && !target.getWorld().isClient()) {
+         ServerWorld serverWorld = (ServerWorld)target.getWorld();
+         Vec3d pos = target.getPos();
+         serverWorld.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.HOSTILE, 1.0F, 1.0F);
 
          for (int i = 0; i < 25; i++) {
-            double offsetX = (target.method_6051().method_43058() - 0.5) * 2.0;
-            double offsetY = target.method_6051().method_43058() * 1.5 + 0.5;
-            double offsetZ = (target.method_6051().method_43058() - 0.5) * 2.0;
-            double velocityX = (target.method_6051().method_43058() - 0.5) * 0.2;
-            double velocityY = target.method_6051().method_43058() * 0.3 + 0.1;
-            double velocityZ = (target.method_6051().method_43058() - 0.5) * 0.2;
-            serverWorld.method_14199(
-               ParticleTypes.field_11249, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, velocityX, velocityY, velocityZ, 0.5
-            );
+            double offsetX = (target.getRandom().nextDouble() - 0.5) * 2.0;
+            double offsetY = target.getRandom().nextDouble() * 1.5 + 0.5;
+            double offsetZ = (target.getRandom().nextDouble() - 0.5) * 2.0;
+            double velocityX = (target.getRandom().nextDouble() - 0.5) * 0.2;
+            double velocityY = target.getRandom().nextDouble() * 0.3 + 0.1;
+            double velocityZ = (target.getRandom().nextDouble() - 0.5) * 0.2;
+            serverWorld.spawnParticles(ParticleTypes.WITCH, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, velocityX, velocityY, velocityZ, 0.5);
          }
       }
    }
@@ -135,12 +133,12 @@ public class ModEvents {
                return false;
             }
 
-            if (source.method_49708(ModDamageSources.GHOST)) {
+            if (source.isOf(ModDamageSources.GHOST)) {
                return true;
             }
 
-            if (source.method_49708(DamageTypes.field_42335) || source.method_49708(DamageTypes.field_42337) || source.method_49708(DamageTypes.field_42338)) {
-               if (player.method_6059(ModEffects.SILENCE) || player.method_6059(ModEffects.DREAM)) {
+            if (source.isOf(DamageTypes.IN_FIRE) || source.isOf(DamageTypes.ON_FIRE) || source.isOf(DamageTypes.LAVA)) {
+               if (player.hasStatusEffect(ModEffects.SILENCE) || player.hasStatusEffect(ModEffects.DREAM)) {
                   return true;
                }
 
@@ -150,7 +148,7 @@ public class ModEvents {
             }
          }
 
-         if (source.method_5529() instanceof PlayerEntity attacker) {
+         if (source.getAttacker() instanceof PlayerEntity attacker) {
             if (entity instanceof PlayerEntity targetPlayer) {
                return handlePlayerVsPlayerDamage(attacker, targetPlayer, source, amount);
             }
@@ -160,17 +158,17 @@ public class ModEvents {
             }
          }
 
-         if (entity instanceof PlayerEntity targetPlayer && source.method_5529() instanceof LivingEntity attacker) {
+         if (entity instanceof PlayerEntity targetPlayer && source.getAttacker() instanceof LivingEntity attacker) {
             handlePlayerAttackedPassiveEffect(targetPlayer, attacker, source);
          }
 
          return true;
       });
       ServerTickEvents.END_WORLD_TICK.register((EndWorldTick)world -> {
-         if (!world.method_8608()) {
-            RegistryKey<World> worldKey = world.method_27983();
-            String worldKeyStr = worldKey.method_29177().toString();
-            boolean isOverworld = worldKey.equals(World.field_25179);
+         if (!world.isClient()) {
+            RegistryKey<World> worldKey = world.getRegistryKey();
+            String worldKeyStr = worldKey.getValue().toString();
+            boolean isOverworld = worldKey.equals(World.OVERWORLD);
             boolean isSpiritRealm = worldKey.equals(Smfs.SPIRIT_REALM_DIMENSION);
             if (!isOverworld && !isSpiritRealm) {
                return;
@@ -194,17 +192,17 @@ public class ModEvents {
          }
       });
       PlayerBlockBreakEvents.AFTER.register((After)(world, player, pos, state, blockEntity) -> {
-         if (!world.method_8608() && world instanceof ServerWorld serverWorld) {
+         if (!world.isClient() && world instanceof ServerWorld serverWorld) {
             handleMiningEventForMineralGhost(serverWorld, player, pos, state);
          }
       });
       EntitySleepEvents.STOP_SLEEPING.register((StopSleeping)(entity, sleepingPos) -> {
-         if (entity instanceof ServerPlayerEntity player && !player.method_37908().method_8608() && player.method_37908().method_27983() == World.field_25179) {
+         if (entity instanceof ServerPlayerEntity player && !player.getWorld().isClient() && player.getWorld().getRegistryKey() == World.OVERWORLD) {
             if (PlayerEvents.hasGhostType(player, "ghost_dream")) {
                return;
             }
 
-            WorldConfig worldConfig = WorldConfig.getInstance(player.method_37908());
+            WorldConfig worldConfig = WorldConfig.getInstance(player.getWorld());
             if (worldConfig.modDifficulty != 2 && PlayerEvents.countOccupiedGhostSlots(player) < 2) {
                return;
             }
@@ -225,10 +223,10 @@ public class ModEvents {
    private static void handleMiningEventForMineralGhost(ServerWorld world, PlayerEntity player, BlockPos pos, BlockState state) {
       GhostRespawnConfig config = ModConfig.getInstance().getGhostRespawnConfig("mineral_ghost");
       if (config != null && config.enabled) {
-         long worldTime = world.method_8532();
+         long worldTime = world.getTimeOfDay();
          int worldDays = (int)(worldTime / 24000L);
          if (worldDays >= config.respawnDays) {
-            if (isMineralBlock(state.method_26204())) {
+            if (isMineralBlock(state.getBlock())) {
                if (RANDOM.nextDouble() <= 0.02) {
                   spawnMineralGhost(world, pos);
                }
@@ -239,11 +237,11 @@ public class ModEvents {
 
    private static void spawnMineralGhost(ServerWorld world, BlockPos pos) {
       try {
-         MineralGhostEntity mineralGhost = (MineralGhostEntity)ModEntities.MINERAL_GHOST.method_5883(world);
+         MineralGhostEntity mineralGhost = (MineralGhostEntity)ModEntities.MINERAL_GHOST.create(world);
          if (mineralGhost != null) {
-            mineralGhost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 1.0, pos.method_10260() + 0.5, RANDOM.nextFloat() * 360.0F, 0.0F);
+            mineralGhost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, RANDOM.nextFloat() * 360.0F, 0.0F);
             mineralGhost.setSpiritualStrength(1000);
-            world.method_8649(mineralGhost);
+            world.spawnEntity(mineralGhost);
             Smfs.LOGGER.debug("矿物鬼在位置 {} 生成", pos.toString());
          }
       } catch (Exception e) {
@@ -257,15 +255,15 @@ public class ModEvents {
       }
 
       SpiritSurgeStatusEffect.applySpiritSurgeDamage(attacker, target, baseAmount);
-      boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(attacker.method_6047());
+      boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(attacker.getMainHandStack());
       boolean isSkillDamage = GhostSkillManager.isSkillDamage(source);
       boolean isCorpseOilSwordAttack = false;
       float corpseOilSwordDamage = 0.0F;
-      if (attacker.method_6047().method_7985() && attacker.method_6047().method_7969().method_10545("corpse_oil_layers")) {
-         int oilLayers = attacker.method_6047().method_7969().method_10550("corpse_oil_layers");
+      if (attacker.getMainHandStack().hasNbt() && attacker.getMainHandStack().getNbt().contains("corpse_oil_layers")) {
+         int oilLayers = attacker.getMainHandStack().getNbt().getInt("corpse_oil_layers");
          if (oilLayers > 0) {
             isCorpseOilSwordAttack = true;
-            corpseOilSwordDamage = attacker.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION ? 0.0F : baseAmount * 10.0F;
+            corpseOilSwordDamage = attacker.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION ? 0.0F : baseAmount * 10.0F;
          }
       }
 
@@ -274,20 +272,20 @@ public class ModEvents {
       }
 
       NbtCompound attackerData = PlayerEvents.getSpiritAttributes(attacker);
-      float playerSpiritDamage = attackerData.method_10545("spiritDamage") ? (float)attackerData.method_10574("spiritDamage") : 0.0F;
-      float tempSpiritDamage = attackerData.method_10545("tempSpiritDamage") ? (float)attackerData.method_10574("tempSpiritDamage") : 0.0F;
-      float tempSpiritDamageMultiplier = attackerData.method_10545("tempSpiritDamageMultiplier")
-         ? (float)attackerData.method_10574("tempSpiritDamageMultiplier")
+      float playerSpiritDamage = attackerData.contains("spiritDamage") ? (float)attackerData.getDouble("spiritDamage") : 0.0F;
+      float tempSpiritDamage = attackerData.contains("tempSpiritDamage") ? (float)attackerData.getDouble("tempSpiritDamage") : 0.0F;
+      float tempSpiritDamageMultiplier = attackerData.contains("tempSpiritDamageMultiplier")
+         ? (float)attackerData.getDouble("tempSpiritDamageMultiplier")
          : 1.0F;
       float totalSpiritDamage = playerSpiritDamage * tempSpiritDamageMultiplier + tempSpiritDamage;
       float effectiveSpiritDamage = totalSpiritDamage;
       if (hasSpiritWeapon) {
          float weaponDamageBonus = 0.0F;
          float damageMultiplier = 0.5F;
-         ItemStack mainHandStack = attacker.method_6047();
+         ItemStack mainHandStack = attacker.getMainHandStack();
          if (SpiritWeapon.isSpiritWeapon(mainHandStack)) {
-            SpiritWeapon weapon = (SpiritWeapon)mainHandStack.method_7909();
-            if (attacker.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
+            SpiritWeapon weapon = (SpiritWeapon)mainHandStack.getItem();
+            if (attacker.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
                weaponDamageBonus = 0.0F;
                damageMultiplier = 0.0F;
             } else {
@@ -302,7 +300,7 @@ public class ModEvents {
       float spiritDamageAmount = effectiveSpiritDamage;
       if (hasSpiritWeapon) {
          long currentTime = System.currentTimeMillis();
-         UUID playerUUID = attacker.method_5667();
+         UUID playerUUID = attacker.getUuid();
          Long lastAttackTime = SPIRIT_WEAPON_COOLDOWN.get(playerUUID);
          if (lastAttackTime != null) {
             long timeDiff = currentTime - lastAttackTime;
@@ -326,20 +324,18 @@ public class ModEvents {
             spawnSpiritAttackParticles(target, corpseOilSwordDamage);
             float actualDamage = PlayerEvents.handleSpiritDamage(target, corpseOilSwordDamage, baseAmount, source);
             fireSpiritDamageCallback(attacker, target, corpseOilSwordDamage, actualDamage, source);
-            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.method_5667()) && actualDamage > 0.0F) {
-               attacker.method_7353(
-                  Text.method_43470("§a对 §f" + target.method_5477().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(actualDamage) + " §a点灵异伤害"),
-                  true
+            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.getUuid()) && actualDamage > 0.0F) {
+               attacker.sendMessage(
+                  Text.literal("§a对 §f" + target.getName().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(actualDamage) + " §a点灵异伤害"), true
                );
             }
          } else {
             spawnSpiritAttackParticles(target, spiritDamageAmount);
             float actualDamage = PlayerEvents.handleSpiritDamage(target, spiritDamageAmount, baseAmount, source);
             fireSpiritDamageCallback(attacker, target, spiritDamageAmount, actualDamage, source);
-            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.method_5667()) && actualDamage > 0.0F) {
-               attacker.method_7353(
-                  Text.method_43470("§a对 §f" + target.method_5477().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(actualDamage) + " §a点灵异伤害"),
-                  true
+            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.getUuid()) && actualDamage > 0.0F) {
+               attacker.sendMessage(
+                  Text.literal("§a对 §f" + target.getName().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(actualDamage) + " §a点灵异伤害"), true
                );
             }
          }
@@ -353,15 +349,15 @@ public class ModEvents {
 
    private static boolean handlePlayerVsEntityDamage(PlayerEntity attacker, LivingEntity target, DamageSource source, float baseAmount) {
       SpiritSurgeStatusEffect.applySpiritSurgeDamage(attacker, target, baseAmount);
-      boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(attacker.method_6047());
+      boolean hasSpiritWeapon = SpiritWeapon.isSpiritWeapon(attacker.getMainHandStack());
       boolean isSkillDamage = GhostSkillManager.isSkillDamage(source);
       boolean isCorpseOilSwordAttack = false;
       float corpseOilSwordDamage = 0.0F;
-      if (attacker.method_6047().method_7985() && attacker.method_6047().method_7969().method_10545("corpse_oil_layers")) {
-         int oilLayers = attacker.method_6047().method_7969().method_10550("corpse_oil_layers");
+      if (attacker.getMainHandStack().hasNbt() && attacker.getMainHandStack().getNbt().contains("corpse_oil_layers")) {
+         int oilLayers = attacker.getMainHandStack().getNbt().getInt("corpse_oil_layers");
          if (oilLayers > 0) {
             isCorpseOilSwordAttack = true;
-            corpseOilSwordDamage = attacker.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION ? 0.0F : baseAmount * 10.0F;
+            corpseOilSwordDamage = attacker.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION ? 0.0F : baseAmount * 10.0F;
          }
       }
 
@@ -370,19 +366,19 @@ public class ModEvents {
       }
 
       NbtCompound attackerData = PlayerEvents.getSpiritAttributes(attacker);
-      float playerSpiritDamage = attackerData.method_10545("spiritDamage") ? (float)attackerData.method_10574("spiritDamage") : 0.0F;
-      float tempSpiritDamage = attackerData.method_10545("tempSpiritDamage") ? (float)attackerData.method_10574("tempSpiritDamage") : 0.0F;
-      float tempSpiritDamageMultiplier = attackerData.method_10545("tempSpiritDamageMultiplier")
-         ? (float)attackerData.method_10574("tempSpiritDamageMultiplier")
+      float playerSpiritDamage = attackerData.contains("spiritDamage") ? (float)attackerData.getDouble("spiritDamage") : 0.0F;
+      float tempSpiritDamage = attackerData.contains("tempSpiritDamage") ? (float)attackerData.getDouble("tempSpiritDamage") : 0.0F;
+      float tempSpiritDamageMultiplier = attackerData.contains("tempSpiritDamageMultiplier")
+         ? (float)attackerData.getDouble("tempSpiritDamageMultiplier")
          : 1.0F;
       float totalSpiritDamage = playerSpiritDamage * tempSpiritDamageMultiplier + tempSpiritDamage;
       float spiritDamageAmount = 0.0F;
       if (hasSpiritWeapon) {
          float weaponDamageBonus = 0.0F;
          float damageMultiplier = 0.5F;
-         if (SpiritWeapon.isSpiritWeapon(attacker.method_6047())) {
-            SpiritWeapon weapon = (SpiritWeapon)attacker.method_6047().method_7909();
-            if (attacker.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
+         if (SpiritWeapon.isSpiritWeapon(attacker.getMainHandStack())) {
+            SpiritWeapon weapon = (SpiritWeapon)attacker.getMainHandStack().getItem();
+            if (attacker.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
                weaponDamageBonus = 0.0F;
                damageMultiplier = 0.0F;
             } else {
@@ -398,7 +394,7 @@ public class ModEvents {
 
       if (hasSpiritWeapon) {
          long currentTime = System.currentTimeMillis();
-         UUID playerUUID = attacker.method_5667();
+         UUID playerUUID = attacker.getUuid();
          Long lastAttackTime = SPIRIT_WEAPON_COOLDOWN.get(playerUUID);
          if (lastAttackTime != null) {
             long timeDiff = currentTime - lastAttackTime;
@@ -420,57 +416,55 @@ public class ModEvents {
       try {
          if (isCorpseOilSwordAttack) {
             spawnSpiritAttackParticles(target, corpseOilSwordDamage);
-            float healthBefore = target.method_6032();
-            target.method_5643(source, corpseOilSwordDamage);
-            float actualDamage = healthBefore - target.method_6032();
+            float healthBefore = target.getHealth();
+            target.damage(source, corpseOilSwordDamage);
+            float actualDamage = healthBefore - target.getHealth();
             float penetrationThreshold = (float)ModConfig.getInstance().spiritDamagePenetrationThreshold;
             boolean skipCreative = target instanceof PlayerEntity playerTarget
                && (
-                  playerTarget.method_7337() && !ModConfig.getInstance().penetrateCreativeMode
-                     || playerTarget.method_7325() && !ModConfig.getInstance().penetrateSpectatorMode
+                  playerTarget.isCreative() && !ModConfig.getInstance().penetrateCreativeMode
+                     || playerTarget.isSpectator() && !ModConfig.getInstance().penetrateSpectatorMode
                );
             float threshold = corpseOilSwordDamage * penetrationThreshold;
-            if (!skipCreative && actualDamage < threshold && actualDamage >= 0.0F && target.method_5805()) {
+            if (!skipCreative && actualDamage < threshold && actualDamage >= 0.0F && target.isAlive()) {
                float missingDamage = corpseOilSwordDamage - actualDamage;
-               target.method_6033(Math.max(0.0F, target.method_6032() - missingDamage));
+               target.setHealth(Math.max(0.0F, target.getHealth() - missingDamage));
             }
 
             fireSpiritDamageCallback(attacker, target, corpseOilSwordDamage, actualDamage, source);
-            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.method_5667()) && actualDamage > 0.0F) {
-               attacker.method_7353(
-                  Text.method_43470("§a对 §f" + target.method_5477().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(actualDamage) + " §a点灵异伤害"),
-                  true
+            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.getUuid()) && actualDamage > 0.0F) {
+               attacker.sendMessage(
+                  Text.literal("§a对 §f" + target.getName().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(actualDamage) + " §a点灵异伤害"), true
                );
             }
          } else {
             spawnSpiritAttackParticles(target, spiritDamageAmount);
-            float healthBefore = target.method_6032();
-            target.method_5643(source, spiritDamageAmount);
-            float actualDamage = healthBefore - target.method_6032();
+            float healthBefore = target.getHealth();
+            target.damage(source, spiritDamageAmount);
+            float actualDamage = healthBefore - target.getHealth();
             float penetrationThreshold2 = (float)ModConfig.getInstance().spiritDamagePenetrationThreshold;
             boolean skipCreative2 = target instanceof PlayerEntity playerTarget
                && (
-                  playerTarget.method_7337() && !ModConfig.getInstance().penetrateCreativeMode
-                     || playerTarget.method_7325() && !ModConfig.getInstance().penetrateSpectatorMode
+                  playerTarget.isCreative() && !ModConfig.getInstance().penetrateCreativeMode
+                     || playerTarget.isSpectator() && !ModConfig.getInstance().penetrateSpectatorMode
                );
             float threshold2 = spiritDamageAmount * penetrationThreshold2;
-            if (!skipCreative2 && actualDamage < threshold2 && actualDamage >= 0.0F && target.method_5805()) {
+            if (!skipCreative2 && actualDamage < threshold2 && actualDamage >= 0.0F && target.isAlive()) {
                float missingDamage = spiritDamageAmount - actualDamage;
-               target.method_6033(Math.max(0.0F, target.method_6032() - missingDamage));
+               target.setHealth(Math.max(0.0F, target.getHealth() - missingDamage));
             }
 
             fireSpiritDamageCallback(attacker, target, spiritDamageAmount, actualDamage, source);
-            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.method_5667()) && actualDamage > 0.0F) {
-               Float preAttackHealth = preSpiritWeaponAttackHealth.remove(target.method_5667());
-               float displayDamage = preAttackHealth != null ? preAttackHealth - target.method_6032() : actualDamage;
-               attacker.method_7353(
-                  Text.method_43470("§a对 §f" + target.method_5477().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(displayDamage) + " §a点灵异伤害"),
-                  true
+            if (ModConfig.getInstance().showActionBarInfo && ClientModConfig.getInstance().showDamageText(attacker.getUuid()) && actualDamage > 0.0F) {
+               Float preAttackHealth = preSpiritWeaponAttackHealth.remove(target.getUuid());
+               float displayDamage = preAttackHealth != null ? preAttackHealth - target.getHealth() : actualDamage;
+               attacker.sendMessage(
+                  Text.literal("§a对 §f" + target.getName().getString() + " §a造成了 §f" + new DecimalFormat("#.###").format(displayDamage) + " §a点灵异伤害"), true
                );
             }
          }
 
-         if (!target.method_5805() && attacker instanceof ServerPlayerEntity serverPlayer) {
+         if (!target.isAlive() && attacker instanceof ServerPlayerEntity serverPlayer) {
             handleSpiritWeaponKill(serverPlayer, target);
          }
       } finally {
@@ -483,9 +477,9 @@ public class ModEvents {
 
    private static void trySpawnGhost(ServerWorld world, EntityType<?> ghostType) {
       String ghostName = GhostUtils.getGhostDisplayName(ghostType);
-      Smfs.LOGGER.debug("开始尝试生成厉鬼: {}, 当前世界：{}", ghostName, world.method_27983());
+      Smfs.LOGGER.debug("开始尝试生成厉鬼: {}, 当前世界：{}", ghostName, world.getRegistryKey());
       boolean canSpawn;
-      if (world.method_27983().equals(Smfs.SPIRIT_REALM_DIMENSION)) {
+      if (world.getRegistryKey().equals(Smfs.SPIRIT_REALM_DIMENSION)) {
          canSpawn = GhostSpawnManager.canSpawnGhostInSpiritRealm(world, ghostType);
       } else {
          canSpawn = GhostSpawnManager.canSpawnGhostInOverworld(world, ghostType);
@@ -495,35 +489,35 @@ public class ModEvents {
          Smfs.LOGGER.debug("厉鬼生成失败: 未找到生成配置或生成条件不满足");
       } else {
          ServerWorld targetWorld;
-         if (world.method_27983().equals(Smfs.SPIRIT_REALM_DIMENSION)) {
+         if (world.getRegistryKey().equals(Smfs.SPIRIT_REALM_DIMENSION)) {
             targetWorld = world;
             Smfs.LOGGER.debug("在灵异世界生成厉鬼: {}", ghostName);
-            List<ServerPlayerEntity> spiritRealmPlayers = targetWorld.method_18456();
+            List<ServerPlayerEntity> spiritRealmPlayers = targetWorld.getPlayers();
             if (spiritRealmPlayers.isEmpty()) {
                Smfs.LOGGER.debug("厉鬼生成失败: 灵异世界中没有玩家");
                return;
             }
          } else {
-            targetWorld = world.method_8503().method_30002();
+            targetWorld = world.getServer().getOverworld();
             Smfs.LOGGER.debug("在主世界生成厉鬼: {}", ghostName);
             if (targetWorld == null) {
                Smfs.LOGGER.error("厉鬼生成失败: 无法获取主世界");
                return;
             }
 
-            List<ServerPlayerEntity> overworldPlayers = targetWorld.method_18456();
+            List<ServerPlayerEntity> overworldPlayers = targetWorld.getPlayers();
             if (overworldPlayers.isEmpty()) {
                Smfs.LOGGER.debug("厉鬼生成失败: 主世界中没有玩家");
                return;
             }
          }
 
-         List<ServerPlayerEntity> players = targetWorld.method_18456();
+         List<ServerPlayerEntity> players = targetWorld.getPlayers();
          if (players.isEmpty()) {
-            Smfs.LOGGER.debug("厉鬼生成失败: {}中没有玩家", targetWorld.method_27983());
+            Smfs.LOGGER.debug("厉鬼生成失败: {}中没有玩家", targetWorld.getRegistryKey());
          } else {
             ServerPlayerEntity targetPlayer = players.get(RANDOM.nextInt(players.size()));
-            Smfs.LOGGER.debug("选择玩家 {} 作为生成中心", targetPlayer.method_5477().getString());
+            Smfs.LOGGER.debug("选择玩家 {} 作为生成中心", targetPlayer.getName().getString());
             if (!checkSpecialSpawnConditions(targetWorld, ghostType, targetPlayer)) {
                Smfs.LOGGER.debug("厉鬼生成失败: 特殊生成条件不满足");
             } else {
@@ -534,16 +528,12 @@ public class ModEvents {
                   Smfs.LOGGER.debug("厉鬼生成失败: 未找到合适的生成位置");
                } else {
                   Smfs.LOGGER.debug("找到合适的生成位置: {}", spawnPos.toString());
-                  Entity ghostEntity = ghostType.method_5883(targetWorld);
+                  Entity ghostEntity = ghostType.create(targetWorld);
                   if (ghostEntity != null) {
-                     ghostEntity.method_5808(
-                        spawnPos.method_10263() + 0.5,
-                        spawnPos.method_10264(),
-                        spawnPos.method_10260() + 0.5,
-                        targetWorld.method_8409().method_43057() * 360.0F,
-                        0.0F
+                     ghostEntity.refreshPositionAndAngles(
+                        spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, targetWorld.getRandom().nextFloat() * 360.0F, 0.0F
                      );
-                     targetWorld.method_8649(ghostEntity);
+                     targetWorld.spawnEntity(ghostEntity);
                      Smfs.LOGGER.debug("成功生成厉鬼: {} 在位置: {}", ghostName, spawnPos.toString());
                      GhostSpawnManager.markGhostSpawned(targetWorld, ghostType);
                      if (ghostEntity instanceof GhostEntity ghost) {
@@ -551,9 +541,9 @@ public class ModEvents {
                         spawnGhostSlavesForGhost(ghost, 3);
                      }
 
-                     for (PlayerEntity nearbyPlayer : targetWorld.method_18456()) {
-                        if (nearbyPlayer.method_24515().method_10262(spawnPos) <= 256.0) {
-                           nearbyPlayer.method_7353(Text.method_43471("event.smfs.ghost_spawn").method_27692(Formatting.field_1064), true);
+                     for (PlayerEntity nearbyPlayer : targetWorld.getPlayers()) {
+                        if (nearbyPlayer.getBlockPos().getSquaredDistance(spawnPos) <= 256.0) {
+                           nearbyPlayer.sendMessage(Text.translatable("event.smfs.ghost_spawn").formatted(Formatting.DARK_PURPLE), true);
                         }
                      }
                   } else {
@@ -567,20 +557,20 @@ public class ModEvents {
 
    private static BlockPos findSuitableSpawnPosition(ServerWorld world, BlockPos centerPos, int radius) {
       for (int attempt = 0; attempt < 10; attempt++) {
-         int x = centerPos.method_10263() + RANDOM.nextInt(radius * 2) - radius;
-         int z = centerPos.method_10260() + RANDOM.nextInt(radius * 2) - radius;
-         Mutable checkPos = new Mutable(x, centerPos.method_10264(), z);
+         int x = centerPos.getX() + RANDOM.nextInt(radius * 2) - radius;
+         int z = centerPos.getZ() + RANDOM.nextInt(radius * 2) - radius;
+         Mutable checkPos = new Mutable(x, centerPos.getY(), z);
 
          for (int yOffset = 0; yOffset <= 16; yOffset++) {
-            checkPos.method_33098(centerPos.method_10264() + yOffset);
+            checkPos.setY(centerPos.getY() + yOffset);
             if (isValidSpawnPosition(world, checkPos)) {
-               return checkPos.method_10062();
+               return checkPos.toImmutable();
             }
 
             if (yOffset > 0) {
-               checkPos.method_33098(centerPos.method_10264() - yOffset);
+               checkPos.setY(centerPos.getY() - yOffset);
                if (isValidSpawnPosition(world, checkPos)) {
-                  return checkPos.method_10062();
+                  return checkPos.toImmutable();
                }
             }
          }
@@ -590,22 +580,22 @@ public class ModEvents {
    }
 
    private static boolean isValidSpawnPosition(ServerWorld world, BlockPos pos) {
-      BlockState blockState = world.method_8320(pos.method_10074());
-      if (!blockState.method_26212(world, pos.method_10074())) {
+      BlockState blockState = world.getBlockState(pos.down());
+      if (!blockState.isSolidBlock(world, pos.down())) {
          return false;
       }
 
-      BlockPos abovePos = pos.method_10084();
-      BlockState aboveState = world.method_8320(abovePos);
-      BlockState aboveAboveState = world.method_8320(abovePos.method_10084());
-      return aboveState.method_26215() && aboveAboveState.method_26215();
+      BlockPos abovePos = pos.up();
+      BlockState aboveState = world.getBlockState(abovePos);
+      BlockState aboveAboveState = world.getBlockState(abovePos.up());
+      return aboveState.isAir() && aboveAboveState.isAir();
    }
 
    private static boolean checkSpecialSpawnConditions(ServerWorld world, EntityType<?> ghostType, ServerPlayerEntity targetPlayer) {
-      BlockPos playerPos = targetPlayer.method_24515();
+      BlockPos playerPos = targetPlayer.getBlockPos();
       if (ghostType == ModEntities.VILLAGER_GHOST) {
          boolean hasVillagerNearby = false;
-         List<VillagerEntity> villagers = world.method_8390(VillagerEntity.class, new Box(playerPos).method_1014(64.0), villager -> villager.method_5805());
+         List<VillagerEntity> villagers = world.getEntitiesByClass(VillagerEntity.class, new Box(playerPos).expand(64.0), villager -> villager.isAlive());
          hasVillagerNearby = !villagers.isEmpty();
          if (!hasVillagerNearby) {
             return false;
@@ -618,9 +608,9 @@ public class ModEvents {
          for (int x = -32; x <= 32; x += 4) {
             for (int z = -32; z <= 32; z += 4) {
                for (int y = -16; y <= 16; y += 4) {
-                  BlockPos checkPos = playerPos.method_10069(x, y, z);
-                  BlockState blockState = world.method_8320(checkPos);
-                  if (blockState.method_26204() instanceof ChestBlock) {
+                  BlockPos checkPos = playerPos.add(x, y, z);
+                  BlockState blockState = world.getBlockState(checkPos);
+                  if (blockState.getBlock() instanceof ChestBlock) {
                      hasChestNearby = true;
                      break;
                   }
@@ -647,9 +637,9 @@ public class ModEvents {
          for (int x = -48; x <= 48; x += 6) {
             for (int z = -48; z <= 48; z += 6) {
                for (int y = -24; y <= 24; y += 6) {
-                  BlockPos checkPos = playerPos.method_10069(x, y, z);
-                  FluidState fluidState = world.method_8316(checkPos);
-                  if (fluidState.method_15767(FluidTags.field_15517)) {
+                  BlockPos checkPos = playerPos.add(x, y, z);
+                  FluidState fluidState = world.getFluidState(checkPos);
+                  if (fluidState.isIn(FluidTags.WATER)) {
                      hasWaterNearby = true;
                      break;
                   }
@@ -677,50 +667,48 @@ public class ModEvents {
       boolean hasPassiveEffect = false;
       if (GhostDomainManager.hasUntouchableGhost(targetPlayer)) {
          hasPassiveEffect = true;
-         if (source.method_49708(ModDamageSources.GHOST)) {
+         if (source.isOf(ModDamageSources.GHOST)) {
             return;
          }
 
-         if (targetPlayer.method_37908().method_8608()) {
+         if (targetPlayer.getWorld().isClient()) {
             return;
          }
 
          StatusEffectInstance spiritErosionEffect = new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 100, 4, false, true, true);
-         attacker.method_6092(spiritErosionEffect);
+         attacker.addStatusEffect(spiritErosionEffect);
       }
 
       if (GhostDomainManager.hasQiaomenGhost(targetPlayer)) {
          hasPassiveEffect = true;
-         if (source.method_49708(ModDamageSources.GHOST)) {
+         if (source.isOf(ModDamageSources.GHOST)) {
             return;
          }
 
-         if (targetPlayer.method_37908().method_8608()) {
+         if (targetPlayer.getWorld().isClient()) {
             return;
          }
 
          StatusEffectInstance spiritErosionEffect = new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 60, 1, false, true, true);
-         attacker.method_6092(spiritErosionEffect);
+         attacker.addStatusEffect(spiritErosionEffect);
       }
 
-      if (hasPassiveEffect && !targetPlayer.method_37908().method_8608()) {
-         ServerWorld serverWorld = (ServerWorld)targetPlayer.method_37908();
-         Vec3d pos = attacker.method_19538();
+      if (hasPassiveEffect && !targetPlayer.getWorld().isClient()) {
+         ServerWorld serverWorld = (ServerWorld)targetPlayer.getWorld();
+         Vec3d pos = attacker.getPos();
 
          for (int i = 0; i < 15; i++) {
-            double offsetX = (targetPlayer.method_6051().method_43058() - 0.5) * 1.5;
-            double offsetY = targetPlayer.method_6051().method_43058() * 2.0;
-            double offsetZ = (targetPlayer.method_6051().method_43058() - 0.5) * 1.5;
-            serverWorld.method_14199(
-               ParticleTypes.field_11251, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.1, 0.0, 0.1
-            );
+            double offsetX = (targetPlayer.getRandom().nextDouble() - 0.5) * 1.5;
+            double offsetY = targetPlayer.getRandom().nextDouble() * 2.0;
+            double offsetZ = (targetPlayer.getRandom().nextDouble() - 0.5) * 1.5;
+            serverWorld.spawnParticles(ParticleTypes.SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.1, 0.0, 0.1);
          }
       }
    }
 
    private static void spawnGhostSlavesForGhost(GhostEntity ghost, int count) {
-      ServerWorld world = (ServerWorld)ghost.method_37908();
-      BlockPos ghostPos = ghost.method_24515();
+      ServerWorld world = (ServerWorld)ghost.getWorld();
+      BlockPos ghostPos = ghost.getBlockPos();
 
       for (int i = 0; i < count; i++) {
          BlockPos slaveSpawnPos = findSuitableSpawnPosition(world, ghostPos, 10);
@@ -728,12 +716,8 @@ public class ModEvents {
             try {
                GhostSlaveEntity slave = ghost.spawnGhostSlave();
                if (slave != null) {
-                  slave.method_5808(
-                     slaveSpawnPos.method_10263() + 0.5,
-                     slaveSpawnPos.method_10264(),
-                     slaveSpawnPos.method_10260() + 0.5,
-                     world.method_8409().method_43057() * 360.0F,
-                     0.0F
+                  slave.refreshPositionAndAngles(
+                     slaveSpawnPos.getX() + 0.5, slaveSpawnPos.getY(), slaveSpawnPos.getZ() + 0.5, world.getRandom().nextFloat() * 360.0F, 0.0F
                   );
                }
             } catch (Exception var7) {
@@ -743,16 +727,16 @@ public class ModEvents {
    }
 
    private static void checkFirstNightMidnightSound(ServerWorld world) {
-      if (world.method_27983().method_29177().toString().equals("minecraft:overworld")) {
+      if (world.getRegistryKey().getValue().toString().equals("minecraft:overworld")) {
          if (!firstNightPianoPlayed) {
-            long totalTime = world.method_8510();
+            long totalTime = world.getTime();
             int currentDay = (int)(totalTime / 24000L);
             if (currentDay == 0) {
-               long timeOfDay = world.method_8532() % 24000L;
+               long timeOfDay = world.getTimeOfDay() % 24000L;
                if (timeOfDay == 18000L) {
-                  for (ServerPlayerEntity player : world.method_18456()) {
-                     BlockPos playerPos = player.method_24515();
-                     world.method_8396(null, playerPos, ModSounds.BACKGROUND_EERIE_PIANO, SoundCategory.field_15256, 1.0F, 1.0F);
+                  for (ServerPlayerEntity player : world.getPlayers()) {
+                     BlockPos playerPos = player.getBlockPos();
+                     world.playSound(null, playerPos, ModSounds.BACKGROUND_EERIE_PIANO, SoundCategory.AMBIENT, 1.0F, 1.0F);
                   }
 
                   firstNightPianoPlayed = true;
@@ -764,16 +748,16 @@ public class ModEvents {
    }
 
    private static void checkSecondNightBabyCryingSound(ServerWorld world) {
-      if (world.method_27983().method_29177().toString().equals("minecraft:overworld")) {
+      if (world.getRegistryKey().getValue().toString().equals("minecraft:overworld")) {
          if (!secondNightBabyCryingPlayed) {
-            long totalTime = world.method_8510();
+            long totalTime = world.getTime();
             int currentDay = (int)(totalTime / 24000L);
             if (currentDay == 1) {
-               long timeOfDay = world.method_8532() % 24000L;
+               long timeOfDay = world.getTimeOfDay() % 24000L;
                if (timeOfDay == 18000L) {
-                  for (ServerPlayerEntity player : world.method_18456()) {
-                     BlockPos playerPos = player.method_24515();
-                     world.method_8396(null, playerPos, ModSounds.BACKGROUND_HORROR_BACKGROUND, SoundCategory.field_15256, 1.0F, 1.0F);
+                  for (ServerPlayerEntity player : world.getPlayers()) {
+                     BlockPos playerPos = player.getBlockPos();
+                     world.playSound(null, playerPos, ModSounds.BACKGROUND_HORROR_BACKGROUND, SoundCategory.AMBIENT, 1.0F, 1.0F);
                   }
 
                   secondNightBabyCryingPlayed = true;
@@ -785,7 +769,7 @@ public class ModEvents {
    }
 
    private static void checkLockedGhostExpiration(ServerWorld world) {
-      if (world.method_27983().equals(World.field_25179)) {
+      if (world.getRegistryKey().equals(World.OVERWORLD)) {
          lockedGhostCheckTimer++;
          if (lockedGhostCheckTimer >= 24000) {
             lockedGhostCheckTimer = 0;
@@ -830,25 +814,25 @@ public class ModEvents {
 
    private static boolean isMineralBlock(Block block) {
       Set<Block> mineralBlocks = Set.of(
-         Blocks.field_10418,
-         Blocks.field_29219,
-         Blocks.field_10212,
-         Blocks.field_29027,
-         Blocks.field_27120,
-         Blocks.field_29221,
-         Blocks.field_10571,
-         Blocks.field_29026,
-         Blocks.field_10080,
-         Blocks.field_29030,
-         Blocks.field_10090,
-         Blocks.field_29028,
-         Blocks.field_10442,
-         Blocks.field_29029,
-         Blocks.field_10013,
-         Blocks.field_29220,
-         Blocks.field_10213,
-         Blocks.field_23077,
-         Blocks.field_22109,
+         Blocks.COAL_ORE,
+         Blocks.DEEPSLATE_COAL_ORE,
+         Blocks.IRON_ORE,
+         Blocks.DEEPSLATE_IRON_ORE,
+         Blocks.COPPER_ORE,
+         Blocks.DEEPSLATE_COPPER_ORE,
+         Blocks.GOLD_ORE,
+         Blocks.DEEPSLATE_GOLD_ORE,
+         Blocks.REDSTONE_ORE,
+         Blocks.DEEPSLATE_REDSTONE_ORE,
+         Blocks.LAPIS_ORE,
+         Blocks.DEEPSLATE_LAPIS_ORE,
+         Blocks.DIAMOND_ORE,
+         Blocks.DEEPSLATE_DIAMOND_ORE,
+         Blocks.EMERALD_ORE,
+         Blocks.DEEPSLATE_EMERALD_ORE,
+         Blocks.NETHER_QUARTZ_ORE,
+         Blocks.NETHER_GOLD_ORE,
+         Blocks.ANCIENT_DEBRIS,
          ModBlocks.DEFILED_ORE,
          ModBlocks.DEEP_DEFILED_ORE
       );

@@ -37,100 +37,100 @@ public class ChenDoctorEntity extends VillagerEntity implements Merchant {
 
    public ChenDoctorEntity(EntityType<? extends VillagerEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5665(Text.method_43470("§6陈博士"));
-      this.method_5880(true);
-      this.method_5803(true);
+      this.setCustomName(Text.literal("§6陈博士"));
+      this.setCustomNameVisible(true);
+      this.setSilent(true);
       this.initTradeOffers();
    }
 
    private void initTradeOffers() {
       this.offers.clear();
-      int experience = this.method_19269();
+      int experience = this.getExperience();
       if (experience >= 0) {
-         ItemStack goldIngotInput1 = new ItemStack(Items.field_8695, 12);
+         ItemStack goldIngotInput1 = new ItemStack(Items.GOLD_INGOT, 12);
          ItemStack corpsePieceOutput = new ItemStack(ModItems.CORPSE_PIECE, 1);
          this.offers.add(new TradeOffer(goldIngotInput1, corpsePieceOutput, 8, 5, 0.05F));
-         ItemStack goldIngotInput2 = new ItemStack(Items.field_8695, 6);
+         ItemStack goldIngotInput2 = new ItemStack(Items.GOLD_INGOT, 6);
          ItemStack corpseOilOutput = new ItemStack(ModItems.CORPSE_OIL, 1);
          this.offers.add(new TradeOffer(goldIngotInput2, corpseOilOutput, 6, 5, 0.05F));
       }
 
       if (experience >= 20) {
          ItemStack blackCoffinInput = new ItemStack(ModItems.GHOST_COFFIN, 1);
-         ItemStack goldIngotOutput = new ItemStack(Items.field_8695, 8);
+         ItemStack goldIngotOutput = new ItemStack(Items.GOLD_INGOT, 8);
          this.offers.add(new TradeOffer(blackCoffinInput, goldIngotOutput, 8, 5, 0.05F));
-         ItemStack goldIngotInput3 = new ItemStack(Items.field_8695, 12);
+         ItemStack goldIngotInput3 = new ItemStack(Items.GOLD_INGOT, 12);
          ItemStack deafnessPotionOutput = new ItemStack(ModItems.DEAFNESS_POTION, 1);
          this.offers.add(new TradeOffer(goldIngotInput3, deafnessPotionOutput, 8, 5, 0.05F));
       }
 
       if (experience >= 40) {
          ItemStack eerieRagInput = new ItemStack(ModItems.EERIE_RAG, 1);
-         ItemStack goldIngotOutput1 = new ItemStack(Items.field_8695, 3);
+         ItemStack goldIngotOutput1 = new ItemStack(Items.GOLD_INGOT, 3);
          this.offers.add(new TradeOffer(eerieRagInput, goldIngotOutput1, 8, 5, 0.05F));
          ItemStack viscousBloodInput = new ItemStack(ModItems.VISCOUS_BLOOD, 1);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 5);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 5);
          this.offers.add(new TradeOffer(viscousBloodInput, goldIngotOutput2, 8, 5, 0.05F));
          ItemStack blackenedToothInput = new ItemStack(ModItems.BLACKENED_TOOTH, 1);
-         ItemStack goldIngotOutput3 = new ItemStack(Items.field_8695, 5);
+         ItemStack goldIngotOutput3 = new ItemStack(Items.GOLD_INGOT, 5);
          this.offers.add(new TradeOffer(blackenedToothInput, goldIngotOutput3, 8, 5, 0.05F));
       }
 
       if (experience >= 50) {
-         ItemStack goldBlockInput8 = new ItemStack(Items.field_8494, 6);
+         ItemStack goldBlockInput8 = new ItemStack(Items.GOLD_BLOCK, 6);
          ItemStack spiritBrewingStandOutput = new ItemStack(ModBlocks.SPIRIT_BREWING_STAND, 1);
          this.offers.add(new TradeOffer(goldBlockInput8, spiritBrewingStandOutput, 1, 5, 0.05F));
       }
    }
 
    public static Builder createChenDoctorAttributes() {
-      return VillagerEntity.method_26955().method_26868(EntityAttributes.field_23716, 100.0);
+      return VillagerEntity.createVillagerAttributes().add(EntityAttributes.GENERIC_MAX_HEALTH, 100.0);
    }
 
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
-   public boolean method_7239() {
+   public boolean canBreed() {
       return false;
    }
 
-   public VillagerData method_7231() {
-      return new VillagerData(VillagerType.field_17073, VillagerProfession.field_17051, 1);
+   public VillagerData getVillagerData() {
+      return new VillagerData(VillagerType.PLAINS, VillagerProfession.NONE, 1);
    }
 
-   public void method_7195(VillagerData villagerData) {
+   public void setVillagerData(VillagerData villagerData) {
    }
 
-   public void method_8259(PlayerEntity customer) {
+   public void setCustomer(PlayerEntity customer) {
       this.customer = customer;
    }
 
-   public PlayerEntity method_8257() {
+   public PlayerEntity getCustomer() {
       return this.customer;
    }
 
-   public TradeOfferList method_8264() {
+   public TradeOfferList getOffers() {
       return this.offers;
    }
 
-   public void method_8261(TradeOfferList offers) {
+   public void setOffersFromServer(TradeOfferList offers) {
       this.offers = offers;
    }
 
-   public void method_8262(TradeOffer offer) {
-      if (!this.method_37908().field_9236) {
-         offer.method_8244();
-         int currentExperience = this.method_19269();
-         this.method_19271(currentExperience + 5);
+   public void trade(TradeOffer offer) {
+      if (!this.getWorld().isClient) {
+         offer.use();
+         int currentExperience = this.getExperience();
+         this.setExperienceFromServer(currentExperience + 5);
          this.initTradeOffers();
       }
    }
 
-   public void method_8258(ItemStack stack) {
+   public void onSellingItem(ItemStack stack) {
    }
 
-   public int method_19269() {
+   public int getExperience() {
       return this.tradeExperience;
    }
 
@@ -138,19 +138,19 @@ public class ChenDoctorEntity extends VillagerEntity implements Merchant {
       return this.faction;
    }
 
-   public void method_19271(int experience) {
+   public void setExperienceFromServer(int experience) {
       this.tradeExperience = experience;
    }
 
-   public boolean method_19270() {
+   public boolean isLeveledMerchant() {
       return false;
    }
 
-   public SoundEvent method_18010() {
+   public SoundEvent getYesSound() {
       return null;
    }
 
-   public boolean method_20708() {
+   public boolean canRefreshTrades() {
       return false;
    }
 
@@ -159,30 +159,30 @@ public class ChenDoctorEntity extends VillagerEntity implements Merchant {
    }
 
    public void openTradeScreen(ServerPlayerEntity player) {
-      this.method_8259(player);
-      int experience = this.method_19269();
+      this.setCustomer(player);
+      int experience = this.getExperience();
       int level = this.calculateLevel(experience);
-      this.method_5665(Text.method_43470("§6陈博士 §7(等级" + level + ")"));
-      player.method_17355(new NamedScreenHandlerFactory() {
+      this.setCustomName(Text.literal("§6陈博士 §7(等级" + level + ")"));
+      player.openHandledScreen(new NamedScreenHandlerFactory() {
          public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity playerx) {
             return new MerchantScreenHandler(syncId, inventory, ChenDoctorEntity.this);
          }
 
-         public Text method_5476() {
-            return ChenDoctorEntity.this.method_5476();
+         public Text getDisplayName() {
+            return ChenDoctorEntity.this.getDisplayName();
          }
       });
-      int syncId = player.field_7512 != null ? player.field_7512.field_7763 : 0;
-      player.field_13987
-         .method_14364(
+      int syncId = player.currentScreenHandler != null ? player.currentScreenHandler.syncId : 0;
+      player.networkHandler
+         .sendPacket(
             new SetTradeOffersS2CPacket(
-               syncId, this.offers, this.calculateLevelProgress(experience), this.method_19269(), this.method_19270(), this.method_20708()
+               syncId, this.offers, this.calculateLevelProgress(experience), this.getExperience(), this.isLeveledMerchant(), this.canRefreshTrades()
             )
          );
    }
 
-   public Text method_5476() {
-      return Text.method_43470("§6陈博士");
+   public Text getDisplayName() {
+      return Text.literal("§6陈博士");
    }
 
    private int calculateLevel(int experience) {
@@ -207,7 +207,7 @@ public class ChenDoctorEntity extends VillagerEntity implements Merchant {
       }
    }
 
-   public boolean method_5679(DamageSource damageSource) {
-      return damageSource.method_5529() instanceof ZombieEntity ? true : super.method_5679(damageSource);
+   public boolean isInvulnerableTo(DamageSource damageSource) {
+      return damageSource.getAttacker() instanceof ZombieEntity ? true : super.isInvulnerableTo(damageSource);
    }
 }

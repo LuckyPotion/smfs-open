@@ -35,17 +35,17 @@ public class ModScreenHandlers {
       (syncId, inventory, buf) -> new GhostChildFeedScreenHandler(syncId, inventory, buf)
    );
    public static final ScreenHandlerType<SpiritBrewingStandScreenHandler> SPIRIT_BREWING_STAND_SCREEN_HANDLER = new ScreenHandlerType(
-      SpiritBrewingStandScreenHandler::new, FeatureFlags.field_40182
+      SpiritBrewingStandScreenHandler::new, FeatureFlags.VANILLA_FEATURES
    );
 
    public static void registerScreenHandlers() {
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "ghost_control"), GHOST_CONTROL_SCREEN_HANDLER);
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "ghost_taming"), GHOST_TAMING_SCREEN_HANDLER);
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "quest"), QUEST_SCREEN_HANDLER);
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "ghost_child_cultivation"), GHOST_CHILD_CULTIVATION_SCREEN_HANDLER);
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "royal_curse"), ROYAL_CURSE_SCREEN_HANDLER);
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "ghost_child_feed"), GHOST_CHILD_FEED_SCREEN_HANDLER);
-      Registry.method_10230(Registries.field_41187, new Identifier("smfs", "spirit_brewing_stand"), SPIRIT_BREWING_STAND_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "ghost_control"), GHOST_CONTROL_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "ghost_taming"), GHOST_TAMING_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "quest"), QUEST_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "ghost_child_cultivation"), GHOST_CHILD_CULTIVATION_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "royal_curse"), ROYAL_CURSE_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "ghost_child_feed"), GHOST_CHILD_FEED_SCREEN_HANDLER);
+      Registry.register(Registries.SCREEN_HANDLER, new Identifier("smfs", "spirit_brewing_stand"), SPIRIT_BREWING_STAND_SCREEN_HANDLER);
       Smfs.LOGGER.info("成功注册厉鬼控制屏幕处理器 - 模块ID: {}", "smfs");
       Smfs.LOGGER.info("成功注册驭鬼界面处理器 - 模块ID: {}", "smfs");
       Smfs.LOGGER.info("成功注册任务界面处理器 - 模块ID: {}", "smfs");

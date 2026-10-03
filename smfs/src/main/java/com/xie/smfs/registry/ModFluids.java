@@ -27,29 +27,25 @@ public class ModFluids {
    public static Block GHOST_LAKE_BLOCK;
 
    public static void registerFluids() {
-      BLOOD_LAKE_STILL = (FlowableFluid)Registry.method_10230(Registries.field_41173, new Identifier("smfs", "blood_lake_still"), new BloodLakeFluid.Still());
-      BLOOD_LAKE_FLOWING = (FlowableFluid)Registry.method_10230(
-         Registries.field_41173, new Identifier("smfs", "blood_lake_flowing"), new BloodLakeFluid.Flowing()
+      BLOOD_LAKE_STILL = (FlowableFluid)Registry.register(Registries.FLUID, new Identifier("smfs", "blood_lake_still"), new BloodLakeFluid.Still());
+      BLOOD_LAKE_FLOWING = (FlowableFluid)Registry.register(Registries.FLUID, new Identifier("smfs", "blood_lake_flowing"), new BloodLakeFluid.Flowing());
+      BLOOD_LAKE_BLOCK = (Block)Registry.register(
+         Registries.BLOCK, new Identifier("smfs", "blood_lake"), new BloodLakeBlock(FabricBlockSettings.method_9630(Blocks.WATER))
       );
-      BLOOD_LAKE_BLOCK = (Block)Registry.method_10230(
-         Registries.field_41175, new Identifier("smfs", "blood_lake"), new BloodLakeBlock(FabricBlockSettings.method_9630(Blocks.field_10382))
-      );
-      BLOOD_LAKE_BUCKET = (Item)Registry.method_10230(
-         Registries.field_41178,
+      BLOOD_LAKE_BUCKET = (Item)Registry.register(
+         Registries.ITEM,
          new Identifier("smfs", "blood_lake_bucket"),
-         new BucketItem(BLOOD_LAKE_STILL, new FabricItemSettings().recipeRemainder(Items.field_8550).maxCount(1))
+         new BucketItem(BLOOD_LAKE_STILL, new FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1))
       );
-      GHOST_LAKE_STILL = (FlowableFluid)Registry.method_10230(Registries.field_41173, new Identifier("smfs", "ghost_lake_still"), new GhostLakeFluid.Still());
-      GHOST_LAKE_FLOWING = (FlowableFluid)Registry.method_10230(
-         Registries.field_41173, new Identifier("smfs", "ghost_lake_flowing"), new GhostLakeFluid.Flowing()
+      GHOST_LAKE_STILL = (FlowableFluid)Registry.register(Registries.FLUID, new Identifier("smfs", "ghost_lake_still"), new GhostLakeFluid.Still());
+      GHOST_LAKE_FLOWING = (FlowableFluid)Registry.register(Registries.FLUID, new Identifier("smfs", "ghost_lake_flowing"), new GhostLakeFluid.Flowing());
+      GHOST_LAKE_BLOCK = (Block)Registry.register(
+         Registries.BLOCK, new Identifier("smfs", "ghost_lake"), new GhostLakeBlock(FabricBlockSettings.method_9630(Blocks.WATER))
       );
-      GHOST_LAKE_BLOCK = (Block)Registry.method_10230(
-         Registries.field_41175, new Identifier("smfs", "ghost_lake"), new GhostLakeBlock(FabricBlockSettings.method_9630(Blocks.field_10382))
-      );
-      GHOST_LAKE_BUCKET = (Item)Registry.method_10230(
-         Registries.field_41178,
+      GHOST_LAKE_BUCKET = (Item)Registry.register(
+         Registries.ITEM,
          new Identifier("smfs", "ghost_lake_bucket"),
-         new BucketItem(GHOST_LAKE_STILL, new FabricItemSettings().recipeRemainder(Items.field_8550).maxCount(1))
+         new BucketItem(GHOST_LAKE_STILL, new FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1))
       );
    }
 }

@@ -12,9 +12,9 @@ public class DisgustingLiquidItem extends SpiritPotionItem {
    }
 
    @Override
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (!world.field_9236 && user instanceof PlayerEntity player && !player.method_31549().field_7477) {
-         stack.method_7934(1);
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (!world.isClient && user instanceof PlayerEntity player && !player.getAbilities().creativeMode) {
+         stack.decrement(1);
       }
 
       return stack;

@@ -53,17 +53,15 @@ public class GhostChildEntity extends GhostEntity {
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
       if (this.owner != null) {
-         this.field_6201
-            .method_6277(
-               2, new GhostChildEntity.CustomFollowOwnerGoal(this, this.followSpeed, this.followStopDistance, this.followStartDistance, this.allowTeleport)
-            );
-         this.field_6201.method_6277(1, new MeleeAttackGoal(this, 1.8, false));
+         this.goalSelector
+            .add(2, new GhostChildEntity.CustomFollowOwnerGoal(this, this.followSpeed, this.followStopDistance, this.followStartDistance, this.allowTeleport));
+         this.goalSelector.add(1, new MeleeAttackGoal(this, 1.8, false));
          final GhostChildEntity ghostChild = this;
-         this.field_6185
-            .method_6277(
+         this.targetSelector
+            .add(
                1,
                new ActiveTargetGoal(
                   this,
@@ -77,21 +75,21 @@ public class GhostChildEntity extends GhostEntity {
                            return false;
                         } else if (entity == GhostChildEntity.this.owner) {
                            return false;
-                        } else if (entity.method_6052() == ghostChild) {
+                        } else if (entity.getAttacking() == ghostChild) {
                            return false;
                         } else {
-                           LivingEntity playerTarget = GhostChildEntity.this.owner.method_6052();
+                           LivingEntity playerTarget = GhostChildEntity.this.owner.getAttacking();
                            if (playerTarget != null && entity == playerTarget) {
                               return true;
                            } else if (entity instanceof GhostChildEntity otherGhostChild
                               && otherGhostChild.getOwner() != null
                               && GhostChildEntity.this.owner != null
-                              && otherGhostChild.getOwner().method_5667().equals(GhostChildEntity.this.owner.method_5667())) {
+                              && otherGhostChild.getOwner().getUuid().equals(GhostChildEntity.this.owner.getUuid())) {
                               return false;
                            } else if (entity instanceof PlayerGhostEntity playerGhost
                               && playerGhost.isServantMode()
                               && playerGhost.getMasterUuid() != null
-                              && playerGhost.getMasterUuid().equals(GhostChildEntity.this.owner.method_5667())) {
+                              && playerGhost.getMasterUuid().equals(GhostChildEntity.this.owner.getUuid())) {
                               return false;
                            } else if (entity instanceof HostileEntity) {
                               return true;
@@ -208,9 +206,9 @@ public class GhostChildEntity extends GhostEntity {
             this.setMaxSpiritualStrength(this.data.getMaxSpiritPower());
             this.setSpiritualResistance(this.data.getSpiritResistance());
             this.setSpiritualDamage(this.data.getSpiritDamage());
-            this.field_6201.method_35113(goal -> true);
-            this.field_6185.method_35113(goal -> true);
-            this.method_5959();
+            this.goalSelector.clear(goal -> true);
+            this.targetSelector.clear(goal -> true);
+            this.initGoals();
          } catch (Exception e) {
             e.printStackTrace();
          }
@@ -218,7 +216,7 @@ public class GhostChildEntity extends GhostEntity {
    }
 
    public UUID getMasterUuid() {
-      return this.owner != null ? this.owner.method_5667() : null;
+      return this.owner != null ? this.owner.getUuid() : null;
    }
 
    public boolean isSummoned() {
@@ -232,9 +230,9 @@ public class GhostChildEntity extends GhostEntity {
    public void setFollowStopDistance(float followStopDistance) {
       this.followStopDistance = followStopDistance;
       if (this.owner != null) {
-         this.field_6201.method_35113(goal -> true);
-         this.field_6185.method_35113(goal -> true);
-         this.method_5959();
+         this.goalSelector.clear(goal -> true);
+         this.targetSelector.clear(goal -> true);
+         this.initGoals();
       }
    }
 
@@ -245,9 +243,9 @@ public class GhostChildEntity extends GhostEntity {
    public void setFollowStartDistance(float followStartDistance) {
       this.followStartDistance = followStartDistance;
       if (this.owner != null) {
-         this.field_6201.method_35113(goal -> true);
-         this.field_6185.method_35113(goal -> true);
-         this.method_5959();
+         this.goalSelector.clear(goal -> true);
+         this.targetSelector.clear(goal -> true);
+         this.initGoals();
       }
    }
 
@@ -258,9 +256,9 @@ public class GhostChildEntity extends GhostEntity {
    public void setFollowSpeed(double followSpeed) {
       this.followSpeed = followSpeed;
       if (this.owner != null) {
-         this.field_6201.method_35113(goal -> true);
-         this.field_6185.method_35113(goal -> true);
-         this.method_5959();
+         this.goalSelector.clear(goal -> true);
+         this.targetSelector.clear(goal -> true);
+         this.initGoals();
       }
    }
 
@@ -271,9 +269,9 @@ public class GhostChildEntity extends GhostEntity {
    public void setAllowTeleport(boolean allowTeleport) {
       this.allowTeleport = allowTeleport;
       if (this.owner != null) {
-         this.field_6201.method_35113(goal -> true);
-         this.field_6185.method_35113(goal -> true);
-         this.method_5959();
+         this.goalSelector.clear(goal -> true);
+         this.targetSelector.clear(goal -> true);
+         this.initGoals();
       }
    }
 
@@ -292,12 +290,12 @@ public class GhostChildEntity extends GhostEntity {
    }
 
    public void recall() {
-      if (this.hasCoffinNail() && !this.method_37908().field_9236) {
+      if (this.hasCoffinNail() && !this.getWorld().isClient) {
          ItemStack coffinNail = this.getCoffinNail();
-         if (!coffinNail.method_7960()) {
-            ItemEntity itemEntity = new ItemEntity(this.method_37908(), this.method_23317(), this.method_23318(), this.method_23321(), coffinNail);
-            this.method_37908().method_8649(itemEntity);
-            this.setCoffinNail(ItemStack.field_8037);
+         if (!coffinNail.isEmpty()) {
+            ItemEntity itemEntity = new ItemEntity(this.getWorld(), this.getX(), this.getY(), this.getZ(), coffinNail);
+            this.getWorld().spawnEntity(itemEntity);
+            this.setCoffinNail(ItemStack.EMPTY);
          }
       }
 
@@ -338,56 +336,54 @@ public class GhostChildEntity extends GhostEntity {
          && playerGhost.isServantMode()
          && playerGhost.getMasterUuid() != null
          && this.getOwner() != null
-         && this.getOwner().method_5667().equals(playerGhost.getMasterUuid())) {
+         && this.getOwner().getUuid().equals(playerGhost.getMasterUuid())) {
          return false;
       } else {
          return ghost instanceof GhostChildEntity ghostChild && ghostChild.getOwner() != null && this.getOwner() != null
-            ? !this.getOwner().method_5667().equals(ghostChild.getOwner().method_5667())
+            ? !this.getOwner().getUuid().equals(ghostChild.getOwner().getUuid())
             : true;
       }
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
       if (this.owner != null) {
-         nbt.method_25927("owner", this.owner.method_5667());
+         nbt.putUuid("owner", this.owner.getUuid());
       }
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
    }
 
    @Override
-   public void method_5980(@Nullable LivingEntity target) {
-      if (!(this.getOwner() != null && target instanceof PlayerEntity player) || !player.method_5667().equals(this.getOwner().method_5667())) {
-         super.method_5980(target);
+   public void setTarget(@Nullable LivingEntity target) {
+      if (!(this.getOwner() != null && target instanceof PlayerEntity player) || !player.getUuid().equals(this.getOwner().getUuid())) {
+         super.setTarget(target);
       }
    }
 
    @Override
-   public boolean method_6121(Entity target) {
-      return this.getOwner() != null && target instanceof PlayerEntity player && player.method_5667().equals(this.getOwner().method_5667())
+   public boolean tryAttack(Entity target) {
+      return this.getOwner() != null && target instanceof PlayerEntity player && player.getUuid().equals(this.getOwner().getUuid())
          ? false
-         : super.method_6121(target);
+         : super.tryAttack(target);
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if ((this.isDeadlocked() || this.isSuppressed()) && !this.method_37908().field_9236) {
-         ServerWorld serverWorld = (ServerWorld)this.method_37908();
-         Vec3d pos = this.method_19538();
+   public void tick() {
+      super.tick();
+      if ((this.isDeadlocked() || this.isSuppressed()) && !this.getWorld().isClient) {
+         ServerWorld serverWorld = (ServerWorld)this.getWorld();
+         Vec3d pos = this.getPos();
 
          for (int i = 0; i < 5; i++) {
-            double offsetX = this.method_6051().method_43058() - 0.5;
-            double offsetY = (this.method_6051().method_43058() - 0.5) * 2.0 + 1.0;
-            double offsetZ = this.method_6051().method_43058() - 0.5;
-            serverWorld.method_14199(
-               ParticleTypes.field_11251, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.1, 0.0, 0.0
-            );
+            double offsetX = this.getRandom().nextDouble() - 0.5;
+            double offsetY = (this.getRandom().nextDouble() - 0.5) * 2.0 + 1.0;
+            double offsetZ = this.getRandom().nextDouble() - 0.5;
+            serverWorld.spawnParticles(ParticleTypes.SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.1, 0.0, 0.0);
          }
       }
    }
@@ -408,10 +404,10 @@ public class GhostChildEntity extends GhostEntity {
          this.stopDistance = stopDistance * stopDistance;
          this.startDistance = startDistance * startDistance;
          this.canTeleportToOwner = teleportToOwner;
-         this.method_6265(EnumSet.of(Control.field_18405, Control.field_18406));
+         this.setControls(EnumSet.of(Control.MOVE, Control.LOOK));
       }
 
-      public boolean method_6264() {
+      public boolean canStart() {
          PlayerEntity owner = this.ghostChild.getOwner();
          if (owner == null) {
             return false;
@@ -421,11 +417,11 @@ public class GhostChildEntity extends GhostEntity {
             return false;
          }
 
-         if (owner.method_7325()) {
+         if (owner.isSpectator()) {
             return false;
          }
 
-         if (this.ghostChild.method_5858(owner) < this.stopDistance) {
+         if (this.ghostChild.squaredDistanceTo(owner) < this.stopDistance) {
             return false;
          }
 
@@ -433,33 +429,33 @@ public class GhostChildEntity extends GhostEntity {
          return true;
       }
 
-      public boolean method_6266() {
-         return this.owner.method_5805() && this.ghostChild.isSummoned() ? !(this.ghostChild.method_5858(this.owner) > this.startDistance) : false;
+      public boolean shouldContinue() {
+         return this.owner.isAlive() && this.ghostChild.isSummoned() ? !(this.ghostChild.squaredDistanceTo(this.owner) > this.startDistance) : false;
       }
 
-      public void method_6269() {
+      public void start() {
          this.timeToRecalcPath = 0;
       }
 
-      public void method_6270() {
+      public void stop() {
          this.owner = null;
-         this.ghostChild.method_5942().method_6340();
+         this.ghostChild.getNavigation().stop();
       }
 
-      public void method_6268() {
-         this.ghostChild.method_5988().method_6226(this.owner, 10.0F, this.ghostChild.method_5978());
+      public void tick() {
+         this.ghostChild.getLookControl().lookAt(this.owner, 10.0F, this.ghostChild.getMaxLookPitchChange());
          if (--this.timeToRecalcPath <= 0) {
             this.timeToRecalcPath = 10;
-            if (!this.ghostChild.method_5934() && !this.ghostChild.method_5782()) {
-               double distance = this.ghostChild.method_5858(this.owner);
+            if (!this.ghostChild.isLeashed() && !this.ghostChild.hasPassengers()) {
+               double distance = this.ghostChild.squaredDistanceTo(this.owner);
                if (distance >= 144.0) {
                   if (this.canTeleportToOwner) {
                      this.teleportToOwner();
                   } else {
-                     this.ghostChild.method_5942().method_6335(this.owner, this.speed);
+                     this.ghostChild.getNavigation().startMovingTo(this.owner, this.speed);
                   }
                } else {
-                  this.ghostChild.method_5942().method_6335(this.owner, this.speed);
+                  this.ghostChild.getNavigation().startMovingTo(this.owner, this.speed);
                }
             }
          }
@@ -467,18 +463,18 @@ public class GhostChildEntity extends GhostEntity {
 
       private void teleportToOwner() {
          if (this.canTeleportToOwner) {
-            Vec3d vec3d = this.owner.method_19538();
+            Vec3d vec3d = this.owner.getPos();
 
             for (int i = 0; i < 10; i++) {
-               double d = this.ghostChild.method_6051().method_43058() * 2.0 - 1.0;
-               double e = this.ghostChild.method_6051().method_43058() * 2.0 - 1.0;
-               double f = this.ghostChild.method_6051().method_43058() * 2.0 - 1.0;
-               double g = this.owner.method_17681() + 1.0;
-               double h = vec3d.field_1352 + d * g;
-               double j = vec3d.field_1351 + e;
-               double k = vec3d.field_1350 + f * g;
-               this.ghostChild.method_20620(h, j, k);
-               if (!this.ghostChild.method_5942().method_6357()) {
+               double d = this.ghostChild.getRandom().nextDouble() * 2.0 - 1.0;
+               double e = this.ghostChild.getRandom().nextDouble() * 2.0 - 1.0;
+               double f = this.ghostChild.getRandom().nextDouble() * 2.0 - 1.0;
+               double g = this.owner.getWidth() + 1.0;
+               double h = vec3d.x + d * g;
+               double j = vec3d.y + e;
+               double k = vec3d.z + f * g;
+               this.ghostChild.teleport(h, j, k);
+               if (!this.ghostChild.getNavigation().isIdle()) {
                   break;
                }
             }

@@ -43,7 +43,7 @@ public class GiantShadowGhostRenderer extends GeoObjectRenderer<GiantShadowGhost
    ) {
       PlayerEntity player = this.getCurrentPlayer();
       if (player != null) {
-         ClientWorld world = MinecraftClient.method_1551().field_1687;
+         ClientWorld world = MinecraftClient.getInstance().world;
          if (world != null) {
             if (hasGiantShadowGhost(player)) {
                this.renderGiantShadowGhostOnPlayer(matrices, animatable, vertexConsumers, light, partialTick, packedOverlay, player);
@@ -61,21 +61,21 @@ public class GiantShadowGhostRenderer extends GeoObjectRenderer<GiantShadowGhost
       int packedOverlay,
       PlayerEntity player
    ) {
-      matrices.method_22903();
-      Camera camera = MinecraftClient.method_1551().field_1773.method_19418();
-      Vec3d cameraPos = camera.method_19326();
-      float tickDelta = MinecraftClient.method_1551().method_1488();
-      Vec3d targetPos = player.method_30950(tickDelta);
-      float targetYaw = player.method_5705(tickDelta);
+      matrices.push();
+      Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+      Vec3d cameraPos = camera.getPos();
+      float tickDelta = MinecraftClient.getInstance().getTickDelta();
+      Vec3d targetPos = player.getLerpedPos(tickDelta);
+      float targetYaw = player.getYaw(tickDelta);
       if (Double.isNaN(smoothedX)) {
-         smoothedX = targetPos.field_1352;
-         smoothedY = targetPos.field_1351;
-         smoothedZ = targetPos.field_1350;
+         smoothedX = targetPos.x;
+         smoothedY = targetPos.y;
+         smoothedZ = targetPos.z;
          smoothedYaw = targetYaw;
       } else {
-         smoothedX = smoothedX + (targetPos.field_1352 - smoothedX) * 0.08F;
-         smoothedY = smoothedY + (targetPos.field_1351 - smoothedY) * 0.08F;
-         smoothedZ = smoothedZ + (targetPos.field_1350 - smoothedZ) * 0.08F;
+         smoothedX = smoothedX + (targetPos.x - smoothedX) * 0.08F;
+         smoothedY = smoothedY + (targetPos.y - smoothedY) * 0.08F;
+         smoothedZ = smoothedZ + (targetPos.z - smoothedZ) * 0.08F;
          float yawDiff = targetYaw - smoothedYaw;
 
          while (yawDiff > 180.0F) {
@@ -95,17 +95,15 @@ public class GiantShadowGhostRenderer extends GeoObjectRenderer<GiantShadowGhost
       double worldX = smoothedX + backOffsetX;
       double worldY = smoothedY + offsetY;
       double worldZ = smoothedZ + backOffsetZ;
-      matrices.method_22904(worldX - cameraPos.field_1352, worldY - cameraPos.field_1351, worldZ - cameraPos.field_1350);
-      matrices.method_22907(RotationAxis.field_40716.rotationDegrees(180.0F - smoothedYaw));
-      matrices.method_22905(0.6F, 0.6F, 0.6F);
+      matrices.translate(worldX - cameraPos.x, worldY - cameraPos.y, worldZ - cameraPos.z);
+      matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - smoothedYaw));
+      matrices.scale(0.6F, 0.6F, 0.6F);
       super.render(matrices, animatable, vertexConsumers, light, partialTick, packedOverlay);
-      matrices.method_22909();
+      matrices.pop();
    }
 
    private PlayerEntity getCurrentPlayer() {
-      return MinecraftClient.method_1551().field_1687 != null && MinecraftClient.method_1551().field_1724 != null
-         ? MinecraftClient.method_1551().field_1724
-         : null;
+      return MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().player != null ? MinecraftClient.getInstance().player : null;
    }
 
    private static boolean hasGiantShadowGhost(PlayerEntity player) {
@@ -115,7 +113,7 @@ public class GiantShadowGhostRenderer extends GeoObjectRenderer<GiantShadowGhost
 
       int mainSlot = MainGhostManager.getMainGhostSlot(player);
       ItemStack ghostItem = PlayerEvents.getGhostSlotItem(player, mainSlot);
-      return !ghostItem.method_7960() && ghostItem.method_7909() == ModItems.GIANT_SHADOW_GHOST;
+      return !ghostItem.isEmpty() && ghostItem.getItem() == ModItems.GIANT_SHADOW_GHOST;
    }
 
    public static class GiantShadowGhostAnimatable implements GeoAnimatable {

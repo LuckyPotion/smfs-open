@@ -127,10 +127,10 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
 
    public static Builder createLivingAttributes() {
       return GhostEntity.createGhostAttributes()
-         .method_26868(EntityAttributes.field_23716, 80000.0)
-         .method_26868(EntityAttributes.field_23719, 0.0)
-         .method_26868(EntityAttributes.field_23721, 12.0)
-         .method_26868(EntityAttributes.field_23717, 25.0);
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 80000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.0)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 12.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 25.0);
    }
 
    public LuoQianGhostEntity(EntityType<LuoQianGhostEntity> entityType, World world) {
@@ -138,14 +138,14 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       this.ghostLevel = 5;
       this.setGhostDomainActualLevel(5);
       this.setSuppressionSlotCost(4);
-      this.method_5971();
+      this.setPersistent();
       this.setSpiritualStrength(this.getMaxSpiritualStrength());
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient()) {
          if (this.domainSkillCooldown > 0) {
             this.domainSkillCooldown--;
          }
@@ -200,18 +200,16 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void checkPlayerInRange() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(
-            PlayerEntity.class,
-            new Box(this.method_19538().method_1031(-25.0, -10.0, -25.0), this.method_19538().method_1031(25.0, 10.0, 25.0)),
-            p -> !p.method_7325() && !p.method_7337()
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(
+            PlayerEntity.class, new Box(this.getPos().add(-25.0, -10.0, -25.0), this.getPos().add(25.0, 10.0, 25.0)), p -> !p.isSpectator() && !p.isCreative()
          );
       boolean newHasPlayer = !nearbyPlayers.isEmpty();
       if (newHasPlayer && !this.hasPlayerInRange) {
-         this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_14792, SoundCategory.field_15251, 3.0F, 0.5F);
+         this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 3.0F, 0.5F);
 
          for (PlayerEntity player : nearbyPlayers) {
-            player.method_7353(Text.method_43470("§c罗千：此地，已是坟场..."), false);
+            player.sendMessage(Text.literal("§c罗千：此地，已是坟场..."), false);
          }
 
          this.battleStarted = true;
@@ -224,11 +222,11 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       }
 
       if (!newHasPlayer && this.hasSavedBlocks && !this.isRestoring) {
-         List<PlayerEntity> restoreCheckPlayers = this.method_37908()
-            .method_8390(
+         List<PlayerEntity> restoreCheckPlayers = this.getWorld()
+            .getEntitiesByClass(
                PlayerEntity.class,
-               new Box(this.method_19538().method_1031(-35.0, -10.0, -35.0), this.method_19538().method_1031(35.0, 10.0, 35.0)),
-               p -> !p.method_7325() && !p.method_7337()
+               new Box(this.getPos().add(-35.0, -10.0, -35.0), this.getPos().add(35.0, 10.0, 35.0)),
+               p -> !p.isSpectator() && !p.isCreative()
             );
          if (restoreCheckPlayers.isEmpty()) {
             this.startRestoreAnimation();
@@ -239,8 +237,8 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void sendCombatState(boolean isInCombat) {
-      if (this.method_37908() instanceof ServerWorld) {
-         ServerWorld serverWorld = (ServerWorld)this.method_37908();
+      if (this.getWorld() instanceof ServerWorld) {
+         ServerWorld serverWorld = (ServerWorld)this.getWorld();
          int currentStrength = this.getSpiritualStrength();
          int maxStrength = this.getMaxSpiritualStrength();
          LuoQianCombatStateS2CPacket.sendToAllPlayers(serverWorld, isInCombat, currentStrength, maxStrength, this.isInvincible, this.getRecoveryFactor());
@@ -287,7 +285,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
          int newStrength = Math.min(currentStrength + restoreAmount, maxStrength);
          this.setSpiritualStrength(newStrength);
          this.restoredGraves.add(gravePos);
-         this.method_37908().method_8396(null, gravePos, SoundEvents.field_21951, SoundCategory.field_15251, 1.0F, 0.8F);
+         this.getWorld().playSound(null, gravePos, SoundEvents.BLOCK_SOUL_SAND_PLACE, SoundCategory.HOSTILE, 1.0F, 0.8F);
       }
    }
 
@@ -310,13 +308,11 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
          if (currentStrength < maxStrength * 0.2F) {
             this.isDefeated = true;
 
-            for (PlayerEntity player : this.method_37908()
-               .method_8390(
-                  PlayerEntity.class,
-                  new Box(this.method_19538().method_1031(-25.0, -10.0, -25.0), this.method_19538().method_1031(25.0, 10.0, 25.0)),
-                  p -> !p.method_7325()
+            for (PlayerEntity player : this.getWorld()
+               .getEntitiesByClass(
+                  PlayerEntity.class, new Box(this.getPos().add(-25.0, -10.0, -25.0), this.getPos().add(25.0, 10.0, 25.0)), p -> !p.isSpectator()
                )) {
-               player.method_7353(Text.method_43470("§c罗千：真是位了不起的后生..."), false);
+               player.sendMessage(Text.literal("§c罗千：真是位了不起的后生..."), false);
             }
 
             this.sendCombatState(false);
@@ -326,40 +322,40 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void createLootChest() {
-      BlockPos chestPos = this.method_24515().method_10084();
+      BlockPos chestPos = this.getBlockPos().up();
 
-      while (chestPos.method_10264() < 256 && !this.method_37908().method_8320(chestPos).method_26215()) {
-         chestPos = chestPos.method_10084();
+      while (chestPos.getY() < 256 && !this.getWorld().getBlockState(chestPos).isAir()) {
+         chestPos = chestPos.up();
       }
 
-      this.method_37908().method_8501(chestPos, Blocks.field_10034.method_9564());
-      if (this.method_37908().method_8321(chestPos) instanceof ChestBlockEntity chest) {
-         chest.method_5447(0, new ItemStack(ModItems.EERIE_YELLOW_PAPER, 5 + (int)(Math.random() * 8.0)));
-         chest.method_5447(1, new ItemStack(Items.field_8494, 4 + (int)(Math.random() * 5.0)));
+      this.getWorld().setBlockState(chestPos, Blocks.CHEST.getDefaultState());
+      if (this.getWorld().getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+         chest.setStack(0, new ItemStack(ModItems.EERIE_YELLOW_PAPER, 5 + (int)(Math.random() * 8.0)));
+         chest.setStack(1, new ItemStack(Items.GOLD_BLOCK, 4 + (int)(Math.random() * 5.0)));
          if (Math.random() < 0.5) {
-            chest.method_5447(2, new ItemStack(ModItems.CORPSE_OIL, 16 + (int)(Math.random() * 9.0)));
+            chest.setStack(2, new ItemStack(ModItems.CORPSE_OIL, 16 + (int)(Math.random() * 9.0)));
          } else {
-            chest.method_5447(2, new ItemStack(ModItems.CORPSE_PIECE, 16 + (int)(Math.random() * 9.0)));
+            chest.setStack(2, new ItemStack(ModItems.CORPSE_PIECE, 16 + (int)(Math.random() * 9.0)));
          }
 
          int randomChoice = (int)(Math.random() * 3.0);
          if (randomChoice == 0) {
-            chest.method_5447(3, new ItemStack(ModItems.BLACKENED_TOOTH, 4 + (int)(Math.random() * 3.0)));
+            chest.setStack(3, new ItemStack(ModItems.BLACKENED_TOOTH, 4 + (int)(Math.random() * 3.0)));
          } else if (randomChoice == 1) {
-            chest.method_5447(3, new ItemStack(ModItems.VISCOUS_BLOOD, 4 + (int)(Math.random() * 3.0)));
+            chest.setStack(3, new ItemStack(ModItems.VISCOUS_BLOOD, 4 + (int)(Math.random() * 3.0)));
          } else {
-            chest.method_5447(3, new ItemStack(ModItems.EERIE_RAG, 4 + (int)(Math.random() * 3.0)));
+            chest.setStack(3, new ItemStack(ModItems.EERIE_RAG, 4 + (int)(Math.random() * 3.0)));
          }
 
-         chest.method_5447(4, new ItemStack(ModItems.COFFIN_NAIL));
-         chest.method_5447(5, LuoQianDiaryItem.createDiary());
+         chest.setStack(4, new ItemStack(ModItems.COFFIN_NAIL));
+         chest.setStack(5, LuoQianDiaryItem.createDiary());
       }
    }
 
    private void spawnFloatingDirt() {
       if (++this.floatingDirtTimer >= 60) {
          this.floatingDirtTimer = 0;
-         int countToSpawn = 8 + this.method_37908().field_9229.method_43048(13);
+         int countToSpawn = 8 + this.getWorld().random.nextInt(13);
          if (this.floatingDirtCount + countToSpawn > 50) {
             countToSpawn = 50 - this.floatingDirtCount;
             if (countToSpawn < 2) {
@@ -367,20 +363,20 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
             }
          }
 
-         double targetX = this.method_23317();
-         double targetZ = this.method_23321();
+         double targetX = this.getX();
+         double targetZ = this.getZ();
 
          for (int i = 0; i < countToSpawn; i++) {
-            double angle = this.method_37908().field_9229.method_43058() * Math.PI * 2.0;
-            double radius = 5.0 + this.method_37908().field_9229.method_43058() * 20.0;
-            double spawnX = targetX + Math.cos(angle) * radius + (this.method_37908().field_9229.method_43058() - 0.5) * 4.0;
-            double spawnZ = targetZ + Math.sin(angle) * radius + (this.method_37908().field_9229.method_43058() - 0.5) * 4.0;
-            int spawnY = this.method_37908().method_8624(Type.field_13202, (int)spawnX, (int)spawnZ);
-            if (this.method_37908().method_8320(new BlockPos((int)spawnX, spawnY, (int)spawnZ)).method_26215()) {
-               FloatingDirtEntity dirt = (FloatingDirtEntity)ModEntities.FLOATING_DIRT.method_5883(this.method_37908());
+            double angle = this.getWorld().random.nextDouble() * Math.PI * 2.0;
+            double radius = 5.0 + this.getWorld().random.nextDouble() * 20.0;
+            double spawnX = targetX + Math.cos(angle) * radius + (this.getWorld().random.nextDouble() - 0.5) * 4.0;
+            double spawnZ = targetZ + Math.sin(angle) * radius + (this.getWorld().random.nextDouble() - 0.5) * 4.0;
+            int spawnY = this.getWorld().getTopY(Type.WORLD_SURFACE, (int)spawnX, (int)spawnZ);
+            if (this.getWorld().getBlockState(new BlockPos((int)spawnX, spawnY, (int)spawnZ)).isAir()) {
+               FloatingDirtEntity dirt = (FloatingDirtEntity)ModEntities.FLOATING_DIRT.create(this.getWorld());
                if (dirt != null) {
                   dirt.init(targetX, spawnY, targetZ, spawnX + 0.5, spawnZ + 0.5);
-                  this.method_37908().method_8649(dirt);
+                  this.getWorld().spawnEntity(dirt);
                   this.floatingDirtCount++;
                }
             }
@@ -390,10 +386,10 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
 
    private void updateFloatingDirtCount() {
       int count = 0;
-      Box searchBox = new Box(this.method_19538().method_1031(-25.0, -20.0, -25.0), this.method_19538().method_1031(25.0, 20.0, 25.0));
+      Box searchBox = new Box(this.getPos().add(-25.0, -20.0, -25.0), this.getPos().add(25.0, 20.0, 25.0));
 
-      for (FloatingDirtEntity dirt : this.method_37908().method_8390(FloatingDirtEntity.class, searchBox, entity -> true)) {
-         if (dirt.method_5858(this) <= 625.0) {
+      for (FloatingDirtEntity dirt : this.getWorld().getEntitiesByClass(FloatingDirtEntity.class, searchBox, entity -> true)) {
+         if (dirt.squaredDistanceTo(this) <= 625.0) {
             count++;
          }
       }
@@ -405,23 +401,23 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       if (++this.warningSpawnTimer >= 60) {
          this.warningSpawnTimer = 0;
          if (this.activeGraveCount < 15) {
-            List<PlayerEntity> nearbyPlayers = this.method_37908()
-               .method_8390(
+            List<PlayerEntity> nearbyPlayers = this.getWorld()
+               .getEntitiesByClass(
                   PlayerEntity.class,
-                  new Box(this.method_19538().method_1031(-25.0, -10.0, -25.0), this.method_19538().method_1031(25.0, 10.0, 25.0)),
-                  p -> !p.method_7325() && !p.method_7337()
+                  new Box(this.getPos().add(-25.0, -10.0, -25.0), this.getPos().add(25.0, 10.0, 25.0)),
+                  p -> !p.isSpectator() && !p.isCreative()
                );
             if (!nearbyPlayers.isEmpty()) {
-               PlayerEntity targetPlayer = nearbyPlayers.get(this.method_37908().field_9229.method_43048(nearbyPlayers.size()));
-               int x = targetPlayer.method_24515().method_10263();
-               int z = targetPlayer.method_24515().method_10260();
-               int y = this.method_37908().method_8624(Type.field_13202, x, z);
+               PlayerEntity targetPlayer = nearbyPlayers.get(this.getWorld().random.nextInt(nearbyPlayers.size()));
+               int x = targetPlayer.getBlockPos().getX();
+               int z = targetPlayer.getBlockPos().getZ();
+               int y = this.getWorld().getTopY(Type.WORLD_SURFACE, x, z);
                BlockPos warningPos = new BlockPos(x, y, z);
-               if (this.method_37908().method_8320(warningPos).method_26215()) {
-                  GraveWarningEntity warning = (GraveWarningEntity)ModEntities.GRAVE_WARNING.method_5883(this.method_37908());
+               if (this.getWorld().getBlockState(warningPos).isAir()) {
+                  GraveWarningEntity warning = (GraveWarningEntity)ModEntities.GRAVE_WARNING.create(this.getWorld());
                   if (warning != null) {
-                     warning.method_5808(warningPos.method_10263() + 0.5, warningPos.method_10264(), warningPos.method_10260() + 0.5, 0.0F, 0.0F);
-                     this.method_37908().method_8649(warning);
+                     warning.refreshPositionAndAngles(warningPos.getX() + 0.5, warningPos.getY(), warningPos.getZ() + 0.5, 0.0F, 0.0F);
+                     this.getWorld().spawnEntity(warning);
                   }
                }
             }
@@ -435,7 +431,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       for (int x = -30; x <= 30; x++) {
          for (int y = -5; y <= 5; y++) {
             for (int z = -30; z <= 30; z++) {
-               if (this.method_37908().method_8320(this.method_24515().method_10069(x, y, z)).method_27852(ModBlocks.GRAVE_MOUND)) {
+               if (this.getWorld().getBlockState(this.getBlockPos().add(x, y, z)).isOf(ModBlocks.GRAVE_MOUND)) {
                   count++;
                }
             }
@@ -463,52 +459,45 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void activateGraveDomain() {
-      for (PlayerEntity player : this.method_37908()
-         .method_8390(
-            PlayerEntity.class,
-            new Box(this.method_19538().method_1031(-25.0, -10.0, -25.0), this.method_19538().method_1031(25.0, 10.0, 25.0)),
-            p -> !p.method_7325()
-         )) {
-         player.method_7353(Text.method_43470("§c罗千：入土为安吧..."), false);
+      for (PlayerEntity player : this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, new Box(this.getPos().add(-25.0, -10.0, -25.0), this.getPos().add(25.0, 10.0, 25.0)), p -> !p.isSpectator())) {
+         player.sendMessage(Text.literal("§c罗千：入土为安吧..."), false);
       }
 
       for (int i = 0; i < 15; i++) {
          BlockPos pos = this.getRandomPositionInDomain();
-         if (this.method_37908().method_8320(pos).method_26215()
-            && this.method_37908().method_8320(pos.method_10074()).method_26212(this.method_37908(), pos.method_10074())) {
-            this.method_37908().method_8501(pos, ModBlocks.GRAVE_MOUND.method_9564());
+         if (this.getWorld().getBlockState(pos).isAir() && this.getWorld().getBlockState(pos.down()).isSolidBlock(this.getWorld(), pos.down())) {
+            this.getWorld().setBlockState(pos, ModBlocks.GRAVE_MOUND.getDefaultState());
          }
       }
 
-      this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_14792, SoundCategory.field_15251, 2.0F, 0.5F);
+      this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 2.0F, 0.5F);
    }
 
    private BlockPos getRandomPositionInDomain() {
-      double x = this.method_23317() + (this.method_37908().field_9229.method_43058() - 0.5) * 25.0 * 2.0;
-      double z = this.method_23321() + (this.method_37908().field_9229.method_43058() - 0.5) * 25.0 * 2.0;
-      return BlockPos.method_49637(x, this.method_37908().method_8624(Type.field_13202, (int)x, (int)z), z);
+      double x = this.getX() + (this.getWorld().random.nextDouble() - 0.5) * 25.0 * 2.0;
+      double z = this.getZ() + (this.getWorld().random.nextDouble() - 0.5) * 25.0 * 2.0;
+      return BlockPos.ofFloored(x, this.getWorld().getTopY(Type.WORLD_SURFACE, (int)x, (int)z), z);
    }
 
    private void activateDirtCharge() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(
-            PlayerEntity.class,
-            new Box(this.method_19538().method_1031(-25.0, -10.0, -25.0), this.method_19538().method_1031(25.0, 10.0, 25.0)),
-            p -> !p.method_7325() && !p.method_7337()
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(
+            PlayerEntity.class, new Box(this.getPos().add(-25.0, -10.0, -25.0), this.getPos().add(25.0, 10.0, 25.0)), p -> !p.isSpectator() && !p.isCreative()
          );
       if (!nearbyPlayers.isEmpty()) {
          for (PlayerEntity player : nearbyPlayers) {
-            player.method_7353(Text.method_43470("§c罗千：坟土将埋葬一切..."), false);
+            player.sendMessage(Text.literal("§c罗千：坟土将埋葬一切..."), false);
          }
 
-         PlayerEntity targetPlayer = nearbyPlayers.get(this.method_37908().field_9229.method_43048(nearbyPlayers.size()));
-         this.dirtChargeTargetX = targetPlayer.method_23317();
-         this.dirtChargeTargetY = targetPlayer.method_23318();
-         this.dirtChargeTargetZ = targetPlayer.method_23321();
-         Box searchBox = new Box(this.method_19538().method_1031(-25.0, -20.0, -25.0), this.method_19538().method_1031(25.0, 20.0, 25.0));
-         List<FloatingDirtEntity> allDirt = this.method_37908().method_8390(FloatingDirtEntity.class, searchBox, entity -> true);
+         PlayerEntity targetPlayer = nearbyPlayers.get(this.getWorld().random.nextInt(nearbyPlayers.size()));
+         this.dirtChargeTargetX = targetPlayer.getX();
+         this.dirtChargeTargetY = targetPlayer.getY();
+         this.dirtChargeTargetZ = targetPlayer.getZ();
+         Box searchBox = new Box(this.getPos().add(-25.0, -20.0, -25.0), this.getPos().add(25.0, 20.0, 25.0));
+         List<FloatingDirtEntity> allDirt = this.getWorld().getEntitiesByClass(FloatingDirtEntity.class, searchBox, entity -> true);
          Collections.shuffle(allDirt);
-         int count = Math.min(3 + this.method_37908().field_9229.method_43048(4), allDirt.size());
+         int count = Math.min(3 + this.getWorld().random.nextInt(4), allDirt.size());
          this.dirtChargeTargets.clear();
 
          for (int i = 0; i < count; i++) {
@@ -518,7 +507,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
          this.isChargingDirt = true;
          this.dirtChargeIndex = 0;
          this.dirtChargeDelayTimer = 0;
-         this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_15211, SoundCategory.field_15251, 2.0F, 0.8F);
+         this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.HOSTILE, 2.0F, 0.8F);
       }
    }
 
@@ -529,16 +518,16 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
          } else {
             if (this.dirtChargeIndex < this.dirtChargeTargets.size()) {
                FloatingDirtEntity dirt = this.dirtChargeTargets.get(this.dirtChargeIndex);
-               if (dirt.method_5805()) {
-                  List<PlayerEntity> nearbyPlayers = this.method_37908()
-                     .method_8390(
+               if (dirt.isAlive()) {
+                  List<PlayerEntity> nearbyPlayers = this.getWorld()
+                     .getEntitiesByClass(
                         PlayerEntity.class,
-                        new Box(this.method_19538().method_1031(-25.0, -10.0, -25.0), this.method_19538().method_1031(25.0, 10.0, 25.0)),
-                        p -> !p.method_7325() && !p.method_7337()
+                        new Box(this.getPos().add(-25.0, -10.0, -25.0), this.getPos().add(25.0, 10.0, 25.0)),
+                        p -> !p.isSpectator() && !p.isCreative()
                      );
                   if (!nearbyPlayers.isEmpty()) {
-                     PlayerEntity targetPlayer = nearbyPlayers.get(this.method_37908().field_9229.method_43048(nearbyPlayers.size()));
-                     dirt.setTrackingTarget(targetPlayer.method_23317(), targetPlayer.method_23318(), targetPlayer.method_23321());
+                     PlayerEntity targetPlayer = nearbyPlayers.get(this.getWorld().random.nextInt(nearbyPlayers.size()));
+                     dirt.setTrackingTarget(targetPlayer.getX(), targetPlayer.getY(), targetPlayer.getZ());
                      dirt.setExplosionDamage(this.getSpiritualDamage() * 0.8F);
                   }
                }
@@ -554,46 +543,38 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void explodeGraves() {
-      List<PlayerEntity> players = this.method_37908()
-         .method_8390(
+      List<PlayerEntity> players = this.getWorld()
+         .getEntitiesByClass(
             PlayerEntity.class,
-            new Box(this.method_19538().method_1031(-30.0, -5.0, -30.0), this.method_19538().method_1031(30.0, 5.0, 30.0)),
-            p -> !p.method_7325() && !p.method_7337() && !this.isPlayerProtected(p)
+            new Box(this.getPos().add(-30.0, -5.0, -30.0), this.getPos().add(30.0, 5.0, 30.0)),
+            p -> !p.isSpectator() && !p.isCreative() && !this.isPlayerProtected(p)
          );
 
       for (int x = -30; x <= 30; x++) {
          for (int z = -30; z <= 30; z++) {
-            BlockPos checkPos = this.method_24515().method_10069(x, 0, z);
-            if (this.method_37908().method_8320(checkPos).method_27852(ModBlocks.GRAVE_MOUND)) {
-               this.method_37908().method_8396(null, checkPos, SoundEvents.field_15152, SoundCategory.field_15251, 1.5F, 0.8F);
-               if (this.method_37908() instanceof ServerWorld) {
-                  ServerWorld serverWorld = (ServerWorld)this.method_37908();
-                  serverWorld.method_14199(
-                     ParticleTypes.field_11236,
-                     checkPos.method_10263() + 0.5,
-                     checkPos.method_10264() + 1.0,
-                     checkPos.method_10260() + 0.5,
-                     10,
-                     0.5,
-                     0.5,
-                     0.5,
-                     0.2
+            BlockPos checkPos = this.getBlockPos().add(x, 0, z);
+            if (this.getWorld().getBlockState(checkPos).isOf(ModBlocks.GRAVE_MOUND)) {
+               this.getWorld().playSound(null, checkPos, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.HOSTILE, 1.5F, 0.8F);
+               if (this.getWorld() instanceof ServerWorld) {
+                  ServerWorld serverWorld = (ServerWorld)this.getWorld();
+                  serverWorld.spawnParticles(
+                     ParticleTypes.EXPLOSION, checkPos.getX() + 0.5, checkPos.getY() + 1.0, checkPos.getZ() + 0.5, 10, 0.5, 0.5, 0.5, 0.2
                   );
                }
 
-               Box damageBox = new Box(checkPos.method_10069(-3, -3, -3), checkPos.method_10069(3, 3, 3));
+               Box damageBox = new Box(checkPos.add(-3, -3, -3), checkPos.add(3, 3, 3));
 
                for (PlayerEntity player : players) {
-                  if (damageBox.method_1006(player.method_19538())) {
+                  if (damageBox.contains(player.getPos())) {
                      float damage = this.getSpiritualDamage() * 1.2F;
-                     PlayerEvents.handleSpiritDamage(player, damage, damage, ModDamageSources.ghost(this.method_37908()));
-                     Vec3d knockback = player.method_19538().method_1020(checkPos.method_46558()).method_1029().method_18805(2.0, 1.0, 2.0);
-                     player.method_5762(knockback.field_1352, knockback.field_1351, knockback.field_1350);
-                     player.field_6037 = true;
+                     PlayerEvents.handleSpiritDamage(player, damage, damage, ModDamageSources.ghost(this.getWorld()));
+                     Vec3d knockback = player.getPos().subtract(checkPos.toCenterPos()).normalize().multiply(2.0, 1.0, 2.0);
+                     player.addVelocity(knockback.x, knockback.y, knockback.z);
+                     player.velocityModified = true;
                   }
                }
 
-               this.method_37908().method_8501(checkPos, Blocks.field_10124.method_9564());
+               this.getWorld().setBlockState(checkPos, Blocks.AIR.getDefaultState());
             }
          }
       }
@@ -603,13 +584,11 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       PlayerEntity targetPlayer = null;
       double closestDistance = Double.MAX_VALUE;
 
-      for (PlayerEntity player : this.method_37908()
-         .method_8390(
-            PlayerEntity.class,
-            new Box(this.method_19538().method_1031(-30.0, -10.0, -30.0), this.method_19538().method_1031(30.0, 10.0, 30.0)),
-            p -> !p.method_7325() && !p.method_7337()
+      for (PlayerEntity player : this.getWorld()
+         .getEntitiesByClass(
+            PlayerEntity.class, new Box(this.getPos().add(-30.0, -10.0, -30.0), this.getPos().add(30.0, 10.0, 30.0)), p -> !p.isSpectator() && !p.isCreative()
          )) {
-         double distance = player.method_5858(this);
+         double distance = player.squaredDistanceTo(this);
          if (distance > 625.0 && distance <= 900.0 && distance < closestDistance) {
             closestDistance = distance;
             targetPlayer = player;
@@ -617,20 +596,20 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       }
 
       if (targetPlayer != null) {
-         double dx = targetPlayer.method_23317() - this.method_23317();
-         double dz = targetPlayer.method_23321() - this.method_23321();
+         double dx = targetPlayer.getX() - this.getX();
+         double dz = targetPlayer.getZ() - this.getZ();
          double startAngle = Math.atan2(dz, dx);
-         double offsetAngle = (Math.PI / 4) * (this.method_37908().field_9229.method_43056() ? 1 : -1);
+         double offsetAngle = (Math.PI / 4) * (this.getWorld().random.nextBoolean() ? 1 : -1);
          this.wallStartAngle = startAngle + offsetAngle;
          this.wallCurrentBlock = 0;
          this.isBuildingWall = true;
-         this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_14609, SoundCategory.field_15251, 2.0F, 0.8F);
+         this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_GRAVEL_PLACE, SoundCategory.HOSTILE, 2.0F, 0.8F);
       }
    }
 
    private void buildDirtWallTick() {
       double angleStep = (Math.PI * 2) / this.wallTotalBlocks;
-      int platformTopY = (int)this.method_23318() - 2 + 1;
+      int platformTopY = (int)this.getY() - 2 + 1;
       int currentLayer = this.wallCurrentBlock / this.wallTotalBlocks;
       int currentBlockInLayer = this.wallCurrentBlock % this.wallTotalBlocks;
       if (currentLayer >= 25) {
@@ -649,11 +628,11 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
             }
 
             double angle = this.wallStartAngle + angleStep * currentBlockInLayer;
-            double x = this.method_23317() + Math.cos(angle) * 30.0;
-            double z = this.method_23321() + Math.sin(angle) * 30.0;
+            double x = this.getX() + Math.cos(angle) * 30.0;
+            double z = this.getZ() + Math.sin(angle) * 30.0;
             BlockPos wallPos = new BlockPos((int)Math.floor(x), platformTopY + currentLayer, (int)Math.floor(z));
-            if (this.method_37908().method_8320(wallPos).method_26215()) {
-               this.method_37908().method_8501(wallPos, Blocks.field_10566.method_9564());
+            if (this.getWorld().getBlockState(wallPos).isAir()) {
+               this.getWorld().setBlockState(wallPos, Blocks.DIRT.getDefaultState());
             }
 
             currentBlockInLayer++;
@@ -664,7 +643,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
 
    private void saveSurroundingBlocks() {
       int radius = 33;
-      int platformTopY = (int)this.method_23318() - 2 + 1;
+      int platformTopY = (int)this.getY() - 2 + 1;
       this.savedBlocksMap.clear();
       int maxSaveHeight = platformTopY + 40;
       int minSaveHeight = platformTopY - 40;
@@ -672,16 +651,16 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       for (int x = -radius; x <= radius; x++) {
          for (int z = -radius; z <= radius; z++) {
             for (int y = minSaveHeight; y <= maxSaveHeight; y++) {
-               BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-               BlockState state = this.method_37908().method_8320(pos);
-               if (!state.method_26215()) {
+               BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+               BlockState state = this.getWorld().getBlockState(pos);
+               if (!state.isAir()) {
                   NbtCompound blockData = new NbtCompound();
-                  blockData.method_10569("x", pos.method_10263());
-                  blockData.method_10569("y", pos.method_10264());
-                  blockData.method_10569("z", pos.method_10260());
-                  blockData.method_10582("blockId", Registries.field_41175.method_10221(state.method_26204()).toString());
+                  blockData.putInt("x", pos.getX());
+                  blockData.putInt("y", pos.getY());
+                  blockData.putInt("z", pos.getZ());
+                  blockData.putString("blockId", Registries.BLOCK.getId(state.getBlock()).toString());
                   this.savedBlocks.add(blockData);
-                  this.savedBlocksMap.put(pos.method_10063(), blockData);
+                  this.savedBlocksMap.put(pos.asLong(), blockData);
                }
             }
          }
@@ -705,29 +684,29 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
             double rad = Math.toRadians(angle);
             int x = (int)Math.round(Math.cos(rad) * currentR);
             int z = (int)Math.round(Math.sin(rad) * currentR);
-            int groundY = this.method_37908().method_8624(Type.field_13202, (int)this.method_23317() + x, (int)this.method_23321() + z);
-            int targetY = (int)this.method_23318() - 2;
+            int groundY = this.getWorld().getTopY(Type.WORLD_SURFACE, (int)this.getX() + x, (int)this.getZ() + z);
+            int targetY = (int)this.getY() - 2;
             int platformTopY = targetY + 1;
             int maxCleanY = platformTopY + 40;
             int minCleanY = platformTopY - 40;
 
             for (int y = maxCleanY; y >= minCleanY; y--) {
-               BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-               if (!this.method_37908().method_8320(pos).method_26215()) {
-                  this.method_37908().method_8501(pos, Blocks.field_10124.method_9564());
+               BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+               if (!this.getWorld().getBlockState(pos).isAir()) {
+                  this.getWorld().setBlockState(pos, Blocks.AIR.getDefaultState());
                }
             }
 
             for (int y = groundY; y <= targetY; y++) {
-               BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-               if (this.method_37908().method_8320(pos).method_26215()) {
-                  this.method_37908().method_8501(pos, Blocks.field_10566.method_9564());
+               BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+               if (this.getWorld().getBlockState(pos).isAir()) {
+                  this.getWorld().setBlockState(pos, Blocks.DIRT.getDefaultState());
                }
             }
 
-            BlockPos topPos = new BlockPos((int)this.method_23317() + x, targetY + 1, (int)this.method_23321() + z);
-            if (this.method_37908().method_8320(topPos).method_26215()) {
-               this.method_37908().method_8501(topPos, Blocks.field_10520.method_9564());
+            BlockPos topPos = new BlockPos((int)this.getX() + x, targetY + 1, (int)this.getZ() + z);
+            if (this.getWorld().getBlockState(topPos).isAir()) {
+               this.getWorld().setBlockState(topPos, Blocks.PODZOL.getDefaultState());
             }
 
             for (int dx = -1; dx <= 1; dx++) {
@@ -737,22 +716,22 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
                      int nz = z + dz;
 
                      for (int y = maxCleanY; y >= minCleanY; y--) {
-                        BlockPos pos = new BlockPos((int)this.method_23317() + nx, y, (int)this.method_23321() + nz);
-                        if (!this.method_37908().method_8320(pos).method_26215()) {
-                           this.method_37908().method_8501(pos, Blocks.field_10124.method_9564());
+                        BlockPos pos = new BlockPos((int)this.getX() + nx, y, (int)this.getZ() + nz);
+                        if (!this.getWorld().getBlockState(pos).isAir()) {
+                           this.getWorld().setBlockState(pos, Blocks.AIR.getDefaultState());
                         }
                      }
 
                      for (int y = minCleanY; y <= targetY; y++) {
-                        BlockPos pos = new BlockPos((int)this.method_23317() + nx, y, (int)this.method_23321() + nz);
-                        if (this.method_37908().method_8320(pos).method_26215()) {
-                           this.method_37908().method_8501(pos, Blocks.field_10566.method_9564());
+                        BlockPos pos = new BlockPos((int)this.getX() + nx, y, (int)this.getZ() + nz);
+                        if (this.getWorld().getBlockState(pos).isAir()) {
+                           this.getWorld().setBlockState(pos, Blocks.DIRT.getDefaultState());
                         }
                      }
 
-                     BlockPos neighborTopPos = new BlockPos((int)this.method_23317() + nx, targetY + 1, (int)this.method_23321() + nz);
-                     if (this.method_37908().method_8320(neighborTopPos).method_26215()) {
-                        this.method_37908().method_8501(neighborTopPos, Blocks.field_10520.method_9564());
+                     BlockPos neighborTopPos = new BlockPos((int)this.getX() + nx, targetY + 1, (int)this.getZ() + nz);
+                     if (this.getWorld().getBlockState(neighborTopPos).isAir()) {
+                        this.getWorld().setBlockState(neighborTopPos, Blocks.PODZOL.getDefaultState());
                      }
                   }
                }
@@ -770,16 +749,16 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
          this.restoreTickCount = 0;
          this.isRestoring = true;
          this.triggerFloatingDirtReturn();
-         this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_15211, SoundCategory.field_15251, 2.0F, 0.8F);
+         this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.HOSTILE, 2.0F, 0.8F);
       } else {
          this.pendingRestore = true;
       }
    }
 
    private void triggerFloatingDirtReturn() {
-      Box searchBox = new Box(this.method_19538().method_1031(-35.0, -30.0, -35.0), this.method_19538().method_1031(35.0, 30.0, 35.0));
+      Box searchBox = new Box(this.getPos().add(-35.0, -30.0, -35.0), this.getPos().add(35.0, 30.0, 35.0));
 
-      for (FloatingDirtEntity dirt : this.method_37908().method_8390(FloatingDirtEntity.class, searchBox, entity -> true)) {
+      for (FloatingDirtEntity dirt : this.getWorld().getEntitiesByClass(FloatingDirtEntity.class, searchBox, entity -> true)) {
          dirt.startReturning();
       }
    }
@@ -802,7 +781,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void processRestoreRing(int radius) {
-      int platformTopY = (int)this.method_23318() - 2 + 1;
+      int platformTopY = (int)this.getY() - 2 + 1;
       int maxRestoreHeight = platformTopY + 40;
       int minRestoreHeight = platformTopY - 40;
 
@@ -812,14 +791,14 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
          int z = (int)Math.round(Math.sin(rad) * radius);
          if (Math.abs(x) > 1 || Math.abs(z) > 1) {
             for (int y = minRestoreHeight; y <= maxRestoreHeight; y++) {
-               BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-               NbtCompound blockData = this.savedBlocksMap.get(pos.method_10063());
+               BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+               NbtCompound blockData = this.savedBlocksMap.get(pos.asLong());
                if (blockData != null) {
-                  String blockId = blockData.method_10558("blockId");
-                  Block block = (Block)Registries.field_41175.method_10223(new Identifier(blockId));
-                  this.method_37908().method_8501(pos, block.method_9564());
+                  String blockId = blockData.getString("blockId");
+                  Block block = (Block)Registries.BLOCK.get(new Identifier(blockId));
+                  this.getWorld().setBlockState(pos, block.getDefaultState());
                } else {
-                  this.method_37908().method_8501(pos, Blocks.field_10124.method_9564());
+                  this.getWorld().setBlockState(pos, Blocks.AIR.getDefaultState());
                }
             }
          }
@@ -829,7 +808,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    private void finishRestore() {
       if (this.hasSavedBlocks) {
          int radius = 33;
-         int platformTopY = (int)this.method_23318() - 2 + 1;
+         int platformTopY = (int)this.getY() - 2 + 1;
          int maxRestoreHeight = platformTopY + 40;
          int minRestoreHeight = platformTopY - 40;
 
@@ -837,14 +816,14 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
             for (int z = -radius; z <= radius; z++) {
                if (Math.abs(x) > 1 || Math.abs(z) > 1) {
                   for (int y = minRestoreHeight; y <= maxRestoreHeight; y++) {
-                     BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-                     NbtCompound blockData = this.savedBlocksMap.get(pos.method_10063());
+                     BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+                     NbtCompound blockData = this.savedBlocksMap.get(pos.asLong());
                      if (blockData != null) {
-                        String blockId = blockData.method_10558("blockId");
-                        Block block = (Block)Registries.field_41175.method_10223(new Identifier(blockId));
-                        this.method_37908().method_8501(pos, block.method_9564());
+                        String blockId = blockData.getString("blockId");
+                        Block block = (Block)Registries.BLOCK.get(new Identifier(blockId));
+                        this.getWorld().setBlockState(pos, block.getDefaultState());
                      } else {
-                        this.method_37908().method_8501(pos, Blocks.field_10124.method_9564());
+                        this.getWorld().setBlockState(pos, Blocks.AIR.getDefaultState());
                      }
                   }
                }
@@ -858,21 +837,21 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       this.isRestoring = false;
       this.restoreCurrentRadius = 0;
       this.restoreTickCount = 0;
-      this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_14653, SoundCategory.field_15251, 1.5F, 1.0F);
+      this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_GRASS_PLACE, SoundCategory.HOSTILE, 1.5F, 1.0F);
       if (this.isDefeated) {
          this.createLootChest();
-         this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_15136, SoundCategory.field_15251, 3.0F, 0.5F);
-         if (this.method_37908() instanceof ServerWorld serverWorld) {
+         this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 3.0F, 0.5F);
+         if (this.getWorld() instanceof ServerWorld serverWorld) {
             for (int i = 0; i < 50; i++) {
-               double x = this.method_23317() + (Math.random() - 0.5) * 2.0;
-               double y = this.method_23318() + Math.random() * 2.0;
-               double z = this.method_23321() + (Math.random() - 0.5) * 2.0;
-               serverWorld.method_14199(ParticleTypes.field_11236, x, y, z, 1, 0.0, 0.0, 0.0, 0.1);
+               double x = this.getX() + (Math.random() - 0.5) * 2.0;
+               double y = this.getY() + Math.random() * 2.0;
+               double z = this.getZ() + (Math.random() - 0.5) * 2.0;
+               serverWorld.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 1, 0.0, 0.0, 0.0, 0.1);
             }
          }
 
          GhostDeathHandler.markLegitimateRemoval(this);
-         this.method_31472();
+         this.discard();
       }
    }
 
@@ -882,14 +861,14 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
 
    private void clearSavedArea() {
       int radius = 33;
-      int platformTopY = (int)this.method_23318() - 2 + 1;
+      int platformTopY = (int)this.getY() - 2 + 1;
 
       for (int x = -radius; x <= radius; x++) {
          for (int z = -radius; z <= radius; z++) {
             if (Math.abs(x) > 1 || Math.abs(z) > 1) {
                for (int y = platformTopY - 5; y <= platformTopY + 25; y++) {
-                  BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-                  this.method_37908().method_8501(pos, Blocks.field_10124.method_9564());
+                  BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+                  this.getWorld().setBlockState(pos, Blocks.AIR.getDefaultState());
                }
             }
          }
@@ -903,7 +882,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
 
    @Override
    public double getTick(Object o) {
-      return this.field_6012;
+      return this.age;
    }
 
    @Override
@@ -912,7 +891,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
-      if (this.field_6252) {
+      if (this.handSwinging) {
          event.getController().setAnimation(RawAnimation.begin().then("attack", LoopType.PLAY_ONCE));
       } else if (event.getLimbSwingAmount() > 0.01F) {
          event.getController().setAnimation(RawAnimation.begin().then("walk", LoopType.LOOP));
@@ -923,8 +902,8 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       return PlayState.CONTINUE;
    }
 
-   public void method_36209() {
-      super.method_36209();
+   public void onRemoved() {
+      super.onRemoved();
       if (this.hasSavedBlocks && !this.isRestoring) {
          this.forceRestore();
       }
@@ -934,7 +913,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       this.triggerFloatingDirtReturn();
       if (this.hasSavedBlocks) {
          int radius = 33;
-         int platformTopY = (int)this.method_23318() - 2 + 1;
+         int platformTopY = (int)this.getY() - 2 + 1;
          int maxRestoreHeight = platformTopY + 40;
          int minRestoreHeight = platformTopY - 40;
 
@@ -942,14 +921,14 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
             for (int z = -radius; z <= radius; z++) {
                if (Math.abs(x) > 1 || Math.abs(z) > 1) {
                   for (int y = minRestoreHeight; y <= maxRestoreHeight; y++) {
-                     BlockPos pos = new BlockPos((int)this.method_23317() + x, y, (int)this.method_23321() + z);
-                     NbtCompound blockData = this.savedBlocksMap.get(pos.method_10063());
+                     BlockPos pos = new BlockPos((int)this.getX() + x, y, (int)this.getZ() + z);
+                     NbtCompound blockData = this.savedBlocksMap.get(pos.asLong());
                      if (blockData != null) {
-                        String blockId = blockData.method_10558("blockId");
-                        Block block = (Block)Registries.field_41175.method_10223(new Identifier(blockId));
-                        this.method_37908().method_8501(pos, block.method_9564());
+                        String blockId = blockData.getString("blockId");
+                        Block block = (Block)Registries.BLOCK.get(new Identifier(blockId));
+                        this.getWorld().setBlockState(pos, block.getDefaultState());
                      } else {
-                        this.method_37908().method_8501(pos, Blocks.field_10124.method_9564());
+                        this.getWorld().setBlockState(pos, Blocks.AIR.getDefaultState());
                      }
                   }
                }
@@ -962,7 +941,7 @@ public class LuoQianGhostEntity extends GhostEntity implements GeoAnimatable {
       }
    }
 
-   public boolean method_6049(StatusEffectInstance effectInstance) {
-      return effectInstance.method_5579() == ModEffects.SILENCE ? false : super.method_6049(effectInstance);
+   public boolean canHaveStatusEffect(StatusEffectInstance effect) {
+      return effect.getEffectType() == ModEffects.SILENCE ? false : super.canHaveStatusEffect(effect);
    }
 }

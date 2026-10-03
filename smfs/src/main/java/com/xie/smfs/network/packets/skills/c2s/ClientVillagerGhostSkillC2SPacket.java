@@ -36,7 +36,7 @@ public class ClientVillagerGhostSkillC2SPacket {
       server.execute(() -> {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             try {
-               LOGGER.info("玩家 {} 执行村民鬼J键技能：鬼奴控制", player.method_5477().getString());
+               LOGGER.info("玩家 {} 执行村民鬼J键技能：鬼奴控制", player.getName().getString());
                PlayerEvents.balanceRevivalDegree(player);
                handleVillagerGhostSkill(player);
             } catch (Exception e) {
@@ -47,14 +47,14 @@ public class ClientVillagerGhostSkillC2SPacket {
    }
 
    private static void handleVillagerGhostSkill(ServerPlayerEntity player) {
-      List<VillagerEntity> villagers = player.method_37908()
-         .method_8390(VillagerEntity.class, player.method_5829().method_1014(10.0), villager -> villager.method_5805() && villager.method_5739(player) <= 10.0);
+      List<VillagerEntity> villagers = player.getWorld()
+         .getEntitiesByClass(VillagerEntity.class, player.getBoundingBox().expand(10.0), villager -> villager.isAlive() && villager.distanceTo(player) <= 10.0);
       if (villagers.isEmpty()) {
-         LOGGER.warn("玩家 {} 周围没有村民，无法使用鬼奴控制技能", player.method_5477().getString());
+         LOGGER.warn("玩家 {} 周围没有村民，无法使用鬼奴控制技能", player.getName().getString());
       } else {
-         VillagerEntity nearestVillager = villagers.stream().min((v1, v2) -> Float.compare(v1.method_5739(player), v2.method_5739(player))).orElse(null);
+         VillagerEntity nearestVillager = villagers.stream().min((v1, v2) -> Float.compare(v1.distanceTo(player), v2.distanceTo(player))).orElse(null);
          if (nearestVillager == null) {
-            LOGGER.warn("玩家 {} 周围没有有效的村民", player.method_5477().getString());
+            LOGGER.warn("玩家 {} 周围没有有效的村民", player.getName().getString());
          } else {
             convertVillagerToGhostSlave(player, nearestVillager);
          }
@@ -63,15 +63,15 @@ public class ClientVillagerGhostSkillC2SPacket {
 
    private static void convertVillagerToGhostSlave(ServerPlayerEntity player, VillagerEntity villager) {
       try {
-         World world = player.method_37908();
+         World world = player.getWorld();
          GhostSlaveEntity ghostSlave = new GhostSlaveEntity(ModEntities.GHOST_SLAVE, world);
-         ghostSlave.method_5808(villager.method_23317(), villager.method_23318(), villager.method_23321(), world.field_9229.method_43057() * 360.0F, 0.0F);
-         ghostSlave.method_6033(ghostSlave.method_6063());
+         ghostSlave.refreshPositionAndAngles(villager.getX(), villager.getY(), villager.getZ(), world.random.nextFloat() * 360.0F, 0.0F);
+         ghostSlave.setHealth(ghostSlave.getMaxHealth());
          ghostSlave.setMaster(player);
-         villager.method_5650(RemovalReason.field_26999);
-         world.method_8649(ghostSlave);
+         villager.remove(RemovalReason.DISCARDED);
+         world.spawnEntity(ghostSlave);
          syncHatredTargets(player, ghostSlave);
-         LOGGER.info("玩家 {} 成功将村民转换为鬼奴，仇恨目标已同步", player.method_5477().getString());
+         LOGGER.info("玩家 {} 成功将村民转换为鬼奴，仇恨目标已同步", player.getName().getString());
          spawnSkillParticles(player, ghostSlave);
       } catch (Exception e) {
          LOGGER.error("转换村民为鬼奴时发生错误", e);
@@ -79,12 +79,12 @@ public class ClientVillagerGhostSkillC2SPacket {
    }
 
    private static void syncHatredTargets(ServerPlayerEntity player, GhostSlaveEntity ghostSlave) {
-      LivingEntity playerTarget = player.method_6052();
+      LivingEntity playerTarget = player.getAttacking();
       if (playerTarget != null) {
          if (isValidTarget(ghostSlave, playerTarget)) {
-            ghostSlave.method_5980(playerTarget);
+            ghostSlave.setTarget(playerTarget);
          } else {
-            LOGGER.warn("鬼奴 {} 无法攻击无效目标: {}", ghostSlave.method_5477().getString(), playerTarget.method_5477().getString());
+            LOGGER.warn("鬼奴 {} 无法攻击无效目标: {}", ghostSlave.getName().getString(), playerTarget.getName().getString());
          }
       }
 
@@ -92,10 +92,10 @@ public class ClientVillagerGhostSkillC2SPacket {
    }
 
    private static void syncAITargets(ServerPlayerEntity player, GhostSlaveEntity ghostSlave) {
-      for (HostileEntity hostile : player.method_37908()
-         .method_8390(HostileEntity.class, player.method_5829().method_1014(15.0), entity -> entity.method_5805() && entity.method_5739(player) <= 15.0)) {
+      for (HostileEntity hostile : player.getWorld()
+         .getEntitiesByClass(HostileEntity.class, player.getBoundingBox().expand(15.0), entity -> entity.isAlive() && entity.distanceTo(player) <= 15.0)) {
          if (isValidTarget(ghostSlave, hostile)) {
-            ghostSlave.method_5980(hostile);
+            ghostSlave.setTarget(hostile);
          }
       }
    }
@@ -117,10 +117,10 @@ public class ClientVillagerGhostSkillC2SPacket {
          }
       }
 
-      if (target.method_6052() == ghostSlave) {
+      if (target.getAttacking() == ghostSlave) {
          return false;
       } else if (ghostSlave.getMaster() instanceof ServerPlayerEntity playerMaster) {
-         LivingEntity playerTarget = playerMaster.method_6052();
+         LivingEntity playerTarget = playerMaster.getAttacking();
          return playerTarget != null && target == playerTarget ? true : target instanceof HostileEntity && !(target instanceof GhostSlaveEntity);
       } else {
          return target instanceof ServerPlayerEntity;
@@ -128,14 +128,14 @@ public class ClientVillagerGhostSkillC2SPacket {
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player, GhostSlaveEntity ghostSlave) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            player.method_23318() + world.field_9229.method_43058() * 2.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            player.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            player.getY() + world.random.nextDouble() * 2.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0
@@ -143,11 +143,11 @@ public class ClientVillagerGhostSkillC2SPacket {
       }
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            ghostSlave.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            ghostSlave.method_23318() + world.field_9229.method_43058() * 2.0,
-            ghostSlave.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            ghostSlave.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            ghostSlave.getY() + world.random.nextDouble() * 2.0,
+            ghostSlave.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0

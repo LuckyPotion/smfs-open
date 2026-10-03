@@ -60,106 +60,106 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
    public GhostTamingScreenHandler(int syncId, PlayerInventory playerInventory, Inventory tamingInventory) {
       super(ModScreenHandlers.GHOST_TAMING_SCREEN_HANDLER, syncId);
-      method_17359(tamingInventory, 1);
+      checkSize(tamingInventory, 1);
       this.tamingInventory = tamingInventory;
-      tamingInventory.method_5435(playerInventory.field_7546);
-      this.method_7621(new GhostTamingScreenHandler.ContainerSlot(tamingInventory, 0, 79, 20));
+      tamingInventory.onOpen(playerInventory.player);
+      this.addSlot(new GhostTamingScreenHandler.ContainerSlot(tamingInventory, 0, 79, 20));
 
       for (int i = 0; i < 3; i++) {
          for (int j = 0; j < 9; j++) {
             int playerSlotIndex = j + i * 9 + 9;
-            this.method_7621(new Slot(playerInventory, playerSlotIndex, 8 + j * 18, 84 + i * 18));
+            this.addSlot(new Slot(playerInventory, playerSlotIndex, 8 + j * 18, 84 + i * 18));
          }
       }
 
       for (int i = 0; i < 9; i++) {
-         this.method_7621(new Slot(playerInventory, i, 8 + i * 18, 142));
+         this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
       }
    }
 
    public GhostTamingScreenHandler(int syncId, PlayerInventory playerInventory, PacketByteBuf buf) {
       this(syncId, playerInventory, new SimpleInventory(1));
-      this.ghostType = buf.method_19772();
+      this.ghostType = buf.readString();
    }
 
    public String getGhostType() {
       return this.ghostType;
    }
 
-   public boolean method_7597(PlayerEntity player) {
-      return this.tamingInventory.method_5443(player);
+   public boolean canUse(PlayerEntity player) {
+      return this.tamingInventory.canPlayerUse(player);
    }
 
-   public void method_7609(Inventory inventory) {
-      super.method_7609(inventory);
+   public void onContentChanged(Inventory inventory) {
+      super.onContentChanged(inventory);
       if (inventory == this.tamingInventory) {
-         this.method_7623();
+         this.sendContentUpdates();
       }
    }
 
-   public boolean method_7604(PlayerEntity player, int id) {
+   public boolean onButtonClick(PlayerEntity player, int id) {
       return id == 0 ? this.handleTaming(player) : false;
    }
 
-   public ItemStack method_7601(PlayerEntity player, int slotIndex) {
-      ItemStack originalStack = ItemStack.field_8037;
-      Slot slot = (Slot)this.field_7761.get(slotIndex);
-      if (slot != null && slot.method_7681()) {
-         ItemStack slotStack = slot.method_7677();
-         originalStack = slotStack.method_7972();
-         if (slotIndex >= 0 && slotIndex < 1) {
-            if (!this.method_7616(slotStack, 1, 37, false)) {
-               return ItemStack.field_8037;
+   public ItemStack quickMove(PlayerEntity player, int slot) {
+      ItemStack originalStack = ItemStack.EMPTY;
+      Slot slotx = (Slot)this.slots.get(slot);
+      if (slotx != null && slotx.hasStack()) {
+         ItemStack slotStack = slotx.getStack();
+         originalStack = slotStack.copy();
+         if (slot >= 0 && slot < 1) {
+            if (!this.insertItem(slotStack, 1, 37, false)) {
+               return ItemStack.EMPTY;
             }
-         } else if (slotIndex >= 1 && slotIndex < 28) {
-            if (!this.method_7616(slotStack, 0, 1, false) && !this.method_7616(slotStack, 28, 37, false)) {
-               return ItemStack.field_8037;
+         } else if (slot >= 1 && slot < 28) {
+            if (!this.insertItem(slotStack, 0, 1, false) && !this.insertItem(slotStack, 28, 37, false)) {
+               return ItemStack.EMPTY;
             }
          } else {
-            if (slotIndex < 28 || slotIndex >= 37) {
-               return ItemStack.field_8037;
+            if (slot < 28 || slot >= 37) {
+               return ItemStack.EMPTY;
             }
 
-            if (!this.method_7616(slotStack, 0, 1, false) && !this.method_7616(slotStack, 1, 28, false)) {
-               return ItemStack.field_8037;
+            if (!this.insertItem(slotStack, 0, 1, false) && !this.insertItem(slotStack, 1, 28, false)) {
+               return ItemStack.EMPTY;
             }
          }
 
-         if (slotStack.method_7960()) {
-            slot.method_48931(ItemStack.field_8037);
+         if (slotStack.isEmpty()) {
+            slotx.setStack(ItemStack.EMPTY);
          } else {
-            slot.method_7668();
+            slotx.markDirty();
          }
 
-         if (slotStack.method_7947() == originalStack.method_7947()) {
-            return ItemStack.field_8037;
+         if (slotStack.getCount() == originalStack.getCount()) {
+            return ItemStack.EMPTY;
          }
 
-         slot.method_7667(player, slotStack);
+         slotx.onTakeItem(player, slotStack);
       }
 
       return originalStack;
    }
 
-   public void method_7593(int slotId, int button, SlotActionType actionType, PlayerEntity player) {
-      super.method_7593(slotId, button, actionType, player);
+   public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+      super.onSlotClick(slotIndex, button, actionType, player);
    }
 
    public boolean validateTamingConditions(PlayerEntity player) {
-      if (player.method_37908().field_9236) {
+      if (player.getWorld().isClient) {
          return false;
       }
 
-      ItemStack containerStack = this.tamingInventory.method_5438(0);
-      if (!containerStack.method_7960() && containerStack.method_7909() instanceof GoldenContainerItem) {
-         NbtCompound nbt = containerStack.method_7948();
-         boolean hasGhost = nbt.method_10577("HasGhost");
+      ItemStack containerStack = this.tamingInventory.getStack(0);
+      if (!containerStack.isEmpty() && containerStack.getItem() instanceof GoldenContainerItem) {
+         NbtCompound nbt = containerStack.getOrCreateNbt();
+         boolean hasGhost = nbt.getBoolean("HasGhost");
          if (!hasGhost) {
             return false;
          }
 
-         NbtCompound contained = nbt.method_10562("ContainedGhost");
-         String ghostType = contained.method_10558("id");
+         NbtCompound contained = nbt.getCompound("ContainedGhost");
+         String ghostType = contained.getString("id");
          if (ghostType.contains(":")) {
             ghostType = ghostType.split(":")[1];
          }
@@ -171,29 +171,29 @@ public class GhostTamingScreenHandler extends ScreenHandler {
    }
 
    public boolean handleTaming(PlayerEntity player) {
-      if (player.method_37908().field_9236) {
+      if (player.getWorld().isClient) {
          return false;
       }
 
-      ItemStack containerStack = this.tamingInventory.method_5438(0);
-      if (!containerStack.method_7960() && containerStack.method_7909() instanceof GoldenContainerItem) {
-         NbtCompound nbt = containerStack.method_7948();
-         boolean hasGhost = nbt.method_10577("HasGhost");
+      ItemStack containerStack = this.tamingInventory.getStack(0);
+      if (!containerStack.isEmpty() && containerStack.getItem() instanceof GoldenContainerItem) {
+         NbtCompound nbt = containerStack.getOrCreateNbt();
+         boolean hasGhost = nbt.getBoolean("HasGhost");
          if (!hasGhost) {
             return false;
          }
 
-         NbtCompound contained = nbt.method_10562("ContainedGhost");
-         String ghostType = contained.method_10558("id");
+         NbtCompound contained = nbt.getCompound("ContainedGhost");
+         String ghostType = contained.getString("id");
          if (ghostType.contains(":")) {
             ghostType = ghostType.split(":")[1];
          }
 
          if (ghostType.isEmpty()) {
-            player.method_7353(Text.method_43470("无法识别鬼的类型"), false);
+            player.sendMessage(Text.literal("无法识别鬼的类型"), false);
             return false;
          } else {
-            boolean isPlayerGhost = contained.method_10545("PlayerUuid");
+            boolean isPlayerGhost = contained.contains("PlayerUuid");
             int controlSlotIndex = this.findFirstItemInPlayerInventory(player, ModItems.CONTROL_SLOT);
             boolean hasControlSlot = controlSlotIndex >= 0;
             return isPlayerGhost
@@ -207,42 +207,42 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
    private boolean handlePlayerGhostTaming(PlayerEntity player, ItemStack containerStack, NbtCompound ghostNbt, int controlSlotIndex, boolean hasControlSlot) {
       LOGGER.debug("检测到玩家鬼，开始读取内部储存的鬼信息");
-      if (!ghostNbt.method_10545("GhostSlotsData")) {
-         player.method_7353(Text.method_43470("该玩家鬼没有槽位信息，无法驾驭"), false);
+      if (!ghostNbt.contains("GhostSlotsData")) {
+         player.sendMessage(Text.literal("该玩家鬼没有槽位信息，无法驾驭"), false);
          return false;
       }
 
-      NbtCompound ghostSlotsData = ghostNbt.method_10562("GhostSlotsData");
+      NbtCompound ghostSlotsData = ghostNbt.getCompound("GhostSlotsData");
       int validSlotCount = 0;
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlotsData.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlotsData.method_10562(slotKey);
-            if (slotData.method_10577("occupied")) {
+         if (ghostSlotsData.contains(slotKey)) {
+            NbtCompound slotData = ghostSlotsData.getCompound(slotKey);
+            if (slotData.getBoolean("occupied")) {
                validSlotCount++;
             }
          }
       }
 
       if (validSlotCount == 0) {
-         player.method_7353(Text.method_43470("该玩家鬼没有驾驭任何鬼，无法驾驭"), false);
+         player.sendMessage(Text.literal("该玩家鬼没有驾驭任何鬼，无法驾驭"), false);
          return false;
       }
 
       LOGGER.debug("玩家鬼包含{}个有效槽位", validSlotCount);
       if (!hasControlSlot) {
-         if (player.method_6051().method_43057() > 0.2F) {
+         if (player.getRandom().nextFloat() > 0.2F) {
             return this.handleTamingFailure(player, containerStack, ghostNbt);
          }
 
          LOGGER.debug("玩家鬼驾驭成功（不使用驾驭名额，20%成功率）");
       } else {
-         if (player.method_6051().method_43057() > 0.85F) {
+         if (player.getRandom().nextFloat() > 0.85F) {
             return this.handleTamingFailure(player, containerStack, ghostNbt);
          }
 
-         player.method_31548().method_5438(controlSlotIndex).method_7934(1);
+         player.getInventory().getStack(controlSlotIndex).decrement(1);
          LOGGER.debug("玩家鬼驾驭成功（使用驾驭名额，85%成功率）");
       }
 
@@ -250,23 +250,23 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlotsData.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlotsData.method_10562(slotKey);
-            if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-               NbtCompound itemNbt = slotData.method_10562("item");
+         if (ghostSlotsData.contains(slotKey)) {
+            NbtCompound slotData = ghostSlotsData.getCompound(slotKey);
+            if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+               NbtCompound itemNbt = slotData.getCompound("item");
                String ghostType = "";
-               if (itemNbt.method_10545("TamedGhost")) {
-                  NbtCompound tamedGhostData = itemNbt.method_10562("TamedGhost");
-                  if (tamedGhostData.method_10545("Type")) {
-                     ghostType = tamedGhostData.method_10558("Type");
-                  } else if (tamedGhostData.method_10545("id")) {
-                     String fullId = tamedGhostData.method_10558("id");
+               if (itemNbt.contains("TamedGhost")) {
+                  NbtCompound tamedGhostData = itemNbt.getCompound("TamedGhost");
+                  if (tamedGhostData.contains("Type")) {
+                     ghostType = tamedGhostData.getString("Type");
+                  } else if (tamedGhostData.contains("id")) {
+                     String fullId = tamedGhostData.getString("id");
                      if (fullId.contains(":")) {
                         ghostType = fullId.split(":")[1];
                      }
                   }
-               } else if (itemNbt.method_10545("id")) {
-                  String fullId = itemNbt.method_10558("id");
+               } else if (itemNbt.contains("id")) {
+                  String fullId = itemNbt.getString("id");
                   if (fullId.contains(":")) {
                      ghostType = fullId.split(":")[1];
                   }
@@ -274,12 +274,12 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
                if (!ghostType.isEmpty()) {
                   ItemStack tamedItem = GhostUtils.createTamedItem(ghostType, itemNbt);
-                  if (!tamedItem.method_7960()) {
-                     if (!player.method_31548().method_7394(tamedItem)) {
-                        player.method_7328(tamedItem, false);
-                        LOGGER.debug("槽位{}驾驭物品掉落在地上，获得: {}", i + 1, tamedItem.method_7964().getString());
+                  if (!tamedItem.isEmpty()) {
+                     if (!player.getInventory().insertStack(tamedItem)) {
+                        player.dropItem(tamedItem, false);
+                        LOGGER.debug("槽位{}驾驭物品掉落在地上，获得: {}", i + 1, tamedItem.getName().getString());
                      } else {
-                        LOGGER.debug("槽位{}驾驭成功，获得: {}", i + 1, tamedItem.method_7964().getString());
+                        LOGGER.debug("槽位{}驾驭成功，获得: {}", i + 1, tamedItem.getName().getString());
                      }
 
                      successCount++;
@@ -293,22 +293,22 @@ public class GhostTamingScreenHandler extends ScreenHandler {
          }
       }
 
-      containerStack.method_7934(1);
-      this.tamingInventory.method_5431();
-      this.method_7623();
+      containerStack.decrement(1);
+      this.tamingInventory.markDirty();
+      this.sendContentUpdates();
       ItemStack emptyContainer = new ItemStack(ModItems.GOLDEN_CONTAINER);
-      if (!player.method_31548().method_7394(emptyContainer)) {
-         player.method_7328(emptyContainer, false);
+      if (!player.getInventory().insertStack(emptyContainer)) {
+         player.dropItem(emptyContainer, false);
       }
 
       if (successCount > 0) {
-         player.method_7353(Text.method_43470("成功驾驭玩家鬼的" + successCount + "个槽位中的鬼魂"), false);
-         LOGGER.debug("玩家鬼驾驭成功，共驾驭了{}个槽位中的鬼魂，玩家: {}", successCount, player.method_5477().getString());
+         player.sendMessage(Text.literal("成功驾驭玩家鬼的" + successCount + "个槽位中的鬼魂"), false);
+         LOGGER.debug("玩家鬼驾驭成功，共驾驭了{}个槽位中的鬼魂，玩家: {}", successCount, player.getName().getString());
          FactionManager.addReputation(player, 1000 * successCount);
          this.tryLockPlayerGhostsAfterTaming(player, ghostSlotsData);
          return true;
       } else {
-         player.method_7353(Text.method_43470("驾驭玩家鬼失败，没有成功驾驭任何鬼魂"), false);
+         player.sendMessage(Text.literal("驾驭玩家鬼失败，没有成功驾驭任何鬼魂"), false);
          return false;
       }
    }
@@ -317,57 +317,57 @@ public class GhostTamingScreenHandler extends ScreenHandler {
       PlayerEntity player, ItemStack containerStack, String ghostType, NbtCompound nbt, int controlSlotIndex, boolean hasControlSlot
    ) {
       if (PlayerEvents.hasGhostType(player, ghostType)) {
-         player.method_7353(Text.method_43470("无法重复驾驭"), false);
+         player.sendMessage(Text.literal("无法重复驾驭"), false);
          if (player instanceof ServerPlayerEntity serverPlayer) {
-            serverPlayer.method_7346();
+            serverPlayer.closeHandledScreen();
          }
 
          return false;
       } else {
          ItemStack tamedItem = GhostUtils.createTamedItem(ghostType, nbt);
-         ItemStack displayStack = tamedItem.method_7972();
-         if (tamedItem.method_7960()) {
-            LOGGER.debug("驾驭转换失败：暂不支持驾驭该鬼类型，物品类型: {}，鬼类型: {}，玩家: {}", containerStack.method_7909().method_7876(), ghostType, player.method_5477().getString());
-            player.method_7353(Text.method_43470("暂不支持驾驭"), false);
+         ItemStack displayStack = tamedItem.copy();
+         if (tamedItem.isEmpty()) {
+            LOGGER.debug("驾驭转换失败：暂不支持驾驭该鬼类型，物品类型: {}，鬼类型: {}，玩家: {}", containerStack.getItem().getTranslationKey(), ghostType, player.getName().getString());
+            player.sendMessage(Text.literal("暂不支持驾驭"), false);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7346();
+               serverPlayer.closeHandledScreen();
             }
 
             return false;
-         } else if (tamedItem.method_7909() == ModItems.CONTROL_SLOT) {
-            LOGGER.debug("驾驭转换失败：暂不支持驾驭该鬼类型（返回控制槽），鬼类型: {}，玩家: {}", ghostType, player.method_5477().getString());
-            player.method_7353(Text.method_43470("暂不支持驾驭"), false);
+         } else if (tamedItem.getItem() == ModItems.CONTROL_SLOT) {
+            LOGGER.debug("驾驭转换失败：暂不支持驾驭该鬼类型（返回控制槽），鬼类型: {}，玩家: {}", ghostType, player.getName().getString());
+            player.sendMessage(Text.literal("暂不支持驾驭"), false);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7346();
+               serverPlayer.closeHandledScreen();
             }
 
             return false;
          } else {
             if (!hasControlSlot) {
-               if (player.method_6051().method_43057() > 0.2F) {
+               if (player.getRandom().nextFloat() > 0.2F) {
                   return this.handleTamingFailure(player, containerStack, nbt);
                }
 
                LOGGER.debug("普通鬼驾驭成功（不使用驾驭名额，20%成功率）");
             } else {
-               if (player.method_6051().method_43057() > 0.85F) {
+               if (player.getRandom().nextFloat() > 0.85F) {
                   return this.handleTamingFailure(player, containerStack, nbt);
                }
 
-               player.method_31548().method_5438(controlSlotIndex).method_7934(1);
+               player.getInventory().getStack(controlSlotIndex).decrement(1);
                LOGGER.debug("普通鬼驾驭成功（使用驾驭名额，85%成功率）");
             }
 
-            containerStack.method_7934(1);
-            this.tamingInventory.method_5431();
-            this.method_7623();
+            containerStack.decrement(1);
+            this.tamingInventory.markDirty();
+            this.sendContentUpdates();
             ItemStack emptyContainer = new ItemStack(ModItems.GOLDEN_CONTAINER);
-            if (!player.method_31548().method_7394(emptyContainer)) {
-               player.method_7328(emptyContainer, false);
+            if (!player.getInventory().insertStack(emptyContainer)) {
+               player.dropItem(emptyContainer, false);
             }
 
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7346();
+               serverPlayer.closeHandledScreen();
             }
 
             boolean directTame = ModConfig.getInstance().directTameGhost;
@@ -379,28 +379,28 @@ public class GhostTamingScreenHandler extends ScreenHandler {
                      PlayerEvents.setGhostSlotData(player, emptySlot, tamedItem);
                      PlayerEvents.validateGhostSlots(player);
                      NbtCompound ghostData = new NbtCompound();
-                     ghostData.method_10582("Type", ghostType);
-                     ghostData.method_10582("Name", displayStack.method_7964().getString());
+                     ghostData.putString("Type", ghostType);
+                     ghostData.putString("Name", displayStack.getName().getString());
                      PlayerEvents.showGhostAbilityPopup(player, ghostData);
-                     player.method_7353(Text.method_43470("成功驾驭，获得: " + displayStack.method_7964().getString()), false);
-                     LOGGER.debug("strate转换成功并绑定到槽位{}，获得: {}，玩家: {}", emptySlot + 1, displayStack.method_7964().getString(), player.method_5477().getString());
+                     player.sendMessage(Text.literal("成功驾驭，获得: " + displayStack.getName().getString()), false);
+                     LOGGER.debug("strate转换成功并绑定到槽位{}，获得: {}，玩家: {}", emptySlot + 1, displayStack.getName().getString(), player.getName().getString());
                      FactionManager.addReputation(player, 1000);
                      return true;
                   } catch (Exception e) {
                      LOGGER.error("绑定驾驭物品到槽位 {} 失败: {}", emptySlot, e.getMessage(), e);
-                     player.method_7353(Text.method_43470("绑定失败，请重试"), false);
+                     player.sendMessage(Text.literal("绑定失败，请重试"), false);
                   }
                }
             }
 
-            if (!player.method_31548().method_7394(tamedItem)) {
-               player.method_7328(displayStack, false);
-               LOGGER.debug("strate转换成功但物品栏已满，物品掉落在地上，获得: {}，玩家: {}", displayStack.method_7964().getString(), player.method_5477().getString());
+            if (!player.getInventory().insertStack(tamedItem)) {
+               player.dropItem(displayStack, false);
+               LOGGER.debug("strate转换成功但物品栏已满，物品掉落在地上，获得: {}，玩家: {}", displayStack.getName().getString(), player.getName().getString());
             } else {
-               LOGGER.debug("strate转换成功，获得: {}，玩家: {}", displayStack.method_7964().getString(), player.method_5477().getString());
+               LOGGER.debug("strate转换成功，获得: {}，玩家: {}", displayStack.getName().getString(), player.getName().getString());
             }
 
-            player.method_7353(Text.method_43470("成功驾驭，获得: " + displayStack.method_7964().getString()), false);
+            player.sendMessage(Text.literal("成功驾驭，获得: " + displayStack.getName().getString()), false);
             FactionManager.addReputation(player, 1000);
             tryLockGhostAfterTaming(player, ghostType);
             return true;
@@ -409,9 +409,9 @@ public class GhostTamingScreenHandler extends ScreenHandler {
    }
 
    private int findFirstItemInPlayerInventory(PlayerEntity player, Item item) {
-      for (int i = 0; i < player.method_31548().method_5439(); i++) {
-         ItemStack s = player.method_31548().method_5438(i);
-         if (!s.method_7960() && s.method_7909() == item) {
+      for (int i = 0; i < player.getInventory().size(); i++) {
+         ItemStack s = player.getInventory().getStack(i);
+         if (!s.isEmpty() && s.getItem() == item) {
             return i;
          }
       }
@@ -419,44 +419,44 @@ public class GhostTamingScreenHandler extends ScreenHandler {
       return -1;
    }
 
-   public void method_7595(PlayerEntity player) {
-      super.method_7595(player);
+   public void onClosed(PlayerEntity player) {
+      super.onClosed(player);
 
       for (int i = 0; i < 1; i++) {
-         ItemStack stack = this.tamingInventory.method_5438(i);
-         if (!stack.method_7960()) {
-            if (!player.method_31548().method_7394(stack.method_7972())) {
-               player.method_7328(stack.method_7972(), false);
+         ItemStack stack = this.tamingInventory.getStack(i);
+         if (!stack.isEmpty()) {
+            if (!player.getInventory().insertStack(stack.copy())) {
+               player.dropItem(stack.copy(), false);
             }
 
-            this.tamingInventory.method_5447(i, ItemStack.field_8037);
+            this.tamingInventory.setStack(i, ItemStack.EMPTY);
          }
       }
 
-      this.tamingInventory.method_5432(player);
+      this.tamingInventory.onClose(player);
    }
 
    private boolean handleTamingFailure(PlayerEntity player, ItemStack containerStack, NbtCompound nbt) {
       LOGGER.info("驾驭失败（不使用驾驭名额，20%成功率失败），开始处理失败后果");
       String ghostType = "";
       NbtCompound contained = new NbtCompound();
-      if (nbt.method_10545("ContainedGhost")) {
-         contained = nbt.method_10562("ContainedGhost");
-         ghostType = contained.method_10558("id");
+      if (nbt.contains("ContainedGhost")) {
+         contained = nbt.getCompound("ContainedGhost");
+         ghostType = contained.getString("id");
          if (ghostType.contains(":")) {
             ghostType = ghostType.split(":")[1];
          }
       }
 
-      containerStack.method_7934(1);
-      this.tamingInventory.method_5431();
-      this.method_7623();
+      containerStack.decrement(1);
+      this.tamingInventory.markDirty();
+      this.sendContentUpdates();
       ItemStack emptyContainer = new ItemStack(ModItems.GOLDEN_CONTAINER);
-      if (!player.method_31548().method_7394(emptyContainer)) {
-         player.method_7328(emptyContainer, false);
+      if (!player.getInventory().insertStack(emptyContainer)) {
+         player.dropItem(emptyContainer, false);
       }
 
-      player.method_6092(new StatusEffectInstance(StatusEffects.field_5920, 200, 2));
+      player.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 200, 2));
       if (!ghostType.isEmpty()) {
          if (ghostType.equals("player_ghost")) {
             this.spawnPlayerGhostFromNbt(player, contained);
@@ -466,30 +466,30 @@ public class GhostTamingScreenHandler extends ScreenHandler {
       }
 
       if (player instanceof ServerPlayerEntity serverPlayer) {
-         serverPlayer.method_7346();
+         serverPlayer.closeHandledScreen();
       }
 
-      player.method_7353(Text.method_43470("驾驭失败！"), false);
-      LOGGER.info("驾驭失败处理完成，玩家: {}，鬼类型: {}", player.method_5477().getString(), ghostType);
+      player.sendMessage(Text.literal("驾驭失败！"), false);
+      LOGGER.info("驾驭失败处理完成，玩家: {}，鬼类型: {}", player.getName().getString(), ghostType);
       return false;
    }
 
    private void spawnCorrespondingGhost(PlayerEntity player, String ghostType) {
-      BlockPos playerPos = player.method_24515();
-      World world = player.method_37908();
+      BlockPos playerPos = player.getBlockPos();
+      World world = player.getWorld();
 
       try {
          EntityType<?> entityType = this.getEntityTypeByGhostType(ghostType, world);
          if (entityType != null) {
-            MobEntity ghostEntity = (MobEntity)entityType.method_5883(world);
+            MobEntity ghostEntity = (MobEntity)entityType.create(world);
             if (ghostEntity != null) {
-               BlockPos spawnPos = playerPos.method_10069(player.method_6051().method_43048(5) - 2, 0, player.method_6051().method_43048(5) - 2);
+               BlockPos spawnPos = playerPos.add(player.getRandom().nextInt(5) - 2, 0, player.getRandom().nextInt(5) - 2);
                spawnPos = this.findSafeSpawnPosition(world, spawnPos);
-               ghostEntity.method_5808(
-                  spawnPos.method_10263() + 0.5, spawnPos.method_10264(), spawnPos.method_10260() + 0.5, player.method_6051().method_43057() * 360.0F, 0.0F
+               ghostEntity.refreshPositionAndAngles(
+                  spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getRandom().nextFloat() * 360.0F, 0.0F
                );
-               ghostEntity.method_5980(player);
-               world.method_8649(ghostEntity);
+               ghostEntity.setTarget(player);
+               world.spawnEntity(ghostEntity);
                LOGGER.debug("成功生成鬼实体: {}，位置: {}", ghostType, spawnPos);
             }
          }
@@ -502,11 +502,11 @@ public class GhostTamingScreenHandler extends ScreenHandler {
       if (ghostType != null && !ghostType.isEmpty() && world != null) {
          GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, world);
          if (ghostEntity != null) {
-            return ghostEntity.method_5864();
+            return ghostEntity.getType();
          }
 
          try {
-            return (EntityType<?>)EntityType.method_5898(ghostType).orElse(null);
+            return (EntityType<?>)EntityType.get(ghostType).orElse(null);
          } catch (Exception e) {
             LOGGER.warn("无法获取鬼类型对应的实体类型: {}", ghostType);
             return null;
@@ -518,8 +518,8 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
    private BlockPos findSafeSpawnPosition(World world, BlockPos pos) {
       for (int y = 0; y < 3; y++) {
-         BlockPos checkPos = pos.method_10086(y);
-         if (world.method_8320(checkPos).method_26215() && world.method_8320(checkPos.method_10084()).method_26215()) {
+         BlockPos checkPos = pos.up(y);
+         if (world.getBlockState(checkPos).isAir() && world.getBlockState(checkPos.up()).isAir()) {
             return checkPos;
          }
       }
@@ -528,23 +528,21 @@ public class GhostTamingScreenHandler extends ScreenHandler {
    }
 
    private void spawnPlayerGhostFromNbt(PlayerEntity player, NbtCompound ghostNbt) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       try {
-         Entity entity = (Entity)EntityType.method_5892(ghostNbt, world).orElse(null);
+         Entity entity = (Entity)EntityType.getEntityFromNbt(ghostNbt, world).orElse(null);
          if (entity instanceof PlayerGhostEntity playerGhost) {
-            playerGhost.method_5651(ghostNbt);
-            playerGhost.method_5749(ghostNbt);
-            BlockPos playerPos = player.method_24515();
-            BlockPos spawnPos = playerPos.method_10069(player.method_6051().method_43048(5) - 2, 0, player.method_6051().method_43048(5) - 2);
+            playerGhost.readNbt(ghostNbt);
+            playerGhost.readCustomDataFromNbt(ghostNbt);
+            BlockPos playerPos = player.getBlockPos();
+            BlockPos spawnPos = playerPos.add(player.getRandom().nextInt(5) - 2, 0, player.getRandom().nextInt(5) - 2);
             spawnPos = this.findSafeSpawnPosition(world, spawnPos);
-            playerGhost.method_5808(
-               spawnPos.method_10263() + 0.5, spawnPos.method_10264(), spawnPos.method_10260() + 0.5, player.method_6051().method_43057() * 360.0F, 0.0F
-            );
-            playerGhost.method_5980(player);
-            world.method_8649(playerGhost);
+            playerGhost.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getRandom().nextFloat() * 360.0F, 0.0F);
+            playerGhost.setTarget(player);
+            world.spawnEntity(playerGhost);
          } else {
-            LOGGER.warn("玩家鬼NBT创建实体失败，类型: {}", entity != null ? entity.method_5864().method_5882() : "null");
+            LOGGER.warn("玩家鬼NBT创建实体失败，类型: {}", entity != null ? entity.getType().getTranslationKey() : "null");
          }
       } catch (Exception e) {
          LOGGER.error("生成玩家鬼失败: {}", e.getMessage());
@@ -554,10 +552,10 @@ public class GhostTamingScreenHandler extends ScreenHandler {
    public static void tryLockGhostAfterTaming(PlayerEntity player, String ghostType) {
       if (ModConfig.getInstance().lockAfterTaming) {
          if (ghostType != null && !ghostType.isEmpty()) {
-            if (player.method_37908() instanceof ServerWorld serverWorld) {
-               GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, player.method_37908());
+            if (player.getWorld() instanceof ServerWorld serverWorld) {
+               GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, player.getWorld());
                if (ghostEntity != null) {
-                  EntityType<?> entityType = ghostEntity.method_5864();
+                  EntityType<?> entityType = ghostEntity.getType();
                   if (GhostSpawnManager.getSpawnedGhostTypes().contains(entityType)) {
                      GhostSpawnManager.lockGhostType(serverWorld, entityType);
                      if (player instanceof ServerPlayerEntity serverPlayer) {
@@ -572,30 +570,30 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
    private void tryLockPlayerGhostsAfterTaming(PlayerEntity player, NbtCompound ghostSlotsData) {
       if (ModConfig.getInstance().lockAfterTaming) {
-         if (player.method_37908() instanceof ServerWorld serverWorld) {
+         if (player.getWorld() instanceof ServerWorld serverWorld) {
             for (int var11 = 0; var11 < 10; var11++) {
                String slotKey = "Slot" + var11;
-               if (ghostSlotsData.method_10545(slotKey)) {
-                  NbtCompound slotData = ghostSlotsData.method_10562(slotKey);
-                  if (slotData.method_10577("occupied") && slotData.method_10545("item")) {
-                     NbtCompound itemNbt = slotData.method_10562("item");
+               if (ghostSlotsData.contains(slotKey)) {
+                  NbtCompound slotData = ghostSlotsData.getCompound(slotKey);
+                  if (slotData.getBoolean("occupied") && slotData.contains("item")) {
+                     NbtCompound itemNbt = slotData.getCompound("item");
                      String ghostType = "";
-                     if (itemNbt.method_10545("TamedGhost")) {
-                        NbtCompound tamedGhostData = itemNbt.method_10562("TamedGhost");
-                        if (tamedGhostData.method_10545("Type")) {
-                           ghostType = tamedGhostData.method_10558("Type");
+                     if (itemNbt.contains("TamedGhost")) {
+                        NbtCompound tamedGhostData = itemNbt.getCompound("TamedGhost");
+                        if (tamedGhostData.contains("Type")) {
+                           ghostType = tamedGhostData.getString("Type");
                         }
-                     } else if (itemNbt.method_10545("id")) {
-                        String fullId = itemNbt.method_10558("id");
+                     } else if (itemNbt.contains("id")) {
+                        String fullId = itemNbt.getString("id");
                         if (fullId.contains(":")) {
                            ghostType = fullId.split(":")[1];
                         }
                      }
 
                      if (!ghostType.isEmpty()) {
-                        GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, player.method_37908());
+                        GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, player.getWorld());
                         if (ghostEntity != null) {
-                           EntityType<?> entityType = ghostEntity.method_5864();
+                           EntityType<?> entityType = ghostEntity.getType();
                            if (GhostSpawnManager.getSpawnedGhostTypes().contains(entityType)) {
                               GhostSpawnManager.lockGhostType(serverWorld, entityType);
                            }
@@ -617,19 +615,19 @@ public class GhostTamingScreenHandler extends ScreenHandler {
          super(inventory, index, x, y);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return stack.method_7909() instanceof GoldenContainerItem;
+      public boolean canInsert(ItemStack stack) {
+         return stack.getItem() instanceof GoldenContainerItem;
       }
 
-      public int method_7675() {
+      public int getMaxItemCount() {
          return 1;
       }
 
-      public int method_7676(ItemStack stack) {
+      public int getMaxItemCount(ItemStack stack) {
          return 1;
       }
 
-      public boolean method_7674(PlayerEntity playerEntity) {
+      public boolean canTakeItems(PlayerEntity playerEntity) {
          return true;
       }
    }
@@ -643,27 +641,27 @@ public class GhostTamingScreenHandler extends ScreenHandler {
 
       public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
          String ghostType = "";
-         if (this.containerStack.method_7909() instanceof GoldenContainerItem) {
-            NbtCompound nbt = this.containerStack.method_7948();
-            boolean hasGhost = nbt.method_10577("HasGhost");
+         if (this.containerStack.getItem() instanceof GoldenContainerItem) {
+            NbtCompound nbt = this.containerStack.getOrCreateNbt();
+            boolean hasGhost = nbt.getBoolean("HasGhost");
             if (hasGhost) {
-               NbtCompound contained = nbt.method_10562("ContainedGhost");
-               ghostType = contained.method_10558("id");
+               NbtCompound contained = nbt.getCompound("ContainedGhost");
+               ghostType = contained.getString("id");
                if (ghostType.contains(":")) {
                   ghostType = ghostType.split(":")[1];
                }
             }
          }
 
-         buf.method_10814(ghostType);
+         buf.writeString(ghostType);
       }
 
       public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
          return new GhostTamingScreenHandler(syncId, inv, new SimpleInventory(1));
       }
 
-      public Text method_5476() {
-         return Text.method_43471("screen.smfs.ghost_taming");
+      public Text getDisplayName() {
+         return Text.translatable("screen.smfs.ghost_taming");
       }
    }
 }

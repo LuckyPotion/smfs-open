@@ -34,35 +34,35 @@ public class RustyOldBroadswordItem extends SwordItem implements SpiritWeapon, G
    private static final String RANGED_MODE_KEY = "RangedMode";
 
    public RustyOldBroadswordItem(Settings settings) {
-      super(ToolMaterials.field_8923, 8, -2.4F, settings);
+      super(ToolMaterials.IRON, 8, -2.4F, settings);
    }
 
    public static boolean isRangedMode(ItemStack stack) {
-      return !stack.method_7985() ? false : stack.method_7969().method_10577("RangedMode");
+      return !stack.hasNbt() ? false : stack.getNbt().getBoolean("RangedMode");
    }
 
    public static void setRangedMode(ItemStack stack, boolean ranged) {
-      stack.method_7948().method_10556("RangedMode", ranged);
+      stack.getOrCreateNbt().putBoolean("RangedMode", ranged);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
       if (isRangedMode(stack)) {
          setRangedMode(stack, false);
-         if (!world.field_9236) {
-            user.method_7353(Text.method_43470("§7大刀切换为劈砍模式"), true);
+         if (!world.isClient) {
+            user.sendMessage(Text.literal("§7大刀切换为劈砍模式"), true);
          }
       } else {
          setRangedMode(stack, true);
-         if (!world.field_9236) {
-            user.method_7353(Text.method_43470("§c大刀切换为媒介模式"), true);
+         if (!world.isClient) {
+            user.sendMessage(Text.literal("§c大刀切换为媒介模式"), true);
          }
       }
 
-      return TypedActionResult.method_29237(stack, world.method_8608());
+      return TypedActionResult.success(stack, world.isClient());
    }
 
-   public boolean method_7846() {
+   public boolean isDamageable() {
       return false;
    }
 
@@ -78,13 +78,10 @@ public class RustyOldBroadswordItem extends SwordItem implements SpiritWeapon, G
 
    @Override
    public void onSpiritWeaponAttack(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-      if (!attacker.method_37908().method_8608()
-         && attacker.method_5805()
-         && target instanceof GhostEntity ghost
-         && target.method_6051().method_43048(100) == 0) {
+      if (!attacker.getWorld().isClient() && attacker.isAlive() && target instanceof GhostEntity ghost && target.getRandom().nextInt(100) == 0) {
          String ghostType = GhostUtils.getGhostTypeFromEntity(ghost);
          if (ghostType == null) {
-            LOGGER.warn("锈迹大刀攻击的厉鬼 {} 未找到对应的鬼类型映射", target.method_5864().method_5882());
+            LOGGER.warn("锈迹大刀攻击的厉鬼 {} 未找到对应的鬼类型映射", target.getType().getTranslationKey());
             return;
          }
 
@@ -96,20 +93,20 @@ public class RustyOldBroadswordItem extends SwordItem implements SpiritWeapon, G
 
          ItemStack shard = new ItemStack(ghostItem);
          BaseGhostEyeItem.setShard(shard, true);
-         target.method_37908().method_8649(new ItemEntity(target.method_37908(), target.method_23317(), target.method_23318(), target.method_23321(), shard));
-         LOGGER.info("锈迹大刀攻击 {} 触发碎片掉落: {}", ghostType, ghostItem.method_7876());
+         target.getWorld().spawnEntity(new ItemEntity(target.getWorld(), target.getX(), target.getY(), target.getZ(), shard));
+         LOGGER.info("锈迹大刀攻击 {} 触发碎片掉落: {}", ghostType, ghostItem.getTranslationKey());
       }
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.rusty_old_broadsword.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_old_broadsword.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_old_broadsword.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_old_broadsword.effect.shard_drop"));
-      tooltip.add(Text.method_43471("item.smfs.rusty_old_broadsword.mode_switch"));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.rusty_old_broadsword.description.source"));
+      tooltip.add(Text.translatable("item.smfs.rusty_old_broadsword.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.rusty_old_broadsword.description.type"));
+      tooltip.add(Text.translatable("item.smfs.rusty_old_broadsword.effect.shard_drop"));
+      tooltip.add(Text.translatable("item.smfs.rusty_old_broadsword.mode_switch"));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
    }
 
    @Override

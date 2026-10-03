@@ -7,11 +7,11 @@ import net.minecraft.world.World;
 
 public class PassiveSkillManager {
    private static boolean isSilencedOrDreaming(PlayerEntity player) {
-      return player.method_6059(ModEffects.SILENCE) || player.method_6059(ModEffects.DREAM);
+      return player.hasStatusEffect(ModEffects.SILENCE) || player.hasStatusEffect(ModEffects.DREAM);
    }
 
    public static void tick1Second(World world, PlayerEntity player) {
-      if (world.method_8510() % 20L == 0L) {
+      if (world.getTime() % 20L == 0L) {
          GhostSkillManager.handlePuppetGhostResistanceSkill(player);
          GhostSkillManager.handleFuneralMusicGhostPassiveSkill(player);
          GhostSkillManager.handleSneakGhostPassiveSkill(player);
@@ -21,7 +21,7 @@ public class PassiveSkillManager {
    }
 
    public static void tick2Seconds(World world, PlayerEntity player) {
-      if (world.method_8510() % 40L == 0L) {
+      if (world.getTime() % 40L == 0L) {
          GhostSkillManager.handleFoodGhostPassiveSkill(player);
          GhostSkillManager.handleShadowGhostPassiveSkill(player);
          GhostSkillManager.handleGiantShadowGhostPassiveSkill(player);
@@ -29,13 +29,13 @@ public class PassiveSkillManager {
    }
 
    public static void tick3Seconds(World world, PlayerEntity player) {
-      if (world.method_8510() % 60L == 0L) {
+      if (world.getTime() % 60L == 0L) {
          GhostSkillManager.handleVillagerGhostPassiveSkill(player);
       }
    }
 
    public static void tick5Seconds(World world, PlayerEntity player) {
-      if (world.method_8510() % 100L == 0L) {
+      if (world.getTime() % 100L == 0L) {
          GhostSkillManager.handleMineralGhostPassiveSkill(player);
          GhostSkillManager.handleBoxGhostPassiveSkill(player);
          GhostSkillManager.handleGhostOfficerPassiveSkill(player);
@@ -44,7 +44,7 @@ public class PassiveSkillManager {
    }
 
    public static void tick10Seconds(World world, PlayerEntity player) {
-      if (world.method_8510() % 200L == 0L) {
+      if (world.getTime() % 200L == 0L) {
          GhostSkillManager.handleLostGhostPassiveSkill(player);
          GhostSkillManager.handleGhostPressurePassiveSkill(player);
          GhostSkillManager.handleClothesGhostPassiveSkill(player);
@@ -62,7 +62,7 @@ public class PassiveSkillManager {
    }
 
    public static void triggerAllPlayersPassiveSkills(World world) {
-      for (PlayerEntity player : world.method_18456()) {
+      for (PlayerEntity player : world.getPlayers()) {
          triggerAllPassiveSkills(world, player);
       }
    }

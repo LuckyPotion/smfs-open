@@ -40,29 +40,29 @@ public class ClientGhostLakeSkillC2SPacket {
    ) {
       server.execute(() -> {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
-            if (player != null && player.method_5805()) {
-               World world = player.method_37908();
-               HitResult hitResult = player.method_5745(20.0, 0.0F, false);
-               if (hitResult.method_17783() == Type.field_1333) {
-                  player.method_7353(Text.method_43470("§c请对准一个位置使用鬼湖技能"), true);
+            if (player != null && player.isAlive()) {
+               World world = player.getWorld();
+               HitResult hitResult = player.raycast(20.0, 0.0F, false);
+               if (hitResult.getType() == Type.MISS) {
+                  player.sendMessage(Text.literal("§c请对准一个位置使用鬼湖技能"), true);
                } else {
                   BlockPos targetPos;
-                  if (hitResult.method_17783() == Type.field_1332) {
+                  if (hitResult.getType() == Type.BLOCK) {
                      BlockHitResult blockHitResult = (BlockHitResult)hitResult;
-                     BlockPos blockPos = blockHitResult.method_17777();
-                     Direction side = blockHitResult.method_17780();
-                     targetPos = blockPos.method_10093(side);
+                     BlockPos blockPos = blockHitResult.getBlockPos();
+                     Direction side = blockHitResult.getSide();
+                     targetPos = blockPos.offset(side);
                   } else {
-                     Vec3d pos = hitResult.method_17784();
-                     targetPos = new BlockPos((int)pos.field_1352, (int)pos.field_1351, (int)pos.field_1350);
+                     Vec3d pos = hitResult.getPos();
+                     targetPos = new BlockPos((int)pos.x, (int)pos.y, (int)pos.z);
                   }
 
                   boolean hasGhostLake = false;
 
                   for (int x = -1; x <= 1; x++) {
                      for (int z = -1; z <= 1; z++) {
-                        BlockPos lakePos = targetPos.method_10069(x, 0, z);
-                        if (world.method_8320(lakePos).method_26204() instanceof GhostLakeBlock) {
+                        BlockPos lakePos = targetPos.add(x, 0, z);
+                        if (world.getBlockState(lakePos).getBlock() instanceof GhostLakeBlock) {
                            hasGhostLake = true;
                            break;
                         }
@@ -78,9 +78,9 @@ public class ClientGhostLakeSkillC2SPacket {
                   if (hasGhostLake) {
                      for (int x = -4; x <= 4; x++) {
                         for (int z = -4; z <= 4; z++) {
-                           BlockPos lakePos = targetPos.method_10069(x, 0, z);
-                           if (world.method_8320(lakePos).method_26204() instanceof GhostLakeBlock) {
-                              world.method_8501(lakePos, Blocks.field_10124.method_9564());
+                           BlockPos lakePos = targetPos.add(x, 0, z);
+                           if (world.getBlockState(lakePos).getBlock() instanceof GhostLakeBlock) {
+                              world.setBlockState(lakePos, Blocks.AIR.getDefaultState());
                               removedBlocks++;
                            }
                         }
@@ -88,17 +88,17 @@ public class ClientGhostLakeSkillC2SPacket {
                   } else {
                      for (int x = -1; x <= 1; x++) {
                         for (int z = -1; z <= 1; z++) {
-                           BlockPos lakePos = targetPos.method_10069(x, 0, z);
-                           if (world.method_8320(lakePos).method_26215() || world.method_8320(lakePos).method_45474()) {
-                              world.method_8501(lakePos, ModFluids.GHOST_LAKE_BLOCK.method_9564());
+                           BlockPos lakePos = targetPos.add(x, 0, z);
+                           if (world.getBlockState(lakePos).isAir() || world.getBlockState(lakePos).isReplaceable()) {
+                              world.setBlockState(lakePos, ModFluids.GHOST_LAKE_BLOCK.getDefaultState());
                               placedBlocks++;
                            }
                         }
                      }
                   }
 
-                  player.method_17356(SoundEvents.field_15237, SoundCategory.field_15248, 1.0F, 1.0F);
-                  if (!hasGhostLake && world.field_9229.method_43057() < 0.05F) {
+                  player.playSound(SoundEvents.BLOCK_WATER_AMBIENT, SoundCategory.PLAYERS, 1.0F, 1.0F);
+                  if (!hasGhostLake && world.random.nextFloat() < 0.05F) {
                      spawnGhostSlave(world, targetPos, player);
                   }
 
@@ -114,16 +114,16 @@ public class ClientGhostLakeSkillC2SPacket {
    private static void spawnGhostSlave(World world, BlockPos targetPos, ServerPlayerEntity player) {
       try {
          GhostSlaveEntity ghostSlave = new GhostSlaveEntity(ModEntities.GHOST_SLAVE, world);
-         ghostSlave.method_5808(
-            targetPos.method_10263() + 0.5 + (world.field_9229.method_43058() - 0.5) * 2.0,
-            targetPos.method_10264() + 1.0,
-            targetPos.method_10260() + 0.5 + (world.field_9229.method_43058() - 0.5) * 2.0,
-            world.field_9229.method_43057() * 360.0F,
+         ghostSlave.refreshPositionAndAngles(
+            targetPos.getX() + 0.5 + (world.random.nextDouble() - 0.5) * 2.0,
+            targetPos.getY() + 1.0,
+            targetPos.getZ() + 0.5 + (world.random.nextDouble() - 0.5) * 2.0,
+            world.random.nextFloat() * 360.0F,
             0.0F
          );
-         ghostSlave.method_6033(ghostSlave.method_6063());
-         world.method_8649(ghostSlave);
-         LOGGER.info("玩家 {} 使用鬼湖技能时触发5%概率，成功生成野生鬼奴", player.method_5477().getString());
+         ghostSlave.setHealth(ghostSlave.getMaxHealth());
+         world.spawnEntity(ghostSlave);
+         LOGGER.info("玩家 {} 使用鬼湖技能时触发5%概率，成功生成野生鬼奴", player.getName().getString());
       } catch (Exception e) {
          LOGGER.error("生成野生鬼奴时发生错误", e);
       }

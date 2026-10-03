@@ -35,7 +35,7 @@ public class CoffinEffectManager {
       PLAYERS_IN_GOLD_COFFIN.put(player, coffinPos);
       PLAYERS_IN_RED_COFFIN.remove(player);
       PLAYERS_IN_GHOST_COFFIN.remove(player);
-      player.method_6016(ModEffects.LOST);
+      player.removeStatusEffect(ModEffects.LOST);
    }
 
    public static void setPlayerInRedCoffin(PlayerEntity player, BlockPos coffinPos) {
@@ -63,7 +63,7 @@ public class CoffinEffectManager {
    }
 
    private static void reduceRevivalDegreeForAllSlots(PlayerEntity player) {
-      LOGGER.debug("开始降低玩家 {} 所有槽位的厉鬼复苏值", player.method_5477().getString());
+      LOGGER.debug("开始降低玩家 {} 所有槽位的厉鬼复苏值", player.getName().getString());
       PlayerEvents.decreaseAllSlotRevivalDegree(player, 2);
    }
 
@@ -84,9 +84,9 @@ public class CoffinEffectManager {
    public static void validatePlayerCoffinStatus(PlayerEntity player, World world) {
       BlockPos coffinPos = getPlayerCoffinPosition(player);
       if (coffinPos != null) {
-         if (!(world.method_8320(coffinPos).method_26204() instanceof GoldCoffinBlock)
-            && !(world.method_8320(coffinPos).method_26204() instanceof RedCoffinBlock)
-            && !(world.method_8320(coffinPos).method_26204() instanceof GhostCoffinBlock)) {
+         if (!(world.getBlockState(coffinPos).getBlock() instanceof GoldCoffinBlock)
+            && !(world.getBlockState(coffinPos).getBlock() instanceof RedCoffinBlock)
+            && !(world.getBlockState(coffinPos).getBlock() instanceof GhostCoffinBlock)) {
             removePlayerFromCoffin(player);
          } else {
             if (!isPlayerInsideCoffin(player, coffinPos)) {
@@ -97,7 +97,7 @@ public class CoffinEffectManager {
    }
 
    private static boolean isPlayerInsideCoffin(PlayerEntity player, BlockPos coffinPos) {
-      double distance = player.method_19538().method_1022(coffinPos.method_46558());
+      double distance = player.getPos().distanceTo(coffinPos.toCenterPos());
       return distance <= 2.0;
    }
 }

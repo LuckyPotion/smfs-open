@@ -30,7 +30,7 @@ public class ClientLostGhostSlowC2SPacket {
    ) {
       server.execute(() -> {
          try {
-            LOGGER.info("玩家 {} 执行遗忘鬼V键技能：让目标玩家缓慢255", player.method_5477().getString());
+            LOGGER.info("玩家 {} 执行遗忘鬼V键技能：让目标玩家缓慢255", player.getName().getString());
             PlayerEvents.balanceRevivalDegree(player);
             handleLostGhostSlowSkill(player);
          } catch (Exception e) {
@@ -42,23 +42,23 @@ public class ClientLostGhostSlowC2SPacket {
    private static void handleLostGhostSlowSkill(ServerPlayerEntity player) {
       LivingEntity bestTarget = TargetingUtil.findEntityInLookDirection(player, 4.0, 0.5, e -> e instanceof ServerPlayerEntity);
       if (bestTarget == null) {
-         LOGGER.warn("玩家 {} 准星位置没有其他玩家，无法使用缓慢技能", player.method_5477().getString());
+         LOGGER.warn("玩家 {} 准星位置没有其他玩家，无法使用缓慢技能", player.getName().getString());
       } else {
-         ((ServerPlayerEntity)bestTarget).method_6092(new StatusEffectInstance(StatusEffects.field_5909, 200, 255, false, true));
-         LOGGER.debug("玩家 {} 成功对玩家 {} 使用缓慢255技能，距离: {}", player.method_5477().getString(), bestTarget.method_5477().getString(), player.method_5739(bestTarget));
+         ((ServerPlayerEntity)bestTarget).addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 255, false, true));
+         LOGGER.debug("玩家 {} 成功对玩家 {} 使用缓慢255技能，距离: {}", player.getName().getString(), bestTarget.getName().getString(), player.distanceTo(bestTarget));
          spawnSkillParticles(player, (ServerPlayerEntity)bestTarget);
       }
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player, ServerPlayerEntity targetPlayer) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            player.method_23318() + world.field_9229.method_43058() * 2.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            player.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            player.getY() + world.random.nextDouble() * 2.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0
@@ -66,11 +66,11 @@ public class ClientLostGhostSlowC2SPacket {
       }
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            targetPlayer.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            targetPlayer.method_23318() + world.field_9229.method_43058() * 2.0,
-            targetPlayer.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            targetPlayer.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            targetPlayer.getY() + world.random.nextDouble() * 2.0,
+            targetPlayer.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0

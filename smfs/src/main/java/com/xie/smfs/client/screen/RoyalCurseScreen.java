@@ -38,64 +38,56 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
 
    public RoyalCurseScreen(RoyalCurseScreenHandler handler, PlayerInventory inventory, Text title) {
       super(handler, inventory, title);
-      this.field_2792 = 176;
-      this.field_2779 = 166;
-      this.field_25270 = this.field_2779 - 94;
+      this.backgroundWidth = 176;
+      this.backgroundHeight = 166;
+      this.playerInventoryTitleY = this.backgroundHeight - 94;
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
+   protected void init() {
+      super.init();
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
       int totalWidth = 340;
       int startX = centerX - totalWidth / 2;
-      this.summonButton = ButtonWidget.method_46430(Text.method_43470("召唤"), button -> this.onSummonButtonClicked())
-         .method_46434(startX, centerY + 100, 60, 20)
-         .method_46431();
-      this.recallButton = ButtonWidget.method_46430(Text.method_43470("收回"), button -> this.onRecallButtonClicked())
-         .method_46434(startX + 80, centerY + 100, 60, 20)
-         .method_46431();
-      this.summonAllButton = ButtonWidget.method_46430(Text.method_43470("全部召唤"), button -> this.onSummonAllButtonClicked())
-         .method_46434(startX + 160, centerY + 100, 80, 20)
-         .method_46431();
-      this.recallAllButton = ButtonWidget.method_46430(Text.method_43470("全部收回"), button -> this.onRecallAllButtonClicked())
-         .method_46434(startX + 260, centerY + 100, 80, 20)
-         .method_46431();
-      this.prevButton = ButtonWidget.method_46430(Text.method_43470("<<"), button -> this.onPrevButtonClicked())
-         .method_46434(centerX - 150, centerY, 40, 20)
-         .method_46431();
-      this.nextButton = ButtonWidget.method_46430(Text.method_43470(">>"), button -> this.onNextButtonClicked())
-         .method_46434(centerX + 110, centerY, 40, 20)
-         .method_46431();
-      this.closeButton = ButtonWidget.method_46430(Text.method_43470("关闭"), button -> this.onCloseButtonClicked())
-         .method_46434(this.field_22789 - 70, 10, 60, 20)
-         .method_46431();
-      this.method_37063(this.summonButton);
-      this.method_37063(this.recallButton);
-      this.method_37063(this.summonAllButton);
-      this.method_37063(this.recallAllButton);
-      this.method_37063(this.prevButton);
-      this.method_37063(this.nextButton);
-      this.method_37063(this.closeButton);
+      this.summonButton = ButtonWidget.builder(Text.literal("召唤"), button -> this.onSummonButtonClicked()).dimensions(startX, centerY + 100, 60, 20).build();
+      this.recallButton = ButtonWidget.builder(Text.literal("收回"), button -> this.onRecallButtonClicked())
+         .dimensions(startX + 80, centerY + 100, 60, 20)
+         .build();
+      this.summonAllButton = ButtonWidget.builder(Text.literal("全部召唤"), button -> this.onSummonAllButtonClicked())
+         .dimensions(startX + 160, centerY + 100, 80, 20)
+         .build();
+      this.recallAllButton = ButtonWidget.builder(Text.literal("全部收回"), button -> this.onRecallAllButtonClicked())
+         .dimensions(startX + 260, centerY + 100, 80, 20)
+         .build();
+      this.prevButton = ButtonWidget.builder(Text.literal("<<"), button -> this.onPrevButtonClicked()).dimensions(centerX - 150, centerY, 40, 20).build();
+      this.nextButton = ButtonWidget.builder(Text.literal(">>"), button -> this.onNextButtonClicked()).dimensions(centerX + 110, centerY, 40, 20).build();
+      this.closeButton = ButtonWidget.builder(Text.literal("关闭"), button -> this.onCloseButtonClicked()).dimensions(this.width - 70, 10, 60, 20).build();
+      this.addDrawableChild(this.summonButton);
+      this.addDrawableChild(this.recallButton);
+      this.addDrawableChild(this.summonAllButton);
+      this.addDrawableChild(this.recallAllButton);
+      this.addDrawableChild(this.prevButton);
+      this.addDrawableChild(this.nextButton);
+      this.addDrawableChild(this.closeButton);
       this.updateButtonState();
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
       this.renderServantModel(context, delta);
       this.drawServantInfo(context);
-      this.method_2380(context, mouseX, mouseY);
+      this.drawMouseoverTooltip(context, mouseX, mouseY);
    }
 
    private void renderServantModel(DrawContext context, float delta) {
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
-      MinecraftClient client = MinecraftClient.method_1551();
-      World world = client.field_1687;
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
+      MinecraftClient client = MinecraftClient.getInstance();
+      World world = client.world;
       if (world != null) {
          try {
-            RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+            RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
             if (royalCurseData.getServantCount() > 0 && this.selectedServantIndex < royalCurseData.getServantCount()) {
                RoyalCurseServantData servantData = royalCurseData.getServant(this.selectedServantIndex);
                if (servantData != null) {
@@ -103,18 +95,18 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
                   servant.setPlayerName(servantData.getPlayerName());
                   servant.setPlayerUuid(servantData.getPlayerUuid());
                   servant.setGhostDomainColor(servantData.getGhostDomainColor());
-                  MatrixStack matrices = context.method_51448();
-                  matrices.method_22903();
-                  matrices.method_46416(centerX, centerY + 90, 100.0F);
+                  MatrixStack matrices = context.getMatrices();
+                  matrices.push();
+                  matrices.translate(centerX, centerY + 90, 100.0F);
                   float scale = 60.0F;
-                  matrices.method_22905(scale, scale, scale);
-                  matrices.method_22907(new Quaternionf().rotateX((float)Math.toRadians(180.0)));
-                  matrices.method_22907(new Quaternionf().rotateY((float)Math.toRadians(180.0)));
-                  matrices.method_22907(new Quaternionf().rotateY((float)Math.toRadians(this.rotation)));
-                  Immediate provider = client.method_22940().method_23000();
-                  EntityRenderer<PlayerGhostEntity> renderer = client.method_1561().method_3953(servant);
-                  renderer.method_3936(servant, 0.0F, delta, matrices, provider, 15728880);
-                  matrices.method_22909();
+                  matrices.scale(scale, scale, scale);
+                  matrices.multiply(new Quaternionf().rotateX((float)Math.toRadians(180.0)));
+                  matrices.multiply(new Quaternionf().rotateY((float)Math.toRadians(180.0)));
+                  matrices.multiply(new Quaternionf().rotateY((float)Math.toRadians(this.rotation)));
+                  Immediate provider = client.getBufferBuilders().getEntityVertexConsumers();
+                  EntityRenderer<PlayerGhostEntity> renderer = client.getEntityRenderDispatcher().getRenderer(servant);
+                  renderer.render(servant, 0.0F, delta, matrices, provider, 15728880);
+                  matrices.pop();
                }
             }
          } catch (Exception e) {
@@ -123,7 +115,7 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
       }
    }
 
-   public boolean method_25403(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+   public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
       if (button == 0) {
          this.rotation += (float)(deltaX * 0.15F);
          if (this.rotation > 360.0F) {
@@ -134,25 +126,25 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
 
          return true;
       } else {
-         return super.method_25403(mouseX, mouseY, button, deltaX, deltaY);
+         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
       }
    }
 
-   protected void method_2389(DrawContext context, float delta, int mouseX, int mouseY) {
-      context.method_25290(BACKGROUND_TEXTURE, 0, 0, 0.0F, 0.0F, this.field_22789, this.field_22790, this.field_22789, this.field_22790);
+   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+      context.drawTexture(BACKGROUND_TEXTURE, 0, 0, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
    }
 
-   protected void method_37432() {
-      super.method_37432();
+   protected void handledScreenTick() {
+      super.handledScreenTick();
       this.updateButtonState();
       this.rotation += 0.01F;
    }
 
    private void updateButtonState() {
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       int servantCount = royalCurseData.getServantCount();
-      this.prevButton.field_22763 = servantCount > 0 && this.selectedServantIndex > 0;
-      this.nextButton.field_22763 = servantCount > 0 && this.selectedServantIndex < servantCount - 1;
+      this.prevButton.active = servantCount > 0 && this.selectedServantIndex > 0;
+      this.nextButton.active = servantCount > 0 && this.selectedServantIndex < servantCount - 1;
       boolean hasSummonableServants = false;
       boolean hasRecallableServants = false;
 
@@ -169,23 +161,23 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
          }
       }
 
-      this.summonAllButton.field_22763 = hasSummonableServants;
-      this.recallAllButton.field_22763 = hasRecallableServants;
+      this.summonAllButton.active = hasSummonableServants;
+      this.recallAllButton.active = hasRecallableServants;
       if (servantCount > 0 && this.selectedServantIndex < servantCount) {
          RoyalCurseServantData servantData = royalCurseData.getServant(this.selectedServantIndex);
          if (servantData != null) {
-            this.summonButton.field_22763 = !servantData.isReleased();
-            this.recallButton.field_22763 = servantData.isReleased();
+            this.summonButton.active = !servantData.isReleased();
+            this.recallButton.active = servantData.isReleased();
          }
       } else {
-         this.summonButton.field_22763 = false;
-         this.recallButton.field_22763 = false;
+         this.summonButton.active = false;
+         this.recallButton.active = false;
       }
    }
 
    private void onSummonButtonClicked() {
       LOGGER.info("客户端：点击召唤按钮，索引: {}", this.selectedServantIndex);
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       if (royalCurseData.getServantCount() > 0 && this.selectedServantIndex < royalCurseData.getServantCount()) {
          RoyalCurseServantData servantData = royalCurseData.getServant(this.selectedServantIndex);
          if (servantData != null) {
@@ -194,9 +186,9 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
          }
       }
 
-      if (this.field_22787.field_1724 != null) {
-         this.field_22787.field_1724.field_3944.method_45731("xie servant summon " + this.selectedServantIndex);
-         this.field_22787.execute(() -> {
+      if (this.client.player != null) {
+         this.client.player.networkHandler.sendCommand("xie servant summon " + this.selectedServantIndex);
+         this.client.execute(() -> {
             try {
                Thread.sleep(100L);
             } catch (InterruptedException e) {
@@ -210,7 +202,7 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
 
    private void onRecallButtonClicked() {
       LOGGER.info("客户端：点击收回按钮，索引: {}", this.selectedServantIndex);
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       if (royalCurseData.getServantCount() > 0 && this.selectedServantIndex < royalCurseData.getServantCount()) {
          RoyalCurseServantData servantData = royalCurseData.getServant(this.selectedServantIndex);
          if (servantData != null) {
@@ -219,9 +211,9 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
          }
       }
 
-      if (this.field_22787.field_1724 != null) {
-         this.field_22787.field_1724.field_3944.method_45731("xie servant recall " + this.selectedServantIndex);
-         this.field_22787.execute(() -> {
+      if (this.client.player != null) {
+         this.client.player.networkHandler.sendCommand("xie servant recall " + this.selectedServantIndex);
+         this.client.execute(() -> {
             try {
                Thread.sleep(100L);
             } catch (InterruptedException e) {
@@ -235,7 +227,7 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
 
    private void onSummonAllButtonClicked() {
       LOGGER.info("客户端：点击全部召唤按钮");
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       int servantCount = royalCurseData.getServantCount();
 
       for (int i = 0; i < servantCount; i++) {
@@ -246,9 +238,9 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
       }
 
       this.updateButtonState();
-      if (this.field_22787.field_1724 != null) {
-         this.field_22787.field_1724.field_3944.method_45731("xie servant summon_all");
-         this.field_22787.execute(() -> {
+      if (this.client.player != null) {
+         this.client.player.networkHandler.sendCommand("xie servant summon_all");
+         this.client.execute(() -> {
             try {
                Thread.sleep(100L);
             } catch (InterruptedException e) {
@@ -262,7 +254,7 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
 
    private void onRecallAllButtonClicked() {
       LOGGER.info("客户端：点击全部收回按钮");
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       int servantCount = royalCurseData.getServantCount();
 
       for (int i = 0; i < servantCount; i++) {
@@ -273,9 +265,9 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
       }
 
       this.updateButtonState();
-      if (this.field_22787.field_1724 != null) {
-         this.field_22787.field_1724.field_3944.method_45731("xie servant recall_all");
-         this.field_22787.execute(() -> {
+      if (this.client.player != null) {
+         this.client.player.networkHandler.sendCommand("xie servant recall_all");
+         this.client.execute(() -> {
             try {
                Thread.sleep(100L);
             } catch (InterruptedException e) {
@@ -294,54 +286,54 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
    }
 
    private void onNextButtonClicked() {
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       if (this.selectedServantIndex < royalCurseData.getServantCount() - 1) {
          this.selectedServantIndex++;
       }
    }
 
    private void onCloseButtonClicked() {
-      this.field_22787
-         .method_1507(
+      this.client
+         .setScreen(
             new GhostControlScreen(
-               new GhostControlScreenHandler(0, this.field_22787.field_1724.method_31548()),
-               this.field_22787.field_1724.method_31548(),
-               Text.method_43471("screen.smfs.ghost_control")
+               new GhostControlScreenHandler(0, this.client.player.getInventory()),
+               this.client.player.getInventory(),
+               Text.translatable("screen.smfs.ghost_control")
             )
          );
    }
 
    private void drawServantInfo(DrawContext context) {
-      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.field_2797).getRoyalCurseData();
+      RoyalCurseData royalCurseData = ((RoyalCurseScreenHandler)this.handler).getRoyalCurseData();
       int servantCount = royalCurseData.getServantCount();
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
       if (servantCount > 0 && this.selectedServantIndex < servantCount) {
          RoyalCurseServantData servantData = royalCurseData.getServant(this.selectedServantIndex);
          if (servantData != null) {
-            context.method_27535(this.field_22793, Text.method_43470("奴仆数量: " + servantCount + "/6"), centerX - 150, 10, 16776960);
-            context.method_27535(
-               this.field_22793, Text.method_43470("当前: " + (this.selectedServantIndex + 1) + "/" + servantCount), centerX - 150, 25, 16776960
+            context.drawTextWithShadow(this.textRenderer, Text.literal("奴仆数量: " + servantCount + "/6"), centerX - 150, 10, 16776960);
+            context.drawTextWithShadow(
+               this.textRenderer, Text.literal("当前: " + (this.selectedServantIndex + 1) + "/" + servantCount), centerX - 150, 25, 16776960
             );
-            context.method_27535(this.field_22793, Text.method_43470("名称: " + servantData.getPlayerName()), centerX - 150, 40, 16776960);
-            context.method_27535(
-               this.field_22793,
-               Text.method_43470("强度: " + servantData.getSpiritualStrength() + "/" + servantData.getMaxSpiritualStrength()),
+            context.drawTextWithShadow(this.textRenderer, Text.literal("名称: " + servantData.getPlayerName()), centerX - 150, 40, 16776960);
+            context.drawTextWithShadow(
+               this.textRenderer,
+               Text.literal("强度: " + servantData.getSpiritualStrength() + "/" + servantData.getMaxSpiritualStrength()),
                centerX - 150,
                55,
                16776960
             );
-            context.method_27535(this.field_22793, Text.method_43470("抗性: " + servantData.getSpiritualResistance()), centerX - 150, 70, 16776960);
-            context.method_27535(this.field_22793, Text.method_43470("伤害: " + servantData.getSpiritualDamage()), centerX - 150, 85, 16776960);
-            context.method_27535(this.field_22793, Text.method_43470("复苏: " + servantData.getRecoveryFactor()), centerX - 150, 100, 16776960);
-            context.method_27535(this.field_22793, Text.method_43470("状态: " + (servantData.isReleased() ? "已释放" : "未释放")), centerX - 150, 115, 16711680);
-            context.method_27535(this.field_22793, Text.method_43470("鬼域: " + servantData.getGhostDomainLevel()), centerX + 110, 40, 16776960);
-            context.method_27535(this.field_22793, Text.method_43470("半径: " + servantData.getGhostDomainRadius()), centerX + 110, 55, 16776960);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("抗性: " + servantData.getSpiritualResistance()), centerX - 150, 70, 16776960);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("伤害: " + servantData.getSpiritualDamage()), centerX - 150, 85, 16776960);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("复苏: " + servantData.getRecoveryFactor()), centerX - 150, 100, 16776960);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("状态: " + (servantData.isReleased() ? "已释放" : "未释放")), centerX - 150, 115, 16711680);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("鬼域: " + servantData.getGhostDomainLevel()), centerX + 110, 40, 16776960);
+            context.drawTextWithShadow(this.textRenderer, Text.literal("半径: " + servantData.getGhostDomainRadius()), centerX + 110, 55, 16776960);
             List<String> playerGhosts = servantData.getPlayerGhosts();
             if (!playerGhosts.isEmpty()) {
                int lineHeight = 10;
                int currentY = 70;
-               context.method_27535(this.field_22793, Text.method_43470("灵异: "), centerX + 110, currentY, 16776960);
+               context.drawTextWithShadow(this.textRenderer, Text.literal("灵异: "), centerX + 110, currentY, 16776960);
                currentY += lineHeight + 5;
                int maxWidth = 100;
                StringBuilder currentLine = new StringBuilder();
@@ -349,9 +341,9 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
                for (int i = 0; i < playerGhosts.size(); i++) {
                   String ghostType = playerGhosts.get(i);
                   String displayName = GhostUtils.getGhostDisplayName(ghostType);
-                  int textWidth = this.field_22793.method_1727(currentLine + (currentLine.length() > 0 ? "|" : "") + displayName);
+                  int textWidth = this.textRenderer.getWidth(currentLine + (currentLine.length() > 0 ? "|" : "") + displayName);
                   if (textWidth > maxWidth) {
-                     context.method_27535(this.field_22793, Text.method_43470(currentLine.toString()), centerX + 110, currentY, 16776960);
+                     context.drawTextWithShadow(this.textRenderer, Text.literal(currentLine.toString()), centerX + 110, currentY, 16776960);
                      currentY += lineHeight;
                      currentLine = new StringBuilder(displayName);
                   } else {
@@ -364,13 +356,13 @@ public class RoyalCurseScreen extends HandledScreen<RoyalCurseScreenHandler> {
                }
 
                if (currentLine.length() > 0) {
-                  context.method_27535(this.field_22793, Text.method_43470(currentLine.toString()), centerX + 110, currentY, 16776960);
+                  context.drawTextWithShadow(this.textRenderer, Text.literal(currentLine.toString()), centerX + 110, currentY, 16776960);
                }
             }
          }
       }
    }
 
-   protected void method_2388(DrawContext context, int mouseX, int mouseY) {
+   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
    }
 }

@@ -28,7 +28,7 @@ public class ClientQiaomenGhostGSkillC2SPacket {
       server.execute(() -> {
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "qiaomen_ghost", ModItems.QIAOMEN_GHOST, -1);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭敲门鬼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭敲门鬼，无法使用此技能"), true);
          } else {
             GhostDomainManager.handleQiaomenGhostGSkill(player);
             PlayerEvents.balanceRevivalDegree(player);

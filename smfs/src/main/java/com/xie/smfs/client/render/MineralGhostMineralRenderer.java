@@ -35,20 +35,20 @@ public class MineralGhostMineralRenderer {
    }
 
    public static void render(MatrixStack matrices, Camera camera) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null && client.field_1687 != null) {
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null && client.world != null) {
          if (System.currentTimeMillis() - lastUpdateTime > 5000L) {
             mineralPositions.clear();
             oreTypes.clear();
          } else if (!mineralPositions.isEmpty()) {
-            Tessellator tessellator = Tessellator.method_1348();
-            BufferBuilder buffer = tessellator.method_1349();
-            RenderSystem.setShader(GameRenderer::method_34540);
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
-            Vec3d cameraPos = camera.method_19326();
+            Vec3d cameraPos = camera.getPos();
 
             for (int i = 0; i < mineralPositions.size(); i++) {
                BlockPos pos = mineralPositions.get(i);
@@ -64,9 +64,9 @@ public class MineralGhostMineralRenderer {
    }
 
    private static void renderMineralMarker(MatrixStack matrices, BufferBuilder buffer, Vec3d cameraPos, BlockPos pos, int oreType) {
-      double x = pos.method_10263() + 0.5 - cameraPos.field_1352;
-      double y = pos.method_10264() + 0.5 - cameraPos.field_1351;
-      double z = pos.method_10260() + 0.5 - cameraPos.field_1350;
+      double x = pos.getX() + 0.5 - cameraPos.x;
+      double y = pos.getY() + 0.5 - cameraPos.y;
+      double z = pos.getZ() + 0.5 - cameraPos.z;
       float r;
       float g;
       float b;
@@ -88,81 +88,33 @@ public class MineralGhostMineralRenderer {
       }
 
       float a = 0.8F;
-      buffer.method_1328(DrawMode.field_29344, VertexFormats.field_1576);
+      buffer.begin(DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
       float size = 0.4F;
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y - size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y - size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y - size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y - size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y - size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y - size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y - size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y - size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y + size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y + size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y + size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y + size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y + size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y + size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y + size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y + size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y - size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y + size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y - size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y + size), (float)(z - size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y - size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x + size), (float)(y + size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y - size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      buffer.method_22918(matrices.method_23760().method_23761(), (float)(x - size), (float)(y + size), (float)(z + size))
-         .method_22915(r, g, b, a)
-         .method_1344();
-      Tessellator.method_1348().method_1350();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y - size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y - size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y - size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y - size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y - size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y - size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y - size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y - size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y + size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y + size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y + size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y + size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y + size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y + size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y + size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y + size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y - size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y + size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y - size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y + size), (float)(z - size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y - size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x + size), (float)(y + size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y - size), (float)(z + size)).color(r, g, b, a).next();
+      buffer.vertex(matrices.peek().getPositionMatrix(), (float)(x - size), (float)(y + size), (float)(z + size)).color(r, g, b, a).next();
+      Tessellator.getInstance().draw();
    }
 
    public static void clearPositions() {

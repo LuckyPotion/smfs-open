@@ -23,15 +23,15 @@ public class GhostBuddhaBeadsItem extends Item {
    private static final double DISTANCE_THRESHOLD = 48.0;
 
    public GhostBuddhaBeadsItem(Settings settings) {
-      super(settings.method_7895(200));
+      super(settings.maxDamage(200));
    }
 
-   public void method_7888(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-      super.method_7888(stack, world, entity, slot, selected);
-      if (!world.field_9236 && entity instanceof PlayerEntity player) {
+   public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+      super.inventoryTick(stack, world, entity, slot, selected);
+      if (!world.isClient && entity instanceof PlayerEntity player) {
          this.checkAndConsumeDurability(stack, player);
          this.clearPlayerEffects(player);
-         if (stack.method_7919() >= stack.method_7936()) {
+         if (stack.getDamage() >= stack.getMaxDamage()) {
             this.killPlayer(player, world);
             return;
          }
@@ -39,13 +39,13 @@ public class GhostBuddhaBeadsItem extends Item {
    }
 
    private void checkAndConsumeDurability(ItemStack stack, PlayerEntity player) {
-      World world = player.method_37908();
-      List<GhostEntity> nearbyGhosts = world.method_8390(GhostEntity.class, player.method_5829().method_1014(48.0), ghostx -> true);
+      World world = player.getWorld();
+      List<GhostEntity> nearbyGhosts = world.getEntitiesByClass(GhostEntity.class, player.getBoundingBox().expand(48.0), ghostx -> true);
       if (!nearbyGhosts.isEmpty()) {
          float maxConsumptionRate = 0.0F;
 
          for (GhostEntity ghost : nearbyGhosts) {
-            double distance = player.method_5858(ghost);
+            double distance = player.squaredDistanceTo(ghost);
             if (distance <= 2304.0) {
                double actualDistance = Math.sqrt(distance);
                float consumptionRate = this.calculateConsumptionRate(actualDistance, ghost.getTerrorLevel());
@@ -55,8 +55,8 @@ public class GhostBuddhaBeadsItem extends Item {
             }
          }
 
-         if (maxConsumptionRate > 0.0F && world.field_9229.method_43057() < maxConsumptionRate) {
-            stack.method_7956(1, player, p -> p.method_20236(p.method_6058()));
+         if (maxConsumptionRate > 0.0F && world.random.nextFloat() < maxConsumptionRate) {
+            stack.damage(1, player, p -> p.sendToolBreakStatus(p.getActiveHand()));
          }
       }
    }
@@ -80,92 +80,92 @@ public class GhostBuddhaBeadsItem extends Item {
    }
 
    private void clearPlayerEffects(PlayerEntity player) {
-      boolean hasRedGhostDomain = player.method_6059(ModEffects.RED_GHOST_DOMAIN);
-      boolean hasGreenGhostDomain = player.method_6059(ModEffects.GREEN_GHOST_DOMAIN);
-      boolean hasBlueGhostDomain = player.method_6059(ModEffects.BLUE_GHOST_DOMAIN);
-      boolean hasGrayGhostDomain = player.method_6059(ModEffects.GRAY_GHOST_DOMAIN);
-      boolean hasGoldenGhostDomain = player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN);
-      boolean hasPurpleGhostDomain = player.method_6059(ModEffects.PURPLE_GHOST_DOMAIN);
-      boolean hasBlackGhostDomain = player.method_6059(ModEffects.BLACK_GHOST_DOMAIN);
-      boolean hasCyanGhostDomain = player.method_6059(ModEffects.CYAN_GHOST_DOMAIN);
-      boolean hasThickFog = player.method_6059(ModEffects.THICK_FOG);
-      boolean hasGhostSuppression = player.method_6059(ModEffects.GHOST_SUPPRESSION);
+      boolean hasRedGhostDomain = player.hasStatusEffect(ModEffects.RED_GHOST_DOMAIN);
+      boolean hasGreenGhostDomain = player.hasStatusEffect(ModEffects.GREEN_GHOST_DOMAIN);
+      boolean hasBlueGhostDomain = player.hasStatusEffect(ModEffects.BLUE_GHOST_DOMAIN);
+      boolean hasGrayGhostDomain = player.hasStatusEffect(ModEffects.GRAY_GHOST_DOMAIN);
+      boolean hasGoldenGhostDomain = player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN);
+      boolean hasPurpleGhostDomain = player.hasStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN);
+      boolean hasBlackGhostDomain = player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN);
+      boolean hasCyanGhostDomain = player.hasStatusEffect(ModEffects.CYAN_GHOST_DOMAIN);
+      boolean hasThickFog = player.hasStatusEffect(ModEffects.THICK_FOG);
+      boolean hasGhostSuppression = player.hasStatusEffect(ModEffects.GHOST_SUPPRESSION);
       StatusEffectInstance ghostSuppressionInstance = null;
       if (hasGhostSuppression) {
-         ghostSuppressionInstance = player.method_6112(ModEffects.GHOST_SUPPRESSION);
+         ghostSuppressionInstance = player.getStatusEffect(ModEffects.GHOST_SUPPRESSION);
       }
 
-      boolean hasDream = player.method_6059(ModEffects.DREAM);
+      boolean hasDream = player.hasStatusEffect(ModEffects.DREAM);
       StatusEffectInstance dreamInstance = null;
       if (hasDream) {
-         dreamInstance = player.method_6112(ModEffects.DREAM);
+         dreamInstance = player.getStatusEffect(ModEffects.DREAM);
       }
 
-      boolean hasNightVision = player.method_6059(StatusEffects.field_5925);
+      boolean hasNightVision = player.hasStatusEffect(StatusEffects.NIGHT_VISION);
       StatusEffectInstance nightVisionInstance = null;
       if (hasNightVision) {
-         nightVisionInstance = player.method_6112(StatusEffects.field_5925);
+         nightVisionInstance = player.getStatusEffect(StatusEffects.NIGHT_VISION);
       }
 
-      boolean hasResistance = player.method_6059(StatusEffects.field_5907);
+      boolean hasResistance = player.hasStatusEffect(StatusEffects.RESISTANCE);
       StatusEffectInstance resistanceInstance = null;
       if (hasResistance) {
-         resistanceInstance = player.method_6112(StatusEffects.field_5907);
+         resistanceInstance = player.getStatusEffect(StatusEffects.RESISTANCE);
       }
 
-      player.method_6012();
+      player.clearStatusEffects();
       if (hasRedGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.RED_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.RED_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasGreenGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasBlueGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.BLUE_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.BLUE_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasGrayGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasGoldenGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.GOLDEN_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.GOLDEN_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasPurpleGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasBlackGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasCyanGhostDomain) {
-         player.method_6092(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN, 100, 0));
       }
 
       if (hasThickFog) {
-         player.method_6092(new StatusEffectInstance(ModEffects.THICK_FOG, 100, 0));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.THICK_FOG, 100, 0));
       }
 
       if (hasGhostSuppression && ghostSuppressionInstance != null) {
-         player.method_6092(
-            new StatusEffectInstance(ModEffects.GHOST_SUPPRESSION, ghostSuppressionInstance.method_5584(), ghostSuppressionInstance.method_5578())
+         player.addStatusEffect(
+            new StatusEffectInstance(ModEffects.GHOST_SUPPRESSION, ghostSuppressionInstance.getDuration(), ghostSuppressionInstance.getAmplifier())
          );
       }
 
       if (hasDream && dreamInstance != null) {
-         player.method_6092(new StatusEffectInstance(ModEffects.DREAM, dreamInstance.method_5584(), dreamInstance.method_5578()));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.DREAM, dreamInstance.getDuration(), dreamInstance.getAmplifier()));
       }
 
       if (hasNightVision && nightVisionInstance != null) {
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5925, nightVisionInstance.method_5584(), nightVisionInstance.method_5578()));
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, nightVisionInstance.getDuration(), nightVisionInstance.getAmplifier()));
       }
 
       if (hasResistance && resistanceInstance != null) {
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5907, resistanceInstance.method_5584(), resistanceInstance.method_5578()));
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, resistanceInstance.getDuration(), resistanceInstance.getAmplifier()));
       }
    }
 
@@ -181,19 +181,19 @@ public class GhostBuddhaBeadsItem extends Item {
    }
 
    private void killPlayer(PlayerEntity player, World world) {
-      if (!world.field_9236) {
+      if (!world.isClient) {
          DamageSource damageSource = ModDamageSources.of(world, ModDamageSources.GHOST);
-         player.method_5643(damageSource, 99999.0F);
+         player.damage(damageSource, 99999.0F);
       }
    }
 
-   public boolean method_7886(ItemStack stack) {
+   public boolean hasGlint(ItemStack stack) {
       return true;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43471("item.smfs.ghost_buddha_beads.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_buddha_beads.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_buddha_beads.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.translatable("item.smfs.ghost_buddha_beads.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_buddha_beads.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_buddha_beads.description.type"));
    }
 }

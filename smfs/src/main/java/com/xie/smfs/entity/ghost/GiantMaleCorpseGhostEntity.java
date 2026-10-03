@@ -48,8 +48,8 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimatable {
-   private static final TrackedData<Boolean> IS_ATTACKING_FROM_FOOTPRINT = DataTracker.method_12791(
-      GiantMaleCorpseGhostEntity.class, TrackedDataHandlerRegistry.field_13323
+   private static final TrackedData<Boolean> IS_ATTACKING_FROM_FOOTPRINT = DataTracker.registerData(
+      GiantMaleCorpseGhostEntity.class, TrackedDataHandlerRegistry.BOOLEAN
    );
    private static final boolean HAS_GHOST_DOMAIN = true;
    private static final int GHOST_DOMAIN_LEVEL = 0;
@@ -69,27 +69,27 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    private PlayerEntity pendingAttackTarget = null;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 120000.0)
-         .method_26868(EntityAttributes.field_23719, 0.2)
-         .method_26868(EntityAttributes.field_23721, 15.0)
-         .method_26868(EntityAttributes.field_23723, 0.3)
-         .method_26868(EntityAttributes.field_23722, 0.0)
-         .method_26868(EntityAttributes.field_23717, 32.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 120000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0)
+         .add(EntityAttributes.GENERIC_ATTACK_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_KNOCKBACK, 0.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0);
    }
 
    public GiantMaleCorpseGhostEntity(EntityType<GiantMaleCorpseGhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 50.0, 'A', 9500, 1200, 200, 0.6F);
       this.ghostLevel = 5;
       this.setGhostDomainActualLevel(5);
-      this.method_5875(false);
+      this.setNoGravity(false);
       this.setSuppressionSlotCost(4);
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
-      this.field_6011.method_12784(IS_ATTACKING_FROM_FOOTPRINT, false);
+   protected void initDataTracker() {
+      super.initDataTracker();
+      this.dataTracker.startTracking(IS_ATTACKING_FROM_FOOTPRINT, false);
    }
 
    @Override
@@ -101,40 +101,40 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    public boolean isPlayerProtected(PlayerEntity player) {
       return CoffinEffectManager.isPlayerInGoldCoffin(player)
          || GoldBlockProtectionManager.isPlayerInGoldBlockShelter(player)
-         || SpectateModePacket.isInSpectatorMode(player.method_5667())
-         || player.method_6059(ModEffects.SPIRIT_IMMUNITY);
+         || SpectateModePacket.isInSpectatorMode(player.getUuid())
+         || player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY);
    }
 
-   public ActionResult method_5992(PlayerEntity player, Hand hand) {
-      if (this.method_37908().method_8608()) {
-         return ActionResult.field_5812;
+   public ActionResult interactMob(PlayerEntity player, Hand hand) {
+      if (this.getWorld().isClient()) {
+         return ActionResult.SUCCESS;
       }
 
-      if (!player.method_5998(hand).method_7960()) {
-         return ActionResult.field_5811;
+      if (!player.getStackInHand(hand).isEmpty()) {
+         return ActionResult.PASS;
       }
 
-      for (ItemStack stack : player.method_31548().field_7547) {
+      for (ItemStack stack : player.getInventory().main) {
          if (CaesarHotelDiaryItem.isDiary(stack)) {
-            player.method_7353(Text.method_43470("§7似乎没有什么其他东西了。"), true);
-            return ActionResult.field_5812;
+            player.sendMessage(Text.literal("§7似乎没有什么其他东西了。"), true);
+            return ActionResult.SUCCESS;
          }
       }
 
       ItemStack diary = CaesarHotelDiaryItem.createDiary();
-      if (player.method_31548().method_7394(diary)) {
-         player.method_7353(Text.method_43470("§6你找到了一本破旧的日记：§r§e凯撒大酒店管理员日记"), false);
+      if (player.getInventory().insertStack(diary)) {
+         player.sendMessage(Text.literal("§6你找到了一本破旧的日记：§r§e凯撒大酒店管理员日记"), false);
       } else {
-         player.method_7353(Text.method_43470("§c背包已满，无法获得日记！"), false);
+         player.sendMessage(Text.literal("§c背包已满，无法获得日记！"), false);
       }
 
-      return ActionResult.field_5812;
+      return ActionResult.SUCCESS;
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient()) {
          this.spawnFootprintsForNearbyPlayers();
          this.checkFootprintAttack();
          this.processDelayedAttack();
@@ -155,7 +155,7 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
             }
 
             this.pendingAttackTarget = null;
-            this.field_6011.method_12778(IS_ATTACKING_FROM_FOOTPRINT, false);
+            this.dataTracker.set(IS_ATTACKING_FROM_FOOTPRINT, false);
          }
       }
    }
@@ -163,20 +163,20 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    private void spawnFootprintsForNearbyPlayers() {
       if (++this.footprintSpawnTimer >= 10) {
          this.footprintSpawnTimer = 0;
-         Box detectionBox = new Box(this.method_19538().method_1031(-30.0, -2.0, -30.0), this.method_19538().method_1031(30.0, 3.0, 30.0));
+         Box detectionBox = new Box(this.getPos().add(-30.0, -2.0, -30.0), this.getPos().add(30.0, 3.0, 30.0));
 
-         for (PlayerEntity player : this.method_37908()
-            .method_8390(PlayerEntity.class, detectionBox, playerx -> !playerx.method_7325() && !playerx.method_7337())) {
-            BlockPos playerFeetPos = player.method_24515().method_10074();
-            BlockState playerFeetState = this.method_37908().method_8320(playerFeetPos);
-            if (playerFeetState.method_27852(ModBlocks.UNBREAKABLE_RED_WOOL)) {
+         for (PlayerEntity player : this.getWorld()
+            .getEntitiesByClass(PlayerEntity.class, detectionBox, playerx -> !playerx.isSpectator() && !playerx.isCreative())) {
+            BlockPos playerFeetPos = player.getBlockPos().down();
+            BlockState playerFeetState = this.getWorld().getBlockState(playerFeetPos);
+            if (playerFeetState.isOf(ModBlocks.UNBREAKABLE_RED_WOOL)) {
                double offsetX = (new Random().nextDouble() - 0.5) * 0.8;
                double offsetZ = (new Random().nextDouble() - 0.5) * 0.8;
-               BlockPos footPos = BlockPos.method_49638(player.method_19538().method_1031(offsetX, 0.0, offsetZ));
-               if (this.canPlaceFootprintAt(footPos, this.method_37908())) {
-                  this.method_37908().method_8501(footPos, ModBlocks.FOOTPRINT.method_9564());
-                  if (this.method_37908().method_8321(footPos) instanceof FootprintBlockEntity footprintBE) {
-                     footprintBE.setEntityUUID(player.method_5845());
+               BlockPos footPos = BlockPos.ofFloored(player.getPos().add(offsetX, 0.0, offsetZ));
+               if (this.canPlaceFootprintAt(footPos, this.getWorld())) {
+                  this.getWorld().setBlockState(footPos, ModBlocks.FOOTPRINT.getDefaultState());
+                  if (this.getWorld().getBlockEntity(footPos) instanceof FootprintBlockEntity footprintBE) {
+                     footprintBE.setEntityUUID(player.getUuidAsString());
                      footprintBE.setDecayTime(3600);
                   }
                }
@@ -186,16 +186,16 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    }
 
    private boolean canPlaceFootprintAt(BlockPos pos, World world) {
-      BlockState currentState = world.method_8320(pos);
-      boolean canReplace = currentState.method_26215() || currentState.method_26204() instanceof FootprintBlock || this.isReplaceableBlock(currentState);
-      BlockPos belowPos = pos.method_10074();
-      BlockState belowState = world.method_8320(belowPos);
-      boolean hasSupport = !belowState.method_26215() && belowState.method_26212(world, belowPos);
+      BlockState currentState = world.getBlockState(pos);
+      boolean canReplace = currentState.isAir() || currentState.getBlock() instanceof FootprintBlock || this.isReplaceableBlock(currentState);
+      BlockPos belowPos = pos.down();
+      BlockState belowState = world.getBlockState(belowPos);
+      boolean hasSupport = !belowState.isAir() && belowState.isSolidBlock(world, belowPos);
       return canReplace && hasSupport;
    }
 
    private boolean isReplaceableBlock(BlockState state) {
-      String blockName = state.method_26204().method_9539().toLowerCase();
+      String blockName = state.getBlock().getTranslationKey().toLowerCase();
       return blockName.contains("grass")
          || blockName.contains("snow")
          || blockName.contains("flower")
@@ -209,63 +209,61 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    }
 
    private void checkFootprintAttack() {
-      if (!(Boolean)this.field_6011.method_12789(IS_ATTACKING_FROM_FOOTPRINT)) {
-         BlockPos feetPos = BlockPos.method_49638(this.method_19538());
-         BlockState state = this.method_37908().method_8320(feetPos);
-         if (state.method_26204() instanceof FootprintBlock
-            && this.method_37908().method_8321(feetPos) instanceof FootprintBlockEntity footprintBE
+      if (!(Boolean)this.dataTracker.get(IS_ATTACKING_FROM_FOOTPRINT)) {
+         BlockPos feetPos = BlockPos.ofFloored(this.getPos());
+         BlockState state = this.getWorld().getBlockState(feetPos);
+         if (state.getBlock() instanceof FootprintBlock
+            && this.getWorld().getBlockEntity(feetPos) instanceof FootprintBlockEntity footprintBE
             && footprintBE.hasValidEntityInfo()
-            && footprintBE.getTargetEntity(this.method_37908()) instanceof PlayerEntity player
-            && !player.method_29504()) {
+            && footprintBE.getTargetEntity(this.getWorld()) instanceof PlayerEntity player
+            && !player.isDead()) {
             this.executeFootprintAttack(player);
-            this.method_37908().method_8650(feetPos, false);
+            this.getWorld().removeBlock(feetPos, false);
          }
       }
    }
 
    private void executeFootprintAttack(PlayerEntity target) {
-      this.field_6011.method_12778(IS_ATTACKING_FROM_FOOTPRINT, true);
+      this.dataTracker.set(IS_ATTACKING_FROM_FOOTPRINT, true);
       this.playAttackSound();
       this.pendingAttackTarget = target;
       this.attackDelayTimer = 20;
    }
 
    private void playAttackSound() {
-      this.method_37908()
-         .method_43128(null, this.method_23317(), this.method_23318(), this.method_23321(), ModSounds.SWING_ATTACK_SOUND, SoundCategory.field_15251, 1.0F, 1.0F);
+      this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), ModSounds.SWING_ATTACK_SOUND, SoundCategory.HOSTILE, 1.0F, 1.0F);
    }
 
    private void dealSpiritualDamage(PlayerEntity target) {
       float damage = this.getSpiritualDamage();
-      PlayerEvents.handleSpiritDamage(target, damage, damage, ModDamageSources.ghost(this.method_37908()));
+      PlayerEvents.handleSpiritDamage(target, damage, damage, ModDamageSources.ghost(this.getWorld()));
    }
 
    private void breakCandle(PlayerEntity target) {
-      ItemStack mainHand = target.method_6047();
-      ItemStack offHand = target.method_6079();
-      if (mainHand.method_31574(ModItems.RED_GHOST_CANDLE)) {
-         mainHand.method_7934(1);
-      } else if (offHand.method_31574(ModItems.RED_GHOST_CANDLE)) {
-         offHand.method_7934(1);
+      ItemStack mainHand = target.getMainHandStack();
+      ItemStack offHand = target.getOffHandStack();
+      if (mainHand.isOf(ModItems.RED_GHOST_CANDLE)) {
+         mainHand.decrement(1);
+      } else if (offHand.isOf(ModItems.RED_GHOST_CANDLE)) {
+         offHand.decrement(1);
       }
 
       this.playCandleBreakSound();
    }
 
    private void playCandleBreakSound() {
-      this.method_37908()
-         .method_43128(null, this.method_23317(), this.method_23318(), this.method_23321(), SoundEvents.field_15075, SoundCategory.field_15251, 1.0F, 1.0F);
+      this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.HOSTILE, 1.0F, 1.0F);
    }
 
    @Override
-   public boolean method_6121(Entity target) {
+   public boolean tryAttack(Entity target) {
       if (!this.isDeadlocked() && !this.isSuppressed()) {
          this.playAttackSound();
          if (target instanceof PlayerEntity player && RedGhostCandleItem.isHoldingCandle(player)) {
             this.breakCandle(player);
             return true;
          } else {
-            return super.method_6121(target);
+            return super.tryAttack(target);
          }
       } else {
          return false;
@@ -273,10 +271,10 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    }
 
    @Override
-   public boolean method_5643(DamageSource source, float amount) {
-      boolean result = super.method_5643(source, amount);
-      if (!this.isDeadlocked() && !this.isChasing() && this.getAttackCooldown() <= 0 && source.method_5529() instanceof PlayerEntity player) {
-         this.method_5980(player);
+   public boolean damage(DamageSource source, float amount) {
+      boolean result = super.damage(source, amount);
+      if (!this.isDeadlocked() && !this.isChasing() && this.getAttackCooldown() <= 0 && source.getAttacker() instanceof PlayerEntity player) {
+         this.setTarget(player);
       }
 
       return result;
@@ -289,7 +287,7 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
 
    @Override
    public double getTick(Object object) {
-      return this.field_6012;
+      return this.age;
    }
 
    @Override
@@ -298,8 +296,8 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    }
 
    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> event) {
-      if (!(Boolean)this.field_6011.method_12789(IS_ATTACKING_FROM_FOOTPRINT) && !this.field_6252) {
-         if (this.method_18798().method_37268() > 0.001) {
+      if (!(Boolean)this.dataTracker.get(IS_ATTACKING_FROM_FOOTPRINT) && !this.handSwinging) {
+         if (this.getVelocity().horizontalLengthSquared() > 0.001) {
             event.getController().setAnimation(RawAnimation.begin().then("walk", LoopType.LOOP));
          } else {
             event.getController().setAnimation(RawAnimation.begin().then("idle", LoopType.LOOP));
@@ -312,16 +310,16 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10569("footprintSpawnTimer", this.footprintSpawnTimer);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putInt("footprintSpawnTimer", this.footprintSpawnTimer);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("footprintSpawnTimer")) {
-         this.footprintSpawnTimer = nbt.method_10550("footprintSpawnTimer");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("footprintSpawnTimer")) {
+         this.footprintSpawnTimer = nbt.getInt("footprintSpawnTimer");
       }
    }
 
@@ -330,25 +328,25 @@ public class GiantMaleCorpseGhostEntity extends GhostEntity implements GeoAnimat
          this.messageCooldownTimer--;
       }
 
-      Box detectionBox = new Box(this.method_19538().method_1031(-50.0, -50.0, -50.0), this.method_19538().method_1031(50.0, 50.0, 50.0));
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(PlayerEntity.class, detectionBox, player -> !player.method_7325() && !player.method_7337());
+      Box detectionBox = new Box(this.getPos().add(-50.0, -50.0, -50.0), this.getPos().add(50.0, 50.0, 50.0));
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, detectionBox, player -> !player.isSpectator() && !player.isCreative());
       boolean shouldShowMessage = this.messageCooldownTimer <= 0;
 
       for (PlayerEntity player : nearbyPlayers) {
-         if (player.method_31549().field_7479) {
-            player.method_31549().field_7479 = false;
-            player.method_7355();
+         if (player.getAbilities().flying) {
+            player.getAbilities().flying = false;
+            player.sendAbilitiesUpdate();
             if (shouldShowMessage) {
-               player.method_7353(Text.method_43470("§c周围有极其强大的存在，鬼域被影响，无法继续保持飞行。"), false);
+               player.sendMessage(Text.literal("§c周围有极其强大的存在，鬼域被影响，无法继续保持飞行。"), false);
             }
          }
       }
 
       if (shouldShowMessage && !nearbyPlayers.isEmpty()) {
-         boolean anyPlayerFlying = nearbyPlayers.stream().anyMatch(p -> p.method_31549().field_7479);
+         boolean anyPlayerFlying = nearbyPlayers.stream().anyMatch(p -> p.getAbilities().flying);
          if (!anyPlayerFlying) {
-            boolean anyWasFlying = nearbyPlayers.stream().anyMatch(p -> !p.method_24828() && p.method_18798().field_1351 < 0.0);
+            boolean anyWasFlying = nearbyPlayers.stream().anyMatch(p -> !p.isOnGround() && p.getVelocity().y < 0.0);
             if (anyWasFlying) {
                this.messageCooldownTimer = 20;
             }

@@ -29,7 +29,7 @@ public class PlayerGhostRenderer extends BipedEntityRenderer<PlayerGhostEntity, 
    }
 
    private static ModelPart getModelPart(Context ctx) {
-      return ctx.method_32167(EntityModelLayers.field_27577);
+      return ctx.getPart(EntityModelLayers.PLAYER);
    }
 
    public Identifier getTexture(PlayerGhostEntity entity) {
@@ -41,7 +41,7 @@ public class PlayerGhostRenderer extends BipedEntityRenderer<PlayerGhostEntity, 
       if (playerUuidStr != null && !playerUuidStr.isEmpty()) {
          try {
             UUID playerUuid = UUID.fromString(playerUuidStr);
-            MinecraftClient client = MinecraftClient.method_1551();
+            MinecraftClient client = MinecraftClient.getInstance();
             Identifier skin = this.tryGetSkinFromOnlinePlayer(playerUuid, client);
             if (skin != null) {
                return skin;
@@ -60,10 +60,10 @@ public class PlayerGhostRenderer extends BipedEntityRenderer<PlayerGhostEntity, 
    }
 
    private Identifier tryGetSkinFromOnlinePlayer(UUID playerUuid, MinecraftClient client) {
-      if (client != null && client.field_1687 != null) {
-         for (AbstractClientPlayerEntity player : client.field_1687.method_18456()) {
-            if (player != null && player.method_5667().equals(playerUuid)) {
-               Identifier skinTexture = player.method_3117();
+      if (client != null && client.world != null) {
+         for (AbstractClientPlayerEntity player : client.world.getPlayers()) {
+            if (player != null && player.getUuid().equals(playerUuid)) {
+               Identifier skinTexture = player.getSkinTexture();
                if (skinTexture != null) {
                   return skinTexture;
                }
@@ -77,9 +77,9 @@ public class PlayerGhostRenderer extends BipedEntityRenderer<PlayerGhostEntity, 
    private Identifier tryGetSkinFromSkinProvider(UUID playerUuid, MinecraftClient client) {
       if (client != null) {
          try {
-            PlayerSkinProvider skinProvider = client.method_1582();
+            PlayerSkinProvider skinProvider = client.getSkinProvider();
             GameProfile profile = new GameProfile(playerUuid, null);
-            Identifier skinTexture = skinProvider.method_44705(profile);
+            Identifier skinTexture = skinProvider.loadSkin(profile);
             if (skinTexture != null) {
                return skinTexture;
             }
@@ -93,12 +93,12 @@ public class PlayerGhostRenderer extends BipedEntityRenderer<PlayerGhostEntity, 
 
    public void render(PlayerGhostEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
       if (entity.isVisible()) {
-         matrices.method_22903();
-         matrices.method_22905(1.2F, 1.2F, 1.2F);
+         matrices.push();
+         matrices.scale(1.2F, 1.2F, 1.2F);
          Identifier texture = this.getTexture(entity);
-         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.method_23580(texture));
-         super.method_4072(entity, yaw, tickDelta, matrices, vertexConsumers, light);
-         matrices.method_22909();
+         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(texture));
+         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+         matrices.pop();
       }
    }
 }

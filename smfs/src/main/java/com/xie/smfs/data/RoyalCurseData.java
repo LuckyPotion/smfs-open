@@ -12,11 +12,11 @@ public class RoyalCurseData {
    }
 
    public RoyalCurseData(NbtCompound nbt) {
-      if (nbt.method_10545("servants")) {
-         NbtList servantsList = nbt.method_10554("servants", 10);
+      if (nbt.contains("servants")) {
+         NbtList servantsList = nbt.getList("servants", 10);
 
          for (int i = 0; i < servantsList.size(); i++) {
-            NbtCompound servantNbt = servantsList.method_10602(i);
+            NbtCompound servantNbt = servantsList.getCompound(i);
             RoyalCurseServantData servantData = new RoyalCurseServantData(servantNbt);
             this.servants.add(servantData);
          }
@@ -31,7 +31,7 @@ public class RoyalCurseData {
          servantsList.add(servant.toNbt());
       }
 
-      nbt.method_10566("servants", servantsList);
+      nbt.put("servants", servantsList);
       return nbt;
    }
 

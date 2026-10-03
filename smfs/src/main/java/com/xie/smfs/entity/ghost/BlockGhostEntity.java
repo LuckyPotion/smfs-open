@@ -25,7 +25,7 @@ public class BlockGhostEntity extends GhostEntity {
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
       if (this.isSuppressed() || this.isDeadlocked() || RedGhostCandleItem.isHoldingCandle(player)) {
-         playerInteractingWithBlocks.put(player.method_5667(), false);
+         playerInteractingWithBlocks.put(player.getUuid(), false);
          return false;
       }
 
@@ -34,28 +34,28 @@ public class BlockGhostEntity extends GhostEntity {
       }
 
       boolean isInteractingWithBlocks = this.isPlayerInteractingWithBlocks(player);
-      playerInteractingWithBlocks.put(player.method_5667(), isInteractingWithBlocks);
+      playerInteractingWithBlocks.put(player.getUuid(), isInteractingWithBlocks);
       return isInteractingWithBlocks;
    }
 
    private boolean isPlayerInteractingWithBlocks(PlayerEntity player) {
-      return PlayerBlockActionTracker.hasRecentBlockAction(player.method_5667(), 20);
+      return PlayerBlockActionTracker.hasRecentBlockAction(player.getUuid(), 20);
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.blockAttackCooldown > 0) {
          this.blockAttackCooldown--;
       }
 
       if (this.isDeadlocked()) {
          this.setVisible(true);
-         this.method_5648(false);
+         this.setInvisible(false);
          this.setVisibleTicks(20);
-      } else if (this.method_5968() != null && this.method_5968().method_5805()) {
+      } else if (this.getTarget() != null && this.getTarget().isAlive()) {
          this.setVisible(true);
-         this.method_5648(false);
+         this.setInvisible(false);
          this.setVisibleTicks(20);
       }
    }
@@ -65,21 +65,21 @@ public class BlockGhostEntity extends GhostEntity {
       this.blockAttackCooldown = 20;
       this.setVisible(true);
       this.setVisibleTicks(20);
-      this.method_5648(false);
+      this.setInvisible(false);
       this.executeAttack(player, false);
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10569("BlockAttackCooldown", this.blockAttackCooldown);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putInt("BlockAttackCooldown", this.blockAttackCooldown);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("BlockAttackCooldown")) {
-         this.blockAttackCooldown = nbt.method_10550("BlockAttackCooldown");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("BlockAttackCooldown")) {
+         this.blockAttackCooldown = nbt.getInt("BlockAttackCooldown");
       }
    }
 }

@@ -12,38 +12,38 @@ import net.minecraft.world.GameMode;
 
 public class IllusionCurseEffect extends StatusEffect implements ICurseEffect {
    public IllusionCurseEffect() {
-      super(StatusEffectCategory.field_18272, 9662683);
+      super(StatusEffectCategory.HARMFUL, 9662683);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      if (entity instanceof ServerPlayerEntity player && !player.method_37908().field_9236) {
-         if (!player.method_7325()) {
-            player.method_32748(this.createGameModeNbt(GameMode.field_9219));
-            player.method_7353(Text.method_43471("effect.smfs.illusion_curse.enter").method_27692(Formatting.field_1064), true);
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      if (entity instanceof ServerPlayerEntity player && !player.getWorld().isClient) {
+         if (!player.isSpectator()) {
+            player.setGameMode(this.createGameModeNbt(GameMode.SPECTATOR));
+            player.sendMessage(Text.translatable("effect.smfs.illusion_curse.enter").formatted(Formatting.DARK_PURPLE), true);
          }
 
-         if (entity.method_6112(this).method_5584() <= 100) {
-            player.method_7353(Text.method_43471("effect.smfs.illusion_curse.warning").method_27692(Formatting.field_1076), true);
+         if (entity.getStatusEffect(this).getDuration() <= 100) {
+            player.sendMessage(Text.translatable("effect.smfs.illusion_curse.warning").formatted(Formatting.LIGHT_PURPLE), true);
          }
       }
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      if (entity instanceof ServerPlayerEntity player && !player.method_37908().field_9236) {
-         player.method_32748(this.createGameModeNbt(GameMode.field_9215));
-         player.method_7353(Text.method_43471("effect.smfs.illusion_curse.exit").method_27692(Formatting.field_1060), true);
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      if (entity instanceof ServerPlayerEntity player && !player.getWorld().isClient) {
+         player.setGameMode(this.createGameModeNbt(GameMode.SURVIVAL));
+         player.sendMessage(Text.translatable("effect.smfs.illusion_curse.exit").formatted(Formatting.GREEN), true);
       }
 
-      super.method_5562(entity, attributes, amplifier);
+      super.onRemoved(entity, attributes, amplifier);
    }
 
    private NbtCompound createGameModeNbt(GameMode gameMode) {
       NbtCompound nbt = new NbtCompound();
-      nbt.method_10569("playerGameType", gameMode.method_8379());
+      nbt.putInt("playerGameType", gameMode.getId());
       return nbt;
    }
 }

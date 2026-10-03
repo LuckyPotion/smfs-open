@@ -27,26 +27,26 @@ public class SilentGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.spawnTime == -1L) {
-         this.spawnTime = this.method_37908().method_8510();
+         this.spawnTime = this.getWorld().getTime();
       }
 
-      long currentTime = this.method_37908().method_8510();
+      long currentTime = this.getWorld().getTime();
       if (currentTime - this.spawnTime >= 6000L) {
          GhostDeathHandler.markLegitimateRemoval(this);
-         this.method_31472();
+         this.discard();
       } else {
-         if (!this.method_37908().field_9236 && !this.isDeadlocked() && !this.isSuppressed()) {
-            this.method_37908()
-               .method_18456()
+         if (!this.getWorld().isClient && !this.isDeadlocked() && !this.isSuppressed()) {
+            this.getWorld()
+               .getPlayers()
                .stream()
                .filter(this::shouldAttackPlayer)
-               .filter(player -> this.method_5858(player) <= 256.0)
+               .filter(player -> this.squaredDistanceTo(player) <= 256.0)
                .forEach(player -> {
                   this.executeAttack(player);
-                  this.lastAttackTime = this.method_37908().method_8510();
+                  this.lastAttackTime = this.getWorld().getTime();
                });
          }
       }
@@ -55,15 +55,15 @@ public class SilentGhostEntity extends GhostEntity {
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
       if (!this.isSuppressed() && !this.isDeadlocked() && !RedGhostCandleItem.isHoldingCandle(player)) {
-         long currentTick = this.method_37908().method_8510();
+         long currentTick = this.getWorld().getTime();
          if (this.lastAttackTime != -1L && currentTick - this.lastAttackTime < 100L) {
             return false;
          }
 
-         UUID playerId = player.method_5667();
-         Vec3d currentPos = player.method_19538();
+         UUID playerId = player.getUuid();
+         Vec3d currentPos = player.getPos();
          Vec3d lastPos = this.playerLastPositions.getOrDefault(playerId, currentPos);
-         double distanceMoved = currentPos.method_1022(lastPos);
+         double distanceMoved = currentPos.distanceTo(lastPos);
          boolean isMoving = distanceMoved > 0.01;
          this.playerLastPositions.put(playerId, currentPos);
          if (isMoving) {
@@ -85,7 +85,7 @@ public class SilentGhostEntity extends GhostEntity {
    }
 
    private void resetPlayerTracking(PlayerEntity player) {
-      UUID playerId = player.method_5667();
+      UUID playerId = player.getUuid();
       this.playerMoveStartTicks.remove(playerId);
       this.playerLastPositions.remove(playerId);
    }

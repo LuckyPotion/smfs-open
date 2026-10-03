@@ -40,7 +40,7 @@ public class FusionCameraManager {
       }
 
       float elapsed = (float)(System.currentTimeMillis() - zoomStartTime) / 1000.0F;
-      float progress = MathHelper.method_15363(elapsed / 12.0F, 0.0F, 1.0F);
+      float progress = MathHelper.clamp(elapsed / 12.0F, 0.0F, 1.0F);
       if (progress < 0.5F) {
          return 2.0F * progress * progress;
       }
@@ -55,11 +55,11 @@ public class FusionCameraManager {
       }
 
       float progress = getProgress();
-      Vec3d offset = START_OFFSET.method_35590(END_OFFSET, progress);
-      Vec3d cameraPos = focusedEntity.method_33571().method_1019(offset);
-      double dx = -offset.field_1352;
-      double dy = -offset.field_1351;
-      double dz = -offset.field_1350;
+      Vec3d offset = START_OFFSET.lerp(END_OFFSET, progress);
+      Vec3d cameraPos = focusedEntity.getEyePos().add(offset);
+      double dx = -offset.x;
+      double dy = -offset.y;
+      double dz = -offset.z;
       double horizontalDist = Math.sqrt(dx * dx + dz * dz);
       cameraYaw = (float)Math.toDegrees(Math.atan2(dx, dz));
       cameraPitch = (float)Math.toDegrees(Math.atan2(-dy, horizontalDist));

@@ -22,43 +22,43 @@ import net.minecraft.world.World;
 
 public class FilthyCropBlock extends CropBlock {
    public static final int MAX_AGE = 2;
-   public static final IntProperty AGE = IntProperty.method_11867("age", 0, 2);
+   public static final IntProperty AGE = IntProperty.of("age", 0, 2);
 
    public FilthyCropBlock(Settings settings) {
       super(settings);
-      this.method_9590((BlockState)((BlockState)this.field_10647.method_11664()).method_11657(AGE, 0));
+      this.setDefaultState((BlockState)((BlockState)this.stateManager.getDefaultState()).with(AGE, 0));
    }
 
-   protected ItemConvertible method_9832() {
+   protected ItemConvertible getSeedsItem() {
       return ModItems.FILTHY_SEED;
    }
 
-   public IntProperty method_9824() {
+   public IntProperty getAgeProperty() {
       return AGE;
    }
 
-   public int method_9827() {
+   public int getMaxAge() {
       return 2;
    }
 
-   protected void method_9515(Builder<Block, BlockState> builder) {
-      builder.method_11667(new Property[]{AGE});
+   protected void appendProperties(Builder<Block, BlockState> builder) {
+      builder.add(new Property[]{AGE});
    }
 
-   public ItemStack method_9574(BlockView world, BlockPos pos, BlockState state) {
+   public ItemStack getPickStack(BlockView world, BlockPos pos, BlockState state) {
       return new ItemStack(ModItems.FILTHY_FRUIT);
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-      ItemStack itemStack = player.method_5998(hand);
-      if (itemStack.method_31574(Items.field_8324)) {
-         if (!world.field_9236) {
-            player.method_7353(Text.method_43471("message.smfs.bone_meal_invalid.filthy_crop"), true);
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+      ItemStack itemStack = player.getStackInHand(hand);
+      if (itemStack.isOf(Items.BONE_MEAL)) {
+         if (!world.isClient) {
+            player.sendMessage(Text.translatable("message.smfs.bone_meal_invalid.filthy_crop"), true);
          }
 
-         return ActionResult.field_5812;
+         return ActionResult.SUCCESS;
       } else {
-         return super.method_9534(state, world, pos, player, hand, hit);
+         return super.onUse(state, world, pos, player, hand, hit);
       }
    }
 }

@@ -19,16 +19,23 @@ import java.util.regex.Pattern;
  *
  * Usage:
  *   Remap <in.jar> <out.jar> <mappings.tiny> <fromNs> <toNs> [--reverse] [-cp <path>]...
+ *         [--allow-no-classpath]
+ *
+ * IMPORTANT: member (method/field) remapping needs type resolution. Without a Minecraft
+ * jar on the classpath, class names are still remapped correctly but *no member name is
+ * changed* - a silent failure that looks like success. See the warning emitted below.
  */
 public final class Remap {
     public static void main(String[] args) throws Exception {
         List<String> positional = new ArrayList<>();
         List<Path> classpath = new ArrayList<>();
         boolean reverse = false;
+        boolean allowNoClasspath = false;
 
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "--reverse" -> reverse = true;
+                case "--allow-no-classpath" -> allowNoClasspath = true;
                 case "-cp", "--classpath" -> {
                     if (++i >= args.length) throw new IllegalArgumentException("-cp requires a value");
                     classpath.add(Paths.get(args[i]));
@@ -38,7 +45,8 @@ public final class Remap {
         }
 
         if (positional.size() < 5) {
-            System.err.println("usage: Remap <in.jar> <out.jar> <mappings.tiny> <fromNs> <toNs> [--reverse] [-cp <path>]...");
+            System.err.println("usage: Remap <in.jar> <out.jar> <mappings.tiny> <fromNs> <toNs>"
+                    + " [--reverse] [-cp <path>]... [--allow-no-classpath]");
             System.exit(2);
         }
 
@@ -52,6 +60,17 @@ public final class Remap {
         if (!Files.isRegularFile(mappings)) throw new IllegalArgumentException("mappings not found: " + mappings);
         if (!Files.isRegularFile(out)) Files.createDirectories(out.toAbsolutePath().getParent());
         if (Files.exists(out)) Files.delete(out);
+
+        if (classpath.isEmpty() && !allowNoClasspath) {
+            System.err.println();
+            System.err.println("!! WARNING: no classpath supplied (-cp).");
+            System.err.println("!! TinyRemapper resolves member ownership through the classpath. Without it,");
+            System.err.println("!! class names are remapped but method/field names are left in the source");
+            System.err.println("!! namespace - i.e. the output still contains method_1234 / field_5678.");
+            System.err.println("!! Pass the target Minecraft jar, e.g. -cp mc-intermediary-1.20.1.jar");
+            System.err.println("!! Pass --allow-no-classpath to silence this if that is really what you want.");
+            System.err.println();
+        }
 
         System.out.println("[remap] input      : " + in);
         System.out.println("[remap] output     : " + out);

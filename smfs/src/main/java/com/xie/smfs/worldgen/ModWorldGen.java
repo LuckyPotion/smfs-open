@@ -9,11 +9,9 @@ import net.minecraft.world.gen.GenerationStep.Feature;
 import net.minecraft.world.gen.feature.PlacedFeature;
 
 public class ModWorldGen {
-   public static final RegistryKey<PlacedFeature> DEFILED_ORE_PLACED_KEY = RegistryKey.method_29179(
-      RegistryKeys.field_41245, new Identifier("smfs", "defiled_ore")
-   );
+   public static final RegistryKey<PlacedFeature> DEFILED_ORE_PLACED_KEY = RegistryKey.of(RegistryKeys.PLACED_FEATURE, new Identifier("smfs", "defiled_ore"));
 
    public static void register() {
-      BiomeModifications.addFeature(BiomeSelectors.foundInOverworld(), Feature.field_13176, DEFILED_ORE_PLACED_KEY);
+      BiomeModifications.addFeature(BiomeSelectors.foundInOverworld(), Feature.UNDERGROUND_ORES, DEFILED_ORE_PLACED_KEY);
    }
 }

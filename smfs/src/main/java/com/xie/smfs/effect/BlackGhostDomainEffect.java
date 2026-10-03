@@ -18,22 +18,22 @@ public class BlackGhostDomainEffect extends StatusEffect implements ICurseEffect
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/BlackGhostDomainEffect");
 
    public BlackGhostDomainEffect() {
-      super(StatusEffectCategory.field_18272, 0);
+      super(StatusEffectCategory.HARMFUL, 0);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
       if (entity instanceof PlayerEntity player) {
-         boolean isTargetVersion = player.method_6059(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
+         boolean isTargetVersion = player.hasStatusEffect(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
          if (!isTargetVersion) {
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5925, 5, 0, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 5, 0, false, false, false));
          }
       }
 
-      if (entity instanceof PlayerEntity player && !player.method_37908().method_8608() && player instanceof ServerPlayerEntity serverPlayer) {
+      if (entity instanceof PlayerEntity player && !player.getWorld().isClient() && player instanceof ServerPlayerEntity serverPlayer) {
          int blockGhostSlot = PlayerEvents.findEquippedBlockGhostSlot(player);
          if (blockGhostSlot != -1) {
             GhostDomainManager.markPlayerForGhost(serverPlayer, "方块鬼", "放置方块行为");
@@ -57,12 +57,12 @@ public class BlackGhostDomainEffect extends StatusEffect implements ICurseEffect
    }
 
    public static void updateRevivalDegreeInGhostDomain(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          PlayerEvents.balanceRevivalDegree(player, 3, 1);
       }
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      super.method_5562(entity, attributes, amplifier);
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      super.onRemoved(entity, attributes, amplifier);
    }
 }

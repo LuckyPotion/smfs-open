@@ -15,19 +15,19 @@ public class LuoQianSummonIncenseItem extends Item {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (!world.field_9236) {
-         LuoQianGhostEntity entity = (LuoQianGhostEntity)ModEntities.LUO_QIAN_GHOST.method_5883(world);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (!world.isClient) {
+         LuoQianGhostEntity entity = (LuoQianGhostEntity)ModEntities.LUO_QIAN_GHOST.create(world);
          if (entity != null) {
-            entity.method_5814(user.method_23317(), user.method_23318(), user.method_23321());
-            world.method_8649(entity);
-            if (!user.method_7337()) {
-               stack.method_7934(1);
+            entity.setPosition(user.getX(), user.getY(), user.getZ());
+            world.spawnEntity(entity);
+            if (!user.isCreative()) {
+               stack.decrement(1);
             }
          }
       }
 
-      return TypedActionResult.method_29237(stack, world.method_8608());
+      return TypedActionResult.success(stack, world.isClient());
    }
 }

@@ -25,22 +25,22 @@ public class HumanSkinPaperItem extends Item implements Equipment {
       super(settings);
    }
 
-   public EquipmentSlot method_7685() {
-      return EquipmentSlot.field_6169;
+   public EquipmentSlot getSlotType() {
+      return EquipmentSlot.HEAD;
    }
 
-   public Text method_7848() {
-      return Text.method_43471("item.smfs.human_skin_paper");
+   public Text getName() {
+      return Text.translatable("item.smfs.human_skin_paper");
    }
 
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43471("item.smfs.human_skin_paper");
+   public Text getName(ItemStack stack) {
+      return Text.translatable("item.smfs.human_skin_paper");
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      user.method_6019(hand);
-      if (!world.field_9236 && user instanceof ServerPlayerEntity serverPlayer) {
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      user.setCurrentHand(hand);
+      if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
          try {
             Identifier packetId = new Identifier("smfs", "open_human_skin_paper_screen");
             PacketByteBuf buf = PacketByteBufs.create();
@@ -50,10 +50,10 @@ public class HumanSkinPaperItem extends Item implements Equipment {
          }
       }
 
-      return TypedActionResult.method_22428(stack);
+      return TypedActionResult.consume(stack);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43471("tooltip.smfs.human_skin_paper.description"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.translatable("tooltip.smfs.human_skin_paper.description"));
    }
 }

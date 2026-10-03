@@ -19,28 +19,28 @@ public class ClientDataManager {
       clientData = loadClientData();
       if (clientData == null) {
          clientData = new NbtCompound();
-         clientData.method_10569("tutorial_view_count", 0);
-         clientData.method_10556("first_night_curse_triggered", false);
-         clientData.method_10556("has_received_starter_items", false);
-         clientData.method_10582("shown_events", "[]");
-         clientData.method_10556("has_seen_play_notice", false);
+         clientData.putInt("tutorial_view_count", 0);
+         clientData.putBoolean("first_night_curse_triggered", false);
+         clientData.putBoolean("has_received_starter_items", false);
+         clientData.putString("shown_events", "[]");
+         clientData.putBoolean("has_seen_play_notice", false);
          saveClientData();
       }
    }
 
    private static NbtCompound loadClientData() {
-      MinecraftClient client = MinecraftClient.method_1551();
+      MinecraftClient client = MinecraftClient.getInstance();
       if (client == null) {
          return null;
       }
 
-      File dataFile = new File(client.field_1697, "smfs_client_data.nbt");
+      File dataFile = new File(client.runDirectory, "smfs_client_data.nbt");
       if (!dataFile.exists()) {
          return null;
       }
 
       try (FileInputStream fis = new FileInputStream(dataFile)) {
-         return NbtIo.method_10629(fis);
+         return NbtIo.readCompressed(fis);
       } catch (IOException e) {
          e.printStackTrace();
          return null;
@@ -48,12 +48,12 @@ public class ClientDataManager {
    }
 
    public static void saveClientData() {
-      MinecraftClient client = MinecraftClient.method_1551();
+      MinecraftClient client = MinecraftClient.getInstance();
       if (client != null && clientData != null) {
-         File dataFile = new File(client.field_1697, "smfs_client_data.nbt");
+         File dataFile = new File(client.runDirectory, "smfs_client_data.nbt");
 
          try (FileOutputStream fos = new FileOutputStream(dataFile)) {
-            NbtIo.method_10634(clientData, fos);
+            NbtIo.writeCompressed(clientData, fos);
          } catch (IOException e) {
             e.printStackTrace();
          }
@@ -61,23 +61,23 @@ public class ClientDataManager {
    }
 
    public static int getTutorialViewCount() {
-      return clientData == null ? 0 : clientData.method_10550("tutorial_view_count");
+      return clientData == null ? 0 : clientData.getInt("tutorial_view_count");
    }
 
    public static void incrementTutorialViewCount() {
       if (clientData != null) {
-         clientData.method_10569("tutorial_view_count", getTutorialViewCount() + 1);
+         clientData.putInt("tutorial_view_count", getTutorialViewCount() + 1);
          saveClientData();
       }
    }
 
    public static String getShownEvents() {
-      return clientData == null ? "[]" : clientData.method_10558("shown_events");
+      return clientData == null ? "[]" : clientData.getString("shown_events");
    }
 
    public static void setShownEvents(String events) {
       if (clientData != null) {
-         clientData.method_10582("shown_events", events);
+         clientData.putString("shown_events", events);
          saveClientData();
       }
    }
@@ -87,47 +87,47 @@ public class ClientDataManager {
          init();
       }
 
-      for (String key : data.method_10541()) {
-         clientData.method_10566(key, data.method_10580(key).method_10707());
+      for (String key : data.getKeys()) {
+         clientData.put(key, data.get(key).copy());
       }
 
       saveClientData();
-      MinecraftClient.method_1551().execute(() -> {
-         if (MinecraftClient.method_1551().field_1755 instanceof GhostControlScreen) {
-            GhostControlScreen var0 = (GhostControlScreen)MinecraftClient.method_1551().field_1755;
+      MinecraftClient.getInstance().execute(() -> {
+         if (MinecraftClient.getInstance().currentScreen instanceof GhostControlScreen) {
+            GhostControlScreen var0 = (GhostControlScreen)MinecraftClient.getInstance().currentScreen;
          }
       });
    }
 
    public static boolean isFirstNightCurseTriggered() {
-      return clientData == null ? false : clientData.method_10577("first_night_curse_triggered");
+      return clientData == null ? false : clientData.getBoolean("first_night_curse_triggered");
    }
 
    public static void setFirstNightCurseTriggered(boolean triggered) {
       if (clientData != null) {
-         clientData.method_10556("first_night_curse_triggered", triggered);
+         clientData.putBoolean("first_night_curse_triggered", triggered);
          saveClientData();
       }
    }
 
    public static boolean hasReceivedStarterItems() {
-      return clientData == null ? false : clientData.method_10577("has_received_starter_items");
+      return clientData == null ? false : clientData.getBoolean("has_received_starter_items");
    }
 
    public static void setHasReceivedStarterItems(boolean received) {
       if (clientData != null) {
-         clientData.method_10556("has_received_starter_items", received);
+         clientData.putBoolean("has_received_starter_items", received);
          saveClientData();
       }
    }
 
    public static boolean hasSeenPlayNotice() {
-      return clientData == null ? false : clientData.method_10577("has_seen_play_notice");
+      return clientData == null ? false : clientData.getBoolean("has_seen_play_notice");
    }
 
    public static void setHasSeenPlayNotice(boolean seen) {
       if (clientData != null) {
-         clientData.method_10556("has_seen_play_notice", seen);
+         clientData.putBoolean("has_seen_play_notice", seen);
          saveClientData();
       }
    }

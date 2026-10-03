@@ -17,75 +17,75 @@ import net.minecraft.util.Formatting;
 public class PlayerGhostCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
       dispatcher.register(
-         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("playerghost")
-                     .requires(source -> source.method_9259(2)))
+         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("playerghost")
+                     .requires(source -> source.hasPermissionLevel(2)))
                   .then(
-                     CommandManager.method_9247("info")
-                        .then(CommandManager.method_9244("ghost", EntityArgumentType.method_9309()).executes(PlayerGhostCommand::getGhostInfo))
+                     CommandManager.literal("info")
+                        .then(CommandManager.argument("ghost", EntityArgumentType.entity()).executes(PlayerGhostCommand::getGhostInfo))
                   ))
                .then(
-                  CommandManager.method_9247("retrieve")
-                     .then(CommandManager.method_9244("ghost", EntityArgumentType.method_9309()).executes(PlayerGhostCommand::retrieveCoffinNail))
+                  CommandManager.literal("retrieve")
+                     .then(CommandManager.argument("ghost", EntityArgumentType.entity()).executes(PlayerGhostCommand::retrieveCoffinNail))
                ))
             .then(
-               CommandManager.method_9247("suppress")
-                  .then(CommandManager.method_9244("ghost", EntityArgumentType.method_9309()).executes(PlayerGhostCommand::suppressGhost))
+               CommandManager.literal("suppress")
+                  .then(CommandManager.argument("ghost", EntityArgumentType.entity()).executes(PlayerGhostCommand::suppressGhost))
             )
       );
    }
 
    public static int getGhostInfo(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
       ServerCommandSource source = (ServerCommandSource)context.getSource();
-      PlayerGhostEntity ghost = (PlayerGhostEntity)EntityArgumentType.method_9313(context, "ghost");
+      PlayerGhostEntity ghost = (PlayerGhostEntity)EntityArgumentType.getEntity(context, "ghost");
       if (ghost != null) {
-         source.method_9226(() -> Text.method_43470("=== 玩家鬼魂信息 ===").method_27692(Formatting.field_1065), false);
-         source.method_9226(() -> Text.method_43470("玩家: " + ghost.getPlayerName()).method_27692(Formatting.field_1060), false);
-         source.method_9226(() -> Text.method_43470("鬼域颜色: " + ghost.getGhostDomainColor()).method_27692(Formatting.field_1060), false);
+         source.sendFeedback(() -> Text.literal("=== 玩家鬼魂信息 ===").formatted(Formatting.GOLD), false);
+         source.sendFeedback(() -> Text.literal("玩家: " + ghost.getPlayerName()).formatted(Formatting.GREEN), false);
+         source.sendFeedback(() -> Text.literal("鬼域颜色: " + ghost.getGhostDomainColor()).formatted(Formatting.GREEN), false);
          List<String> playerGhosts = ghost.getPlayerGhosts();
          if (!playerGhosts.isEmpty()) {
-            source.method_9226(() -> Text.method_43470("驾驭的鬼: " + String.join(", ", playerGhosts)).method_27692(Formatting.field_1054), false);
+            source.sendFeedback(() -> Text.literal("驾驭的鬼: " + String.join(", ", playerGhosts)).formatted(Formatting.YELLOW), false);
          }
 
          List<String> killingRules = ghost.getKillingRules();
          if (!killingRules.isEmpty()) {
-            source.method_9226(() -> Text.method_43470("杀人规律: " + String.join(", ", killingRules)).method_27692(Formatting.field_1061), false);
+            source.sendFeedback(() -> Text.literal("杀人规律: " + String.join(", ", killingRules)).formatted(Formatting.RED), false);
          }
 
-         source.method_9226(() -> Text.method_43470("压制状态: " + (ghost.isSuppressed() ? "已压制" : "未压制")).method_27692(Formatting.field_1078), false);
-         source.method_9226(() -> Text.method_43470("棺材钉: " + (ghost.hasCoffinNail() ? "已钉入" : "未钉入")).method_27692(Formatting.field_1078), false);
+         source.sendFeedback(() -> Text.literal("压制状态: " + (ghost.isSuppressed() ? "已压制" : "未压制")).formatted(Formatting.BLUE), false);
+         source.sendFeedback(() -> Text.literal("棺材钉: " + (ghost.hasCoffinNail() ? "已钉入" : "未钉入")).formatted(Formatting.BLUE), false);
          return 1;
       } else {
-         source.method_9213(Text.method_43470("目标不是玩家鬼魂实体"));
+         source.sendError(Text.literal("目标不是玩家鬼魂实体"));
          return 0;
       }
    }
 
    public static int retrieveCoffinNail(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
       ServerCommandSource source = (ServerCommandSource)context.getSource();
-      PlayerGhostEntity ghost = (PlayerGhostEntity)EntityArgumentType.method_9313(context, "ghost");
+      PlayerGhostEntity ghost = (PlayerGhostEntity)EntityArgumentType.getEntity(context, "ghost");
       if (ghost != null) {
          if (ghost.retrieveCoffinNail()) {
-            source.method_9226(() -> Text.method_43470("成功取回棺材钉").method_27692(Formatting.field_1060), false);
+            source.sendFeedback(() -> Text.literal("成功取回棺材钉").formatted(Formatting.GREEN), false);
             return 1;
          } else {
-            source.method_9213(Text.method_43470("无法取回棺材钉（鬼魂未被压制或没有棺材钉）"));
+            source.sendError(Text.literal("无法取回棺材钉（鬼魂未被压制或没有棺材钉）"));
             return 0;
          }
       } else {
-         source.method_9213(Text.method_43470("目标不是玩家鬼魂实体"));
+         source.sendError(Text.literal("目标不是玩家鬼魂实体"));
          return 0;
       }
    }
 
    public static int suppressGhost(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
       ServerCommandSource source = (ServerCommandSource)context.getSource();
-      PlayerGhostEntity ghost = (PlayerGhostEntity)EntityArgumentType.method_9313(context, "ghost");
+      PlayerGhostEntity ghost = (PlayerGhostEntity)EntityArgumentType.getEntity(context, "ghost");
       if (ghost != null) {
          ghost.setSuppressed(true);
-         source.method_9226(() -> Text.method_43470("已压制玩家鬼魂").method_27692(Formatting.field_1060), false);
+         source.sendFeedback(() -> Text.literal("已压制玩家鬼魂").formatted(Formatting.GREEN), false);
          return 1;
       } else {
-         source.method_9213(Text.method_43470("目标不是玩家鬼魂实体"));
+         source.sendError(Text.literal("目标不是玩家鬼魂实体"));
          return 0;
       }
    }

@@ -16,22 +16,22 @@ public class GhostPostOfficeDiaryItem extends Item {
 
    public static ItemStack createDiary() {
       ItemStack stack = new ItemStack(ModItems.GHOST_POST_OFFICE_DIARY);
-      NbtCompound nbt = stack.method_7948();
-      nbt.method_10556("ghost_post_office_diary", true);
+      NbtCompound nbt = stack.getOrCreateNbt();
+      nbt.putBoolean("ghost_post_office_diary", true);
       return stack;
    }
 
    public static boolean isDiary(ItemStack stack) {
-      if (stack == null || stack.method_7960()) {
+      if (stack == null || stack.isEmpty()) {
          return false;
       }
 
-      if (!stack.method_31574(ModItems.GHOST_POST_OFFICE_DIARY)) {
+      if (!stack.isOf(ModItems.GHOST_POST_OFFICE_DIARY)) {
          return false;
       }
 
-      NbtCompound nbt = stack.method_7969();
-      return nbt != null && nbt.method_10577("ghost_post_office_diary");
+      NbtCompound nbt = stack.getNbt();
+      return nbt != null && nbt.getBoolean("ghost_post_office_diary");
    }
 
    public static boolean hasDiary(PlayerEntity player) {
@@ -39,18 +39,18 @@ public class GhostPostOfficeDiaryItem extends Item {
          return false;
       }
 
-      for (ItemStack stack : player.method_31548().field_7547) {
+      for (ItemStack stack : player.getInventory().main) {
          if (isDiary(stack)) {
             return true;
          }
       }
 
-      for (ItemStack stack : player.method_31548().field_7548) {
+      for (ItemStack stack : player.getInventory().armor) {
          if (isDiary(stack)) {
             return true;
          }
       }
 
-      return isDiary(player.method_6079());
+      return isDiary(player.getOffHandStack());
    }
 }

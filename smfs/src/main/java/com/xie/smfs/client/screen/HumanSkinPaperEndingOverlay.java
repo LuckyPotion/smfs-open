@@ -29,12 +29,12 @@ public class HumanSkinPaperEndingOverlay extends Screen {
    private float fadeAlpha = 0.0F;
 
    public HumanSkinPaperEndingOverlay() {
-      super(Text.method_43470(""));
+      super(Text.literal(""));
       this.texts = Arrays.asList("你被人皮纸夺舍了", "人皮纸利用你的身体解放了全部厉鬼", "终结灵异时代失败");
    }
 
-   protected void method_25426() {
-      super.method_25426();
+   protected void init() {
+      super.init();
       this.phase = HumanSkinPaperEndingOverlay.Phase.FADE_IN;
       this.phaseStartTime = System.currentTimeMillis();
       this.currentTextIndex = 0;
@@ -43,10 +43,10 @@ public class HumanSkinPaperEndingOverlay extends Screen {
       this.fadeAlpha = 0.0F;
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
       long now = System.currentTimeMillis();
       long elapsed = now - this.phaseStartTime;
-      context.method_25294(0, 0, this.field_22789, this.field_22790, -16777216);
+      context.fill(0, 0, this.width, this.height, -16777216);
       if (this.phase == HumanSkinPaperEndingOverlay.Phase.BUTTON) {
          this.renderButtonPhase(context, mouseX, mouseY, delta);
       } else {
@@ -69,13 +69,13 @@ public class HumanSkinPaperEndingOverlay extends Screen {
             this.renderText(context, currentText);
          }
 
-         super.method_25394(context, mouseX, mouseY, delta);
+         super.render(context, mouseX, mouseY, delta);
       }
    }
 
    private void handleFadeIn(long elapsed, long now) {
       float progress = (float)elapsed / 300.0F;
-      this.fadeAlpha = MathHelper.method_15363(progress, 0.0F, 1.0F);
+      this.fadeAlpha = MathHelper.clamp(progress, 0.0F, 1.0F);
       if (elapsed >= 300L) {
          this.fadeAlpha = 1.0F;
          this.phase = HumanSkinPaperEndingOverlay.Phase.TYPING;
@@ -112,7 +112,7 @@ public class HumanSkinPaperEndingOverlay extends Screen {
 
    private void handleFadeOut(long elapsed) {
       float progress = (float)elapsed / 500.0F;
-      this.fadeAlpha = MathHelper.method_15363(1.0F - progress, 0.0F, 1.0F);
+      this.fadeAlpha = MathHelper.clamp(1.0F - progress, 0.0F, 1.0F);
       if (elapsed >= 500L) {
          this.fadeAlpha = 0.0F;
          this.currentTextIndex++;
@@ -127,13 +127,13 @@ public class HumanSkinPaperEndingOverlay extends Screen {
          String visibleText = fullText.substring(0, Math.min(this.revealedChars, fullText.length()));
          int textAlpha = (int)(this.fadeAlpha * 255.0F);
          int color = textAlpha << 24 | 16733525;
-         int textWidth = this.field_22793.method_1727(visibleText);
-         int textY = this.field_22790 / 2 - 9 / 2;
-         context.method_51448().method_22903();
-         context.method_51448().method_46416(this.field_22789 / 2.0F, textY, 0.0F);
-         context.method_51448().method_22905(2.0F, 2.0F, 1.0F);
-         context.method_51439(this.field_22793, Text.method_43470(visibleText), -textWidth / 2, 0, color, false);
-         context.method_51448().method_22909();
+         int textWidth = this.textRenderer.getWidth(visibleText);
+         int textY = this.height / 2 - 9 / 2;
+         context.getMatrices().push();
+         context.getMatrices().translate(this.width / 2.0F, textY, 0.0F);
+         context.getMatrices().scale(2.0F, 2.0F, 1.0F);
+         context.drawText(this.textRenderer, Text.literal(visibleText), -textWidth / 2, 0, color, false);
+         context.getMatrices().pop();
       }
    }
 
@@ -141,60 +141,60 @@ public class HumanSkinPaperEndingOverlay extends Screen {
       String currentText = this.texts.get(this.texts.size() - 1);
       int textAlpha = 255;
       int color = textAlpha << 24 | 16733525;
-      int textWidth = this.field_22793.method_1727(currentText);
-      int textY = this.field_22790 / 2 - 30;
-      context.method_51448().method_22903();
-      context.method_51448().method_46416(this.field_22789 / 2.0F, textY, 0.0F);
-      context.method_51448().method_22905(2.0F, 2.0F, 1.0F);
-      context.method_51439(this.field_22793, Text.method_43470(currentText), -textWidth / 2, 0, color, false);
-      context.method_51448().method_22909();
-      super.method_25394(context, mouseX, mouseY, delta);
+      int textWidth = this.textRenderer.getWidth(currentText);
+      int textY = this.height / 2 - 30;
+      context.getMatrices().push();
+      context.getMatrices().translate(this.width / 2.0F, textY, 0.0F);
+      context.getMatrices().scale(2.0F, 2.0F, 1.0F);
+      context.drawText(this.textRenderer, Text.literal(currentText), -textWidth / 2, 0, color, false);
+      context.getMatrices().pop();
+      super.render(context, mouseX, mouseY, delta);
    }
 
    private void addReturnButton() {
-      int centerX = this.field_22789 / 2;
+      int centerX = this.width / 2;
       if (ModConfig.getInstance().unlockSaveLock) {
-         int continueY = this.field_22790 / 2 + 30;
-         ButtonWidget continueButton = ButtonWidget.method_46430(Text.method_43470("§a继续游戏"), btn -> {
+         int continueY = this.height / 2 + 30;
+         ButtonWidget continueButton = ButtonWidget.builder(Text.literal("§a继续游戏"), btn -> {
             HumanSkinPaperContinueC2SPacket.send();
-            if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-               this.field_22787.method_1507(null);
+            if (this.client != null && this.client.player != null) {
+               this.client.setScreen(null);
             }
-         }).method_46434(centerX - 100, continueY, 200, 20).method_46431();
-         this.method_37063(continueButton);
-         int returnY = this.field_22790 / 2 + 55;
-         ButtonWidget returnButton = ButtonWidget.method_46430(Text.method_43471("smfs.ending.return_to_title"), btn -> {
-            if (this.field_22787 != null) {
-               if (this.field_22787.field_1687 != null) {
-                  this.field_22787.field_1687.method_8525();
+         }).dimensions(centerX - 100, continueY, 200, 20).build();
+         this.addDrawableChild(continueButton);
+         int returnY = this.height / 2 + 55;
+         ButtonWidget returnButton = ButtonWidget.builder(Text.translatable("smfs.ending.return_to_title"), btn -> {
+            if (this.client != null) {
+               if (this.client.world != null) {
+                  this.client.world.disconnect();
                }
 
-               this.field_22787.method_18099();
-               this.field_22787.method_1507(new TitleScreen());
+               this.client.disconnect();
+               this.client.setScreen(new TitleScreen());
             }
-         }).method_46434(centerX - 100, returnY, 200, 20).method_46431();
-         this.method_37063(returnButton);
+         }).dimensions(centerX - 100, returnY, 200, 20).build();
+         this.addDrawableChild(returnButton);
       } else {
-         int buttonY = this.field_22790 / 2 + 40;
-         ButtonWidget button = ButtonWidget.method_46430(Text.method_43471("smfs.ending.return_to_title"), btn -> {
-            if (this.field_22787 != null) {
-               if (this.field_22787.field_1687 != null) {
-                  this.field_22787.field_1687.method_8525();
+         int buttonY = this.height / 2 + 40;
+         ButtonWidget button = ButtonWidget.builder(Text.translatable("smfs.ending.return_to_title"), btn -> {
+            if (this.client != null) {
+               if (this.client.world != null) {
+                  this.client.world.disconnect();
                }
 
-               this.field_22787.method_18099();
-               this.field_22787.method_1507(new TitleScreen());
+               this.client.disconnect();
+               this.client.setScreen(new TitleScreen());
             }
-         }).method_46434(centerX - 100, buttonY, 200, 20).method_46431();
-         this.method_37063(button);
+         }).dimensions(centerX - 100, buttonY, 200, 20).build();
+         this.addDrawableChild(button);
       }
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return false;
    }
 

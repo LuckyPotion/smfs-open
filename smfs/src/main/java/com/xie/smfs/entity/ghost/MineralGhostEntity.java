@@ -21,17 +21,17 @@ public class MineralGhostEntity extends GhostEntity {
    private static final char TERROR_LEVEL = 'C';
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 90000.0)
-         .method_26868(EntityAttributes.field_23719, 0.18)
-         .method_26868(EntityAttributes.field_23721, 8.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 90000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.18)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 8.0);
    }
 
    public MineralGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 1000, 100, 50, 0.1F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(90000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.18);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(8.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(90000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.18);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(8.0);
    }
 
    @Override
@@ -40,7 +40,7 @@ public class MineralGhostEntity extends GhostEntity {
          return false;
       } else if (CoffinEffectManager.isPlayerInGoldCoffin(player)) {
          return false;
-      } else if (player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
+      } else if (player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
          return false;
       } else {
          return !this.isPlayerInRange(player) ? false : this.hasMineralsInInventory(player);
@@ -48,13 +48,13 @@ public class MineralGhostEntity extends GhostEntity {
    }
 
    private boolean isPlayerInRange(PlayerEntity player) {
-      return this.method_5858(player) <= 1024.0;
+      return this.squaredDistanceTo(player) <= 1024.0;
    }
 
    private boolean hasMineralsInInventory(PlayerEntity player) {
-      for (int i = 0; i < player.method_31548().method_5439(); i++) {
-         ItemStack stack = player.method_31548().method_5438(i);
-         if (!stack.method_7960() && this.isMineral(stack)) {
+      for (int i = 0; i < player.getInventory().size(); i++) {
+         ItemStack stack = player.getInventory().getStack(i);
+         if (!stack.isEmpty() && this.isMineral(stack)) {
             return true;
          }
       }
@@ -63,37 +63,37 @@ public class MineralGhostEntity extends GhostEntity {
    }
 
    private boolean isMineral(ItemStack stack) {
-      return stack.method_31574(Items.field_8713)
-         || stack.method_31574(Items.field_8620)
-         || stack.method_31574(Items.field_8695)
-         || stack.method_31574(Items.field_8477)
-         || stack.method_31574(Items.field_8687)
-         || stack.method_31574(Items.field_8759)
-         || stack.method_31574(Items.field_8725)
-         || stack.method_31574(Items.field_8155)
-         || stack.method_31574(Items.field_22020)
-         || stack.method_31574(Items.field_27022)
-         || stack.method_31574(Items.field_27063)
-         || stack.method_31574(Items.field_33400)
-         || stack.method_31574(Items.field_33402)
-         || stack.method_31574(Items.field_33401)
-         || stack.method_31574(Items.field_8476)
-         || stack.method_31574(Items.field_8599)
-         || stack.method_31574(Items.field_8775)
-         || stack.method_31574(Items.field_8787)
-         || stack.method_31574(Items.field_8837)
-         || stack.method_31574(Items.field_8809)
-         || stack.method_31574(Items.field_8604)
-         || stack.method_31574(Items.field_8702)
-         || stack.method_31574(Items.field_29212)
-         || stack.method_31574(Items.field_29020)
-         || stack.method_31574(Items.field_29019)
-         || stack.method_31574(Items.field_29022)
-         || stack.method_31574(Items.field_29216)
-         || stack.method_31574(Items.field_29021)
-         || stack.method_31574(Items.field_29023)
-         || stack.method_31574(Items.field_27018)
-         || stack.method_31574(Items.field_29211)
-         || stack.method_31574(Items.field_22019);
+      return stack.isOf(Items.COAL)
+         || stack.isOf(Items.IRON_INGOT)
+         || stack.isOf(Items.GOLD_INGOT)
+         || stack.isOf(Items.DIAMOND)
+         || stack.isOf(Items.EMERALD)
+         || stack.isOf(Items.LAPIS_LAZULI)
+         || stack.isOf(Items.REDSTONE)
+         || stack.isOf(Items.QUARTZ)
+         || stack.isOf(Items.NETHERITE_INGOT)
+         || stack.isOf(Items.COPPER_INGOT)
+         || stack.isOf(Items.AMETHYST_SHARD)
+         || stack.isOf(Items.RAW_IRON)
+         || stack.isOf(Items.RAW_GOLD)
+         || stack.isOf(Items.RAW_COPPER)
+         || stack.isOf(Items.COAL_ORE)
+         || stack.isOf(Items.IRON_ORE)
+         || stack.isOf(Items.GOLD_ORE)
+         || stack.isOf(Items.DIAMOND_ORE)
+         || stack.isOf(Items.EMERALD_ORE)
+         || stack.isOf(Items.LAPIS_ORE)
+         || stack.isOf(Items.REDSTONE_ORE)
+         || stack.isOf(Items.NETHER_QUARTZ_ORE)
+         || stack.isOf(Items.DEEPSLATE_COAL_ORE)
+         || stack.isOf(Items.DEEPSLATE_IRON_ORE)
+         || stack.isOf(Items.DEEPSLATE_GOLD_ORE)
+         || stack.isOf(Items.DEEPSLATE_DIAMOND_ORE)
+         || stack.isOf(Items.DEEPSLATE_EMERALD_ORE)
+         || stack.isOf(Items.DEEPSLATE_LAPIS_ORE)
+         || stack.isOf(Items.DEEPSLATE_REDSTONE_ORE)
+         || stack.isOf(Items.COPPER_ORE)
+         || stack.isOf(Items.DEEPSLATE_COPPER_ORE)
+         || stack.isOf(Items.ANCIENT_DEBRIS);
    }
 }

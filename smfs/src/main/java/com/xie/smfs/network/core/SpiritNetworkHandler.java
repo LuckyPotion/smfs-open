@@ -140,7 +140,7 @@ public class SpiritNetworkHandler {
    public static void syncSpiritData(ServerPlayerEntity player) {
       NbtCompound spiritData = PlayerEvents.getSpiritAttributes(player);
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10794(spiritData);
+      buf.writeNbt(spiritData);
       ServerPlayNetworking.send(player, SYNC_SPIRIT_DATA, buf);
    }
 }

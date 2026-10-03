@@ -23,41 +23,41 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class SpiritBrewingStandBlock extends BlockWithEntity {
-   public static final BooleanProperty LIT = Properties.field_12548;
+   public static final BooleanProperty LIT = Properties.LIT;
 
    public SpiritBrewingStandBlock(Settings settings) {
       super(settings);
-      this.method_9590((BlockState)((BlockState)this.field_10647.method_11664()).method_11657(LIT, false));
+      this.setDefaultState((BlockState)((BlockState)this.stateManager.getDefaultState()).with(LIT, false));
    }
 
-   protected void method_9515(Builder<Block, BlockState> builder) {
-      builder.method_11667(new Property[]{LIT});
+   protected void appendProperties(Builder<Block, BlockState> builder) {
+      builder.add(new Property[]{LIT});
    }
 
    @Nullable
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new SpiritBrewingStandBlockEntity(pos, state);
    }
 
-   public BlockRenderType method_9604(BlockState state) {
-      return BlockRenderType.field_11456;
+   public BlockRenderType getRenderType(BlockState state) {
+      return BlockRenderType.ENTITYBLOCK_ANIMATED;
    }
 
    @Nullable
-   public <T extends BlockEntity> BlockEntityTicker<T> method_31645(World world, BlockState state, BlockEntityType<T> type) {
-      return world.field_9236 ? null : method_31618(type, SpiritBrewingStandBlockEntity.TYPE, SpiritBrewingStandBlockEntity::tick);
+   public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+      return world.isClient ? null : checkType(type, SpiritBrewingStandBlockEntity.TYPE, SpiritBrewingStandBlockEntity::tick);
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-      if (!world.field_9236) {
-         NamedScreenHandlerFactory screenHandlerFactory = state.method_26196(world, pos);
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+      if (!world.isClient) {
+         NamedScreenHandlerFactory screenHandlerFactory = state.createScreenHandlerFactory(world, pos);
          if (screenHandlerFactory != null) {
-            player.method_17355(screenHandlerFactory);
+            player.openHandledScreen(screenHandlerFactory);
          }
 
-         return ActionResult.field_21466;
+         return ActionResult.CONSUME;
       } else {
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       }
    }
 }

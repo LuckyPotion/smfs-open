@@ -42,22 +42,22 @@ public class YeZhenEntity extends GhostMasterEntity {
       this.shouldAttackPlayers = false;
       this.shouldProtectPlayers = true;
       this.shouldAttackGhostsNearPlayers = true;
-      this.method_5665(Text.method_43470("§6[替死鬼]叶真"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6[替死鬼]叶真"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.SPIRIT_FORUM;
    }
 
    public static Builder createYeZhenAttributes() {
-      return GhostMasterEntity.createGhostMasterAttributes().method_26868(EntityAttributes.field_23722, 0.8);
+      return GhostMasterEntity.createGhostMasterAttributes().add(EntityAttributes.GENERIC_ATTACK_KNOCKBACK, 0.8);
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -71,61 +71,61 @@ public class YeZhenEntity extends GhostMasterEntity {
    }
 
    @Override
-   public boolean method_6121(Entity target) {
-      boolean attacked = super.method_6121(target);
+   public boolean tryAttack(Entity target) {
+      boolean attacked = super.tryAttack(target);
       if (attacked && target instanceof LivingEntity livingTarget) {
-         livingTarget.method_6092(new StatusEffectInstance(ModEffects.SILENCE, 60, 0, false, true, true));
+         livingTarget.addStatusEffect(new StatusEffectInstance(ModEffects.SILENCE, 60, 0, false, true, true));
       }
 
       return attacked;
    }
 
    @Override
-   public boolean method_5643(DamageSource source, float amount) {
+   public boolean damage(DamageSource source, float amount) {
       if (this.isSuppressed()) {
-         return super.method_5643(source, amount);
+         return super.damage(source, amount);
       }
 
-      if (this.method_6032() - amount <= 0.0F && !this.method_37908().method_8608()) {
+      if (this.getHealth() - amount <= 0.0F && !this.getWorld().isClient()) {
          LivingEntity transferTarget = this.findTransferTargetWithin64Blocks();
          if (transferTarget != null) {
             boolean isGhostMasterOrGhost = transferTarget instanceof GhostMasterEntity || transferTarget instanceof GhostEntity;
-            if (this.hasScapegoatAbility(transferTarget) && transferTarget.method_6032() - amount <= 0.0F) {
-               return super.method_5643(source, amount);
+            if (this.hasScapegoatAbility(transferTarget) && transferTarget.getHealth() - amount <= 0.0F) {
+               return super.damage(source, amount);
             }
 
             if (isGhostMasterOrGhost) {
                ModEvents.processingSpiritDamage.set(true);
-               DamageSource spiritDamageSource = ModDamageSources.ghost(this.method_37908());
-               transferTarget.method_5643(spiritDamageSource, amount);
+               DamageSource spiritDamageSource = ModDamageSources.ghost(this.getWorld());
+               transferTarget.damage(spiritDamageSource, amount);
                ModEvents.processingSpiritDamage.set(false);
-               this.method_6033(this.method_6063());
-               this.method_37908().method_8406(ParticleTypes.field_22246, this.method_23317(), this.method_23318() + 1.0, this.method_23321(), 0.0, 0.0, 0.0);
+               this.setHealth(this.getMaxHealth());
+               this.getWorld().addParticle(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY() + 1.0, this.getZ(), 0.0, 0.0, 0.0);
                return true;
             }
 
-            DamageSource spiritDamageSource = ModDamageSources.ghost(this.method_37908());
-            boolean damageApplied = transferTarget.method_5643(spiritDamageSource, amount);
+            DamageSource spiritDamageSource = ModDamageSources.ghost(this.getWorld());
+            boolean damageApplied = transferTarget.damage(spiritDamageSource, amount);
             if (damageApplied) {
-               this.method_6033(this.method_6063());
-               this.method_37908().method_8406(ParticleTypes.field_22246, this.method_23317(), this.method_23318() + 1.0, this.method_23321(), 0.0, 0.0, 0.0);
+               this.setHealth(this.getMaxHealth());
+               this.getWorld().addParticle(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY() + 1.0, this.getZ(), 0.0, 0.0, 0.0);
                return true;
             }
          }
       }
 
-      return super.method_5643(source, amount);
+      return super.damage(source, amount);
    }
 
    private LivingEntity findTransferTargetWithin64Blocks() {
-      List<LivingEntity> nearbyEntities = this.method_37908()
-         .method_8390(
-            LivingEntity.class, this.method_5829().method_1014(64.0), entity -> entity != this && entity.method_5805() && !(entity instanceof PlayerEntity)
+      List<LivingEntity> nearbyEntities = this.getWorld()
+         .getEntitiesByClass(
+            LivingEntity.class, this.getBoundingBox().expand(64.0), entity -> entity != this && entity.isAlive() && !(entity instanceof PlayerEntity)
          );
       if (!nearbyEntities.isEmpty()) {
          nearbyEntities.sort((entity1, entity2) -> {
-            double distance1 = this.method_5858(entity1);
-            double distance2 = this.method_5858(entity2);
+            double distance1 = this.squaredDistanceTo(entity1);
+            double distance2 = this.squaredDistanceTo(entity2);
             return Double.compare(distance1, distance2);
          });
          return nearbyEntities.get(0);
@@ -135,16 +135,14 @@ public class YeZhenEntity extends GhostMasterEntity {
    }
 
    private void spawnDamageTransferParticles() {
-      ServerWorld serverWorld = (ServerWorld)this.method_37908();
-      Vec3d pos = this.method_19538();
+      ServerWorld serverWorld = (ServerWorld)this.getWorld();
+      Vec3d pos = this.getPos();
 
       for (int i = 0; i < 20; i++) {
-         double offsetX = (this.method_6051().method_43058() - 0.5) * 2.0;
-         double offsetY = this.method_6051().method_43058() * 2.0;
-         double offsetZ = (this.method_6051().method_43058() - 0.5) * 2.0;
-         serverWorld.method_14199(
-            ParticleTypes.field_11209, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.0, 0.0, 0.1
-         );
+         double offsetX = (this.getRandom().nextDouble() - 0.5) * 2.0;
+         double offsetY = this.getRandom().nextDouble() * 2.0;
+         double offsetZ = (this.getRandom().nextDouble() - 0.5) * 2.0;
+         serverWorld.spawnParticles(ParticleTypes.DAMAGE_INDICATOR, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.0, 0.0, 0.1);
       }
    }
 
@@ -155,7 +153,7 @@ public class YeZhenEntity extends GhostMasterEntity {
    @Override
    protected String getAttackDialogue() {
       String[] dialogues = new String[]{"我叶某人无敌于世间。"};
-      return dialogues[this.method_6051().method_43048(dialogues.length)];
+      return dialogues[this.getRandom().nextInt(dialogues.length)];
    }
 
    @Override
@@ -170,10 +168,10 @@ public class YeZhenEntity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack ghostMoney3Input = new ItemStack(ModItems.GHOST_MONEY_3, 3);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 26);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 26);
          this.tradeOffers.add(new TradeOffer(ghostMoney3Input, goldIngotOutput2, 12, 5, 0.05F));
          ItemStack coffinNailInput = new ItemStack(ModItems.COFFIN_NAIL, 1);
-         ItemStack goldNuggetOutput2 = new ItemStack(Items.field_8494, 22);
+         ItemStack goldNuggetOutput2 = new ItemStack(Items.GOLD_BLOCK, 22);
          this.tradeOffers.add(new TradeOffer(coffinNailInput, goldNuggetOutput2, 3, 15, 0.15F));
          this.tradeOffersInitialized = true;
       }

@@ -10,12 +10,17 @@ import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 public class EasterEggCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
       dispatcher.register(
-         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("easter")
-                  .then(((LiteralArgumentBuilder)CommandManager.method_9247("yinqi").requires(source -> source.method_9259(2))).executes(YinQiCommand::execute)))
+         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("easter")
+                  .then(
+                     ((LiteralArgumentBuilder)CommandManager.literal("yinqi").requires(source -> source.hasPermissionLevel(2))).executes(YinQiCommand::execute)
+                  ))
                .then(
-                  ((LiteralArgumentBuilder)CommandManager.method_9247("xianwang").requires(source -> source.method_9259(2))).executes(XianWangCommand::execute)
+                  ((LiteralArgumentBuilder)CommandManager.literal("xianwang").requires(source -> source.hasPermissionLevel(2)))
+                     .executes(XianWangCommand::execute)
                ))
-            .then(((LiteralArgumentBuilder)CommandManager.method_9247("guiniao").requires(source -> source.method_9259(2))).executes(GuiNiaoCommand::execute))
+            .then(
+               ((LiteralArgumentBuilder)CommandManager.literal("guiniao").requires(source -> source.hasPermissionLevel(2))).executes(GuiNiaoCommand::execute)
+            )
       );
    }
 }

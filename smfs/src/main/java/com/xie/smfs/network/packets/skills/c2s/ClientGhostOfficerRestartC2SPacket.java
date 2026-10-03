@@ -28,9 +28,9 @@ public class ClientGhostOfficerRestartC2SPacket {
       server.execute(() -> {
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "ghost_officer", ModItems.GHOST_OFFICER, 7);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭鬼差，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭鬼差，无法使用此技能"), true);
          } else if (result == GhostDomainManager.SkillCheckResult.LEVEL_TOO_LOW) {
-            player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+            player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
          } else {
             GhostDomainManager.handleGhostOfficerRestart(player);
             PlayerEvents.balanceRevivalDegree(player);

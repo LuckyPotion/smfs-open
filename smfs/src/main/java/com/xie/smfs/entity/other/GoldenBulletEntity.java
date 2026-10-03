@@ -22,23 +22,23 @@ public class GoldenBulletEntity extends PersistentProjectileEntity {
 
    public GoldenBulletEntity(EntityType<? extends PersistentProjectileEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5875(true);
+      this.setNoGravity(true);
    }
 
    public GoldenBulletEntity(EntityType<? extends PersistentProjectileEntity> entityType, LivingEntity owner, World world) {
       super(entityType, owner, world);
-      this.method_5875(true);
+      this.setNoGravity(true);
    }
 
    public GoldenBulletEntity(World world, LivingEntity owner) {
-      super(EntityType.field_6122, owner, world);
-      this.method_5875(true);
+      super(EntityType.ARROW, owner, world);
+      this.setNoGravity(true);
    }
 
-   protected void method_7454(EntityHitResult entityHitResult) {
-      super.method_7454(entityHitResult);
+   protected void onEntityHit(EntityHitResult entityHitResult) {
+      super.onEntityHit(entityHitResult);
       this.hitEntity = true;
-      if (!this.method_37908().field_9236 && entityHitResult.method_17782() instanceof LivingEntity target) {
+      if (!this.getWorld().isClient && entityHitResult.getEntity() instanceof LivingEntity target) {
          float damage = 15.0F;
          if (target instanceof PlayerEntity player) {
             int ghostCount = PlayerEvents.countOccupiedGhostSlots(player);
@@ -66,34 +66,34 @@ public class GoldenBulletEntity extends PersistentProjectileEntity {
             damage *= damageMultiplier;
          }
 
-         target.method_5643(this.method_48923().method_48803(this, this.method_24921()), damage);
+         target.damage(this.getDamageSources().arrow(this, this.getOwner()), damage);
       }
 
-      if (!this.method_31481()) {
-         this.method_31472();
+      if (!this.isRemoved()) {
+         this.discard();
       }
    }
 
-   protected void method_7488(HitResult hitResult) {
-      super.method_7488(hitResult);
-      Type type = hitResult.method_17783();
-      if (type == Type.field_1331) {
-         this.method_37908().method_32888(GameEvent.field_28162, hitResult.method_17784(), Emitter.method_43286(this, (BlockState)null));
-      } else if (type == Type.field_1332) {
+   protected void onCollision(HitResult hitResult) {
+      super.onCollision(hitResult);
+      Type type = hitResult.getType();
+      if (type == Type.ENTITY) {
+         this.getWorld().emitGameEvent(GameEvent.PROJECTILE_LAND, hitResult.getPos(), Emitter.of(this, (BlockState)null));
+      } else if (type == Type.BLOCK) {
          BlockHitResult blockHitResult = (BlockHitResult)hitResult;
-         BlockPos blockPos = blockHitResult.method_17777();
-         this.method_37908().method_43276(GameEvent.field_28162, blockPos, Emitter.method_43286(this, this.method_37908().method_8320(blockPos)));
+         BlockPos blockPos = blockHitResult.getBlockPos();
+         this.getWorld().emitGameEvent(GameEvent.PROJECTILE_LAND, blockPos, Emitter.of(this, this.getWorld().getBlockState(blockPos)));
       }
    }
 
-   protected void method_24920(BlockHitResult blockHitResult) {
-      super.method_24920(blockHitResult);
-      if (!this.method_31481()) {
-         this.method_31472();
+   protected void onBlockHit(BlockHitResult blockHitResult) {
+      super.onBlockHit(blockHitResult);
+      if (!this.isRemoved()) {
+         this.discard();
       }
    }
 
-   public ItemStack method_7445() {
-      return new ItemStack(Items.field_8397);
+   public ItemStack asItemStack() {
+      return new ItemStack(Items.GOLD_NUGGET);
    }
 }

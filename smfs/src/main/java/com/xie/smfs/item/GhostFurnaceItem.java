@@ -15,10 +15,10 @@ public class GhostFurnaceItem extends BlockItem {
       super(block, settings);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_furnace.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_furnace.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_furnace.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_furnace.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_furnace.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_furnace.description.type"));
    }
 }

@@ -31,17 +31,17 @@ public class QuestDetectionPacket {
    }
 
    public QuestDetectionPacket(PacketByteBuf buf) {
-      this.questId = buf.method_19772();
-      this.objectiveId = buf.method_19772();
-      this.strategyType = buf.method_19772();
+      this.questId = buf.readString();
+      this.objectiveId = buf.readString();
+      this.strategyType = buf.readString();
       this.amount = buf.readInt();
       this.consume = buf.readBoolean();
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10814(this.questId);
-      buf.method_10814(this.objectiveId);
-      buf.method_10814(this.strategyType);
+      buf.writeString(this.questId);
+      buf.writeString(this.objectiveId);
+      buf.writeString(this.strategyType);
       buf.writeInt(this.amount);
       buf.writeBoolean(this.consume);
    }
@@ -49,9 +49,9 @@ public class QuestDetectionPacket {
    public static void handleServer(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      String questId = buf.method_19772();
-      String objectiveId = buf.method_19772();
-      String strategyType = buf.method_19772();
+      String questId = buf.readString();
+      String objectiveId = buf.readString();
+      String strategyType = buf.readString();
       int amount = buf.readInt();
       boolean consume = buf.readBoolean();
       server.execute(() -> {

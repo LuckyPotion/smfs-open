@@ -33,62 +33,62 @@ public class GhostBowItem extends BowItem implements SpiritWeapon {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack itemStack = user.method_5998(hand);
-      if (world.method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
-         return TypedActionResult.method_22431(itemStack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack itemStack = user.getStackInHand(hand);
+      if (world.getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
+         return TypedActionResult.fail(itemStack);
       }
 
-      boolean hasArrow = !user.method_18808(itemStack).method_7960();
-      if (!user.method_31549().field_7477 && !hasArrow) {
-         return TypedActionResult.method_22431(itemStack);
+      boolean hasArrow = !user.getProjectileType(itemStack).isEmpty();
+      if (!user.getAbilities().creativeMode && !hasArrow) {
+         return TypedActionResult.fail(itemStack);
       }
 
-      user.method_6019(hand);
-      return TypedActionResult.method_22428(itemStack);
+      user.setCurrentHand(hand);
+      return TypedActionResult.consume(itemStack);
    }
 
-   public void method_7840(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
+   public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
       if (user instanceof PlayerEntity player) {
-         boolean creative = player.method_31549().field_7477;
-         ItemStack projectileStack = player.method_18808(stack);
-         if (!projectileStack.method_7960() || creative) {
-            int useTicks = this.method_7881(stack) - remainingUseTicks;
-            float pullProgress = method_7722(useTicks);
+         boolean creative = player.getAbilities().creativeMode;
+         ItemStack projectileStack = player.getProjectileType(stack);
+         if (!projectileStack.isEmpty() || creative) {
+            int useTicks = this.getMaxUseTime(stack) - remainingUseTicks;
+            float pullProgress = getPullProgress(useTicks);
             if (!(pullProgress < 0.1)) {
                PersistentProjectileEntity projectileEntity = this.createArrow(world, player, stack, projectileStack, creative);
                if (projectileEntity != null) {
-                  projectileEntity.method_24919(player, player.method_36455(), player.method_36454(), 0.0F, pullProgress * 3.0F, 1.0F);
+                  projectileEntity.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, pullProgress * 3.0F, 1.0F);
                   if (pullProgress == 1.0F) {
-                     projectileEntity.method_7439(true);
+                     projectileEntity.setCritical(true);
                   }
 
-                  if (world.method_27983() != Smfs.GHOST_DREAM_DIMENSION) {
-                     projectileEntity.method_7438(projectileEntity.method_7448() + this.getSpiritDamageBonus());
+                  if (world.getRegistryKey() != Smfs.GHOST_DREAM_DIMENSION) {
+                     projectileEntity.setDamage(projectileEntity.getDamage() + this.getSpiritDamageBonus());
                   }
 
                   if (!creative) {
-                     projectileStack.method_7934(1);
-                     if (projectileStack.method_7960()) {
-                        player.method_31548().method_7378(projectileStack);
+                     projectileStack.decrement(1);
+                     if (projectileStack.isEmpty()) {
+                        player.getInventory().removeOne(projectileStack);
                      }
                   }
 
-                  world.method_43128(
+                  world.playSound(
                      null,
-                     player.method_23317(),
-                     player.method_23318(),
-                     player.method_23321(),
-                     SoundEvents.field_14600,
-                     SoundCategory.field_15248,
+                     player.getX(),
+                     player.getY(),
+                     player.getZ(),
+                     SoundEvents.ENTITY_ARROW_SHOOT,
+                     SoundCategory.PLAYERS,
                      1.0F,
-                     1.0F / (world.method_8409().method_43057() * 0.4F + 1.2F) + pullProgress * 0.5F
+                     1.0F / (world.getRandom().nextFloat() * 0.4F + 1.2F) + pullProgress * 0.5F
                   );
-                  if (!world.field_9236) {
-                     world.method_8649(projectileEntity);
+                  if (!world.isClient) {
+                     world.spawnEntity(projectileEntity);
                   }
 
-                  projectileEntity.method_7432(player);
+                  projectileEntity.setOwner(player);
                }
             }
          }
@@ -96,56 +96,54 @@ public class GhostBowItem extends BowItem implements SpiritWeapon {
    }
 
    private PersistentProjectileEntity createArrow(World world, PlayerEntity player, ItemStack bowStack, ItemStack arrowStack, boolean creative) {
-      if (arrowStack.method_7960() && creative) {
-         arrowStack = new ItemStack(Items.field_8107);
+      if (arrowStack.isEmpty() && creative) {
+         arrowStack = new ItemStack(Items.ARROW);
       }
 
       final ItemStack finalArrowStack = arrowStack;
-      return new PersistentProjectileEntity(EntityType.field_6122, player, world) {
+      return new PersistentProjectileEntity(EntityType.ARROW, player, world) {
          private boolean hitEntity = false;
 
-         protected void method_7454(EntityHitResult entityHitResult) {
-            super.method_7454(entityHitResult);
+         protected void onEntityHit(EntityHitResult entityHitResult) {
+            super.onEntityHit(entityHitResult);
             this.hitEntity = true;
-            if (!this.method_37908().field_9236 && entityHitResult.method_17782() instanceof LivingEntity target) {
-               float damage = (float)this.method_7448();
-               target.method_5643(this.method_48923().method_48803(this, this.method_24921()), damage);
+            if (!this.getWorld().isClient && entityHitResult.getEntity() instanceof LivingEntity target) {
+               float damage = (float)this.getDamage();
+               target.damage(this.getDamageSources().arrow(this, this.getOwner()), damage);
             }
 
-            if (!this.method_31481()) {
-               this.method_31472();
+            if (!this.isRemoved()) {
+               this.discard();
             }
          }
 
-         protected void method_7450(LivingEntity target) {
-            super.method_7450(target);
+         protected void onHit(LivingEntity target) {
+            super.onHit(target);
          }
 
-         protected void method_7488(HitResult hitResult) {
-            super.method_7488(hitResult);
-            Type type = hitResult.method_17783();
-            if (type == Type.field_1331) {
-               this.method_37908().method_32888(GameEvent.field_28162, hitResult.method_17784(), Emitter.method_43286(this, (BlockState)null));
-            } else if (type == Type.field_1332) {
+         protected void onCollision(HitResult hitResult) {
+            super.onCollision(hitResult);
+            Type type = hitResult.getType();
+            if (type == Type.ENTITY) {
+               this.getWorld().emitGameEvent(GameEvent.PROJECTILE_LAND, hitResult.getPos(), Emitter.of(this, (BlockState)null));
+            } else if (type == Type.BLOCK) {
                BlockHitResult blockHitResult = (BlockHitResult)hitResult;
-               BlockPos blockPos = blockHitResult.method_17777();
-               this.method_37908().method_43276(GameEvent.field_28162, blockPos, Emitter.method_43286(this, this.method_37908().method_8320(blockPos)));
+               BlockPos blockPos = blockHitResult.getBlockPos();
+               this.getWorld().emitGameEvent(GameEvent.PROJECTILE_LAND, blockPos, Emitter.of(this, this.getWorld().getBlockState(blockPos)));
             }
          }
 
-         protected void method_24920(BlockHitResult blockHitResult) {
-            super.method_24920(blockHitResult);
-            if (!this.hitEntity && this.method_24921() instanceof PlayerEntity owner && !this.method_31481()) {
-               float damage = (float)this.method_7448();
-               owner.method_5643(ModDamageSources.ghost(owner.method_37908()), damage);
-               world.method_43128(
-                  null, owner.method_23317(), owner.method_23318(), owner.method_23321(), SoundEvents.field_15115, SoundCategory.field_15248, 1.0F, 1.0F
-               );
+         protected void onBlockHit(BlockHitResult blockHitResult) {
+            super.onBlockHit(blockHitResult);
+            if (!this.hitEntity && this.getOwner() instanceof PlayerEntity owner && !this.isRemoved()) {
+               float damage = (float)this.getDamage();
+               owner.damage(ModDamageSources.ghost(owner.getWorld()), damage);
+               world.playSound(null, owner.getX(), owner.getY(), owner.getZ(), SoundEvents.ENTITY_PLAYER_HURT, SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
          }
 
-         public ItemStack method_7445() {
-            return finalArrowStack.method_7972();
+         public ItemStack asItemStack() {
+            return finalArrowStack.copy();
          }
       };
    }
@@ -155,14 +153,14 @@ public class GhostBowItem extends BowItem implements SpiritWeapon {
       return 50.0F;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_bow.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_bow.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_bow.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_bow.effect1.miss"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_bow.effect2.miss"));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_bow.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_bow.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_bow.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_bow.effect1.miss"));
+      tooltip.add(Text.translatable("item.smfs.ghost_bow.effect2.miss"));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
    }
 }

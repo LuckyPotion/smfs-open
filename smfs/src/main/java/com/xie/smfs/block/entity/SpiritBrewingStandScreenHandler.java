@@ -25,67 +25,67 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
       super(ModScreenHandlers.SPIRIT_BREWING_STAND_SCREEN_HANDLER, syncId);
       this.inventory = inventory;
       this.propertyDelegate = propertyDelegate;
-      this.method_7621(new SpiritBrewingStandScreenHandler.GoldenContainerSlot(inventory, 3, 40, 35, propertyDelegate));
-      this.method_7621(new SpiritBrewingStandScreenHandler.ModMaterialSlot(inventory, 0, 24, 19, propertyDelegate));
-      this.method_7621(new SpiritBrewingStandScreenHandler.ModMaterialSlot(inventory, 1, 56, 19, propertyDelegate));
-      this.method_7621(new SpiritBrewingStandScreenHandler.VanillaMaterialSlot(inventory, 2, 40, 53, propertyDelegate));
-      this.method_7621(new SpiritBrewingStandScreenHandler.GlassBottleSlot(inventory, 4, 116, 35, propertyDelegate));
+      this.addSlot(new SpiritBrewingStandScreenHandler.GoldenContainerSlot(inventory, 3, 40, 35, propertyDelegate));
+      this.addSlot(new SpiritBrewingStandScreenHandler.ModMaterialSlot(inventory, 0, 24, 19, propertyDelegate));
+      this.addSlot(new SpiritBrewingStandScreenHandler.ModMaterialSlot(inventory, 1, 56, 19, propertyDelegate));
+      this.addSlot(new SpiritBrewingStandScreenHandler.VanillaMaterialSlot(inventory, 2, 40, 53, propertyDelegate));
+      this.addSlot(new SpiritBrewingStandScreenHandler.GlassBottleSlot(inventory, 4, 116, 35, propertyDelegate));
 
       for (int i = 0; i < 3; i++) {
          for (int j = 0; j < 9; j++) {
-            this.method_7621(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
+            this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
          }
       }
 
       for (int i = 0; i < 9; i++) {
-         this.method_7621(new Slot(playerInventory, i, 8 + i * 18, 142));
+         this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
       }
 
-      this.method_17360(propertyDelegate);
+      this.addProperties(propertyDelegate);
    }
 
-   public boolean method_7597(PlayerEntity player) {
-      return this.inventory.method_5443(player);
+   public boolean canUse(PlayerEntity player) {
+      return this.inventory.canPlayerUse(player);
    }
 
-   public ItemStack method_7601(PlayerEntity player, int slotIndex) {
-      ItemStack itemStack = ItemStack.field_8037;
-      Slot slot = (Slot)this.field_7761.get(slotIndex);
-      boolean isBrewing = this.propertyDelegate.method_17390(2) == 1;
-      if (isBrewing && slotIndex < 5) {
-         return ItemStack.field_8037;
+   public ItemStack quickMove(PlayerEntity player, int slot) {
+      ItemStack itemStack = ItemStack.EMPTY;
+      Slot slotx = (Slot)this.slots.get(slot);
+      boolean isBrewing = this.propertyDelegate.get(2) == 1;
+      if (isBrewing && slot < 5) {
+         return ItemStack.EMPTY;
       }
 
-      if (slot != null && slot.method_7681()) {
-         ItemStack itemStack2 = slot.method_7677();
-         itemStack = itemStack2.method_7972();
-         if (slotIndex < 5) {
-            if (!this.method_7616(itemStack2, 5, 41, true)) {
-               return ItemStack.field_8037;
+      if (slotx != null && slotx.hasStack()) {
+         ItemStack itemStack2 = slotx.getStack();
+         itemStack = itemStack2.copy();
+         if (slot < 5) {
+            if (!this.insertItem(itemStack2, 5, 41, true)) {
+               return ItemStack.EMPTY;
             }
-         } else if (itemStack2.method_31574(Items.field_8469)) {
-            if (!this.method_7616(itemStack2, 4, 5, false)) {
-               return ItemStack.field_8037;
+         } else if (itemStack2.isOf(Items.GLASS_BOTTLE)) {
+            if (!this.insertItem(itemStack2, 4, 5, false)) {
+               return ItemStack.EMPTY;
             }
-         } else if (ModItems.isModMaterial(itemStack2.method_7909())) {
-            if (!this.method_7616(itemStack2, 0, 2, false)) {
-               return ItemStack.field_8037;
+         } else if (ModItems.isModMaterial(itemStack2.getItem())) {
+            if (!this.insertItem(itemStack2, 0, 2, false)) {
+               return ItemStack.EMPTY;
             }
-         } else if (!this.method_7616(itemStack2, 2, 3, false)) {
-            return ItemStack.field_8037;
+         } else if (!this.insertItem(itemStack2, 2, 3, false)) {
+            return ItemStack.EMPTY;
          }
 
-         if (itemStack2.method_7960()) {
-            slot.method_48931(ItemStack.field_8037);
+         if (itemStack2.isEmpty()) {
+            slotx.setStack(ItemStack.EMPTY);
          } else {
-            slot.method_7668();
+            slotx.markDirty();
          }
 
-         if (itemStack2.method_7947() == itemStack.method_7947()) {
-            return ItemStack.field_8037;
+         if (itemStack2.getCount() == itemStack.getCount()) {
+            return ItemStack.EMPTY;
          }
 
-         slot.method_7667(player, itemStack2);
+         slotx.onTakeItem(player, itemStack2);
       }
 
       return itemStack;
@@ -102,15 +102,15 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          this.values = new int[size];
       }
 
-      public int method_17390(int index) {
+      public int get(int index) {
          return this.values[index];
       }
 
-      public void method_17391(int index, int value) {
+      public void set(int index, int value) {
          this.values[index] = value;
       }
 
-      public int method_17389() {
+      public int size() {
          return this.values.length;
       }
    }
@@ -123,8 +123,8 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          this.propertyDelegate = propertyDelegate;
       }
 
-      public boolean method_7674(PlayerEntity player) {
-         boolean isBrewing = this.propertyDelegate.method_17390(2) == 1;
+      public boolean canTakeItems(PlayerEntity playerEntity) {
+         boolean isBrewing = this.propertyDelegate.get(2) == 1;
          return !isBrewing;
       }
    }
@@ -134,15 +134,15 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          super(inventory, index, x, y, propertyDelegate);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return stack.method_31574(Items.field_8469);
+      public boolean canInsert(ItemStack stack) {
+         return stack.isOf(Items.GLASS_BOTTLE);
       }
 
-      public int method_7675() {
+      public int getMaxItemCount() {
          return 1;
       }
 
-      public int method_7676(ItemStack stack) {
+      public int getMaxItemCount(ItemStack stack) {
          return 1;
       }
    }
@@ -152,10 +152,8 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          super(inventory, index, x, y, propertyDelegate);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return stack.method_31574(ModItems.GOLDEN_CONTAINER)
-            && stack.method_7948().method_10577("HasGhost")
-            && stack.method_7948().method_10545("ContainedGhost");
+      public boolean canInsert(ItemStack stack) {
+         return stack.isOf(ModItems.GOLDEN_CONTAINER) && stack.getOrCreateNbt().getBoolean("HasGhost") && stack.getOrCreateNbt().contains("ContainedGhost");
       }
    }
 
@@ -164,8 +162,8 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          super(inventory, index, x, y, propertyDelegate);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return ModItems.isModMaterial(stack.method_7909());
+      public boolean canInsert(ItemStack stack) {
+         return ModItems.isModMaterial(stack.getItem());
       }
    }
 
@@ -176,17 +174,17 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          this.stacks = new ItemStack[size];
 
          for (int i = 0; i < size; i++) {
-            this.stacks[i] = ItemStack.field_8037;
+            this.stacks[i] = ItemStack.EMPTY;
          }
       }
 
-      public int method_5439() {
+      public int size() {
          return this.stacks.length;
       }
 
-      public boolean method_5442() {
+      public boolean isEmpty() {
          for (ItemStack stack : this.stacks) {
-            if (!stack.method_7960()) {
+            if (!stack.isEmpty()) {
                return false;
             }
          }
@@ -194,37 +192,37 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          return true;
       }
 
-      public ItemStack method_5438(int slot) {
+      public ItemStack getStack(int slot) {
          return this.stacks[slot];
       }
 
-      public ItemStack method_5434(int slot, int amount) {
-         return Inventories.method_5430(Arrays.asList(this.stacks), slot, amount);
+      public ItemStack removeStack(int slot, int amount) {
+         return Inventories.splitStack(Arrays.asList(this.stacks), slot, amount);
       }
 
-      public ItemStack method_5441(int slot) {
+      public ItemStack removeStack(int slot) {
          ItemStack result = this.stacks[slot];
-         this.stacks[slot] = ItemStack.field_8037;
+         this.stacks[slot] = ItemStack.EMPTY;
          return result;
       }
 
-      public void method_5447(int slot, ItemStack stack) {
+      public void setStack(int slot, ItemStack stack) {
          this.stacks[slot] = stack;
-         if (stack.method_7947() > this.method_5444()) {
-            stack.method_7939(this.method_5444());
+         if (stack.getCount() > this.getMaxCountPerStack()) {
+            stack.setCount(this.getMaxCountPerStack());
          }
       }
 
-      public void method_5431() {
+      public void markDirty() {
       }
 
-      public boolean method_5443(PlayerEntity player) {
+      public boolean canPlayerUse(PlayerEntity player) {
          return true;
       }
 
-      public void method_5448() {
+      public void clear() {
          for (int i = 0; i < this.stacks.length; i++) {
-            this.stacks[i] = ItemStack.field_8037;
+            this.stacks[i] = ItemStack.EMPTY;
          }
       }
    }
@@ -234,8 +232,8 @@ public class SpiritBrewingStandScreenHandler extends ScreenHandler {
          super(inventory, index, x, y, propertyDelegate);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return !ModItems.isModMaterial(stack.method_7909());
+      public boolean canInsert(ItemStack stack) {
+         return !ModItems.isModMaterial(stack.getItem());
       }
    }
 }

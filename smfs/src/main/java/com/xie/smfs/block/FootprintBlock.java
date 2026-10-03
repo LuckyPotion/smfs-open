@@ -17,7 +17,7 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class FootprintBlock extends Block implements BlockEntityProvider {
-   private static final VoxelShape SHAPE = Block.method_9541(0.0, 0.0, 0.0, 16.0, 0.01, 16.0);
+   private static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 0.01, 16.0);
    public static final int DEFAULT_DECAY_TICKS = 240;
    public static final int MIN_DECAY_TICKS = 20;
    public static final int MAX_DECAY_TICKS = 12000;
@@ -26,36 +26,36 @@ public class FootprintBlock extends Block implements BlockEntityProvider {
       super(settings);
    }
 
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
       return SHAPE;
    }
 
-   public VoxelShape method_9549(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return VoxelShapes.method_1073();
+   public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return VoxelShapes.empty();
    }
 
-   public void method_9615(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
-      super.method_9615(state, world, pos, oldState, notify);
-      if (!world.method_8608()) {
-         world.method_35230(pos, ModBlockEntities.FOOTPRINT_BLOCK_ENTITY).ifPresent(entity -> {
+   public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
+      super.onBlockAdded(state, world, pos, oldState, notify);
+      if (!world.isClient()) {
+         world.getBlockEntity(pos, ModBlockEntities.FOOTPRINT_BLOCK_ENTITY).ifPresent(entity -> {
             int decayTime = entity.getDecayTime();
-            world.method_39279(pos, this, decayTime);
+            world.scheduleBlockTick(pos, this, decayTime);
          });
       }
    }
 
-   public void method_9588(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-      if (!world.method_8608()) {
-         world.method_8650(pos, false);
+   public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+      if (!world.isClient()) {
+         world.removeBlock(pos, false);
       }
    }
 
-   public boolean method_9579(BlockState state, BlockView world, BlockPos pos) {
+   public boolean isTransparent(BlockState state, BlockView world, BlockPos pos) {
       return true;
    }
 
    @Nullable
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new com.xie.smfs.block.entity.FootprintBlockEntity(pos, state);
    }
 

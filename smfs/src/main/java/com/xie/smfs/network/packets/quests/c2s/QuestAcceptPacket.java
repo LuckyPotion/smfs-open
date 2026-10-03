@@ -36,13 +36,13 @@ public class QuestAcceptPacket {
    }
 
    public static void encode(QuestAcceptPacket packet, PacketByteBuf buf) {
-      buf.method_10814(packet.questId);
-      buf.method_10814(packet.questType);
+      buf.writeString(packet.questId);
+      buf.writeString(packet.questType);
    }
 
    public static QuestAcceptPacket decode(PacketByteBuf buf) {
-      String questId = buf.method_19772();
-      String questType = buf.method_19772();
+      String questId = buf.readString();
+      String questType = buf.readString();
       return new QuestAcceptPacket(questId, questType);
    }
 
@@ -63,12 +63,12 @@ public class QuestAcceptPacket {
                   handleNormalQuest(player, packet.questId);
             }
 
-            player.method_7353(Text.method_43470("§a任务接受成功！"), false);
+            player.sendMessage(Text.literal("§a任务接受成功！"), false);
             NbtCompound updatedQuestData = QuestManager.getQuestData(player);
             ModNetwork.sendQuestAcceptResultToClient(packet.questId, true, updatedQuestData, player);
             RefreshQuestUIPacket.sendToClient(player);
          } catch (Exception e) {
-            player.method_7353(Text.method_43470("§c任务接受失败：" + e.getMessage()), false);
+            player.sendMessage(Text.literal("§c任务接受失败：" + e.getMessage()), false);
             LOGGER.error("处理任务接受包时出错", e);
          }
       });

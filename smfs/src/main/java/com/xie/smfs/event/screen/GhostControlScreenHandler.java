@@ -23,9 +23,9 @@ public class GhostControlScreenHandler extends ScreenHandler {
    public GhostControlScreenHandler(int syncId, PlayerInventory playerInventory, Inventory ghostInventory) {
       super(ModScreenHandlers.GHOST_CONTROL_SCREEN_HANDLER, syncId);
       Smfs.LOGGER.info("[服务器] 服务器端构造函数被调用: syncId={}", syncId);
-      method_17359(ghostInventory, 10);
+      checkSize(ghostInventory, 10);
       this.ghostInventory = ghostInventory;
-      ghostInventory.method_5435(playerInventory.field_7546);
+      ghostInventory.onOpen(playerInventory.player);
       int centerX = 88;
       int centerY = 74;
       int radius = 30;
@@ -34,7 +34,7 @@ public class GhostControlScreenHandler extends ScreenHandler {
          double angle = (Math.PI * 2) * i / 6.0;
          int x = centerX + (int)(radius * Math.cos(angle)) - 8;
          int y = centerY + (int)(radius * Math.sin(angle)) - 8;
-         this.method_7621(new GhostControlScreenHandler.GhostSlot(ghostInventory, i, x, y));
+         this.addSlot(new GhostControlScreenHandler.GhostSlot(ghostInventory, i, x, y));
       }
 
       int[] customX = new int[]{33, 130, 22, 141};
@@ -44,7 +44,7 @@ public class GhostControlScreenHandler extends ScreenHandler {
          int index = i - 6;
          int x = customX[index];
          int y = customY[index];
-         this.method_7621(new GhostControlScreenHandler.GhostSlot(ghostInventory, i, x, y));
+         this.addSlot(new GhostControlScreenHandler.GhostSlot(ghostInventory, i, x, y));
       }
    }
 
@@ -58,22 +58,22 @@ public class GhostControlScreenHandler extends ScreenHandler {
       Smfs.LOGGER.info("[客户端] 简化客户端构造函数被调用: syncId={}", syncId);
    }
 
-   public boolean method_7597(PlayerEntity player) {
-      boolean canUse = this.ghostInventory.method_5443(player);
+   public boolean canUse(PlayerEntity player) {
+      boolean canUse = this.ghostInventory.canPlayerUse(player);
       if (!canUse) {
-         Smfs.LOGGER.warn("[验证] 玩家{}使用权限被拒绝", player.method_5477().getString());
+         Smfs.LOGGER.warn("[验证] 玩家{}使用权限被拒绝", player.getName().getString());
       }
 
       return canUse;
    }
 
-   public ItemStack method_7601(PlayerEntity player, int slotIndex) {
-      return ItemStack.field_8037;
+   public ItemStack quickMove(PlayerEntity player, int slot) {
+      return ItemStack.EMPTY;
    }
 
-   public void method_7595(PlayerEntity player) {
-      super.method_7595(player);
-      this.ghostInventory.method_5432(player);
+   public void onClosed(PlayerEntity player) {
+      super.onClosed(player);
+      this.ghostInventory.onClose(player);
    }
 
    public static class GhostControlFactory implements ExtendedScreenHandlerFactory, NamedScreenHandlerFactory {
@@ -81,14 +81,14 @@ public class GhostControlScreenHandler extends ScreenHandler {
       }
 
       public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-         Smfs.LOGGER.info("[工厂] 开始创建厉鬼控制界面处理器: syncId={}, player={}", syncId, player.method_5477().getString());
+         Smfs.LOGGER.info("[工厂] 开始创建厉鬼控制界面处理器: syncId={}, player={}", syncId, player.getName().getString());
          ScreenHandler handler = new GhostControlScreenHandler(syncId, inv, new SimpleInventory(10));
          Smfs.LOGGER.info("[工厂] 厉鬼控制界面处理器创建成功: {}", handler.getClass().getSimpleName());
          return handler;
       }
 
-      public Text method_5476() {
-         return Text.method_43471("screen.smfs.ghost_control");
+      public Text getDisplayName() {
+         return Text.translatable("screen.smfs.ghost_control");
       }
    }
 
@@ -97,8 +97,8 @@ public class GhostControlScreenHandler extends ScreenHandler {
          super(inventory, index, x, y);
       }
 
-      public boolean method_7680(ItemStack stack) {
-         return stack.method_7909() instanceof GhostPorcelainItem;
+      public boolean canInsert(ItemStack stack) {
+         return stack.getItem() instanceof GhostPorcelainItem;
       }
    }
 }

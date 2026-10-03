@@ -15,8 +15,8 @@ public class GhostFurnaceRecipeType implements RecipeType<GhostFurnaceRecipe> {
    }
 
    public static void register() {
-      Registry.method_10230(Registries.field_41188, new Identifier("smfs", "ghost_furnace"), INSTANCE);
-      Registry.method_10230(Registries.field_41189, new Identifier("smfs", "ghost_furnace"), SERIALIZER);
+      Registry.register(Registries.RECIPE_TYPE, new Identifier("smfs", "ghost_furnace"), INSTANCE);
+      Registry.register(Registries.RECIPE_SERIALIZER, new Identifier("smfs", "ghost_furnace"), SERIALIZER);
    }
 
    @Override

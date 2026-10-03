@@ -20,7 +20,7 @@ public class FogGhostEntity extends GhostEntity {
 
    @Override
    protected void applyDefaultEffects(PlayerEntity player) {
-      player.method_6092(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, Integer.MAX_VALUE, this.getGhostDomainActualLevel() - 1, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, Integer.MAX_VALUE, this.getGhostDomainActualLevel() - 1, false, false));
    }
 
    public FogGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
@@ -32,11 +32,11 @@ public class FogGhostEntity extends GhostEntity {
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
       if (!this.isSuppressed() && !this.isDeadlocked() && !RedGhostCandleItem.isHoldingCandle(player)) {
-         UUID playerId = player.method_5667();
-         Vec3d currentPos = player.method_19538();
+         UUID playerId = player.getUuid();
+         Vec3d currentPos = player.getPos();
          Vec3d lastPos = this.playerLastPositions.getOrDefault(playerId, currentPos);
-         long currentTick = this.method_37908().method_8510();
-         double distanceMoved = currentPos.method_1022(lastPos);
+         long currentTick = this.getWorld().getTime();
+         double distanceMoved = currentPos.distanceTo(lastPos);
          boolean isMoving = distanceMoved > 0.1;
          this.playerLastPositions.put(playerId, currentPos);
          if (isMoving) {
@@ -58,7 +58,7 @@ public class FogGhostEntity extends GhostEntity {
    }
 
    private void resetPlayerTracking(PlayerEntity player) {
-      UUID playerId = player.method_5667();
+      UUID playerId = player.getUuid();
       this.playerMoveStartTicks.remove(playerId);
       this.playerLastPositions.remove(playerId);
    }

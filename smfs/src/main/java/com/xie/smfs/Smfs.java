@@ -109,13 +109,13 @@ public class Smfs implements ModInitializer {
    public static final Logger LOGGER = LoggerFactory.getLogger("smfs");
    public static final Identifier SECOND_INVENTORY_ID = new Identifier("smfs", "second_inventory");
    public static final Identifier OPEN_GHOST_SCREEN_PACKET = new Identifier("smfs", "open_ghost_screen");
-   public static final RegistryKey<World> SPIRIT_REALM_DIMENSION = RegistryKey.method_29179(RegistryKeys.field_41223, new Identifier("smfs", "spirit_realm"));
-   public static final RegistryKey<DimensionType> SPIRIT_REALM_DIMENSION_TYPE = RegistryKey.method_29179(
-      RegistryKeys.field_41241, new Identifier("smfs", "spirit_realm")
+   public static final RegistryKey<World> SPIRIT_REALM_DIMENSION = RegistryKey.of(RegistryKeys.WORLD, new Identifier("smfs", "spirit_realm"));
+   public static final RegistryKey<DimensionType> SPIRIT_REALM_DIMENSION_TYPE = RegistryKey.of(
+      RegistryKeys.DIMENSION_TYPE, new Identifier("smfs", "spirit_realm")
    );
-   public static final RegistryKey<World> GHOST_DREAM_DIMENSION = RegistryKey.method_29179(RegistryKeys.field_41223, new Identifier("smfs", "ghost_dream"));
-   public static final RegistryKey<DimensionType> GHOST_DREAM_DIMENSION_TYPE = RegistryKey.method_29179(
-      RegistryKeys.field_41241, new Identifier("smfs", "ghost_dream")
+   public static final RegistryKey<World> GHOST_DREAM_DIMENSION = RegistryKey.of(RegistryKeys.WORLD, new Identifier("smfs", "ghost_dream"));
+   public static final RegistryKey<DimensionType> GHOST_DREAM_DIMENSION_TYPE = RegistryKey.of(
+      RegistryKeys.DIMENSION_TYPE, new Identifier("smfs", "ghost_dream")
    );
 
    @Override
@@ -174,8 +174,8 @@ public class Smfs implements ModInitializer {
    }
 
    private void onServerStarted(MinecraftServer server) {
-      if (server.method_30002() != null) {
-         GhostSpawnManager.loadLockedGhostTypes(server.method_30002());
+      if (server.getOverworld() != null) {
+         GhostSpawnManager.loadLockedGhostTypes(server.getOverworld());
       }
    }
 

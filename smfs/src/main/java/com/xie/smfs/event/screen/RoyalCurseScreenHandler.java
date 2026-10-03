@@ -28,7 +28,7 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
 
    public RoyalCurseScreenHandler(int syncId, PlayerInventory inventory) {
       super(ModScreenHandlers.ROYAL_CURSE_SCREEN_HANDLER, syncId);
-      this.player = inventory.field_7546;
+      this.player = inventory.player;
       this.royalCurseData = PlayerRoyalCurseManager.getRoyalCurseData(this.player);
    }
 
@@ -44,15 +44,15 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
       return this.player;
    }
 
-   public boolean method_7597(PlayerEntity player) {
+   public boolean canUse(PlayerEntity player) {
       return true;
    }
 
-   public ItemStack method_7601(PlayerEntity player, int index) {
-      return ItemStack.field_8037;
+   public ItemStack quickMove(PlayerEntity player, int slot) {
+      return ItemStack.EMPTY;
    }
 
-   public boolean method_7604(PlayerEntity player, int id) {
+   public boolean onButtonClick(PlayerEntity player, int id) {
       switch (id) {
          case 0:
             LOGGER.debug("收到召唤按钮点击事件，索引: {}", this.selectedServantIndex);
@@ -75,7 +75,7 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
    }
 
    public void summonServant(int servantIndex) {
-      if (this.player != null && !this.player.method_37908().field_9236) {
+      if (this.player != null && !this.player.getWorld().isClient) {
          PlayerRoyalCurseManager.summonServant(this.player, servantIndex);
          this.royalCurseData = PlayerRoyalCurseManager.getRoyalCurseData(this.player);
          this.syncDataToClient();
@@ -83,7 +83,7 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
    }
 
    public void recallServant(int servantIndex) {
-      if (this.player != null && !this.player.method_37908().field_9236) {
+      if (this.player != null && !this.player.getWorld().isClient) {
          PlayerRoyalCurseManager.recallServant(this.player, servantIndex);
          this.royalCurseData = PlayerRoyalCurseManager.getRoyalCurseData(this.player);
          this.syncDataToClient();
@@ -91,7 +91,7 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
    }
 
    public void summonAllServants() {
-      if (this.player != null && !this.player.method_37908().field_9236) {
+      if (this.player != null && !this.player.getWorld().isClient) {
          RoyalCurseData data = PlayerRoyalCurseManager.getRoyalCurseData(this.player);
          int servantCount = data.getServantCount();
 
@@ -108,7 +108,7 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
    }
 
    public void recallAllServants() {
-      if (this.player != null && !this.player.method_37908().field_9236) {
+      if (this.player != null && !this.player.getWorld().isClient) {
          RoyalCurseData data = PlayerRoyalCurseManager.getRoyalCurseData(this.player);
          int servantCount = data.getServantCount();
 
@@ -136,7 +136,7 @@ public class RoyalCurseScreenHandler extends ScreenHandler {
       }
 
       public Text method_5476() {
-         return Text.method_43470("王家诅咒");
+         return Text.literal("王家诅咒");
       }
 
       public void writeScreenOpeningData(ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf) {

@@ -18,18 +18,18 @@ import net.minecraft.text.Text.Serializer;
 public class PlayerJoinListener {
    public static void register() {
       ServerPlayConnectionEvents.JOIN.register((Join)(handler, sender, server) -> {
-         ServerPlayerEntity player = handler.method_32311();
+         ServerPlayerEntity player = handler.getPlayer();
          if (!ModConfig.getInstance().unlockSaveLock && GhostDeathHandler.isPlayerPermanentlyLocked(player)) {
-            System.out.println("玩家 " + player.method_7334().getName() + " 被检测为永久锁定，正在断开连接");
-            player.field_13987.method_14367(Text.method_43471("message.smfs.ghost.world_corrupted"));
+            System.out.println("玩家 " + player.getGameProfile().getName() + " 被检测为永久锁定，正在断开连接");
+            player.networkHandler.disconnect(Text.translatable("message.smfs.ghost.world_corrupted"));
          } else {
             NbtCompound playerData = PlayerEvents.getSpiritAttributes(player);
-            if (!playerData.method_10577("has_received_starter_items")) {
-               giveItem(player, new ItemStack(Items.field_8091));
-               giveItem(player, new ItemStack(Items.field_8229, 10));
+            if (!playerData.getBoolean("has_received_starter_items")) {
+               giveItem(player, new ItemStack(Items.WOODEN_SWORD));
+               giveItem(player, new ItemStack(Items.BREAD, 10));
                giveItem(player, new ItemStack(ModItems.HUMAN_SKIN_PAPER));
                giveItem(player, createDefaultBook());
-               playerData.method_10556("has_received_starter_items", true);
+               playerData.putBoolean("has_received_starter_items", true);
                PlayerEvents.setSpiritAttributes(player, playerData);
             }
          }
@@ -37,32 +37,32 @@ public class PlayerJoinListener {
    }
 
    private static void giveItem(PlayerEntity player, ItemStack stack) {
-      if (!player.method_31548().method_7394(stack)) {
-         player.method_7328(stack, false);
+      if (!player.getInventory().insertStack(stack)) {
+         player.dropItem(stack, false);
       }
    }
 
    private static ItemStack createDefaultBook() {
       try {
-         ItemStack book = new ItemStack(Items.field_8360);
-         NbtCompound tag = book.method_7948();
-         tag.method_10582("title", Text.method_43471("book.smfs.default_book.title").getString());
-         tag.method_10582("author", Text.method_43471("book.smfs.default_book.author").getString());
+         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+         NbtCompound tag = book.getOrCreateNbt();
+         tag.putString("title", Text.translatable("book.smfs.default_book.title").getString());
+         tag.putString("author", Text.translatable("book.smfs.default_book.author").getString());
          NbtList pages = new NbtList();
 
          for (int i = 0; i < 11; i++) {
             String translationKey = "book.smfs.default_book.page" + (i + 1);
-            String pageText = Text.method_43471(translationKey).getString();
-            String jsonText = Serializer.method_10867(Text.method_43470(pageText));
-            pages.add(NbtString.method_23256(jsonText));
+            String pageText = Text.translatable(translationKey).getString();
+            String jsonText = Serializer.toJson(Text.literal(pageText));
+            pages.add(NbtString.of(jsonText));
          }
 
-         tag.method_10566("pages", pages);
-         tag.method_10556("resolved", true);
-         book.method_7977(Text.method_43471("book.smfs.default_book.title"));
+         tag.put("pages", pages);
+         tag.putBoolean("resolved", true);
+         book.setCustomName(Text.translatable("book.smfs.default_book.title"));
          return book;
       } catch (Exception e) {
-         return new ItemStack(Items.field_8360);
+         return new ItemStack(Items.WRITTEN_BOOK);
       }
    }
 }

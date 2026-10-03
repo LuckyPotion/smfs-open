@@ -22,7 +22,7 @@ public class FactionManager {
    public static final int REQUIRED_REPUTATION = 10000;
 
    public static FactionManager.FactionData getFactionData(PlayerEntity player) {
-      return PLAYER_FACTION_DATA.computeIfAbsent(player.method_5667(), k -> {
+      return PLAYER_FACTION_DATA.computeIfAbsent(player.getUuid(), k -> {
          FactionManager.FactionData data = new FactionManager.FactionData();
          loadFromCache(player, data);
          return data;
@@ -96,13 +96,13 @@ public class FactionManager {
 
    public static boolean tryJoinFaction(ServerPlayerEntity player, PlayerFaction faction) {
       if (!canJoinFaction(player)) {
-         player.method_7353(Text.method_43470("§c声望不足，需要10000声望才能加入" + faction.getDisplayName() + "。").method_27692(Formatting.field_1061), false);
+         player.sendMessage(Text.literal("§c声望不足，需要10000声望才能加入" + faction.getDisplayName() + "。").formatted(Formatting.RED), false);
          return false;
       }
 
       FactionManager.FactionData data = getFactionData(player);
       if (data.faction == faction) {
-         player.method_7353(Text.method_43470("§e你已经加入了" + faction.getDisplayName() + "。").method_27692(Formatting.field_1054), false);
+         player.sendMessage(Text.literal("§e你已经加入了" + faction.getDisplayName() + "。").formatted(Formatting.YELLOW), false);
          return false;
       }
 
@@ -117,10 +117,10 @@ public class FactionManager {
          }
 
          syncToCache(player);
-         player.method_7353(Text.method_43470("§a你已成功加入" + faction.getDisplayName() + "！").method_27692(Formatting.field_1060), false);
+         player.sendMessage(Text.literal("§a你已成功加入" + faction.getDisplayName() + "！").formatted(Formatting.GREEN), false);
          return true;
       } else {
-         player.method_7353(Text.method_43470("§c你已经加入了" + data.faction.getDisplayName() + "，无法再加入其他阵营。").method_27692(Formatting.field_1061), false);
+         player.sendMessage(Text.literal("§c你已经加入了" + data.faction.getDisplayName() + "，无法再加入其他阵营。").formatted(Formatting.RED), false);
          return false;
       }
    }
@@ -134,18 +134,18 @@ public class FactionManager {
    }
 
    private static void syncToCache(PlayerEntity player) {
-      if (!player.method_37908().field_9236) {
+      if (!player.getWorld().isClient) {
          FactionManager.FactionData data = getFactionData(player);
-         NbtCompound cache = PlayerEvents.PLAYER_DATA_CACHE.get(player.method_5667());
+         NbtCompound cache = PlayerEvents.PLAYER_DATA_CACHE.get(player.getUuid());
          if (cache == null) {
             cache = new NbtCompound();
          }
 
-         cache.method_10582("faction", data.faction.name());
-         cache.method_10569("reputation", data.reputation);
-         cache.method_10569("goldSalary", data.goldSalary);
-         cache.method_10582("codename", data.codename);
-         PlayerEvents.PLAYER_DATA_CACHE.put(player.method_5667(), cache);
+         cache.putString("faction", data.faction.name());
+         cache.putInt("reputation", data.reputation);
+         cache.putInt("goldSalary", data.goldSalary);
+         cache.putString("codename", data.codename);
+         PlayerEvents.PLAYER_DATA_CACHE.put(player.getUuid(), cache);
          if (player instanceof ServerPlayerEntity) {
             PlayerEvents.saveDataToPlayer(player, cache);
          }
@@ -153,22 +153,22 @@ public class FactionManager {
    }
 
    private static void loadFromCache(PlayerEntity player, FactionManager.FactionData data) {
-      NbtCompound cache = PlayerEvents.PLAYER_DATA_CACHE.get(player.method_5667());
+      NbtCompound cache = PlayerEvents.PLAYER_DATA_CACHE.get(player.getUuid());
       if (cache != null) {
-         if (cache.method_10545("faction")) {
-            data.faction = PlayerFaction.fromString(cache.method_10558("faction"));
+         if (cache.contains("faction")) {
+            data.faction = PlayerFaction.fromString(cache.getString("faction"));
          }
 
-         if (cache.method_10545("reputation")) {
-            data.reputation = cache.method_10550("reputation");
+         if (cache.contains("reputation")) {
+            data.reputation = cache.getInt("reputation");
          }
 
-         if (cache.method_10545("goldSalary")) {
-            data.goldSalary = cache.method_10550("goldSalary");
+         if (cache.contains("goldSalary")) {
+            data.goldSalary = cache.getInt("goldSalary");
          }
 
-         if (cache.method_10545("codename")) {
-            data.codename = cache.method_10558("codename");
+         if (cache.contains("codename")) {
+            data.codename = cache.getString("codename");
          }
       }
    }
@@ -181,29 +181,29 @@ public class FactionManager {
 
       public NbtCompound toNbt() {
          NbtCompound nbt = new NbtCompound();
-         nbt.method_10582("faction", this.faction.name());
-         nbt.method_10569("reputation", this.reputation);
-         nbt.method_10569("goldSalary", this.goldSalary);
-         nbt.method_10582("codename", this.codename);
+         nbt.putString("faction", this.faction.name());
+         nbt.putInt("reputation", this.reputation);
+         nbt.putInt("goldSalary", this.goldSalary);
+         nbt.putString("codename", this.codename);
          return nbt;
       }
 
       public static FactionManager.FactionData fromNbt(NbtCompound nbt) {
          FactionManager.FactionData data = new FactionManager.FactionData();
-         if (nbt.method_10545("faction")) {
-            data.faction = PlayerFaction.fromString(nbt.method_10558("faction"));
+         if (nbt.contains("faction")) {
+            data.faction = PlayerFaction.fromString(nbt.getString("faction"));
          }
 
-         if (nbt.method_10545("reputation")) {
-            data.reputation = nbt.method_10550("reputation");
+         if (nbt.contains("reputation")) {
+            data.reputation = nbt.getInt("reputation");
          }
 
-         if (nbt.method_10545("goldSalary")) {
-            data.goldSalary = nbt.method_10550("goldSalary");
+         if (nbt.contains("goldSalary")) {
+            data.goldSalary = nbt.getInt("goldSalary");
          }
 
-         if (nbt.method_10545("codename")) {
-            data.codename = nbt.method_10558("codename");
+         if (nbt.contains("codename")) {
+            data.codename = nbt.getString("codename");
          }
 
          return data;

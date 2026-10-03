@@ -22,36 +22,34 @@ public class DamageWhitelistScreen extends Screen {
    private TextFieldWidget nameField;
 
    public DamageWhitelistScreen(Screen parent) {
-      super(Text.method_43471("smfs.whitelist.title"));
+      super(Text.translatable("smfs.whitelist.title"));
       this.parent = parent;
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      UUID uuid = this.field_22787 != null && this.field_22787.field_1724 != null ? this.field_22787.field_1724.method_5667() : null;
+   protected void init() {
+      super.init();
+      UUID uuid = this.client != null && this.client.player != null ? this.client.player.getUuid() : null;
       int listTop = 40;
-      int listBottom = this.field_22790 - 60;
-      this.listWidget = new DamageWhitelistScreen.WhitelistListWidget(this.field_22787, this.field_22789, this.field_22790, listTop, listBottom, 25);
-      this.method_25429(this.listWidget);
-      this.nameField = new TextFieldWidget(
-         this.field_22793, this.field_22789 / 2 - 100, this.field_22790 - 46, 130, 20, Text.method_43471("smfs.whitelist.input")
-      );
-      this.nameField.method_1880(16);
-      this.method_25429(this.nameField);
-      this.method_37063(ButtonWidget.method_46430(Text.method_43471("smfs.whitelist.add"), button -> {
+      int listBottom = this.height - 60;
+      this.listWidget = new DamageWhitelistScreen.WhitelistListWidget(this.client, this.width, this.height, listTop, listBottom, 25);
+      this.addSelectableChild(this.listWidget);
+      this.nameField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, this.height - 46, 130, 20, Text.translatable("smfs.whitelist.input"));
+      this.nameField.setMaxLength(16);
+      this.addSelectableChild(this.nameField);
+      this.addDrawableChild(ButtonWidget.builder(Text.translatable("smfs.whitelist.add"), button -> {
          if (uuid != null) {
-            String name = this.nameField.method_1882().trim();
+            String name = this.nameField.getText().trim();
             if (!name.isEmpty()) {
                this.config.addDamageWhitelist(uuid, name);
-               this.nameField.method_1852("");
+               this.nameField.setText("");
                this.refreshList();
             }
          }
-      }).method_46434(this.field_22789 / 2 + 34, this.field_22790 - 46, 80, 20).method_46431());
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.cancel"), button -> this.method_25419())
-            .method_46434(this.field_22789 / 2 - 100, this.field_22790 - 24, 200, 20)
-            .method_46431()
+      }).dimensions(this.width / 2 + 34, this.height - 46, 80, 20).build());
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.cancel"), button -> this.close())
+            .dimensions(this.width / 2 - 100, this.height - 24, 200, 20)
+            .build()
       );
    }
 
@@ -61,17 +59,17 @@ public class DamageWhitelistScreen extends Screen {
       }
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      this.listWidget.method_25394(context, mouseX, mouseY, delta);
-      context.method_27534(this.field_22793, this.field_22785, this.field_22789 / 2, 15, 16777215);
-      this.nameField.method_25394(context, mouseX, mouseY, delta);
-      super.method_25394(context, mouseX, mouseY, delta);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      this.listWidget.render(context, mouseX, mouseY, delta);
+      context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 15, 16777215);
+      this.nameField.render(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
-   public void method_25419() {
-      if (this.field_22787 != null) {
-         this.field_22787.method_1507(this.parent);
+   public void close() {
+      if (this.client != null) {
+         this.client.setScreen(this.parent);
       }
    }
 
@@ -82,29 +80,29 @@ public class DamageWhitelistScreen extends Screen {
       }
 
       public void refresh() {
-         this.method_25339();
-         UUID uuid = this.field_22740 != null && this.field_22740.field_1724 != null ? this.field_22740.field_1724.method_5667() : null;
+         this.clearEntries();
+         UUID uuid = this.client != null && this.client.player != null ? this.client.player.getUuid() : null;
          if (uuid != null) {
             Set<String> whitelist = DamageWhitelistScreen.this.config.getDamageWhitelist(uuid);
             List<String> sortedList = new ArrayList<>(whitelist);
             sortedList.sort(String::compareToIgnoreCase);
 
             for (String name : sortedList) {
-               this.method_25321(new DamageWhitelistScreen.WhitelistListWidget.Entry(name));
+               this.addEntry(new DamageWhitelistScreen.WhitelistListWidget.Entry(name));
             }
          }
       }
 
-      public int method_25322() {
+      public int getRowWidth() {
          return 300;
       }
 
-      protected int method_25329() {
-         return this.field_22742 / 2 + 150;
+      protected int getScrollbarPositionX() {
+         return this.width / 2 + 150;
       }
 
-      public void method_37020(NarrationMessageBuilder builder) {
-         builder.method_37033(NarrationPart.field_33788, "技能伤害白名单");
+      public void appendNarrations(NarrationMessageBuilder builder) {
+         builder.put(NarrationPart.TITLE, "技能伤害白名单");
       }
 
       private class Entry extends net.minecraft.client.gui.widget.EntryListWidget.Entry<DamageWhitelistScreen.WhitelistListWidget.Entry> {
@@ -113,11 +111,11 @@ public class DamageWhitelistScreen extends Screen {
 
          public Entry(String playerName) {
             this.playerName = playerName;
-            this.removeButton = ButtonWidget.method_46430(
-                  Text.method_43470("§c✕ " + playerName),
+            this.removeButton = ButtonWidget.builder(
+                  Text.literal("§c✕ " + playerName),
                   button -> {
-                     UUID uuid = WhitelistListWidget.this.field_22740 != null && WhitelistListWidget.this.field_22740.field_1724 != null
-                        ? WhitelistListWidget.this.field_22740.field_1724.method_5667()
+                     UUID uuid = WhitelistListWidget.this.client != null && WhitelistListWidget.this.client.player != null
+                        ? WhitelistListWidget.this.client.player.getUuid()
                         : null;
                      if (uuid != null) {
                         DamageWhitelistScreen.this.config.removeDamageWhitelist(uuid, playerName);
@@ -125,24 +123,24 @@ public class DamageWhitelistScreen extends Screen {
                      }
                   }
                )
-               .method_46434(0, 0, 200, 20)
-               .method_46431();
+               .dimensions(0, 0, 200, 20)
+               .build();
          }
 
-         public void method_25343(
+         public void render(
             DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta
          ) {
-            this.removeButton.method_46421(x + (entryWidth - 200) / 2);
-            this.removeButton.method_46419(y);
-            this.removeButton.method_25394(context, mouseX, mouseY, tickDelta);
+            this.removeButton.setX(x + (entryWidth - 200) / 2);
+            this.removeButton.setY(y);
+            this.removeButton.render(context, mouseX, mouseY, tickDelta);
          }
 
-         public boolean method_25402(double mouseX, double mouseY, int button) {
-            return this.removeButton.method_25402(mouseX, mouseY, button);
+         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            return this.removeButton.mouseClicked(mouseX, mouseY, button);
          }
 
-         public boolean method_25406(double mouseX, double mouseY, int button) {
-            return this.removeButton.method_25406(mouseX, mouseY, button);
+         public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            return this.removeButton.mouseReleased(mouseX, mouseY, button);
          }
       }
    }

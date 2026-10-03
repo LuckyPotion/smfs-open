@@ -24,23 +24,23 @@ public class GhostChildFusionC2SPacket {
 
    public static void handleServer(ServerPlayerEntity player, PacketByteBuf buf) {
       if (!GoldBlockProtectionManager.isPlayerInGoldBlockShelter(player)) {
-         player.method_7353(Text.method_43470("§c需要在金块包裹状态下才能进行融合！"), false);
+         player.sendMessage(Text.literal("§c需要在金块包裹状态下才能进行融合！"), false);
       } else {
          int tamedCount = PlayerEvents.countOccupiedGhostSlots(player);
          if (tamedCount < 6) {
-            player.method_7353(Text.method_43470("§c需要驾驭6只鬼才能进行融合！当前驾驭：" + tamedCount + "只"), false);
+            player.sendMessage(Text.literal("§c需要驾驭6只鬼才能进行融合！当前驾驭：" + tamedCount + "只"), false);
          } else {
             GhostChildData data = PlayerGhostChildManager.getGhostChildData(player);
             if (data == null) {
-               player.method_7353(Text.method_43470("§c你没有鬼童！"), false);
+               player.sendMessage(Text.literal("§c你没有鬼童！"), false);
             } else if (data.getLevel() < 10) {
-               player.method_7353(Text.method_43470("§c鬼童需要10级才能进行融合！当前等级：" + data.getLevel()), false);
+               player.sendMessage(Text.literal("§c鬼童需要10级才能进行融合！当前等级：" + data.getLevel()), false);
             } else if (data.isSummoned()) {
-               player.method_7353(Text.method_43470("§c鬼童需要处于收回状态才能进行融合！"), false);
+               player.sendMessage(Text.literal("§c鬼童需要处于收回状态才能进行融合！"), false);
             } else if (AdvancementManager.hasHumanSkinPaper(player)) {
                AdvancementManager.checkHumanSkinPaperEnding(player);
             } else if (!EndingSupernaturalSecretItem.hasComprehended(player)) {
-               player.method_7353(Text.method_43470("§c似乎还缺失了关键的一环..."), false);
+               player.sendMessage(Text.literal("§c似乎还缺失了关键的一环..."), false);
             } else {
                AdvancementManager.checkAndUnlockBecomeGod(player);
                GhostChildFusionBeginS2CPacket.send(player);
@@ -60,18 +60,18 @@ public class GhostChildFusionC2SPacket {
 
    private static void unlockAdditionalGhostSlots(ServerPlayerEntity player) {
       NbtCompound data = PlayerEvents.getCachedData(player);
-      NbtCompound ghostSlots = data.method_10562("GhostSlots");
+      NbtCompound ghostSlots = data.getCompound("GhostSlots");
 
       for (int i = 6; i <= 9; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            slotData.method_10556("unlocked", true);
-            ghostSlots.method_10566(slotKey, slotData);
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            slotData.putBoolean("unlocked", true);
+            ghostSlots.put(slotKey, slotData);
          }
       }
 
-      data.method_10566("GhostSlots", ghostSlots);
+      data.put("GhostSlots", ghostSlots);
       PlayerEvents.setSpiritAttributes(player, data);
    }
 

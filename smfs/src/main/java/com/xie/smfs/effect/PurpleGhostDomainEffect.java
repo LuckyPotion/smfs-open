@@ -15,26 +15,26 @@ public class PurpleGhostDomainEffect extends StatusEffect implements ICurseEffec
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/PurpleGhostDomainEffect");
 
    public PurpleGhostDomainEffect() {
-      super(StatusEffectCategory.field_18272, 8388736);
+      super(StatusEffectCategory.HARMFUL, 8388736);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
       if (entity instanceof PlayerEntity player) {
-         player.method_6092(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN_VISUAL, 5, amplifier, false, false, false));
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.PURPLE_GHOST_DOMAIN_VISUAL, 5, amplifier, false, false, false));
       }
    }
 
    public static void updateRevivalDegreeInGhostDomain(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          PlayerEvents.balanceRevivalDegree(player, 3, 1);
       }
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      super.method_5562(entity, attributes, amplifier);
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      super.onRemoved(entity, attributes, amplifier);
    }
 }

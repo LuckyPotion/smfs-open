@@ -90,7 +90,7 @@ public class ModSounds {
 
    private static SoundEvent register(String id) {
       Identifier identifier = new Identifier("smfs", id);
-      SoundEvent soundEvent = SoundEvent.method_47908(identifier);
-      return (SoundEvent)Registry.method_10230(Registries.field_41172, identifier, soundEvent);
+      SoundEvent soundEvent = SoundEvent.of(identifier);
+      return (SoundEvent)Registry.register(Registries.SOUND_EVENT, identifier, soundEvent);
    }
 }

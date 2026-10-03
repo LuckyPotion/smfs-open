@@ -18,63 +18,63 @@ public class DeceptionGhostNecklaceItem extends Item {
    private static final int BASE_DURABILITY = 20;
 
    public DeceptionGhostNecklaceItem(Settings settings) {
-      super(settings.method_7895(20));
+      super(settings.maxDamage(20));
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (world.field_9236) {
-         return TypedActionResult.method_22427(stack);
-      } else if (stack.method_7919() >= stack.method_7936()) {
-         user.method_7353(Text.method_43471("item.smfs.deception_ghost_necklace.broken"), true);
-         return TypedActionResult.method_22431(stack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (world.isClient) {
+         return TypedActionResult.success(stack);
+      } else if (stack.getDamage() >= stack.getMaxDamage()) {
+         user.sendMessage(Text.translatable("item.smfs.deception_ghost_necklace.broken"), true);
+         return TypedActionResult.fail(stack);
       } else {
          this.applyHealingEffect(user);
-         stack.method_7956(1, user, p -> p.method_20236(hand));
-         user.method_7353(Text.method_43471("item.smfs.deception_ghost_necklace.used"), true);
-         return TypedActionResult.method_22427(stack);
+         stack.damage(1, user, p -> p.sendToolBreakStatus(hand));
+         user.sendMessage(Text.translatable("item.smfs.deception_ghost_necklace.used"), true);
+         return TypedActionResult.success(stack);
       }
    }
 
    private void applyHealingEffect(PlayerEntity player) {
       this.clearNegativeEffects(player);
-      float currentMaxHealth = player.method_6063();
+      float currentMaxHealth = player.getMaxHealth();
       float targetHealth;
       if (currentMaxHealth < 20.0F) {
          targetHealth = 20.0F;
-         player.method_5996(EntityAttributes.field_23716).method_6192(20.0);
+         player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(20.0);
       } else {
          targetHealth = currentMaxHealth;
       }
 
-      player.method_6033(targetHealth);
+      player.setHealth(targetHealth);
    }
 
    private void clearNegativeEffects(PlayerEntity player) {
-      for (StatusEffectInstance effect : player.method_6026()) {
-         StatusEffect statusEffect = effect.method_5579();
+      for (StatusEffectInstance effect : player.getStatusEffects()) {
+         StatusEffect statusEffect = effect.getEffectType();
          if (this.isNegativeEffect(statusEffect)) {
-            player.method_6016(statusEffect);
+            player.removeStatusEffect(statusEffect);
          }
       }
    }
 
    private boolean isNegativeEffect(StatusEffect effect) {
-      return !effect.method_5573();
+      return !effect.isBeneficial();
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.deception_ghost_necklace.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.deception_ghost_necklace.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.deception_ghost_necklace.description.type"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.deception_ghost_necklace.description.source"));
+      tooltip.add(Text.translatable("item.smfs.deception_ghost_necklace.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.deception_ghost_necklace.description.type"));
    }
 
-   public boolean method_7870(ItemStack stack) {
+   public boolean isEnchantable(ItemStack stack) {
       return false;
    }
 
-   public int method_7837() {
+   public int getEnchantability() {
       return 0;
    }
 }

@@ -20,15 +20,15 @@ public class ThickFogEffect extends StatusEffect implements ICurseEffect {
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/ThickFogEffect");
 
    public ThickFogEffect() {
-      super(StatusEffectCategory.field_18272, 11184810);
+      super(StatusEffectCategory.HARMFUL, 11184810);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      if (entity instanceof PlayerEntity player && !player.method_37908().method_8608() && player instanceof ServerPlayerEntity serverPlayer) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      if (entity instanceof PlayerEntity player && !player.getWorld().isClient() && player instanceof ServerPlayerEntity serverPlayer) {
          int fogGhostSlot = PlayerEvents.findEquippedThickFogSlot(player);
          if (fogGhostSlot != -1) {
             int radius = 10;
@@ -42,16 +42,14 @@ public class ThickFogEffect extends StatusEffect implements ICurseEffect {
 
    private static List<LivingEntity> findMovingEntitiesInRange(PlayerEntity player, int radius) {
       List<LivingEntity> entities = new ArrayList<>();
-      BlockPos playerPos = player.method_24515();
-      World world = player.method_37908();
+      BlockPos playerPos = player.getBlockPos();
+      World world = player.getWorld();
 
-      for (LivingEntity entity : world.method_8390(
-         LivingEntity.class,
-         new Box(playerPos.method_10069(-radius, -radius, -radius), playerPos.method_10069(radius, radius, radius)),
-         entityx -> entityx != player
+      for (LivingEntity entity : world.getEntitiesByClass(
+         LivingEntity.class, new Box(playerPos.add(-radius, -radius, -radius), playerPos.add(radius, radius, radius)), entityx -> entityx != player
       )) {
-         Vec3d velocity = entity.method_18798();
-         double speed = Math.sqrt(velocity.field_1352 * velocity.field_1352 + velocity.field_1350 * velocity.field_1350);
+         Vec3d velocity = entity.getVelocity();
+         double speed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
          if (speed > 0.1) {
             entities.add(entity);
          }
@@ -61,7 +59,7 @@ public class ThickFogEffect extends StatusEffect implements ICurseEffect {
    }
 
    public static void updateRevivalDegreeInGhostDomain(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          PlayerEvents.balanceRevivalDegree(player, 3, 1);
       }
    }

@@ -28,8 +28,8 @@ public class RequestRespawnPacket {
    ) {
       Logger LOGGER = LoggerFactory.getLogger(RequestRespawnPacket.class);
       server.execute(() -> {
-         LOGGER.debug("=== 收到玩家 {} 的立即复活请求 ===", player.method_5477().getString());
-         UUID playerUuid = player.method_5667();
+         LOGGER.debug("=== 收到玩家 {} 的立即复活请求 ===", player.getName().getString());
+         UUID playerUuid = player.getUuid();
          if (SpectateModePacket.isInSpectatorMode(playerUuid)) {
             LOGGER.warn("玩家 {} 在立即复活时仍有旁观者标志，清除它", playerUuid);
             SpectateModePacket.removeSpectatorFlag(playerUuid);

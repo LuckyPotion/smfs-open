@@ -111,10 +111,10 @@ public class GhostRendererAPIImpl implements GhostRendererAPI {
       public void render(GhostEntity entity, float entityYaw, float partialTick, MatrixStack poseStack, VertexConsumerProvider bufferSource, int packedLight) {
          float scale = this.resourceProvider.getScale(entity);
          if (scale != 1.0F) {
-            poseStack.method_22903();
-            poseStack.method_22905(scale, scale, scale);
+            poseStack.push();
+            poseStack.scale(scale, scale, scale);
             super.method_3936(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-            poseStack.method_22909();
+            poseStack.pop();
          } else {
             super.method_3936(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
          }
@@ -122,7 +122,7 @@ public class GhostRendererAPIImpl implements GhostRendererAPI {
 
       public RenderLayer getRenderType(GhostEntity animatable, Identifier texture, VertexConsumerProvider bufferSource, float partialTick) {
          return this.resourceProvider.isTranslucent(animatable)
-            ? RenderLayer.method_23580(texture)
+            ? RenderLayer.getEntityTranslucent(texture)
             : super.getRenderType(animatable, texture, bufferSource, partialTick);
       }
    }

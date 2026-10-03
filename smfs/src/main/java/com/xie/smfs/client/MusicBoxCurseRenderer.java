@@ -18,12 +18,12 @@ public class MusicBoxCurseRenderer {
    }
 
    private static void render(DrawContext context, float tickDelta) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      PlayerEntity player = client.field_1724;
+      MinecraftClient client = MinecraftClient.getInstance();
+      PlayerEntity player = client.player;
       if (player == null) {
          isActive = false;
       } else {
-         StatusEffectInstance effect = player.method_6112(ModEffects.MUSIC_BOX_CURSE);
+         StatusEffectInstance effect = player.getStatusEffect(ModEffects.MUSIC_BOX_CURSE);
          if (effect == null) {
             isActive = false;
          } else {
@@ -32,8 +32,8 @@ public class MusicBoxCurseRenderer {
                effectStartTime = System.currentTimeMillis();
             }
 
-            int screenWidth = context.method_51421();
-            int screenHeight = context.method_51443();
+            int screenWidth = context.getScaledWindowWidth();
+            int screenHeight = context.getScaledWindowHeight();
             float fadeProgress = calculateFadeProgress(effect);
             FilterRenderer.renderEdgeGradient(context, screenWidth, screenHeight, FilterRenderer.FilterPreset.RED_CURSE, fadeProgress);
          }
@@ -47,7 +47,7 @@ public class MusicBoxCurseRenderer {
          float progress = (float)elapsedTime / 2000.0F;
          return (float)Math.sin(progress * Math.PI / 2.0);
       } else {
-         int remainingDuration = effect.method_5584();
+         int remainingDuration = effect.getDuration();
          long remainingMs = remainingDuration * 50L;
          if (remainingMs < 2000L) {
             float progress = (float)remainingMs / 2000.0F;

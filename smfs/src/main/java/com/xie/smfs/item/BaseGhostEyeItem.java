@@ -36,41 +36,41 @@ public abstract class BaseGhostEyeItem extends Item {
    }
 
    public static boolean isShard(ItemStack stack) {
-      NbtCompound nbt = stack.method_7969();
-      return nbt != null && nbt.method_10577("Shard");
+      NbtCompound nbt = stack.getNbt();
+      return nbt != null && nbt.getBoolean("Shard");
    }
 
    public static void setShard(ItemStack stack, boolean shard) {
-      stack.method_7948().method_10556("Shard", shard);
+      stack.getOrCreateNbt().putBoolean("Shard", shard);
       if (shard) {
-         stack.method_7948().method_10569("ShardUses", 2);
+         stack.getOrCreateNbt().putInt("ShardUses", 2);
       }
    }
 
-   public Text method_7864(ItemStack stack) {
-      Text baseName = super.method_7864(stack);
-      return (Text)(isShard(stack) ? Text.method_43470(baseName.getString() + "（碎片）") : baseName);
+   public Text getName(ItemStack stack) {
+      Text baseName = super.getName(stack);
+      return (Text)(isShard(stack) ? Text.literal(baseName.getString() + "（碎片）") : baseName);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity player, Hand hand) {
-      ItemStack stack = player.method_5998(hand);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
       if (isShard(stack)) {
-         return TypedActionResult.method_22430(player.method_5998(hand));
+         return TypedActionResult.pass(user.getStackInHand(hand));
       }
 
-      if (world.field_9236) {
-         return TypedActionResult.method_22430(player.method_5998(hand));
+      if (world.isClient) {
+         return TypedActionResult.pass(user.getStackInHand(hand));
       }
 
-      if (player instanceof ServerPlayerEntity serverPlayer) {
-         LOGGER.debug("玩家 {} 是服务器端玩家，开始处理绑定逻辑", serverPlayer.method_7334().getName());
+      if (user instanceof ServerPlayerEntity serverPlayer) {
+         LOGGER.debug("玩家 {} 是服务器端玩家，开始处理绑定逻辑", serverPlayer.getGameProfile().getName());
 
          try {
             TameableItemAPI api = TameableItemAPI.getInstance();
             if (api.hasTamedGhost(serverPlayer, this.getGhostType())) {
-               LOGGER.debug("玩家 {} 已经驾驭同种类厉鬼，绑定失败", serverPlayer.method_7334().getName());
-               player.method_7353(Text.method_43471("item.smfs.ghost_eye.same_type_exists"), true);
-               return TypedActionResult.method_22431(stack);
+               LOGGER.debug("玩家 {} 已经驾驭同种类厉鬼，绑定失败", serverPlayer.getGameProfile().getName());
+               user.sendMessage(Text.translatable("item.smfs.ghost_eye.same_type_exists"), true);
+               return TypedActionResult.fail(stack);
             }
          } catch (Exception e) {
             LOGGER.warn("检查同种类驾驭状态失败: {}", e.getMessage());
@@ -78,40 +78,40 @@ public abstract class BaseGhostEyeItem extends Item {
 
          int emptySlot = PlayerEvents.getUnlockedGhostSlot(serverPlayer);
          if (emptySlot != -1) {
-            ItemStack ghostEyeCopy = stack.method_7972();
-            ghostEyeCopy.method_7939(1);
+            ItemStack ghostEyeCopy = stack.copy();
+            ghostEyeCopy.setCount(1);
 
             try {
                PlayerEvents.setGhostSlotData(serverPlayer, emptySlot, ghostEyeCopy);
-               stack.method_7934(1);
+               stack.decrement(1);
                PlayerEvents.validateGhostSlots(serverPlayer);
                NbtCompound ghostData = new NbtCompound();
-               ghostData.method_10582("Type", this.getGhostType());
-               ghostData.method_10582("Name", this.method_7848().getString());
+               ghostData.putString("Type", this.getGhostType());
+               ghostData.putString("Name", this.getName().getString());
                PlayerEvents.showGhostAbilityPopup(serverPlayer, ghostData);
                GhostTamingScreenHandler.tryLockGhostAfterTaming(serverPlayer, this.getGhostType());
-               return TypedActionResult.method_22427(stack);
+               return TypedActionResult.success(stack);
             } catch (Exception e) {
                LOGGER.error("绑定鬼眼到槽位 {} 失败: {}", emptySlot, e.getMessage(), e);
-               player.method_7353(Text.method_43470("绑定失败，请重试"), false);
-               return TypedActionResult.method_22431(stack);
+               user.sendMessage(Text.literal("绑定失败，请重试"), false);
+               return TypedActionResult.fail(stack);
             }
          } else {
-            this.sendSlotsFullMessage(player);
-            return TypedActionResult.method_22431(stack);
+            this.sendSlotsFullMessage(user);
+            return TypedActionResult.fail(stack);
          }
       } else {
-         return TypedActionResult.method_22430(stack);
+         return TypedActionResult.pass(stack);
       }
    }
 
    protected void applySpiritAttributes(ServerPlayerEntity player) {
       NbtCompound spiritData = PlayerEvents.getSpiritAttributes(player);
-      spiritData.method_10549("maxSpirit", spiritData.method_10574("maxSpirit") + this.maxSpiritBonus);
-      spiritData.method_10549("spiritResistance", spiritData.method_10574("spiritResistance") + this.spiritResistanceBonus);
-      spiritData.method_10549("spiritDamage", spiritData.method_10574("spiritDamage") + this.spiritDamageBonus);
-      spiritData.method_10549("sanity", spiritData.method_10574("sanity") + this.sanityBonus);
-      spiritData.method_10549("revivalFactor", spiritData.method_10574("revivalFactor") + this.revivalFactor);
+      spiritData.putDouble("maxSpirit", spiritData.getDouble("maxSpirit") + this.maxSpiritBonus);
+      spiritData.putDouble("spiritResistance", spiritData.getDouble("spiritResistance") + this.spiritResistanceBonus);
+      spiritData.putDouble("spiritDamage", spiritData.getDouble("spiritDamage") + this.spiritDamageBonus);
+      spiritData.putDouble("sanity", spiritData.getDouble("sanity") + this.sanityBonus);
+      spiritData.putDouble("revivalFactor", spiritData.getDouble("revivalFactor") + this.revivalFactor);
       PlayerEvents.setSpiritAttributes(player, spiritData);
    }
 
@@ -135,17 +135,17 @@ public abstract class BaseGhostEyeItem extends Item {
       return this.revivalFactor;
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.description.type"));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.max_spirit", new Object[]{this.maxSpiritBonus}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.spirit_resistance", new Object[]{this.spiritResistanceBonus}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.spirit_damage", new Object[]{this.spiritDamageBonus}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.sanity", new Object[]{this.sanityBonus}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.revival_factor", new Object[]{String.format("%.1f", this.revivalFactor * 100.0)}));
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.usage"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.max_spirit", new Object[]{this.maxSpiritBonus}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.spirit_resistance", new Object[]{this.spiritResistanceBonus}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.spirit_damage", new Object[]{this.spiritDamageBonus}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.sanity", new Object[]{this.sanityBonus}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.revival_factor", new Object[]{String.format("%.1f", this.revivalFactor * 100.0)}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.usage"));
    }
 
    protected abstract Text getBindSuccessMessage(int i);

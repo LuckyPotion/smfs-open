@@ -23,57 +23,46 @@ public class CoffinNailItem extends Item {
       super(settings);
    }
 
-   public ActionResult method_7847(ItemStack stack, PlayerEntity user, LivingEntity entity, Hand hand) {
-      World world = user.method_37908();
+   public ActionResult useOnEntity(ItemStack stack, PlayerEntity user, LivingEntity entity, Hand hand) {
+      World world = user.getWorld();
       if (entity instanceof GhostEntity ghost) {
-         if (!world.field_9236) {
+         if (!world.isClient) {
             if (ghost instanceof LuoQianGhostEntity) {
-               user.method_7353(Text.method_43470("§c无法将棺材钉插入罗千厉鬼！"), true);
-               user.method_7353(Text.method_43470("§c罗千：哦？想用我的东西来对付我。"), false);
-               return ActionResult.field_5812;
+               user.sendMessage(Text.literal("§c无法将棺材钉插入罗千厉鬼！"), true);
+               user.sendMessage(Text.literal("§c罗千：哦？想用我的东西来对付我。"), false);
+               return ActionResult.SUCCESS;
             }
 
             if (!ghost.isSuppressed()) {
                this.applySuppressionToGhost(ghost, user, stack);
-               world.method_43128(
-                  null, ghost.method_23317(), ghost.method_23318(), ghost.method_23321(), SoundEvents.field_14931, SoundCategory.field_15254, 1.0F, 1.0F
-               );
-               return ActionResult.field_5812;
+               world.playSound(null, ghost.getX(), ghost.getY(), ghost.getZ(), SoundEvents.ITEM_TOTEM_USE, SoundCategory.NEUTRAL, 1.0F, 1.0F);
+               return ActionResult.SUCCESS;
             }
          }
 
-         return ActionResult.field_5812;
+         return ActionResult.SUCCESS;
       } else if (entity instanceof GhostMasterEntity ghostMaster) {
-         if (!world.field_9236 && !this.isGhostMasterSuppressed(ghostMaster)) {
+         if (!world.isClient && !this.isGhostMasterSuppressed(ghostMaster)) {
             this.applySuppressionToGhostMaster(ghostMaster, user, stack);
-            world.method_43128(
-               null,
-               ghostMaster.method_23317(),
-               ghostMaster.method_23318(),
-               ghostMaster.method_23321(),
-               SoundEvents.field_14931,
-               SoundCategory.field_15254,
-               1.0F,
-               1.0F
-            );
-            return ActionResult.field_5812;
+            world.playSound(null, ghostMaster.getX(), ghostMaster.getY(), ghostMaster.getZ(), SoundEvents.ITEM_TOTEM_USE, SoundCategory.NEUTRAL, 1.0F, 1.0F);
+            return ActionResult.SUCCESS;
          } else {
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
       } else {
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       }
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      return TypedActionResult.method_22430(user.method_5998(hand));
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      return TypedActionResult.pass(user.getStackInHand(hand));
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.coffin_nail.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.coffin_nail.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.coffin_nail.description.type"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.coffin_nail.description.source"));
+      tooltip.add(Text.translatable("item.smfs.coffin_nail.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.coffin_nail.description.type"));
    }
 
    private boolean canSuppressGhost(GhostEntity ghost) {
@@ -86,8 +75,8 @@ public class CoffinNailItem extends Item {
          ghost.setSuppressed(true);
          ghost.disableGhostDomain();
          ghost.disableKillingRules();
-         ItemStack nailCopy = stack.method_7972();
-         stack.method_7934(1);
+         ItemStack nailCopy = stack.copy();
+         stack.decrement(1);
          ghost.setCoffinNail(nailCopy);
       }
    }
@@ -101,8 +90,8 @@ public class CoffinNailItem extends Item {
          ghostMaster.setDeadlocked(true);
          ghostMaster.setSuppressed(true);
          ghostMaster.disableGhostDomain();
-         ItemStack nailCopy = stack.method_7972();
-         stack.method_7934(1);
+         ItemStack nailCopy = stack.copy();
+         stack.decrement(1);
          ghostMaster.setCoffinNail(nailCopy);
       }
    }

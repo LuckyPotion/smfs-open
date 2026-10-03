@@ -15,7 +15,7 @@ public abstract class LivingEntitySetHealthMixin {
    private void onSetHealth(float health, CallbackInfo ci) {
       LivingEntity entity = (LivingEntity)this;
       if (entity instanceof PlayerEntity player
-         && player.method_6059(ModEffects.MUSIC_BOX_CURSE)
+         && player.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE)
          && health <= 0.0F
          && !InstantKillUtil.isMarkedForInstantKill(player)) {
          ci.cancel();

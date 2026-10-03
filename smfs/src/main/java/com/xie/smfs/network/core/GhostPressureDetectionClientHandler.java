@@ -12,7 +12,7 @@ public class GhostPressureDetectionClientHandler {
 
    public static void register() {
       ClientPlayNetworking.registerGlobalReceiver(GhostPressureDetectionPacket.PACKET_ID, (client, handler, buf, responseSender) -> {
-         UUID entityId = buf.method_10790();
+         UUID entityId = buf.readUuid();
          boolean hasGhostPressure = buf.readBoolean();
          client.execute(() -> {
             GhostPullRenderer.updateServerDetectionResult(entityId, hasGhostPressure);

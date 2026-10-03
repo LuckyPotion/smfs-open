@@ -40,12 +40,12 @@ public class ClientGhostFireJSkillC2SPacket {
    private static void attackBurningEntities(ServerPlayerEntity player) {
       int ghostFireLevel = GhostDomainManager.getEffectiveSkillLevel(player, GhostDomainManager.getGhostFireLevel(player));
       if (ghostFireLevel < 2) {
-         player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+         player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
       } else {
          double range = 30.0;
          int attackedCount = 0;
          NbtCompound spiritAttributes = PlayerEvents.getSpiritAttributes(player);
-         float spiritDamage = spiritAttributes.method_10545("spiritDamage") ? (float)spiritAttributes.method_10574("spiritDamage") : 0.0F;
+         float spiritDamage = spiritAttributes.contains("spiritDamage") ? (float)spiritAttributes.getDouble("spiritDamage") : 0.0F;
          if (spiritDamage <= 0.0F) {
             spiritDamage = 5.0F;
          }
@@ -54,20 +54,20 @@ public class ClientGhostFireJSkillC2SPacket {
          int multiplier = bothEquipped ? 2 : 1;
          float displayDamage = spiritDamage * multiplier;
 
-         for (Entity entity : player.method_37908().method_8335(player, player.method_5829().method_1014(range))) {
-            if (entity.method_5805() && entity != player && entity instanceof LivingEntity livingEntity && livingEntity.method_5809()) {
+         for (Entity entity : player.getWorld().getOtherEntities(player, player.getBoundingBox().expand(range))) {
+            if (entity.isAlive() && entity != player && entity instanceof LivingEntity livingEntity && livingEntity.isOnFire()) {
                GhostDomainManager.executeSkillSpiritAttack(player, livingEntity, multiplier);
-               livingEntity.method_5639(10);
+               livingEntity.setOnFireFor(10);
                attackedCount++;
             }
          }
 
          if (attackedCount > 0) {
             if (ModConfig.getInstance().showActionBarInfo) {
-               player.method_7353(Text.method_43470("§a对" + attackedCount + "个生物造成" + new DecimalFormat("#.###").format(displayDamage) + "点灵异伤害"), true);
+               player.sendMessage(Text.literal("§a对" + attackedCount + "个生物造成" + new DecimalFormat("#.###").format(displayDamage) + "点灵异伤害"), true);
             }
          } else {
-            player.method_7353(Text.method_43470("§7周围没有燃烧的生物可以袭击"), true);
+            player.sendMessage(Text.literal("§7周围没有燃烧的生物可以袭击"), true);
          }
 
          PlayerEvents.balanceRevivalDegree(player);

@@ -15,36 +15,36 @@ import net.minecraft.world.WorldAccess;
 import net.minecraft.world.WorldView;
 
 public abstract class TutorialFluid extends FlowableFluid {
-   public boolean method_15780(Fluid fluid) {
-      return fluid == this.method_15751() || fluid == this.method_15750();
+   public boolean matchesType(Fluid fluid) {
+      return fluid == this.getStill() || fluid == this.getFlowing();
    }
 
-   protected boolean method_15737(World world) {
+   protected boolean isInfinite(World world) {
       return false;
    }
 
-   protected void method_15730(WorldAccess world, BlockPos pos, BlockState state) {
-      BlockEntity blockEntity = state.method_26204() instanceof BlockEntityProvider ? world.method_8321(pos) : null;
-      Block.method_9610(state, world, pos, blockEntity);
+   protected void beforeBreakingBlock(WorldAccess world, BlockPos pos, BlockState state) {
+      BlockEntity blockEntity = state.getBlock() instanceof BlockEntityProvider ? world.getBlockEntity(pos) : null;
+      Block.dropStacks(state, world, pos, blockEntity);
    }
 
-   protected boolean method_15777(FluidState fluidState, BlockView blockView, BlockPos blockPos, Fluid fluid, Direction direction) {
+   protected boolean canBeReplacedWith(FluidState state, BlockView world, BlockPos pos, Fluid fluid, Direction direction) {
       return false;
    }
 
-   protected int method_15733(WorldView worldView) {
+   protected int getFlowSpeed(WorldView world) {
       return 4;
    }
 
-   protected int method_15739(WorldView worldView) {
+   protected int getLevelDecreasePerBlock(WorldView world) {
       return 1;
    }
 
-   public int method_15789(WorldView worldView) {
+   public int getTickRate(WorldView world) {
       return 5;
    }
 
-   protected float method_15784() {
+   protected float getBlastResistance() {
       return 100.0F;
    }
 }

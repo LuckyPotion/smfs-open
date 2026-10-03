@@ -31,9 +31,9 @@ public class ClientGhostDreamVSkillC2SPacket {
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
       server.execute(() -> {
-         if (player != null && player.method_5805()) {
-            World world = player.method_37908();
-            if (world.method_27983() != Smfs.GHOST_DREAM_DIMENSION) {
+         if (player != null && player.isAlive()) {
+            World world = player.getWorld();
+            if (world.getRegistryKey() != Smfs.GHOST_DREAM_DIMENSION) {
                teleportToGhostDream(player);
             } else {
                teleportFromGhostDream(player);
@@ -48,12 +48,12 @@ public class ClientGhostDreamVSkillC2SPacket {
 
    private static void teleportToGhostDream(ServerPlayerEntity player) {
       GhostDreamManager.enterGhostDream(player, false);
-      LOGGER.debug("玩家 {} 通过V技能进入了鬼梦维度", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 通过V技能进入了鬼梦维度", player.getName().getString());
    }
 
    private static void teleportFromGhostDream(ServerPlayerEntity player) {
       GhostDreamManager.exitGhostDream(player);
-      LOGGER.debug("玩家 {} 通过V技能离开了鬼梦维度", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 通过V技能离开了鬼梦维度", player.getName().getString());
    }
 
    private static BlockPos findGrassBlockPosition(ServerWorld world, int x, int z, int minY, int maxY) {
@@ -61,8 +61,8 @@ public class ClientGhostDreamVSkillC2SPacket {
          BlockPos pos = new BlockPos(x, y, z);
          if (isGrassBlock(world, pos)
             && y + 2 < maxY
-            && world.method_8320(new BlockPos(x, y + 1, z)).method_26215()
-            && world.method_8320(new BlockPos(x, y + 2, z)).method_26215()) {
+            && world.getBlockState(new BlockPos(x, y + 1, z)).isAir()
+            && world.getBlockState(new BlockPos(x, y + 2, z)).isAir()) {
             return pos;
          }
       }
@@ -78,8 +78,8 @@ public class ClientGhostDreamVSkillC2SPacket {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -90,8 +90,8 @@ public class ClientGhostDreamVSkillC2SPacket {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -105,8 +105,8 @@ public class ClientGhostDreamVSkillC2SPacket {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -117,8 +117,8 @@ public class ClientGhostDreamVSkillC2SPacket {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -131,25 +131,25 @@ public class ClientGhostDreamVSkillC2SPacket {
    private static BlockPos createSafePlatform(ServerWorld world, BlockPos pos) {
       for (int x = -1; x <= 1; x++) {
          for (int z = -1; z <= 1; z++) {
-            BlockPos currentPos = pos.method_10069(x, 0, z);
-            world.method_8501(currentPos, Blocks.field_10540.method_9564());
+            BlockPos currentPos = pos.add(x, 0, z);
+            world.setBlockState(currentPos, Blocks.OBSIDIAN.getDefaultState());
          }
       }
 
       for (int y = 1; y <= 2; y++) {
          for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-               BlockPos airPos = pos.method_10069(x, y, z);
-               world.method_8501(airPos, Blocks.field_10124.method_9564());
+               BlockPos airPos = pos.add(x, y, z);
+               world.setBlockState(airPos, Blocks.AIR.getDefaultState());
             }
          }
       }
 
-      return new BlockPos(pos.method_10263(), pos.method_10264() + 1, pos.method_10260());
+      return new BlockPos(pos.getX(), pos.getY() + 1, pos.getZ());
    }
 
    private static boolean isGrassBlock(ServerWorld world, BlockPos pos) {
-      Block block = world.method_8320(pos).method_26204();
+      Block block = world.getBlockState(pos).getBlock();
       return block instanceof GrassBlock;
    }
 }

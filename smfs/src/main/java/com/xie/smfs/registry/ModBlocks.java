@@ -35,87 +35,76 @@ import net.minecraft.util.Identifier;
 
 public class ModBlocks {
    public static final Block GHOST_COFFIN = register(
-      "ghost_coffin", new GhostCoffinBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_coffin", new GhostCoffinBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block RED_COFFIN = register(
-      "red_coffin", new RedCoffinBlock(Settings.method_9630(Blocks.field_22126).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "red_coffin", new RedCoffinBlock(Settings.copy(Blocks.CRIMSON_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block GOLD_COFFIN = register(
-      "gold_coffin", new GoldCoffinBlock(Settings.method_9630(Blocks.field_10205).method_22488().method_9626(BlockSoundGroup.field_11533))
+      "gold_coffin", new GoldCoffinBlock(Settings.copy(Blocks.GOLD_BLOCK).nonOpaque().sounds(BlockSoundGroup.METAL))
    );
    public static final Block GHOST_PIANO = register(
-      "ghost_piano", new GhostPianoBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_piano", new GhostPianoBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
-   public static final Block GHOST_DOOR = register(
-      "ghost_door", new GhostDoorBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
-   );
+   public static final Block GHOST_DOOR = register("ghost_door", new GhostDoorBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD)));
    public static final Block NEW_GHOST_DOOR = register(
-      "new_ghost_door", new NewGhostDoorBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "new_ghost_door", new NewGhostDoorBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
-   public static final Block GHOST_BED = register(
-      "ghost_bed", new GhostBedBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
-   );
+   public static final Block GHOST_BED = register("ghost_bed", new GhostBedBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD)));
    public static final Block GHOST_TABLE = register(
-      "ghost_table", new GhostTableBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_table", new GhostTableBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block GHOST_TABLE2 = register(
-      "ghost_table2", new GhostTable2Block(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_table2", new GhostTable2Block(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block GHOST_SCREEN = register(
-      "ghost_screen", new GhostScreenBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_screen", new GhostScreenBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block GHOST_CANDLE = register(
-      "ghost_candle", new GhostCandleBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_candle", new GhostCandleBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block GHOST_SKELETON = register(
-      "ghost_skeleton", new GhostSkeletonBlock(Settings.method_9630(Blocks.field_10166).method_22488().method_9626(BlockSoundGroup.field_22149))
+      "ghost_skeleton", new GhostSkeletonBlock(Settings.copy(Blocks.BONE_BLOCK).nonOpaque().sounds(BlockSoundGroup.BONE))
    );
    public static final Block GHOST_PORTRAIT = register(
-      "ghost_portrait", new GhostPortraitBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_portrait", new GhostPortraitBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block GHOST_MIRROR = register(
-      "ghost_mirror", new GhostMirrorBlock(Settings.method_9630(Blocks.field_10033).method_22488().method_9626(BlockSoundGroup.field_11537))
+      "ghost_mirror", new GhostMirrorBlock(Settings.copy(Blocks.GLASS).nonOpaque().sounds(BlockSoundGroup.GLASS))
    );
    public static final Block FOOTPRINT = register(
-      "footprint", new FootprintBlock(Settings.method_9630(Blocks.field_10340).method_22488().method_9634().method_9626(BlockSoundGroup.field_11544))
+      "footprint", new FootprintBlock(Settings.copy(Blocks.STONE).nonOpaque().noCollision().sounds(BlockSoundGroup.STONE))
    );
    public static final Block FOOTPRINT2 = register(
-      "footprint2", new Footprint2Block(Settings.method_9630(Blocks.field_10340).method_22488().method_9634().method_9626(BlockSoundGroup.field_11544))
+      "footprint2", new Footprint2Block(Settings.copy(Blocks.STONE).nonOpaque().noCollision().sounds(BlockSoundGroup.STONE))
    );
    public static final Block DEFILED_ORE = register(
-      "defiled_ore", new DefiledOreBlock(Settings.method_9630(Blocks.field_10161).method_9629(3.0F, 3.0F).method_9626(BlockSoundGroup.field_11544))
+      "defiled_ore", new DefiledOreBlock(Settings.copy(Blocks.OAK_PLANKS).strength(3.0F, 3.0F).sounds(BlockSoundGroup.STONE))
    );
    public static final Block DEEP_DEFILED_ORE = register(
-      "deep_defiled_ore", new DeepDefiledOreBlock(Settings.method_9630(Blocks.field_10161).method_9629(4.0F, 4.0F).method_9626(BlockSoundGroup.field_29033))
+      "deep_defiled_ore", new DeepDefiledOreBlock(Settings.copy(Blocks.OAK_PLANKS).strength(4.0F, 4.0F).sounds(BlockSoundGroup.DEEPSLATE))
    );
    public static final Block GHOST_FURNACE = register(
-      "ghost_furnace", new GhostFurnaceBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "ghost_furnace", new GhostFurnaceBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block SPIRIT_BREWING_STAND = register(
-      "spirit_brewing_stand", new SpiritBrewingStandBlock(Settings.method_9630(Blocks.field_10161).method_22488().method_9626(BlockSoundGroup.field_11547))
+      "spirit_brewing_stand", new SpiritBrewingStandBlock(Settings.copy(Blocks.OAK_PLANKS).nonOpaque().sounds(BlockSoundGroup.WOOD))
    );
    public static final Block DIRTY_CROP = register(
-      "dirty_crop",
-      new DirtyCropBlock(
-         Settings.method_9630(Blocks.field_10293).method_22488().method_9634().method_9640().method_9618().method_9626(BlockSoundGroup.field_17580)
-      )
+      "dirty_crop", new DirtyCropBlock(Settings.copy(Blocks.WHEAT).nonOpaque().noCollision().ticksRandomly().breakInstantly().sounds(BlockSoundGroup.CROP))
    );
    public static final Block FILTHY_CROP = register(
-      "filthy_crop",
-      new FilthyCropBlock(
-         Settings.method_9630(Blocks.field_10293).method_22488().method_9634().method_9640().method_9618().method_9626(BlockSoundGroup.field_17580)
-      )
+      "filthy_crop", new FilthyCropBlock(Settings.copy(Blocks.WHEAT).nonOpaque().noCollision().ticksRandomly().breakInstantly().sounds(BlockSoundGroup.CROP))
    );
    public static final Block UNBREAKABLE_RED_WOOL = register(
-      "unbreakable_red_wool",
-      new UnbreakableRedWoolBlock(Settings.method_9630(Blocks.field_10314).method_9629(-1.0F, 3600000.0F).method_9626(BlockSoundGroup.field_11543))
+      "unbreakable_red_wool", new UnbreakableRedWoolBlock(Settings.copy(Blocks.RED_WOOL).strength(-1.0F, 3600000.0F).sounds(BlockSoundGroup.WOOL))
    );
    public static final Block GRAVE_MOUND = register(
-      "grave_mound", new GraveMoundBlock(Settings.method_9630(Blocks.field_10566).method_22488().method_9634().method_9626(BlockSoundGroup.field_11529))
+      "grave_mound", new GraveMoundBlock(Settings.copy(Blocks.DIRT).nonOpaque().noCollision().sounds(BlockSoundGroup.GRAVEL))
    );
 
    private static Block register(String name, Block block) {
-      return (Block)Registry.method_10230(Registries.field_41175, new Identifier("smfs", name), block);
+      return (Block)Registry.register(Registries.BLOCK, new Identifier("smfs", name), block);
    }
 
    public static void registerBlocks() {

@@ -154,14 +154,14 @@ public class GhostSkillSystem {
 
    public static void handleNKeySkill(PlayerEntity player) {
       String currentSkillType = getCurrentSkillType(player);
-      if (player.method_6059(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
-      } else if (player.method_6059(ModEffects.DREAM)) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
+      if (player.hasStatusEffect(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
+      } else if (player.hasStatusEffect(ModEffects.DREAM)) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
       } else if (GhostDomainManager.isSkillOnCooldown(player, "ngv_shared_cooldown")) {
          long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "ngv_shared_cooldown");
          double remainingSeconds = remainingTicks / 20.0;
-         player.method_7353(Text.method_43470("§c技能正在冷却中，剩余时间：" + String.format("%.2f", remainingSeconds) + "秒"), true);
+         player.sendMessage(Text.literal("§c技能正在冷却中，剩余时间：" + String.format("%.2f", remainingSeconds) + "秒"), true);
       } else if (isHoldingShardItem(player)
          || currentSkillType.equals("lost_ghost")
          || currentSkillType.equals("wish_ghost")
@@ -173,36 +173,36 @@ public class GhostSkillSystem {
          handleDefaultNSkill(currentSkillType, player);
          if (isHoldingShardItem(player)) {
             PacketByteBuf buf = PacketByteBufs.create();
-            buf.method_10814(currentSkillType);
+            buf.writeString(currentSkillType);
             ClientPlayNetworking.send(ClientConsumeShardC2SPacket.ID, buf);
          }
 
          float multiplier = getAberrationCooldownMultiplier(player);
          int cooldownTicks = Math.round(60.0F * multiplier);
          GhostDomainManager.setSkillCooldown(player, "ngv_shared_cooldown", cooldownTicks);
-         LOGGER.debug("玩家 {} 使用N键技能，设置NGV共享冷却{}秒", player.method_5477().getString(), cooldownTicks / 20.0);
+         LOGGER.debug("玩家 {} 使用N键技能，设置NGV共享冷却{}秒", player.getName().getString(), cooldownTicks / 20.0);
       }
    }
 
    public static void handleGKeySkill(PlayerEntity player) {
       String currentSkillType = getCurrentSkillType(player);
-      if (player.method_6059(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
-      } else if (player.method_6059(ModEffects.DREAM)) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
+      if (player.hasStatusEffect(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
+      } else if (player.hasStatusEffect(ModEffects.DREAM)) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
       } else {
          if (currentSkillType.equals("funeral_music_ghost")) {
             if (GhostDomainManager.isSkillOnCooldown(player, "funeral_music_ghost_g_skill")) {
                long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "funeral_music_ghost_g_skill");
                double remainingSeconds = remainingTicks / 20.0;
-               player.method_7353(Text.method_43470("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
-               LOGGER.warn("玩家 {} 尝试使用丧乐鬼G键技能但冷却中，剩余时间：{}秒", player.method_5477().getString(), String.format("%.1f", remainingSeconds));
+               player.sendMessage(Text.literal("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
+               LOGGER.warn("玩家 {} 尝试使用丧乐鬼G键技能但冷却中，剩余时间：{}秒", player.getName().getString(), String.format("%.1f", remainingSeconds));
                return;
             }
          } else if (GhostDomainManager.isSkillOnCooldown(player, "ngv_shared_cooldown")) {
             long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "ngv_shared_cooldown");
             double remainingSeconds = remainingTicks / 20.0;
-            player.method_7353(Text.method_43470("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
+            player.sendMessage(Text.literal("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
             return;
          }
 
@@ -217,7 +217,7 @@ public class GhostSkillSystem {
             handleDefaultGSkill(currentSkillType, player);
             if (isHoldingShardItem(player)) {
                PacketByteBuf buf = PacketByteBufs.create();
-               buf.method_10814(currentSkillType);
+               buf.writeString(currentSkillType);
                ClientPlayNetworking.send(ClientConsumeShardC2SPacket.ID, buf);
             }
 
@@ -225,11 +225,11 @@ public class GhostSkillSystem {
             if (currentSkillType.equals("funeral_music_ghost")) {
                int cooldownTicks = Math.round(100.0F * multiplier);
                GhostDomainManager.setSkillCooldown(player, "funeral_music_ghost_g_skill", cooldownTicks);
-               LOGGER.debug("玩家 {} 使用丧乐鬼G键技能，设置单独冷却{}秒", player.method_5477().getString(), cooldownTicks / 20.0);
+               LOGGER.debug("玩家 {} 使用丧乐鬼G键技能，设置单独冷却{}秒", player.getName().getString(), cooldownTicks / 20.0);
             } else {
                int cooldownTicks = Math.round(60.0F * multiplier);
                GhostDomainManager.setSkillCooldown(player, "ngv_shared_cooldown", cooldownTicks);
-               LOGGER.debug("玩家 {} 使用G键技能，设置NGV共享冷却{}秒", player.method_5477().getString(), cooldownTicks / 20.0);
+               LOGGER.debug("玩家 {} 使用G键技能，设置NGV共享冷却{}秒", player.getName().getString(), cooldownTicks / 20.0);
             }
          }
       }
@@ -237,23 +237,23 @@ public class GhostSkillSystem {
 
    public static void handleVKeySkill(PlayerEntity player) {
       String currentSkillType = getCurrentSkillType(player);
-      if (player.method_6059(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
-      } else if (player.method_6059(ModEffects.DREAM) && !currentSkillType.equals("ghost_dream")) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
+      if (player.hasStatusEffect(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
+      } else if (player.hasStatusEffect(ModEffects.DREAM) && !currentSkillType.equals("ghost_dream")) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
       } else {
          if (currentSkillType.equals("funeral_music_ghost")) {
             if (GhostDomainManager.isSkillOnCooldown(player, "funeral_music_ghost_v_skill")) {
                long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "funeral_music_ghost_v_skill");
                double remainingSeconds = remainingTicks / 20.0;
-               player.method_7353(Text.method_43470("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
-               LOGGER.warn("玩家 {} 尝试使用丧乐鬼V键技能但冷却中，剩余时间：{}秒", player.method_5477().getString(), String.format("%.1f", remainingSeconds));
+               player.sendMessage(Text.literal("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
+               LOGGER.warn("玩家 {} 尝试使用丧乐鬼V键技能但冷却中，剩余时间：{}秒", player.getName().getString(), String.format("%.1f", remainingSeconds));
                return;
             }
          } else if (GhostDomainManager.isSkillOnCooldown(player, "ngv_shared_cooldown")) {
             long remainingTicks = GhostDomainManager.getSkillCooldownRemaining(player, "ngv_shared_cooldown");
             double remainingSeconds = remainingTicks / 20.0;
-            player.method_7353(Text.method_43470("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
+            player.sendMessage(Text.literal("§c技能正在冷却中，剩余时间：" + String.format("%.1f", remainingSeconds) + "秒"), true);
             return;
          }
 
@@ -269,7 +269,7 @@ public class GhostSkillSystem {
             handleDefaultVSkill(currentSkillType, player);
             if (isHoldingShardItem(player)) {
                PacketByteBuf buf = PacketByteBufs.create();
-               buf.method_10814(currentSkillType);
+               buf.writeString(currentSkillType);
                ClientPlayNetworking.send(ClientConsumeShardC2SPacket.ID, buf);
             }
 
@@ -277,11 +277,11 @@ public class GhostSkillSystem {
             if (currentSkillType.equals("funeral_music_ghost")) {
                int cooldownTicks = Math.round(100.0F * multiplier);
                GhostDomainManager.setSkillCooldown(player, "funeral_music_ghost_v_skill", cooldownTicks);
-               LOGGER.debug("玩家 {} 使用丧乐鬼V键技能，设置单独冷却{}秒", player.method_5477().getString(), cooldownTicks / 20.0);
+               LOGGER.debug("玩家 {} 使用丧乐鬼V键技能，设置单独冷却{}秒", player.getName().getString(), cooldownTicks / 20.0);
             } else {
                int cooldownTicks = Math.round(60.0F * multiplier);
                GhostDomainManager.setSkillCooldown(player, "ngv_shared_cooldown", cooldownTicks);
-               LOGGER.debug("玩家 {} 使用V键技能，设置NGV共享冷却{}秒", player.method_5477().getString(), cooldownTicks / 20.0);
+               LOGGER.debug("玩家 {} 使用V键技能，设置NGV共享冷却{}秒", player.getName().getString(), cooldownTicks / 20.0);
             }
          }
       }
@@ -289,16 +289,16 @@ public class GhostSkillSystem {
 
    public static void handleJKeySkill(PlayerEntity player) {
       String currentSkillType = getCurrentSkillType(player);
-      if (player.method_6059(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
-      } else if (player.method_6059(ModEffects.DREAM)) {
-         player.method_7353(Text.method_43470("§c体内的鬼陷入沉寂"), true);
+      if (player.hasStatusEffect(ModEffects.SILENCE) && !currentSkillType.equals("funeral_music_ghost")) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
+      } else if (player.hasStatusEffect(ModEffects.DREAM)) {
+         player.sendMessage(Text.literal("§c体内的鬼陷入沉寂"), true);
       } else if (MainGhostManager.hasMainGhost(player) || isHoldingShardItem(player)) {
          String skillType = getCurrentSkillType(player);
          handleDefaultJSkill(skillType, player);
          if (isHoldingShardItem(player)) {
             PacketByteBuf buf = PacketByteBufs.create();
-            buf.method_10814(skillType);
+            buf.writeString(skillType);
             ClientPlayNetworking.send(ClientConsumeShardC2SPacket.ID, buf);
          }
       }
@@ -306,8 +306,8 @@ public class GhostSkillSystem {
 
    private static boolean isHoldingShardItem(PlayerEntity player) {
       for (Hand hand : Hand.values()) {
-         ItemStack stack = player.method_5998(hand);
-         if (stack.method_7909() instanceof BaseGhostEyeItem && BaseGhostEyeItem.isShard(stack)) {
+         ItemStack stack = player.getStackInHand(hand);
+         if (stack.getItem() instanceof BaseGhostEyeItem && BaseGhostEyeItem.isShard(stack)) {
             return true;
          }
       }
@@ -317,8 +317,8 @@ public class GhostSkillSystem {
 
    private static String getCurrentSkillType(PlayerEntity player) {
       for (Hand hand : Hand.values()) {
-         ItemStack heldStack = player.method_5998(hand);
-         if (heldStack.method_7909() instanceof BaseGhostEyeItem item && BaseGhostEyeItem.isShard(heldStack)) {
+         ItemStack heldStack = player.getStackInHand(hand);
+         if (heldStack.getItem() instanceof BaseGhostEyeItem item && BaseGhostEyeItem.isShard(heldStack)) {
             return item.getGhostType();
          }
       }
@@ -331,8 +331,8 @@ public class GhostSkillSystem {
          }
 
          ItemStack mainGhostItem = PlayerEvents.getGhostSlotItem(player, mainSlot);
-         if (!mainGhostItem.method_7960()) {
-            String itemId = Registries.field_41178.method_10221(mainGhostItem.method_7909()).method_12832();
+         if (!mainGhostItem.isEmpty()) {
+            String itemId = Registries.ITEM.getId(mainGhostItem.getItem()).getPath();
             LOGGER.debug("通过物品ID获取技能类型: {}", itemId);
             return itemId;
          }
@@ -354,9 +354,9 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 7) {
-            LOGGER.warn("玩家 {} 尝试使用遗忘鬼N键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用遗忘鬼N键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c复苏程度不足"), true);
+               serverPlayer.sendMessage(Text.literal("§c复苏程度不足"), true);
             }
          } else {
             ClientPlayNetworking.send(ClientLostGhostRestartC2SPacket.ID, PacketByteBufs.empty());
@@ -370,9 +370,9 @@ public class GhostSkillSystem {
          int rawLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          int currentLevel = GhostDomainManager.getEffectiveSkillLevel(player, rawLevel);
          if (currentLevel < 7) {
-            LOGGER.warn("玩家 {} 尝试使用鬼差N键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用鬼差N键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               serverPlayer.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
             }
          } else {
             ClientPlayNetworking.send(ClientGhostOfficerRestartC2SPacket.ID, PacketByteBufs.empty());
@@ -386,9 +386,9 @@ public class GhostSkillSystem {
          int rawLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          int currentLevel = GhostDomainManager.getEffectiveSkillLevel(player, rawLevel);
          if (currentLevel < 7) {
-            LOGGER.warn("玩家 {} 尝试使用敲门鬼N键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用敲门鬼N键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               serverPlayer.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
             }
          } else {
             ClientPlayNetworking.send(ClientQiaomenGhostNSkillC2SPacket.ID, PacketByteBufs.empty());
@@ -424,9 +424,9 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 3) {
-            LOGGER.warn("玩家 {} 尝试使用遗忘鬼G键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用遗忘鬼G键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c复苏程度不足"), true);
+               serverPlayer.sendMessage(Text.literal("§c复苏程度不足"), true);
             }
          } else {
             ClientPlayNetworking.send(ClientLostGhostBlindC2SPacket.ID, PacketByteBufs.empty());
@@ -440,28 +440,28 @@ public class GhostSkillSystem {
          int rawLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          int currentLevel = GhostDomainManager.getEffectiveSkillLevel(player, rawLevel);
          if (currentLevel < 4) {
-            LOGGER.warn("玩家 {} 尝试使用敲门鬼G键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用敲门鬼G键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               serverPlayer.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
             }
          } else {
-            LOGGER.debug("玩家 {} 执行敲门鬼G键技能：生成门圈", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行敲门鬼G键技能：生成门圈", player.getName().getString());
             ClientPlayNetworking.send(ClientQiaomenGhostGSkillC2SPacket.ID, PacketByteBufs.empty());
          }
       }
    }
 
    private static void handleOtherGhostGSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行其他鬼的G键技能", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行其他鬼的G键技能", player.getName().getString());
    }
 
    private static void handleGhostEyeVSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行鬼眼V键技能：鬼域瞬移", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行鬼眼V键技能：鬼域瞬移", player.getName().getString());
       ClientPlayNetworking.send(ClientGhostDomainTeleportC2SPacket.ID, PacketByteBufs.empty());
    }
 
    private static void handleGhostFireVSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行鬼火V键技能：点燃生物", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行鬼火V键技能：点燃生物", player.getName().getString());
       ClientModNetwork.sendToServer(new ClientGhostDomainFireIgniteC2SPacket());
    }
 
@@ -470,12 +470,12 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 2) {
-            LOGGER.warn("玩家 {} 尝试使用遗忘鬼V键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用遗忘鬼V键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§c复苏程度不足"), true);
+               serverPlayer.sendMessage(Text.literal("§c复苏程度不足"), true);
             }
          } else {
-            LOGGER.debug("玩家 {} 执行遗忘鬼V键技能：遗忘·肆", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行遗忘鬼V键技能：遗忘·肆", player.getName().getString());
             ClientPlayNetworking.send(ClientLostGhostSlowC2SPacket.ID, PacketByteBufs.empty());
          }
       }
@@ -487,12 +487,12 @@ public class GhostSkillSystem {
          int rawLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          int currentLevel = GhostDomainManager.getEffectiveSkillLevel(player, rawLevel);
          if (currentLevel < 2) {
-            LOGGER.warn("玩家 {} 尝试使用敲门鬼V键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用敲门鬼V键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               serverPlayer.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
             }
          } else {
-            LOGGER.debug("玩家 {} 执行敲门鬼V键技能：生成门", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行敲门鬼V键技能：生成门", player.getName().getString());
             ClientPlayNetworking.send(ClientQiaomenGhostVSkillC2SPacket.ID, PacketByteBufs.empty());
          }
       }
@@ -504,12 +504,12 @@ public class GhostSkillSystem {
          int rawLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          int currentLevel = GhostDomainManager.getEffectiveSkillLevel(player, rawLevel);
          if (currentLevel < 3) {
-            LOGGER.warn("玩家 {} 尝试使用食物鬼V键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用食物鬼V键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               serverPlayer.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
             }
          } else {
-            LOGGER.debug("玩家 {} 执行食物鬼V键技能：饥荒", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行食物鬼V键技能：饥荒", player.getName().getString());
             ClientPlayNetworking.send(ClientFoodGhostVSkillC2SPacket.ID, PacketByteBufs.empty());
          }
       }
@@ -521,19 +521,19 @@ public class GhostSkillSystem {
          int rawLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          int currentLevel = GhostDomainManager.getEffectiveSkillLevel(player, rawLevel);
          if (currentLevel < 2) {
-            LOGGER.warn("玩家 {} 尝试使用方块鬼V键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
+            LOGGER.warn("玩家 {} 尝试使用方块鬼V键技能但等级不足: {}", player.getName().getString(), currentLevel);
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               serverPlayer.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
             }
          } else {
-            LOGGER.debug("玩家 {} 执行方块鬼V键技能：受到4点伤害后随机获得一种颜色的混凝土方块16个", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行方块鬼V键技能：受到4点伤害后随机获得一种颜色的混凝土方块16个", player.getName().getString());
             ClientPlayNetworking.send(ClientBlockGhostVSkillC2SPacket.ID, PacketByteBufs.empty());
          }
       }
    }
 
    private static void handleOtherGhostVSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行其他鬼的V键技能", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行其他鬼的V键技能", player.getName().getString());
    }
 
    private static void handleGhostLakeNSkill(PlayerEntity player) {
@@ -541,10 +541,10 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 2) {
-            LOGGER.warn("玩家 {} 尝试使用鬼湖N键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
-            player.method_7353(Text.method_43470("§c复苏程度不足"), true);
+            LOGGER.warn("玩家 {} 尝试使用鬼湖N键技能但等级不足: {}", player.getName().getString(), currentLevel);
+            player.sendMessage(Text.literal("§c复苏程度不足"), true);
          } else if (!isPlayerInGhostLake(player)) {
-            player.method_7353(Text.method_43470("§c需要在鬼湖中才能释放此技能"), true);
+            player.sendMessage(Text.literal("§c需要在鬼湖中才能释放此技能"), true);
          } else {
             ClientPlayNetworking.send(ClientGhostLakeNSkillC2SPacket.ID, PacketByteBufs.empty());
          }
@@ -556,8 +556,8 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 5) {
-            LOGGER.warn("玩家 {} 尝试使用鬼湖G键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
-            player.method_7353(Text.method_43470("§c复苏程度不足"), true);
+            LOGGER.warn("玩家 {} 尝试使用鬼湖G键技能但等级不足: {}", player.getName().getString(), currentLevel);
+            player.sendMessage(Text.literal("§c复苏程度不足"), true);
          } else {
             ClientPlayNetworking.send(ClientGhostLakeGSkillC2SPacket.ID, PacketByteBufs.empty());
          }
@@ -569,10 +569,10 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 7) {
-            LOGGER.warn("玩家 {} 尝试使用鬼湖V键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
-            player.method_7353(Text.method_43470("§c复苏程度不足"), true);
+            LOGGER.warn("玩家 {} 尝试使用鬼湖V键技能但等级不足: {}", player.getName().getString(), currentLevel);
+            player.sendMessage(Text.literal("§c复苏程度不足"), true);
          } else if (!isPlayerInGhostLake(player)) {
-            player.method_7353(Text.method_43470("§c需要在鬼湖中才能释放此技能"), true);
+            player.sendMessage(Text.literal("§c需要在鬼湖中才能释放此技能"), true);
          } else {
             ClientPlayNetworking.send(ClientGhostLakeVSkillC2SPacket.ID, PacketByteBufs.empty());
          }
@@ -584,39 +584,39 @@ public class GhostSkillSystem {
          int mainSlot = MainGhostManager.getMainGhostSlot(player);
          int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
          if (currentLevel < 5) {
-            LOGGER.warn("玩家 {} 尝试使用鬼梦V键技能但等级不足: {}", player.method_5477().getString(), currentLevel);
-            player.method_7353(Text.method_43470("§c复苏程度不足"), true);
+            LOGGER.warn("玩家 {} 尝试使用鬼梦V键技能但等级不足: {}", player.getName().getString(), currentLevel);
+            player.sendMessage(Text.literal("§c复苏程度不足"), true);
          } else {
-            LOGGER.debug("玩家 {} 执行鬼梦V键技能：进入/离开鬼梦维度", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼梦V键技能：进入/离开鬼梦维度", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostDreamVSkillC2SPacket.ID, PacketByteBufs.empty());
          }
       }
    }
 
    private static boolean isPlayerInGhostLake(PlayerEntity player) {
-      if (player != null && player.method_5805()) {
-         World world = player.method_37908();
-         BlockPos pos = player.method_24515();
-         BlockState blockState = world.method_8320(pos);
-         BlockState bodyState = world.method_8320(pos.method_10084());
-         return blockState.method_26204() instanceof GhostLakeBlock || bodyState.method_26204() instanceof GhostLakeBlock;
+      if (player != null && player.isAlive()) {
+         World world = player.getWorld();
+         BlockPos pos = player.getBlockPos();
+         BlockState blockState = world.getBlockState(pos);
+         BlockState bodyState = world.getBlockState(pos.up());
+         return blockState.getBlock() instanceof GhostLakeBlock || bodyState.getBlock() instanceof GhostLakeBlock;
       } else {
          return false;
       }
    }
 
    private static void handleWishGhostNSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行许愿鬼N键技能：给周围鬼蜮内所有鬼添加1分钟沉寂效果", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行许愿鬼N键技能：给周围鬼蜮内所有鬼添加1分钟沉寂效果", player.getName().getString());
       ClientPlayNetworking.send(ClientWishGhostNSkillC2SPacket.ID, PacketByteBufs.empty());
    }
 
    private static void handleWishGhostGSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行许愿鬼G键技能：给自己30秒抗性5和力量255", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行许愿鬼G键技能：给自己30秒抗性5和力量255", player.getName().getString());
       ClientPlayNetworking.send(ClientWishGhostGSkillC2SPacket.ID, PacketByteBufs.empty());
    }
 
    private static void handleWishGhostVSkill(PlayerEntity player) {
-      LOGGER.debug("玩家 {} 执行许愿鬼V键技能：清除所有buff并传送到安全地方", player.method_5477().getString());
+      LOGGER.debug("玩家 {} 执行许愿鬼V键技能：清除所有buff并传送到安全地方", player.getName().getString());
       ClientPlayNetworking.send(ClientWishGhostVSkillC2SPacket.ID, PacketByteBufs.empty());
    }
 
@@ -643,7 +643,7 @@ public class GhostSkillSystem {
    private static void handleDefaultNSkill(String skillType, PlayerEntity player) {
       Runnable customHandler = nSkillHandlerMap.get(skillType);
       if (customHandler != null) {
-         LOGGER.debug("玩家 {} 使用附属模组注册的N键技能处理：{}", player.method_5477().getString(), skillType);
+         LOGGER.debug("玩家 {} 使用附属模组注册的N键技能处理：{}", player.getName().getString(), skillType);
          customHandler.run();
       } else {
          Map<String, Runnable> nSkillHandlers = new HashMap<>();
@@ -660,9 +660,9 @@ public class GhostSkillSystem {
             int mainSlot = MainGhostManager.getMainGhostSlot(player);
             int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
             if (currentLevel < 7) {
-               player.method_7353(Text.method_43470("§c复苏程度不足"), true);
+               player.sendMessage(Text.literal("§c复苏程度不足"), true);
             } else {
-               LOGGER.debug("玩家 {} 执行鬼影头N键技能：切换目标控制权", player.method_5477().getString());
+               LOGGER.debug("玩家 {} 执行鬼影头N键技能：切换目标控制权", player.getName().getString());
                GhostShadowHeadCameraManager.performNSkill(player);
             }
          });
@@ -670,9 +670,9 @@ public class GhostSkillSystem {
             int mainSlot = MainGhostManager.getMainGhostSlot(player);
             int currentLevel = PlayerEvents.getGhostSlotLevel(player, mainSlot);
             if (currentLevel < 7) {
-               player.method_7353(Text.method_43470("§c复苏程度不足"), true);
+               player.sendMessage(Text.literal("§c复苏程度不足"), true);
             } else {
-               LOGGER.debug("玩家 {} 执行完整鬼影N键技能：切换目标控制权", player.method_5477().getString());
+               LOGGER.debug("玩家 {} 执行完整鬼影N键技能：切换目标控制权", player.getName().getString());
                GhostShadowHeadCameraManager.performNSkill(player);
             }
          });
@@ -680,9 +680,9 @@ public class GhostSkillSystem {
          if (handler != null) {
             handler.run();
          } else if (!skillType.equals("taitou_ghost") && !skillType.equals("ditou_ghost")) {
-            LOGGER.debug("玩家 {} 使用N键技能，但当前鬼类型 {} 没有默认N键技能处理", player.method_5477().getString(), skillType);
+            LOGGER.debug("玩家 {} 使用N键技能，但当前鬼类型 {} 没有默认N键技能处理", player.getName().getString(), skillType);
          } else {
-            LOGGER.debug("玩家 {} 尝试使用N键技能，但当前鬼类型无N键技能", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 尝试使用N键技能，但当前鬼类型无N键技能", player.getName().getString());
          }
       }
    }
@@ -690,7 +690,7 @@ public class GhostSkillSystem {
    private static void handleDefaultGSkill(String skillType, PlayerEntity player) {
       Runnable customHandler = gSkillHandlerMap.get(skillType);
       if (customHandler != null) {
-         LOGGER.debug("玩家 {} 使用附属模组注册的G键技能处理：{}", player.method_5477().getString(), skillType);
+         LOGGER.debug("玩家 {} 使用附属模组注册的G键技能处理：{}", player.getName().getString(), skillType);
          customHandler.run();
       } else {
          Map<String, Runnable> gSkillHandlers = new HashMap<>();
@@ -702,28 +702,28 @@ public class GhostSkillSystem {
          gSkillHandlers.put("villager_ghost", () -> handleVillagerGhostGSkill(player));
          gSkillHandlers.put("wish_ghost", () -> handleWishGhostGSkill(player));
          gSkillHandlers.put("ghost_officer", () -> {
-            LOGGER.debug("玩家 {} 执行鬼差G键技能：秒杀沉寂状态玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼差G键技能：秒杀沉寂状态玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostOfficerGSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          gSkillHandlers.put("funeral_music_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行丧乐鬼G键技能：退出演奏状态，并立刻解除自身沉寂，同时获得3s净化效果", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行丧乐鬼G键技能：退出演奏状态，并立刻解除自身沉寂，同时获得3s净化效果", player.getName().getString());
             ClientPlayNetworking.send(ClientFuneralMusicGhostGSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          gSkillHandlers.put("ghost_shadow_head", () -> {
-            LOGGER.debug("玩家 {} 执行鬼影头G键技能：对附身目标施加缓慢3和虚弱3", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼影头G键技能：对附身目标施加缓慢3和虚弱3", player.getName().getString());
             GhostShadowHeadCameraManager.performGSkill(player);
          });
          gSkillHandlers.put("complete_shadow_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行完整鬼影G键技能：对附身目标施加缓慢3和虚弱3", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行完整鬼影G键技能：对附身目标施加缓慢3和虚弱3", player.getName().getString());
             GhostShadowHeadCameraManager.performGSkill(player);
          });
          Runnable handler = gSkillHandlers.get(skillType);
          if (handler != null) {
             handler.run();
          } else if (!skillType.equals("taitou_ghost") && !skillType.equals("ditou_ghost")) {
-            LOGGER.debug("玩家 {} 使用G键技能，但当前鬼类型 {} 没有默认G键技能处理", player.method_5477().getString(), skillType);
+            LOGGER.debug("玩家 {} 使用G键技能，但当前鬼类型 {} 没有默认G键技能处理", player.getName().getString(), skillType);
          } else {
-            LOGGER.debug("玩家 {} 尝试使用G键技能，但当前鬼类型无G键技能", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 尝试使用G键技能，但当前鬼类型无G键技能", player.getName().getString());
          }
       }
    }
@@ -731,7 +731,7 @@ public class GhostSkillSystem {
    private static void handleDefaultVSkill(String skillType, PlayerEntity player) {
       Runnable customHandler = vSkillHandlerMap.get(skillType);
       if (customHandler != null) {
-         LOGGER.debug("玩家 {} 使用附属模组注册的V键技能处理：{}", player.method_5477().getString(), skillType);
+         LOGGER.debug("玩家 {} 使用附属模组注册的V键技能处理：{}", player.getName().getString(), skillType);
          customHandler.run();
       } else {
          Map<String, Runnable> vSkillHandlers = new HashMap<>();
@@ -746,25 +746,25 @@ public class GhostSkillSystem {
          vSkillHandlers.put("wish_ghost", () -> handleWishGhostVSkill(player));
          vSkillHandlers.put("ghost_officer", () -> ClientPlayNetworking.send(ClientGhostOfficerVSkillC2SPacket.ID, PacketByteBufs.empty()));
          vSkillHandlers.put("funeral_music_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行丧乐鬼V键技能：立刻解除自身沉寂并进入演奏状态，同时获得3s净化效果", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行丧乐鬼V键技能：立刻解除自身沉寂并进入演奏状态，同时获得3s净化效果", player.getName().getString());
             ClientPlayNetworking.send(ClientFuneralMusicGhostVSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          vSkillHandlers.put("ghost_dream", () -> handleGhostDreamVSkill(player));
          vSkillHandlers.put("ghost_shadow_head", () -> {
-            LOGGER.debug("玩家 {} 执行鬼影头V键技能：对附身目标发动灵异袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼影头V键技能：对附身目标发动灵异袭击", player.getName().getString());
             GhostShadowHeadCameraManager.performVSkillAttack(player);
          });
          vSkillHandlers.put("complete_shadow_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行完整鬼影V键技能：对附身目标发动灵异袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行完整鬼影V键技能：对附身目标发动灵异袭击", player.getName().getString());
             GhostShadowHeadCameraManager.performVSkillAttack(player);
          });
          Runnable handler = vSkillHandlers.get(skillType);
          if (handler != null) {
             handler.run();
          } else if (!skillType.equals("taitou_ghost") && !skillType.equals("ditou_ghost")) {
-            LOGGER.debug("玩家 {} 使用V键技能，但当前鬼类型 {} 没有默认V键技能处理", player.method_5477().getString(), skillType);
+            LOGGER.debug("玩家 {} 使用V键技能，但当前鬼类型 {} 没有默认V键技能处理", player.getName().getString(), skillType);
          } else {
-            LOGGER.debug("玩家 {} 尝试使用V键技能，但当前鬼类型无V键技能", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 尝试使用V键技能，但当前鬼类型无V键技能", player.getName().getString());
          }
       }
    }
@@ -772,36 +772,36 @@ public class GhostSkillSystem {
    private static void handleDefaultJSkill(String skillType, PlayerEntity player) {
       Runnable customHandler = jSkillHandlerMap.get(skillType);
       if (customHandler != null) {
-         LOGGER.debug("玩家 {} 使用附属模组注册的J键技能处理：{}", player.method_5477().getString(), skillType);
+         LOGGER.debug("玩家 {} 使用附属模组注册的J键技能处理：{}", player.getName().getString(), skillType);
          customHandler.run();
       } else {
          Map<String, Runnable> jSkillHandlers = new HashMap<>();
          jSkillHandlers.put("silent_ghost_eye", () -> {
-            LOGGER.debug("玩家 {} 执行鬼眼J键技能：修复骗人鬼项链耐久度", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼眼J键技能：修复骗人鬼项链耐久度", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostEyeJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_fire", () -> {
-            LOGGER.debug("玩家 {} 执行鬼火J键技能：袭击所有燃烧的生物", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼火J键技能：袭击所有燃烧的生物", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostFireJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("taitou_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行抬头鬼J键技能：抬头鬼袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行抬头鬼J键技能：抬头鬼袭击", player.getName().getString());
             ClientPlayNetworking.send(ClientTaitouGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("sneak_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行潜行鬼J键技能：袭击蹲下的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行潜行鬼J键技能：袭击蹲下的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientSneakGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("clothes_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行裁缝鬼J键技能：袭击未穿戴装备的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行裁缝鬼J键技能：袭击未穿戴装备的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientClothesGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("puppet_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行木偶鬼J键技能：袭击被标记的生物", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行木偶鬼J键技能：袭击被标记的生物", player.getName().getString());
             ClientPlayNetworking.send(ClientPuppetGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("funeral_music_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行丧乐鬼J键技能：触发全部标记，按照层数造成不同程度的灵异叠加袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行丧乐鬼J键技能：触发全部标记，按照层数造成不同程度的灵异叠加袭击", player.getName().getString());
             ClientPlayNetworking.send(ClientFuneralMusicGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ditou_ghost", () -> ClientPlayNetworking.send(ClientDitouGhostSkillC2SPacket.ID, PacketByteBufs.empty()));
@@ -812,124 +812,124 @@ public class GhostSkillSystem {
          jSkillHandlers.put("fog_ghost", () -> ClientPlayNetworking.send(ClientFogGhostSkillC2SPacket.ID, PacketByteBufs.empty()));
          jSkillHandlers.put("block_ghost", () -> ClientPlayNetworking.send(ClientBlockGhostSkillC2SPacket.ID, PacketByteBufs.empty()));
          jSkillHandlers.put("food_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行食物鬼J键技能：饥饿袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行食物鬼J键技能：饥饿袭击", player.getName().getString());
             ClientPlayNetworking.send(ClientFoodGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("villager_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行村民鬼J键技能：鬼奴控制", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行村民鬼J键技能：鬼奴控制", player.getName().getString());
             ClientPlayNetworking.send(ClientVillagerGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("lost_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行遗忘鬼J键技能：遗忘标记", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行遗忘鬼J键技能：遗忘标记", player.getName().getString());
             ClientPlayNetworking.send(ClientLostGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("qiaomen_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行敲门鬼J键技能：敲门", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行敲门鬼J键技能：敲门", player.getName().getString());
             ClientPlayNetworking.send(ClientQiaomenGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("crop_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行作物鬼J键技能：标记并袭击所有在作物上的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行作物鬼J键技能：标记并袭击所有在作物上的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientCropGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("step_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行踩人鬼J键技能：标记并袭击所有在y坐标低于自己的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行踩人鬼J键技能：标记并袭击所有在y坐标低于自己的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientStepGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("grave_earth_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行坟土鬼J键技能：在目标位置放置坟堆", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行坟土鬼J键技能：在目标位置放置坟堆", player.getName().getString());
             ClientPlayNetworking.send(ClientGraveEarthGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("trash_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行垃圾鬼J键技能：标记并袭击所有周围6格内有掉落物的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行垃圾鬼J键技能：标记并袭击所有周围6格内有掉落物的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientTrashGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("water_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行水鬼J键技能：标记并袭击所有在水里的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行水鬼J键技能：标记并袭击所有在水里的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientWaterGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("giant_shadow_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行高大鬼影J键技能：标记并袭击所有背对自己的玩家", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行高大鬼影J键技能：标记并袭击所有背对自己的玩家", player.getName().getString());
             ClientPlayNetworking.send(ClientGiantShadowGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ganshi_bride_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行干尸newlineJ键技能：剥夺对方的一个鬼", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行干尸newlineJ键技能：剥夺对方的一个鬼", player.getName().getString());
             ClientPlayNetworking.send(ClientGanshiBrideGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("crying_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行哭丧鬼J键技能：哭泣标记", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行哭丧鬼J键技能：哭泣标记", player.getName().getString());
             ClientPlayNetworking.send(ClientCryingGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("suona_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行唢呐鬼J键技能：吹唢呐标记", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行唢呐鬼J键技能：吹唢呐标记", player.getName().getString());
             ClientPlayNetworking.send(ClientSuonaGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("gong_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行敲锣鬼J键技能：敲锣标记", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行敲锣鬼J键技能：敲锣标记", player.getName().getString());
             ClientPlayNetworking.send(ClientGongGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_pressure", () -> {
-            LOGGER.debug("玩家 {} 执行鬼压人J键技能：将背上的鬼扔到目标身上", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼压人J键技能：将背上的鬼扔到目标身上", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostPressureSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_wind", () -> {
-            LOGGER.debug("玩家 {} 执行鬼风J键技能", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼风J键技能", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostWindSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_blood", () -> {
-            LOGGER.debug("玩家 {} 执行鬼血J键技能：释放血雾攻击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼血J键技能：释放血雾攻击", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostBloodSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("wish_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行许愿鬼J键技能：恢复满生命值", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行许愿鬼J键技能：恢复满生命值", player.getName().getString());
             ClientPlayNetworking.send(ClientWishGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("scapegoat_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行替死鬼J键技能：替死标记", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行替死鬼J键技能：替死标记", player.getName().getString());
             ClientPlayNetworking.send(ClientScapegoatGhostSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("candy_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行糖果鬼J键技能：扣除生命获得鬼糖果", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行糖果鬼J键技能：扣除生命获得鬼糖果", player.getName().getString());
             ClientPlayNetworking.send(ClientCandyGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("silent_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行静悄悄J键技能：触发聊天提及传送", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行静悄悄J键技能：触发聊天提及传送", player.getName().getString());
             ClientPlayNetworking.send(ClientSilentGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_officer", () -> {
-            LOGGER.debug("玩家 {} 执行鬼差J键技能：手动指定优先压制对象", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼差J键技能：手动指定优先压制对象", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostOfficerSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_lake", () -> {
-            LOGGER.debug("玩家 {} 执行鬼湖J键技能：在目标位置召唤一处湖水", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼湖J键技能：在目标位置召唤一处湖水", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostLakeSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("plague_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行瘟鬼J键技能：传染目标生物瘟疫", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行瘟鬼J键技能：传染目标生物瘟疫", player.getName().getString());
             ClientPlayNetworking.send(ClientPlagueGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("mineral_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行矿物鬼J键技能：引爆周围的矿物", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行矿物鬼J键技能：引爆周围的矿物", player.getName().getString());
             ClientPlayNetworking.send(ClientMineralGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("shadow_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行黑影鬼J键技能：标记处于阴影中的生物并对其发动袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行黑影鬼J键技能：标记处于阴影中的生物并对其发动袭击", player.getName().getString());
             ClientPlayNetworking.send(ClientShadowGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("complete_shadow_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行完整鬼影J键技能：切换摄像机绑定", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行完整鬼影J键技能：切换摄像机绑定", player.getName().getString());
             GhostShadowHeadCameraManager.toggleCameraBinding(player);
             ClientPlayNetworking.send(ClientGhostShadowHeadJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("door_ghost", () -> {
-            LOGGER.debug("玩家 {} 执行开门鬼J键技能：开门对周围生物造成袭击", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行开门鬼J键技能：开门对周围生物造成袭击", player.getName().getString());
             ClientPlayNetworking.send(ClientDoorGhostJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_dream", () -> {
-            LOGGER.debug("玩家 {} 执行鬼梦J键技能：在目标位置生成鬼梦生物", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼梦J键技能：在目标位置生成鬼梦生物", player.getName().getString());
             ClientPlayNetworking.send(ClientGhostDreamSkillC2SPacket.ID, PacketByteBufs.empty());
          });
          jSkillHandlers.put("ghost_shadow_head", () -> {
-            LOGGER.debug("玩家 {} 执行鬼影头J键技能：切换摄像机绑定", player.method_5477().getString());
+            LOGGER.debug("玩家 {} 执行鬼影头J键技能：切换摄像机绑定", player.getName().getString());
             GhostShadowHeadCameraManager.toggleCameraBinding(player);
             ClientPlayNetworking.send(ClientGhostShadowHeadJSkillC2SPacket.ID, PacketByteBufs.empty());
          });
@@ -937,7 +937,7 @@ public class GhostSkillSystem {
          if (handler != null) {
             handler.run();
          } else {
-            LOGGER.debug("玩家 {} 使用J键技能，但当前鬼类型 {} 没有默认J键技能处理", player.method_5477().getString(), skillType);
+            LOGGER.debug("玩家 {} 使用J键技能，但当前鬼类型 {} 没有默认J键技能处理", player.getName().getString(), skillType);
          }
       }
    }

@@ -24,41 +24,41 @@ public class FilthyFruitItem extends Item {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack itemStack = user.method_5998(hand);
-      if (user.method_7332(true)) {
-         user.method_6019(hand);
-         return TypedActionResult.method_22428(itemStack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack itemStack = user.getStackInHand(hand);
+      if (user.canConsume(true)) {
+         user.setCurrentHand(hand);
+         return TypedActionResult.consume(itemStack);
       } else {
-         return TypedActionResult.method_22431(itemStack);
+         return TypedActionResult.fail(itemStack);
       }
    }
 
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (user instanceof PlayerEntity player && !world.field_9236) {
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (user instanceof PlayerEntity player && !world.isClient) {
          this.restoreSpiritStrength(player);
       }
 
-      return super.method_7861(stack, world, user);
+      return super.finishUsing(stack, world, user);
    }
 
    private void restoreSpiritStrength(PlayerEntity player) {
       if (player instanceof ServerPlayerEntity serverPlayer) {
          NbtCompound spiritData = PlayerEvents.getSpiritAttributes(serverPlayer);
-         float currentSpirit = spiritData.method_10545("currentSpirit") ? (float)spiritData.method_10574("currentSpirit") : 0.0F;
-         float maxSpirit = spiritData.method_10545("maxSpirit") ? (float)spiritData.method_10574("maxSpirit") : 0.0F;
+         float currentSpirit = spiritData.contains("currentSpirit") ? (float)spiritData.getDouble("currentSpirit") : 0.0F;
+         float maxSpirit = spiritData.contains("maxSpirit") ? (float)spiritData.getDouble("maxSpirit") : 0.0F;
          float newSpirit = Math.min(currentSpirit + 50.0F, maxSpirit);
          PlayerEvents.setCurrentSpirit(player, newSpirit);
-         player.method_7353(Text.method_43469("item.smfs.filthy_fruit.effect.success", new Object[]{(int)(newSpirit - currentSpirit)}), true);
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5903, 200, 1, false, true));
-         player.method_5783(SoundEvents.field_14709, 1.0F, 1.0F);
+         player.sendMessage(Text.translatable("item.smfs.filthy_fruit.effect.success", new Object[]{(int)(newSpirit - currentSpirit)}), true);
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 200, 1, false, true));
+         player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
       }
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.filthy_fruit.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.filthy_fruit.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.brewable_material"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.filthy_fruit.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.filthy_fruit.description.type"));
+      tooltip.add(Text.translatable("item.smfs.brewable_material"));
    }
 }

@@ -33,19 +33,19 @@ public class ClientGhostLakeVSkillC2SPacket {
    ) {
       server.execute(
          () -> {
-            if (player != null && player.method_5805()) {
-               World world = player.method_37908();
-               BlockPos playerPos = player.method_24515();
+            if (player != null && player.isAlive()) {
+               World world = player.getWorld();
+               BlockPos playerPos = player.getBlockPos();
                List<BlockPos> ghostLakePositions = new ArrayList<>();
                int searchRadius = 32;
 
                for (int x = -searchRadius; x <= searchRadius; x++) {
                   for (int y = -searchRadius; y <= searchRadius; y++) {
                      for (int z = -searchRadius; z <= searchRadius; z++) {
-                        BlockPos checkPos = playerPos.method_10069(x, y, z);
-                        if (world.method_8320(checkPos).method_26204() instanceof GhostLakeBlock
+                        BlockPos checkPos = playerPos.add(x, y, z);
+                        if (world.getBlockState(checkPos).getBlock() instanceof GhostLakeBlock
                            && !checkPos.equals(playerPos)
-                           && !checkPos.equals(playerPos.method_10084())) {
+                           && !checkPos.equals(playerPos.up())) {
                            ghostLakePositions.add(checkPos);
                         }
                      }
@@ -57,7 +57,7 @@ public class ClientGhostLakeVSkillC2SPacket {
                   double maxDistance = 0.0;
 
                   for (BlockPos pos : ghostLakePositions) {
-                     double distance = playerPos.method_10262(pos);
+                     double distance = playerPos.getSquaredDistance(pos);
                      if (distance > maxDistance) {
                         maxDistance = distance;
                         targetPos = pos;
@@ -65,19 +65,12 @@ public class ClientGhostLakeVSkillC2SPacket {
                   }
 
                   if (targetPos != null && world instanceof ServerWorld serverWorld) {
-                     player.method_14251(
-                        serverWorld,
-                        targetPos.method_10263() + 0.5,
-                        targetPos.method_10264() + 1,
-                        targetPos.method_10260() + 0.5,
-                        player.method_36454(),
-                        player.method_36455()
-                     );
-                     player.method_17356(SoundEvents.field_15237, SoundCategory.field_15248, 1.0F, 1.0F);
+                     player.teleport(serverWorld, targetPos.getX() + 0.5, targetPos.getY() + 1, targetPos.getZ() + 0.5, player.getYaw(), player.getPitch());
+                     player.playSound(SoundEvents.BLOCK_WATER_AMBIENT, SoundCategory.PLAYERS, 1.0F, 1.0F);
                   }
                } else {
-                  LOGGER.warn("玩家 {} 执行鬼湖V键技能，但周围没有其他鬼湖方块", player.method_5477().getString());
-                  player.method_7353(Text.method_43470("§c周围没有其他鬼湖方块"), true);
+                  LOGGER.warn("玩家 {} 执行鬼湖V键技能，但周围没有其他鬼湖方块", player.getName().getString());
+                  player.sendMessage(Text.literal("§c周围没有其他鬼湖方块"), true);
                }
 
                PlayerEvents.balanceRevivalDegree(player);

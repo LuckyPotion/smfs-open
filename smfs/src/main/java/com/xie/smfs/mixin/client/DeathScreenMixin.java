@@ -16,11 +16,11 @@ public class DeathScreenMixin {
    @Inject(method = "init", at = @At("HEAD"), cancellable = true)
    private void replaceDeathScreen(CallbackInfo ci) {
       MusicBoxCurseSoundHandler.stopOnDeath();
-      MinecraftClient client = MinecraftClient.method_1551();
-      DeathScreen deathScreen = (DeathScreen)client.field_1755;
+      MinecraftClient client = MinecraftClient.getInstance();
+      DeathScreen deathScreen = (DeathScreen)client.currentScreen;
       if (!this.isHardcore(deathScreen)) {
          ci.cancel();
-         client.method_1507(new CustomDeathScreen(this.getDeathMessage(deathScreen), this.isHardcore(deathScreen)));
+         client.setScreen(new CustomDeathScreen(this.getDeathMessage(deathScreen), this.isHardcore(deathScreen)));
       }
    }
 
@@ -30,7 +30,7 @@ public class DeathScreenMixin {
          field.setAccessible(true);
          return (Text)field.get(screen);
       } catch (Exception e) {
-         return Text.method_43470("未知死亡原因");
+         return Text.literal("未知死亡原因");
       }
    }
 

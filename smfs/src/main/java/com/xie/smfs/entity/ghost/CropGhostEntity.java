@@ -31,65 +31,65 @@ public class CropGhostEntity extends GhostEntity {
    }
 
    private void initCropGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.25);
+         speedAttribute.setBaseValue(0.25);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(8.0);
+         attackDamageAttribute.setBaseValue(8.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.0);
+         attackKnockbackAttribute.setBaseValue(0.0);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(24.0);
+         followRangeAttribute.setBaseValue(24.0);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          if (this.isSuppressed() || this.isDeadlocked() || this.isMovementDisabled()) {
-            this.method_18799(Vec3d.field_1353);
-            this.method_5942().method_6340();
+            this.setVelocity(Vec3d.ZERO);
+            this.getNavigation().stop();
             return;
          }
 
-         if (this.field_6012 % 150 == 0 && this.getGhostRandom().nextBoolean()) {
+         if (this.age % 150 == 0 && this.getGhostRandom().nextBoolean()) {
             double radius = 10.0;
-            double x = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            double z = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
-            this.method_5942().method_6337(x, this.method_23318(), z, 0.8);
+            double x = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            double z = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * radius * 2.0;
+            this.getNavigation().startMovingTo(x, this.getY(), z, 0.8);
          }
 
-         if (this.field_6012 % 100 == 0) {
+         if (this.age % 100 == 0) {
             this.performFarmingActions();
          }
       }
    }
 
    private void performFarmingActions() {
-      if (this.method_37908() instanceof ServerWorld serverWorld) {
-         BlockPos var9 = this.method_24515();
+      if (this.getWorld() instanceof ServerWorld serverWorld) {
+         BlockPos var9 = this.getBlockPos();
          int radius = 8;
 
          for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                for (int y = -2; y <= 2; y++) {
-                  BlockPos checkPos = var9.method_10069(x, y, z);
-                  BlockState blockState = serverWorld.method_8320(checkPos);
+                  BlockPos checkPos = var9.add(x, y, z);
+                  BlockState blockState = serverWorld.getBlockState(checkPos);
                   if (this.canTillLand(serverWorld, checkPos) && this.getGhostRandom().nextBoolean()) {
                      this.tillLand(serverWorld, checkPos);
                   }
@@ -104,64 +104,61 @@ public class CropGhostEntity extends GhostEntity {
    }
 
    private boolean canTillLand(ServerWorld world, BlockPos pos) {
-      BlockState blockState = world.method_8320(pos);
-      BlockState aboveState = world.method_8320(pos.method_10084());
-      return (blockState.method_27852(Blocks.field_10219) || blockState.method_27852(Blocks.field_10566) || blockState.method_27852(Blocks.field_10253))
-         && aboveState.method_26215();
+      BlockState blockState = world.getBlockState(pos);
+      BlockState aboveState = world.getBlockState(pos.up());
+      return (blockState.isOf(Blocks.GRASS_BLOCK) || blockState.isOf(Blocks.DIRT) || blockState.isOf(Blocks.COARSE_DIRT)) && aboveState.isAir();
    }
 
    private void tillLand(ServerWorld world, BlockPos pos) {
-      BlockState blockState = world.method_8320(pos);
-      if (blockState.method_27852(Blocks.field_10219)) {
-         world.method_8501(pos, Blocks.field_10362.method_9564());
-      } else if (blockState.method_27852(Blocks.field_10566) || blockState.method_27852(Blocks.field_10253)) {
-         world.method_8501(pos, Blocks.field_10362.method_9564());
+      BlockState blockState = world.getBlockState(pos);
+      if (blockState.isOf(Blocks.GRASS_BLOCK)) {
+         world.setBlockState(pos, Blocks.FARMLAND.getDefaultState());
+      } else if (blockState.isOf(Blocks.DIRT) || blockState.isOf(Blocks.COARSE_DIRT)) {
+         world.setBlockState(pos, Blocks.FARMLAND.getDefaultState());
       }
 
-      world.method_14199(ParticleTypes.field_11211, pos.method_10263() + 0.5, pos.method_10264() + 1, pos.method_10260() + 0.5, 5, 0.3, 0.3, 0.3, 0.1);
+      world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 5, 0.3, 0.3, 0.3, 0.1);
    }
 
    private boolean canPlantCrops(ServerWorld world, BlockPos pos) {
-      BlockState blockState = world.method_8320(pos);
-      BlockState aboveState = world.method_8320(pos.method_10084());
-      return blockState.method_27852(Blocks.field_10362) && aboveState.method_26215();
+      BlockState blockState = world.getBlockState(pos);
+      BlockState aboveState = world.getBlockState(pos.up());
+      return blockState.isOf(Blocks.FARMLAND) && aboveState.isAir();
    }
 
    private void plantCrops(ServerWorld world, BlockPos pos) {
-      BlockPos cropPos = pos.method_10084();
+      BlockPos cropPos = pos.up();
       int cropType = this.getGhostRandom().nextInt(4);
       switch (cropType) {
          case 0:
-            world.method_8501(cropPos, Blocks.field_10293.method_9564());
+            world.setBlockState(cropPos, Blocks.WHEAT.getDefaultState());
             break;
          case 1:
-            world.method_8501(cropPos, Blocks.field_10609.method_9564());
+            world.setBlockState(cropPos, Blocks.CARROTS.getDefaultState());
             break;
          case 2:
-            world.method_8501(cropPos, Blocks.field_10247.method_9564());
+            world.setBlockState(cropPos, Blocks.POTATOES.getDefaultState());
             break;
          case 3:
-            world.method_8501(cropPos, Blocks.field_10341.method_9564());
+            world.setBlockState(cropPos, Blocks.BEETROOTS.getDefaultState());
       }
 
-      world.method_14199(
-         ParticleTypes.field_11211, cropPos.method_10263() + 0.5, cropPos.method_10264() + 0.5, cropPos.method_10260() + 0.5, 5, 0.3, 0.3, 0.3, 0.1
-      );
+      world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, cropPos.getX() + 0.5, cropPos.getY() + 0.5, cropPos.getZ() + 0.5, 5, 0.3, 0.3, 0.3, 0.1);
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      boolean hasGoldenBoots = ((ItemStack)player.method_31548().field_7548.get(0)).method_7909() == Items.field_8753;
+      boolean hasGoldenBoots = ((ItemStack)player.getInventory().armor.get(0)).getItem() == Items.GOLDEN_BOOTS;
       return !RedGhostCandleItem.isHoldingCandle(player)
          && !hasGoldenBoots
          && this.isPlayerOnCrops(player)
-         && this.method_5858(player) <= 576.0
+         && this.squaredDistanceTo(player) <= 576.0
          && this.attackCooldown <= 0;
    }
 
    private boolean isPlayerOnCrops(PlayerEntity player) {
-      return player.method_37908().method_8320(player.method_24515().method_10074()).method_26164(BlockTags.field_20341)
-         || player.method_37908().method_8320(player.method_24515()).method_26164(BlockTags.field_20341);
+      return player.getWorld().getBlockState(player.getBlockPos().down()).isIn(BlockTags.CROPS)
+         || player.getWorld().getBlockState(player.getBlockPos()).isIn(BlockTags.CROPS);
    }
 
    @Override

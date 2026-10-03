@@ -19,27 +19,27 @@ public class FissuredSpearRenderer extends GeoEntityRenderer<FissuredSpearEntity
    }
 
    public void render(FissuredSpearEntity spear, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-      matrices.method_22903();
+      matrices.push();
       float renderYaw;
       float renderPitch;
       if (spear.isStuck()) {
          renderYaw = spear.getStuckYaw();
          renderPitch = spear.getStuckPitch();
       } else {
-         renderYaw = MathHelper.method_16439(tickDelta, spear.field_5982, spear.method_36454());
-         renderPitch = MathHelper.method_16439(tickDelta, spear.field_6004, spear.method_36455());
+         renderYaw = MathHelper.lerp(tickDelta, spear.prevYaw, spear.getYaw());
+         renderPitch = MathHelper.lerp(tickDelta, spear.prevPitch, spear.getPitch());
       }
 
-      matrices.method_22907(RotationAxis.field_40716.rotationDegrees(renderYaw - 90.0F));
-      matrices.method_22907(RotationAxis.field_40718.rotationDegrees(renderPitch + 90.0F));
+      matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(renderYaw - 90.0F));
+      matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(renderPitch + 90.0F));
       if (spear.isStuck()) {
-         matrices.method_22907(RotationAxis.field_40718.rotationDegrees(180.0F));
-         matrices.method_22904(0.0, 0.0, 0.35);
+         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180.0F));
+         matrices.translate(0.0, 0.0, 0.35);
       }
 
-      matrices.method_22905(0.5F, 0.5F, 0.5F);
+      matrices.scale(0.5F, 0.5F, 0.5F);
       super.method_3936(spear, yaw, tickDelta, matrices, vertexConsumers, light);
-      matrices.method_22909();
+      matrices.pop();
    }
 
    public static class FissuredSpearModel extends GeoModel<FissuredSpearEntity> {
@@ -49,10 +49,10 @@ public class FissuredSpearRenderer extends GeoEntityRenderer<FissuredSpearEntity
 
       public Identifier getTextureResource(FissuredSpearEntity animatable) {
          ItemStack stack = animatable.getOriginalStack();
-         if (stack.method_7909() instanceof WishSpearItem) {
+         if (stack.getItem() instanceof WishSpearItem) {
             return new Identifier("smfs", "textures/item/wish_spear.png");
          } else {
-            return stack.method_7909() instanceof FissuredSpearRedItem
+            return stack.getItem() instanceof FissuredSpearRedItem
                ? new Identifier("smfs", "textures/item/fissured_spear_red.png")
                : new Identifier("smfs", "textures/item/fissured_spear_purple.png");
          }

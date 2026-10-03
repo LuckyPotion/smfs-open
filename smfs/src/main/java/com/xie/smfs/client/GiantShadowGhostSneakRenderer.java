@@ -18,12 +18,12 @@ public class GiantShadowGhostSneakRenderer {
    }
 
    private static void render(DrawContext context, float tickDelta) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      PlayerEntity player = client.field_1724;
+      MinecraftClient client = MinecraftClient.getInstance();
+      PlayerEntity player = client.player;
       if (player == null) {
          isActive = false;
       } else {
-         boolean shouldActivate = player.method_5715() && hasGiantShadowGhost(player);
+         boolean shouldActivate = player.isSneaking() && hasGiantShadowGhost(player);
          if (!shouldActivate) {
             isActive = false;
          } else {
@@ -32,8 +32,8 @@ public class GiantShadowGhostSneakRenderer {
                effectStartTime = System.currentTimeMillis();
             }
 
-            int screenWidth = context.method_51421();
-            int screenHeight = context.method_51443();
+            int screenWidth = context.getScaledWindowWidth();
+            int screenHeight = context.getScaledWindowHeight();
             float fadeProgress = calculateFadeProgress();
             FilterRenderer.renderEdgeGradient(context, screenWidth, screenHeight, FilterRenderer.FilterPreset.BLACK_CURSE, fadeProgress);
          }

@@ -16,7 +16,7 @@ public class SilentGhostChatHandler {
 
    public static void register() {
       ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((AllowChatMessage)(message, sender, params) -> {
-         String content = message.method_44862();
+         String content = message.getSignedContent();
          if (content.contains("鬼")) {
             summonSilentGhost(sender);
          }
@@ -24,9 +24,9 @@ public class SilentGhostChatHandler {
          return true;
       });
       ServerMessageEvents.ALLOW_COMMAND_MESSAGE.register((AllowCommandMessage)(message, sender, params) -> {
-         String content = message.method_44862();
+         String content = message.getSignedContent();
          if (content.contains("鬼")) {
-            ServerPlayerEntity player = sender.method_44023();
+            ServerPlayerEntity player = sender.getPlayer();
             if (player != null) {
                summonSilentGhost(player);
             }
@@ -37,18 +37,18 @@ public class SilentGhostChatHandler {
    }
 
    private static void summonSilentGhost(ServerPlayerEntity player) {
-      World world = player.method_37908();
-      if (!world.method_8608()) {
-         BlockPos playerPos = player.method_24515();
-         BlockPos spawnPos = playerPos.method_10086(2);
+      World world = player.getWorld();
+      if (!world.isClient()) {
+         BlockPos playerPos = player.getBlockPos();
+         BlockPos spawnPos = playerPos.up(2);
 
          try {
             SilentGhostEntity silentGhost = new SilentGhostEntity(ModEntities.SILENT_GHOST, world);
-            silentGhost.method_5808(spawnPos.method_10263() + 0.5, spawnPos.method_10264(), spawnPos.method_10260() + 0.5, player.method_36454(), 0.0F);
-            world.method_8649(silentGhost);
-            player.method_7353(Text.method_43470("§7你好像触发了某种规律..."), false);
+            silentGhost.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYaw(), 0.0F);
+            world.spawnEntity(silentGhost);
+            player.sendMessage(Text.literal("§7你好像触发了某种规律..."), false);
          } catch (Exception e) {
-            player.method_7353(Text.method_43470("§c召唤静悄悄鬼时出现错误！"), false);
+            player.sendMessage(Text.literal("§c召唤静悄悄鬼时出现错误！"), false);
          }
       }
    }

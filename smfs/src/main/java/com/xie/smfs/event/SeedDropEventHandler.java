@@ -25,7 +25,7 @@ public class SeedDropEventHandler {
 
    public static void register() {
       PlayerBlockBreakEvents.AFTER.register((After)(world, player, pos, state, blockEntity) -> {
-         if (!world.method_8608()) {
+         if (!world.isClient()) {
             handleBlockBreak((ServerWorld)world, player, pos, state);
          }
       });
@@ -33,9 +33,9 @@ public class SeedDropEventHandler {
    }
 
    private static void handleBlockBreak(ServerWorld world, PlayerEntity player, BlockPos pos, BlockState state) {
-      Block block = state.method_26204();
+      Block block = state.getBlock();
       if (isGrassBlock(block)) {
-         ItemStack mainHandStack = player.method_6047();
+         ItemStack mainHandStack = player.getMainHandStack();
          if (isGoldenHoe(mainHandStack)) {
             handleSeedDrops(world, player, pos);
          }
@@ -43,33 +43,29 @@ public class SeedDropEventHandler {
    }
 
    private static boolean isGrassBlock(Block block) {
-      return block == Blocks.field_10219
-         || block == Blocks.field_10214
-         || block == Blocks.field_10479
-         || block == Blocks.field_10112
-         || block == Blocks.field_10313;
+      return block == Blocks.GRASS_BLOCK || block == Blocks.TALL_GRASS || block == Blocks.GRASS || block == Blocks.FERN || block == Blocks.LARGE_FERN;
    }
 
    private static boolean isGoldenHoe(ItemStack stack) {
-      return stack.method_7909() == Items.field_8303;
+      return stack.getItem() == Items.GOLDEN_HOE;
    }
 
    private static void handleSeedDrops(ServerWorld world, PlayerEntity player, BlockPos pos) {
       if (RANDOM.nextDouble() < 0.1) {
          dropSeed(world, pos, ModItems.DIRTY_SEED);
-         LOGGER.debug("玩家 {} 使用黄金锄头挖掘草方块，掉落肮脏种子", player.method_5477().getString());
+         LOGGER.debug("玩家 {} 使用黄金锄头挖掘草方块，掉落肮脏种子", player.getName().getString());
       }
 
       if (RANDOM.nextDouble() < 0.02) {
          dropSeed(world, pos, ModItems.FILTHY_SEED);
-         LOGGER.debug("玩家 {} 使用黄金锄头挖掘草方块，掉落污秽种子", player.method_5477().getString());
+         LOGGER.debug("玩家 {} 使用黄金锄头挖掘草方块，掉落污秽种子", player.getName().getString());
       }
    }
 
    private static void dropSeed(ServerWorld world, BlockPos pos, Item seedItem) {
       ItemStack seedStack = new ItemStack(seedItem, 1);
-      ItemEntity itemEntity = new ItemEntity(world, pos.method_10263() + 0.5, pos.method_10264() + 0.5, pos.method_10260() + 0.5, seedStack);
-      itemEntity.method_18800((RANDOM.nextDouble() - 0.5) * 0.2, 0.2, (RANDOM.nextDouble() - 0.5) * 0.2);
-      world.method_8649(itemEntity);
+      ItemEntity itemEntity = new ItemEntity(world, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, seedStack);
+      itemEntity.setVelocity((RANDOM.nextDouble() - 0.5) * 0.2, 0.2, (RANDOM.nextDouble() - 0.5) * 0.2);
+      world.spawnEntity(itemEntity);
    }
 }

@@ -27,13 +27,13 @@ public class SpearModeConfigC2SPacket {
 
    public static void sendModeUpdateToServer(String mode) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(mode);
+      buf.writeString(mode);
       ClientPlayNetworking.send(UPDATE_ID, buf);
    }
 
    public static void sendWishPresetUpdateToServer(String preset) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(preset);
+      buf.writeString(preset);
       ClientPlayNetworking.send(WISH_PRESET_UPDATE_ID, buf);
    }
 
@@ -45,48 +45,48 @@ public class SpearModeConfigC2SPacket {
 
    public static void sendConfigToClient(ServerPlayerEntity player, String currentMode, boolean isWishSpear, String currentWishPreset, boolean showWishText) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(currentMode);
+      buf.writeString(currentMode);
       buf.writeBoolean(isWishSpear);
-      buf.method_10814(currentWishPreset);
+      buf.writeString(currentWishPreset);
       buf.writeBoolean(showWishText);
       ServerPlayNetworking.send(player, CONFIG_ID, buf);
    }
 
    public static void registerClient() {
       ClientPlayNetworking.registerGlobalReceiver(CONFIG_ID, (client, handler, buf, responseSender) -> {
-         String currentMode = buf.method_19772();
+         String currentMode = buf.readString();
          boolean isWishSpear = buf.readBoolean();
-         String currentWishPreset = buf.method_19772();
+         String currentWishPreset = buf.readString();
          boolean showWishText = buf.readBoolean();
-         client.execute(() -> client.method_1507(new SpearConfigScreen(Text.method_43470("长枪配置"), currentMode, isWishSpear, currentWishPreset, showWishText)));
+         client.execute(() -> client.setScreen(new SpearConfigScreen(Text.literal("长枪配置"), currentMode, isWishSpear, currentWishPreset, showWishText)));
       });
    }
 
    public static void registerServer() {
       ServerPlayNetworking.registerGlobalReceiver(REQUEST_ID, (server, player, handler, buf, responseSender) -> server.execute(() -> {
-         ItemStack stack = player.method_6047();
-         if (stack.method_7909() instanceof FissuredSpearPurpleItem) {
+         ItemStack stack = player.getMainHandStack();
+         if (stack.getItem() instanceof FissuredSpearPurpleItem) {
             String currentMode = FissuredSpearPurpleItem.getThrowMode(stack);
-            boolean isWishSpear = stack.method_7909() instanceof WishSpearItem;
+            boolean isWishSpear = stack.getItem() instanceof WishSpearItem;
             String currentWishPreset = FissuredSpearPurpleItem.getWishPreset(stack);
             boolean showWishText = FissuredSpearPurpleItem.isShowWishText(stack);
             sendConfigToClient(player, currentMode, isWishSpear, currentWishPreset, showWishText);
          }
       }));
       ServerPlayNetworking.registerGlobalReceiver(UPDATE_ID, (server, player, handler, buf, responseSender) -> {
-         String mode = buf.method_19772();
+         String mode = buf.readString();
          server.execute(() -> {
-            ItemStack stack = player.method_6047();
-            if (stack.method_7909() instanceof FissuredSpearPurpleItem) {
+            ItemStack stack = player.getMainHandStack();
+            if (stack.getItem() instanceof FissuredSpearPurpleItem) {
                FissuredSpearPurpleItem.setThrowMode(stack, mode);
             }
          });
       });
       ServerPlayNetworking.registerGlobalReceiver(WISH_PRESET_UPDATE_ID, (server, player, handler, buf, responseSender) -> {
-         String preset = buf.method_19772();
+         String preset = buf.readString();
          server.execute(() -> {
-            ItemStack stack = player.method_6047();
-            if (stack.method_7909() instanceof FissuredSpearPurpleItem) {
+            ItemStack stack = player.getMainHandStack();
+            if (stack.getItem() instanceof FissuredSpearPurpleItem) {
                FissuredSpearPurpleItem.setWishPreset(stack, preset);
             }
          });
@@ -94,8 +94,8 @@ public class SpearModeConfigC2SPacket {
       ServerPlayNetworking.registerGlobalReceiver(SHOW_WISH_TEXT_ID, (server, player, handler, buf, responseSender) -> {
          boolean show = buf.readBoolean();
          server.execute(() -> {
-            ItemStack stack = player.method_6047();
-            if (stack.method_7909() instanceof FissuredSpearPurpleItem) {
+            ItemStack stack = player.getMainHandStack();
+            if (stack.getItem() instanceof FissuredSpearPurpleItem) {
                FissuredSpearPurpleItem.setShowWishText(stack, show);
             }
          });

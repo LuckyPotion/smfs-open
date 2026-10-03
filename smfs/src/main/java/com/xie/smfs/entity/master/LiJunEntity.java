@@ -35,8 +35,8 @@ public class LiJunEntity extends GhostMasterEntity {
       this.shouldAttackPlayers = false;
       this.shouldProtectPlayers = true;
       this.shouldAttackGhostsNearPlayers = true;
-      this.method_5665(Text.method_43470("§6[鬼火]李军"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6[鬼火]李军"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.HEADQUARTERS;
    }
 
@@ -45,12 +45,12 @@ public class LiJunEntity extends GhostMasterEntity {
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -60,14 +60,14 @@ public class LiJunEntity extends GhostMasterEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608()) {
-         if (this.method_5968() != null && this.method_5968() instanceof PlayerEntity) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient()) {
+         if (this.getTarget() != null && this.getTarget() instanceof PlayerEntity) {
             this.applyGreenGhostDomainToNearbyPlayers();
          }
 
-         if (this.method_6032() <= this.method_6063() * 0.3 && this.field_6012 % 40 == 0) {
+         if (this.getHealth() <= this.getMaxHealth() * 0.3 && this.age % 40 == 0) {
             this.activateFireSkill();
          }
       }
@@ -75,53 +75,49 @@ public class LiJunEntity extends GhostMasterEntity {
 
    private void applyGreenGhostDomainToNearbyPlayers() {
       double radius = 16.0;
-      this.method_37908()
-         .method_8390(PlayerEntity.class, this.method_5829().method_1014(radius), player -> player != this.method_5968() && player instanceof PlayerEntity)
+      this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(radius), player -> player != this.getTarget() && player instanceof PlayerEntity)
          .forEach(player -> {
-            double distance = this.method_5739(player);
+            double distance = this.distanceTo(player);
             if (distance <= radius) {
-               player.method_6092(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, 100, 0, false, false, false));
+               player.addStatusEffect(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, 100, 0, false, false, false));
             }
          });
    }
 
    private void activateFireSkill() {
-      World world = this.method_37908();
-      BlockPos feetPos = this.method_24515();
-      if (world.method_8320(feetPos).method_26215()) {
-         world.method_8501(feetPos, Blocks.field_10036.method_9564());
+      World world = this.getWorld();
+      BlockPos feetPos = this.getBlockPos();
+      if (world.getBlockState(feetPos).isAir()) {
+         world.setBlockState(feetPos, Blocks.FIRE.getDefaultState());
       }
 
       double radius = 8.0;
-      this.method_37908()
-         .method_8390(LivingEntity.class, this.method_5829().method_1014(radius), entity -> entity != this && entity instanceof LivingEntity)
-         .forEach(
-            entity -> {
-               double distance = this.method_5739(entity);
-               if (distance <= radius) {
-                  entity.method_5639(5);
-                  if (world instanceof ServerWorld serverWorldx) {
-                     serverWorldx.method_14199(
-                        ParticleTypes.field_11240, entity.method_23317(), entity.method_23318() + 1.0, entity.method_23321(), 10, 0.5, 0.5, 0.5, 0.1
-                     );
-                  }
+      this.getWorld()
+         .getEntitiesByClass(LivingEntity.class, this.getBoundingBox().expand(radius), entity -> entity != this && entity instanceof LivingEntity)
+         .forEach(entity -> {
+            double distance = this.distanceTo(entity);
+            if (distance <= radius) {
+               entity.setOnFireFor(5);
+               if (world instanceof ServerWorld serverWorldx) {
+                  serverWorldx.spawnParticles(ParticleTypes.FLAME, entity.getX(), entity.getY() + 1.0, entity.getZ(), 10, 0.5, 0.5, 0.5, 0.1);
                }
             }
-         );
+         });
       if (world instanceof ServerWorld serverWorld) {
-         serverWorld.method_14199(ParticleTypes.field_11240, this.method_23317(), this.method_23318() + 1.0, this.method_23321(), 20, 1.0, 1.0, 1.0, 0.2);
+         serverWorld.spawnParticles(ParticleTypes.FLAME, this.getX(), this.getY() + 1.0, this.getZ(), 20, 1.0, 1.0, 1.0, 0.2);
       }
    }
 
    @Override
    protected void enableGhostDomain(PlayerEntity player, StatusEffect effect) {
-      player.method_6092(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.GREEN_GHOST_DOMAIN_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
    }
 
    @Override
    protected String getAttackDialogue() {
       String[] dialogues = new String[]{"大不了拼个厉鬼复苏。"};
-      return dialogues[this.method_6051().method_43048(dialogues.length)];
+      return dialogues[this.getRandom().nextInt(dialogues.length)];
    }
 
    @Override
@@ -129,10 +125,10 @@ public class LiJunEntity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack ghostMoney3Input = new ItemStack(ModItems.GHOST_MONEY_3, 3);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 24);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 24);
          this.tradeOffers.add(new TradeOffer(ghostMoney3Input, goldIngotOutput2, 12, 5, 0.05F));
          ItemStack ghostAxeInput = new ItemStack(ModItems.GHOST_AXE, 1);
-         ItemStack goldIngotOutput3 = new ItemStack(Items.field_8494, 4);
+         ItemStack goldIngotOutput3 = new ItemStack(Items.GOLD_BLOCK, 4);
          this.tradeOffers.add(new TradeOffer(ghostAxeInput, goldIngotOutput3, 6, 8, 0.08F));
          this.tradeOffersInitialized = true;
       }

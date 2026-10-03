@@ -28,20 +28,20 @@ public class GhostspawnsHandler {
       ServerTickEvents.END_WORLD_TICK
          .register(
             (EndWorldTick)world -> {
-               if (world.method_8510() % 20L == 0L) {
-                  for (PlayerEntity player : world.method_18456()) {
-                     int currentDay = (int)(world.method_8510() / 24000L) + 1;
-                     if (!world.field_9236
+               if (world.getTime() % 20L == 0L) {
+                  for (PlayerEntity player : world.getPlayers()) {
+                     int currentDay = (int)(world.getTime() / 24000L) + 1;
+                     if (!world.isClient
                         && currentDay == 5
                         && isNightTime(world)
                         && !isFirstNightCurseTriggered(player)
-                        && !player.method_6059(ModEffects.DEAFNESS)) {
-                        player.method_6092(new StatusEffectInstance(ModEffects.KNOCKING_CURSE, 7200, 0));
+                        && !player.hasStatusEffect(ModEffects.DEAFNESS)) {
+                        player.addStatusEffect(new StatusEffectInstance(ModEffects.KNOCKING_CURSE, 7200, 0));
                         setFirstNightCurseTriggered(player, true);
                      }
 
-                     if (!world.field_9236 && currentDay >= 5 && isNightTime(world) && isNearDoor(player)) {
-                        triggerKnocking(player, world, player.method_24515());
+                     if (!world.isClient && currentDay >= 5 && isNightTime(world) && isNearDoor(player)) {
+                        triggerKnocking(player, world, player.getBlockPos());
                      }
                   }
                }
@@ -50,20 +50,20 @@ public class GhostspawnsHandler {
    }
 
    private static boolean isNightTime(World world) {
-      long time = world.method_8532() % 24000L;
+      long time = world.getTimeOfDay() % 24000L;
       return time >= 13000L && time <= 23000L;
    }
 
    private static boolean isNearDoor(PlayerEntity player) {
-      BlockPos playerPos = player.method_24515();
-      World world = player.method_37908();
+      BlockPos playerPos = player.getBlockPos();
+      World world = player.getWorld();
 
       for (int x = -5; x <= 5; x++) {
          for (int y = -5; y <= 5; y++) {
             for (int z = -5; z <= 5; z++) {
-               BlockPos checkPos = playerPos.method_10069(x, y, z);
-               BlockState state = world.method_8320(checkPos);
-               if (state.method_26204() instanceof DoorBlock) {
+               BlockPos checkPos = playerPos.add(x, y, z);
+               BlockState state = world.getBlockState(checkPos);
+               if (state.getBlock() instanceof DoorBlock) {
                   return true;
                }
             }
@@ -74,21 +74,21 @@ public class GhostspawnsHandler {
    }
 
    private static void triggerKnocking(PlayerEntity player, World world, BlockPos pos) {
-      if (RANDOM.nextInt(100) < 1 && !player.method_6059(ModEffects.KNOCKING_CURSE) && !player.method_6059(ModEffects.DEAFNESS)) {
-         world.method_8396(null, pos, ModSounds.KNOCKING_SOUND, SoundCategory.field_15256, 0.5F, 1.0F);
-         player.method_6092(new StatusEffectInstance(ModEffects.KNOCKING_CURSE, 7200, 0));
-         player.method_7353(Text.method_43471("event.smfs.knocking_curse").method_27692(Formatting.field_1080), true);
+      if (RANDOM.nextInt(100) < 1 && !player.hasStatusEffect(ModEffects.KNOCKING_CURSE) && !player.hasStatusEffect(ModEffects.DEAFNESS)) {
+         world.playSound(null, pos, ModSounds.KNOCKING_SOUND, SoundCategory.AMBIENT, 0.5F, 1.0F);
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.KNOCKING_CURSE, 7200, 0));
+         player.sendMessage(Text.translatable("event.smfs.knocking_curse").formatted(Formatting.GRAY), true);
       }
    }
 
    private static boolean isFirstNightCurseTriggered(PlayerEntity player) {
       NbtCompound playerData = PlayerEvents.getCachedData(player);
-      return playerData.method_10545("first_night_curse_triggered") && playerData.method_10577("first_night_curse_triggered");
+      return playerData.contains("first_night_curse_triggered") && playerData.getBoolean("first_night_curse_triggered");
    }
 
    private static void setFirstNightCurseTriggered(PlayerEntity player, boolean triggered) {
       NbtCompound playerData = PlayerEvents.getCachedData(player);
-      playerData.method_10556("first_night_curse_triggered", triggered);
+      playerData.putBoolean("first_night_curse_triggered", triggered);
       PlayerEvents.saveDataToPlayer(player, playerData);
    }
 }

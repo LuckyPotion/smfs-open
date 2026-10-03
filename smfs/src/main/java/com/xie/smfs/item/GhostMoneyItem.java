@@ -14,16 +14,16 @@ public class GhostMoneyItem extends Item {
       super(settings);
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      if (stack.method_31574(ModItems.GHOST_MONEY_3)) {
-         tooltip.add(Text.method_43471("item.smfs.ghost_money_3.description.source"));
-         tooltip.add(Text.method_43471("item.smfs.ghost_money_3.description.desc"));
-         tooltip.add(Text.method_43471("item.smfs.ghost_money_3.description.type"));
-      } else if (stack.method_31574(ModItems.GHOST_MONEY_7)) {
-         tooltip.add(Text.method_43471("item.smfs.ghost_money_7.description.source"));
-         tooltip.add(Text.method_43471("item.smfs.ghost_money_7.description.desc"));
-         tooltip.add(Text.method_43471("item.smfs.ghost_money_7.description.type"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      if (stack.isOf(ModItems.GHOST_MONEY_3)) {
+         tooltip.add(Text.translatable("item.smfs.ghost_money_3.description.source"));
+         tooltip.add(Text.translatable("item.smfs.ghost_money_3.description.desc"));
+         tooltip.add(Text.translatable("item.smfs.ghost_money_3.description.type"));
+      } else if (stack.isOf(ModItems.GHOST_MONEY_7)) {
+         tooltip.add(Text.translatable("item.smfs.ghost_money_7.description.source"));
+         tooltip.add(Text.translatable("item.smfs.ghost_money_7.description.desc"));
+         tooltip.add(Text.translatable("item.smfs.ghost_money_7.description.type"));
       }
    }
 }

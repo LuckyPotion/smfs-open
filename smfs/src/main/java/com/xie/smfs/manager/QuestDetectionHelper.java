@@ -11,13 +11,13 @@ class QuestDetectionHelper {
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/QuestDetectionHelper");
 
    static int countPlayerItems(PlayerEntity player, String itemId) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int count = 0;
 
-      for (int i = 0; i < inventory.method_5439(); i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && isItemMatch(stack, itemId)) {
-            count += stack.method_7947();
+      for (int i = 0; i < inventory.size(); i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && isItemMatch(stack, itemId)) {
+            count += stack.getCount();
          }
       }
 
@@ -25,14 +25,14 @@ class QuestDetectionHelper {
    }
 
    static void consumePlayerItems(PlayerEntity player, String itemId, int amount) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int remaining = amount;
 
-      for (int i = 0; i < inventory.method_5439() && remaining > 0; i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && isItemMatch(stack, itemId)) {
-            int toRemove = Math.min(stack.method_7947(), remaining);
-            stack.method_7934(toRemove);
+      for (int i = 0; i < inventory.size() && remaining > 0; i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && isItemMatch(stack, itemId)) {
+            int toRemove = Math.min(stack.getCount(), remaining);
+            stack.decrement(toRemove);
             remaining -= toRemove;
             LOGGER.info("消耗物品: {} x{}", itemId, toRemove);
          }
@@ -40,8 +40,8 @@ class QuestDetectionHelper {
    }
 
    private static boolean isItemMatch(ItemStack stack, String itemId) {
-      String stackItemKey = stack.method_7909().method_7876();
-      String stackItemId = Registries.field_41178.method_10221(stack.method_7909()).toString();
+      String stackItemKey = stack.getItem().getTranslationKey();
+      String stackItemId = Registries.ITEM.getId(stack.getItem()).toString();
       return stackItemKey.equals("item.smfs." + itemId)
          || stackItemId.equals("smfs:" + itemId)
          || stackItemKey.equals("item.minecraft." + itemId)

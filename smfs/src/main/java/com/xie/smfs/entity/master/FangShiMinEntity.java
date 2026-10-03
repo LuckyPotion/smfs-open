@@ -29,8 +29,8 @@ public class FangShiMinEntity extends GhostMasterEntity {
       this.setRecoveryFactor(0.08F);
       this.shouldFleeFromGhosts = false;
       this.shouldAttackPlayers = false;
-      this.method_5665(Text.method_43470("§6方世民"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6方世民"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.PENGYOU_QUAN;
    }
 
@@ -39,12 +39,12 @@ public class FangShiMinEntity extends GhostMasterEntity {
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -55,21 +55,21 @@ public class FangShiMinEntity extends GhostMasterEntity {
 
    @Override
    protected void enableGhostDomain(PlayerEntity player, StatusEffect effect) {
-      player.method_6092(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608() && this.method_5968() != null && this.method_5968() instanceof PlayerEntity && this.field_6012 % 80 == 0) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient() && this.getTarget() != null && this.getTarget() instanceof PlayerEntity && this.age % 80 == 0) {
          this.activateGhostPressureSkill();
       }
    }
 
    private void activateGhostPressureSkill() {
-      PlayerEntity target = (PlayerEntity)this.method_5968();
+      PlayerEntity target = (PlayerEntity)this.getTarget();
       if (target != null) {
-         target.method_6092(GhostPressureEffect.createEffect(this, 100, 1));
+         target.addStatusEffect(GhostPressureEffect.createEffect(this, 100, 1));
       }
    }
 
@@ -83,10 +83,10 @@ public class FangShiMinEntity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack ghostMoney3Input = new ItemStack(ModItems.GHOST_MONEY_7, 1);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 21);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 21);
          this.tradeOffers.add(new TradeOffer(ghostMoney3Input, goldIngotOutput2, 12, 5, 0.05F));
          ItemStack rustyFirewoodKnifeInput = new ItemStack(ModItems.RUSTY_FIREWOOD_KNIFE, 1);
-         ItemStack goldIngotOutput4 = new ItemStack(Items.field_8494, 8);
+         ItemStack goldIngotOutput4 = new ItemStack(Items.GOLD_BLOCK, 8);
          this.tradeOffers.add(new TradeOffer(rustyFirewoodKnifeInput, goldIngotOutput4, 8, 3, 0.05F));
          this.tradeOffersInitialized = true;
       }

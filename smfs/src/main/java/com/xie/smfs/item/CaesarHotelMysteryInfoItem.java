@@ -5,6 +5,6 @@ import net.minecraft.world.World;
 
 public class CaesarHotelMysteryInfoItem extends StructureMysteryInfoItem {
    public CaesarHotelMysteryInfoItem() {
-      super(new FabricItemSettings().maxCount(16), "caesar_hotel", World.field_25179);
+      super(new FabricItemSettings().maxCount(16), "caesar_hotel", World.OVERWORLD);
    }
 }

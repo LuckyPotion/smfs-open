@@ -27,8 +27,8 @@ public class AiHumanSkinPaperPrompt {
 
       StringBuilder ctx = new StringBuilder();
       ctx.append("持有者信息：\n");
-      ctx.append("名称：").append(player.method_5477().getString()).append("\n");
-      long dayTime = player.method_37908().method_8532() % 24000L;
+      ctx.append("名称：").append(player.getName().getString()).append("\n");
+      long dayTime = player.getWorld().getTimeOfDay() % 24000L;
       String timeStr;
       if (dayTime >= 0L && dayTime < 13000L) {
          timeStr = "白天";
@@ -40,22 +40,22 @@ public class AiHumanSkinPaperPrompt {
 
       ctx.append("时间：").append(timeStr).append("\n");
       String dimension;
-      if (player.method_37908().method_27983() == World.field_25179) {
+      if (player.getWorld().getRegistryKey() == World.OVERWORLD) {
          dimension = "主世界";
-      } else if (player.method_37908().method_27983() == World.field_25180) {
+      } else if (player.getWorld().getRegistryKey() == World.NETHER) {
          dimension = "地狱";
-      } else if (player.method_37908().method_27983() == World.field_25181) {
+      } else if (player.getWorld().getRegistryKey() == World.END) {
          dimension = "末地";
-      } else if (player.method_37908().method_27983() == Smfs.SPIRIT_REALM_DIMENSION) {
+      } else if (player.getWorld().getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION) {
          dimension = "灵异世界";
-      } else if (player.method_37908().method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
+      } else if (player.getWorld().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
          dimension = "鬼梦世界";
       } else {
-         dimension = player.method_37908().method_27983().method_29177().method_12832();
+         dimension = player.getWorld().getRegistryKey().getValue().getPath();
       }
 
       ctx.append("所在维度：").append(dimension).append("\n");
-      ctx.append("生命值：").append((int)player.method_6032()).append("/").append((int)player.method_6063()).append("\n");
+      ctx.append("生命值：").append((int)player.getHealth()).append("/").append((int)player.getMaxHealth()).append("\n");
       List<LivingEntity> nearbyGhosts = GhostDomainManager.findGhostEntitiesInRange(player, 16);
       LOGGER.debug("[提示词] findGhostEntitiesInRange 返回 {} 个实体", nearbyGhosts.size());
       ctx.append("周围16格内厉鬼：");
@@ -72,7 +72,7 @@ public class AiHumanSkinPaperPrompt {
                if (type != null) {
                   name = GhostUtils.getGhostDisplayName(type);
                } else {
-                  name = ghost.method_5477().getString();
+                  name = ghost.getName().getString();
                   LOGGER.debug("[提示词] 鬼类型未知，使用实体名: {}", name);
                }
 
@@ -80,7 +80,7 @@ public class AiHumanSkinPaperPrompt {
                   ctx.append("、");
                }
 
-               double dist = ghost.method_5739(player);
+               double dist = ghost.distanceTo(player);
                ctx.append(name).append("(").append(String.format("%.1f", dist)).append("格)");
                first = false;
             } else {
@@ -110,19 +110,19 @@ public class AiHumanSkinPaperPrompt {
       }
 
       ctx.append("\n");
-      ctx.append("脚下方块：").append(player.method_37908().method_8320(player.method_24515().method_10074()).method_26204().method_9518().getString()).append("\n");
-      LOGGER.debug("[提示词] 脚下方块：{}", player.method_37908().method_8320(player.method_24515().method_10074()).method_26204().method_9518().getString());
+      ctx.append("脚下方块：").append(player.getWorld().getBlockState(player.getBlockPos().down()).getBlock().getName().getString()).append("\n");
+      LOGGER.debug("[提示词] 脚下方块：{}", player.getWorld().getBlockState(player.getBlockPos().down()).getBlock().getName().getString());
       ctx.append("背包物品：");
       boolean hasItem = false;
 
-      for (ItemStack stack : player.method_31548().field_7547) {
-         if (!stack.method_7960()) {
+      for (ItemStack stack : player.getInventory().main) {
+         if (!stack.isEmpty()) {
             if (hasItem) {
                ctx.append("、");
             }
 
-            String itemName = stack.method_7964().getString();
-            ctx.append(itemName).append("x").append(stack.method_7947());
+            String itemName = stack.getName().getString();
+            ctx.append(itemName).append("x").append(stack.getCount());
             hasItem = true;
          }
       }
@@ -140,13 +140,13 @@ public class AiHumanSkinPaperPrompt {
    private static Set<String> getTamedGhostNames(PlayerEntity player) {
       Set<String> ghosts = new LinkedHashSet<>();
 
-      for (ItemStack stack : player.method_31548().field_7547) {
-         if (!stack.method_7960()) {
-            Item item = stack.method_7909();
+      for (ItemStack stack : player.getInventory().main) {
+         if (!stack.isEmpty()) {
+            Item item = stack.getItem();
 
             for (Item ghostItem : GhostUtils.GHOST_CONTROL_ITEMS) {
                if (item == ghostItem) {
-                  String id = Registries.field_41178.method_10221(item).method_12832();
+                  String id = Registries.ITEM.getId(item).getPath();
                   ghosts.add(GhostUtils.getGhostDisplayName(id));
                   break;
                }

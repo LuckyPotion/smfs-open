@@ -19,19 +19,19 @@ public class GhostSmokeEntity extends GhostEntity {
    private static final int EROSION_INTERVAL = 40;
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 120000.0)
-         .method_26868(EntityAttributes.field_23719, 0.15)
-         .method_26868(EntityAttributes.field_23721, 0.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 120000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.15)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 0.0);
    }
 
    public GhostSmokeEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 3, 48.0, 'A', 1500, 0, 80, 0.25F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(120000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.15);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(0.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(120000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.15);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(0.0);
       this.setVisible(false);
-      this.method_5648(true);
+      this.setInvisible(true);
       this.setKillingRulesEnabled(false);
    }
 
@@ -59,8 +59,8 @@ public class GhostSmokeEntity extends GhostEntity {
       return false;
    }
 
-   public void method_5648(boolean invisible) {
-      super.method_5648(true);
+   public void setInvisible(boolean invisible) {
+      super.setInvisible(true);
    }
 
    @Override
@@ -70,6 +70,6 @@ public class GhostSmokeEntity extends GhostEntity {
 
    @Override
    protected void applyDefaultEffects(PlayerEntity player) {
-      player.method_6092(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN_TARGET, 200, this.getGhostDomainActualLevel() - 1, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN_TARGET, 200, this.getGhostDomainActualLevel() - 1, false, false));
    }
 }

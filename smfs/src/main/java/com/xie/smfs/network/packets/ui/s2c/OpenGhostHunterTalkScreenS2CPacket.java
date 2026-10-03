@@ -36,14 +36,14 @@ public class OpenGhostHunterTalkScreenS2CPacket {
       this.dialogues = new ArrayList<>();
 
       for (int i = 0; i < size; i++) {
-         this.dialogues.add(buf.method_19772());
+         this.dialogues.add(buf.readString());
       }
 
       int storySize = buf.readInt();
       this.storyDialogues = new ArrayList<>();
 
       for (int i = 0; i < storySize; i++) {
-         this.storyDialogues.add(buf.method_19772());
+         this.storyDialogues.add(buf.readString());
       }
 
       this.alreadyTalkedToYangXiao = buf.readBoolean();
@@ -54,13 +54,13 @@ public class OpenGhostHunterTalkScreenS2CPacket {
       buf.writeInt(this.dialogues.size());
 
       for (String dialogue : this.dialogues) {
-         buf.method_10814(dialogue);
+         buf.writeString(dialogue);
       }
 
       buf.writeInt(this.storyDialogues.size());
 
       for (String dialogue : this.storyDialogues) {
-         buf.method_10814(dialogue);
+         buf.writeString(dialogue);
       }
 
       buf.writeBoolean(this.alreadyTalkedToYangXiao);
@@ -86,10 +86,10 @@ public class OpenGhostHunterTalkScreenS2CPacket {
       ClientPlayNetworking.registerGlobalReceiver(ID, (client, handler, buf, responseSender) -> {
          OpenGhostHunterTalkScreenS2CPacket packet = new OpenGhostHunterTalkScreenS2CPacket(buf);
          client.execute(() -> {
-            if (client.field_1687 != null && client.field_1755 == null) {
-               Entity entity = client.field_1687.method_8469(packet.getEntityId());
+            if (client.world != null && client.currentScreen == null) {
+               Entity entity = client.world.getEntityById(packet.getEntityId());
                if (entity != null) {
-                  client.method_1507(new GhostHunterTalkScreen(entity, packet.getDialogues(), packet.getStoryDialogues(), packet.isAlreadyTalkedToYangXiao()));
+                  client.setScreen(new GhostHunterTalkScreen(entity, packet.getDialogues(), packet.getStoryDialogues(), packet.isAlreadyTalkedToYangXiao()));
                }
             }
          });

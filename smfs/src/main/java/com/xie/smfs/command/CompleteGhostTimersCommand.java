@@ -19,7 +19,7 @@ public class CompleteGhostTimersCommand {
          Map<EntityType<?>, Integer> ghostTimers = ModEvents.getAllGhostSpawnTimers(dimensionKey);
          if (ghostTimers.isEmpty()) {
             ((ServerCommandSource)context.getSource())
-               .method_9226(() -> Text.method_43470("维度 " + dimensionKey + " 当前没有活跃的鬼实体刷新计时器").method_27692(Formatting.field_1054), false);
+               .sendFeedback(() -> Text.literal("维度 " + dimensionKey + " 当前没有活跃的鬼实体刷新计时器").formatted(Formatting.YELLOW), false);
             return 0;
          }
 
@@ -36,17 +36,15 @@ public class CompleteGhostTimersCommand {
          int finalCompletedCount = completedCount;
          if (finalCompletedCount > 0) {
             ((ServerCommandSource)context.getSource())
-               .method_9226(
-                  () -> Text.method_43470("已立即完成维度 " + dimensionKey + " 的 " + finalCompletedCount + " 个鬼实体的冷却计时器").method_27692(Formatting.field_1060), false
-               );
+               .sendFeedback(() -> Text.literal("已立即完成维度 " + dimensionKey + " 的 " + finalCompletedCount + " 个鬼实体的冷却计时器").formatted(Formatting.GREEN), false);
             return 1;
          } else {
             ((ServerCommandSource)context.getSource())
-               .method_9226(() -> Text.method_43470("维度 " + dimensionKey + " 没有找到有效的鬼实体生成间隔").method_27692(Formatting.field_1054), false);
+               .sendFeedback(() -> Text.literal("维度 " + dimensionKey + " 没有找到有效的鬼实体生成间隔").formatted(Formatting.YELLOW), false);
             return 0;
          }
       } catch (Exception e) {
-         ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("执行命令时发生错误: " + e.getMessage()).method_27692(Formatting.field_1061));
+         ((ServerCommandSource)context.getSource()).sendError(Text.literal("执行命令时发生错误: " + e.getMessage()).formatted(Formatting.RED));
          return -1;
       }
    }

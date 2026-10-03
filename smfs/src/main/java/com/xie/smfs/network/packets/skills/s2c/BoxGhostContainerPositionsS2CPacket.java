@@ -29,7 +29,7 @@ public class BoxGhostContainerPositionsS2CPacket {
       buf.writeInt(packet.containerPositions.size());
 
       for (BlockPos pos : packet.containerPositions) {
-         buf.method_10807(pos);
+         buf.writeBlockPos(pos);
       }
    }
 
@@ -38,7 +38,7 @@ public class BoxGhostContainerPositionsS2CPacket {
       List<BlockPos> positions = new ArrayList<>();
 
       for (int i = 0; i < size; i++) {
-         positions.add(buf.method_10811());
+         positions.add(buf.readBlockPos());
       }
 
       return new BoxGhostContainerPositionsS2CPacket(positions);
@@ -49,7 +49,7 @@ public class BoxGhostContainerPositionsS2CPacket {
       client.execute(() -> {
          try {
             LOGGER.debug("接收到开箱鬼被动技能箱子位置信息，共 {} 个箱子", packet.containerPositions.size());
-            if (client.field_1724 != null) {
+            if (client.player != null) {
                BoxGhostContainerRenderer.setContainerPositions(packet.containerPositions);
             }
          } catch (Exception e) {
@@ -67,7 +67,7 @@ public class BoxGhostContainerPositionsS2CPacket {
          PacketByteBuf buf = PacketByteBufs.create();
          encode(new BoxGhostContainerPositionsS2CPacket(containerPositions), buf);
          ServerPlayNetworking.send(player, ID, buf);
-         LOGGER.debug("向玩家 {} 发送开箱鬼箱子位置信息，共 {} 个箱子", player.method_5477().getString(), containerPositions.size());
+         LOGGER.debug("向玩家 {} 发送开箱鬼箱子位置信息，共 {} 个箱子", player.getName().getString(), containerPositions.size());
       }
    }
 }

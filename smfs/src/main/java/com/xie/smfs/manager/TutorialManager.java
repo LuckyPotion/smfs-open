@@ -27,7 +27,7 @@ public abstract class TutorialManager {
 
    public static int calculateCurrentDay(World world) {
       if (world != null) {
-         long totalTime = world.method_8510();
+         long totalTime = world.getTime();
          int day = (int)(totalTime / 24000L) + 1;
          return Math.max(day, 1);
       } else {
@@ -114,8 +114,8 @@ public abstract class TutorialManager {
       for (String itemId : requiredItems) {
          boolean found = false;
 
-         for (int i = 0; i < player.method_31548().method_5439(); i++) {
-            if (Registries.field_41178.method_29113(player.method_31548().method_5438(i).method_7909()).toString().equals(itemId)) {
+         for (int i = 0; i < player.getInventory().size(); i++) {
+            if (Registries.ITEM.getKey(player.getInventory().getStack(i).getItem()).toString().equals(itemId)) {
                found = true;
                break;
             }

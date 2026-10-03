@@ -5,6 +5,6 @@ import net.minecraft.world.World;
 
 public class GraveyardMysteryInfoItem extends StructureMysteryInfoItem {
    public GraveyardMysteryInfoItem() {
-      super(new FabricItemSettings().maxCount(16), "graveyard", World.field_25179);
+      super(new FabricItemSettings().maxCount(16), "graveyard", World.OVERWORLD);
    }
 }

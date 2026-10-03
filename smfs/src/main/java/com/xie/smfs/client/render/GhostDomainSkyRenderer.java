@@ -43,7 +43,7 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
    public static void renderAtLast(WorldRenderContext context) {
       if (isIrisShaderPackActive()) {
          if (ModConfig.getInstance().irisCompatibilityMode != 1) {
-            PlayerEntity player = MinecraftClient.method_1551().field_1724;
+            PlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
                float[] tint = computeGhostDomainTint();
                if (!(tint[3] <= 0.001F)) {
@@ -68,10 +68,10 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
       if (context.world() != null) {
          float[] finalTint = adjustTintForDimension(context, tint);
          float mix = finalTint[3];
-         Vec3d worldSky = context.world().method_23777(context.camera().method_19326(), tickDelta);
-         float baseR = (float)worldSky.field_1352;
-         float baseG = (float)worldSky.field_1351;
-         float baseB = (float)worldSky.field_1350;
+         Vec3d worldSky = context.world().getSkyColor(context.camera().getPos(), tickDelta);
+         float baseR = (float)worldSky.x;
+         float baseG = (float)worldSky.y;
+         float baseB = (float)worldSky.z;
          float finalR;
          float finalG;
          float finalB;
@@ -80,70 +80,70 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
             finalG = finalTint[1];
             finalB = finalTint[2];
          } else {
-            finalR = MathHelper.method_15363(baseR * (1.0F - mix) + finalTint[0] * mix, 0.0F, 1.0F);
-            finalG = MathHelper.method_15363(baseG * (1.0F - mix) + finalTint[1] * mix, 0.0F, 1.0F);
-            finalB = MathHelper.method_15363(baseB * (1.0F - mix) + finalTint[2] * mix, 0.0F, 1.0F);
+            finalR = MathHelper.clamp(baseR * (1.0F - mix) + finalTint[0] * mix, 0.0F, 1.0F);
+            finalG = MathHelper.clamp(baseG * (1.0F - mix) + finalTint[1] * mix, 0.0F, 1.0F);
+            finalB = MathHelper.clamp(baseB * (1.0F - mix) + finalTint[2] * mix, 0.0F, 1.0F);
          }
 
-         Tessellator tess = Tessellator.method_1348();
-         BufferBuilder buffer = tess.method_1349();
-         matrices.method_22903();
-         Matrix4f matrix = matrices.method_23760().method_23761();
+         Tessellator tess = Tessellator.getInstance();
+         BufferBuilder buffer = tess.getBuffer();
+         matrices.push();
+         Matrix4f matrix = matrices.peek().getPositionMatrix();
          float topR = finalR * 0.6F;
          float topG = finalG * 0.6F;
          float topB = finalB * 0.6F;
          float bottomR = finalR * 0.6F;
          float bottomG = finalG * 0.6F;
          float bottomB = finalB * 0.6F;
-         RenderSystem.setShader(GameRenderer::method_34540);
+         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
          RenderSystem.disableCull();
          RenderSystem.depthMask(false);
-         buffer.method_1328(DrawMode.field_27382, VertexFormats.field_1576);
-         int renderDistance = (Integer)MinecraftClient.method_1551().field_1690.method_42503().method_41753();
+         buffer.begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+         int renderDistance = (Integer)MinecraftClient.getInstance().options.getViewDistance().getValue();
          float size = Math.max(renderDistance * 32.0F, 256.0F);
          float yTop = size * 0.1F;
          float yBottom = -size * 0.1F;
-         buffer.method_22918(matrix, -size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, -size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-         buffer.method_22918(matrix, size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-         tess.method_1350();
+         buffer.vertex(matrix, -size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, size, yTop, size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, -size, yTop, size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, -size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, -size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, -size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, -size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, -size, yTop, size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, size, yTop, size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, -size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, -size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, -size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, -size, yTop, size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, -size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         buffer.vertex(matrix, size, yTop, size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+         buffer.vertex(matrix, size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+         tess.draw();
          RenderSystem.depthMask(true);
          RenderSystem.enableCull();
-         matrices.method_22909();
+         matrices.pop();
       }
    }
 
    private static float[] adjustTintForDimension(WorldRenderContext context, float[] tint) {
-      if (context.world().method_27983() == Smfs.SPIRIT_REALM_DIMENSION) {
-         boolean hasEffect = EffectRenderHandler.hasAnyGhostDomainEffect(MinecraftClient.method_1551().field_1724);
+      if (context.world().getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION) {
+         boolean hasEffect = EffectRenderHandler.hasAnyGhostDomainEffect(MinecraftClient.getInstance().player);
          if (!hasEffect) {
             return new float[]{0.0F, 0.0F, 0.0F, 1.0F};
          }
       }
 
-      if (context.world().method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
-         boolean hasEffect = EffectRenderHandler.hasAnyGhostDomainEffect(MinecraftClient.method_1551().field_1724);
+      if (context.world().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
+         boolean hasEffect = EffectRenderHandler.hasAnyGhostDomainEffect(MinecraftClient.getInstance().player);
          if (!hasEffect) {
             float[] skyColor = getGhostDreamSkyColor();
             return new float[]{skyColor[0], skyColor[1], skyColor[2], 1.0F};
@@ -159,9 +159,9 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
          float tickDelta = context.tickDelta();
          if (context.world() != null) {
             float[] tint = computeGhostDomainTint();
-            if (context.world().method_27983() == Smfs.SPIRIT_REALM_DIMENSION) {
+            if (context.world().getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION) {
                boolean hasGhostDomainEffect = false;
-               PlayerEntity player = MinecraftClient.method_1551().field_1724;
+               PlayerEntity player = MinecraftClient.getInstance().player;
                if (player != null) {
                   hasGhostDomainEffect = EffectRenderHandler.hasAnyGhostDomainEffect(player);
                }
@@ -171,9 +171,9 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
                }
             }
 
-            if (context.world().method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
+            if (context.world().getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
                boolean hasGhostDomainEffect = false;
-               PlayerEntity player = MinecraftClient.method_1551().field_1724;
+               PlayerEntity player = MinecraftClient.getInstance().player;
                if (player != null) {
                   hasGhostDomainEffect = EffectRenderHandler.hasAnyGhostDomainEffect(player);
                }
@@ -184,10 +184,10 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
                }
             }
 
-            Vec3d worldSky = context.world().method_23777(context.camera().method_19326(), tickDelta);
-            float baseR = (float)worldSky.field_1352;
-            float baseG = (float)worldSky.field_1351;
-            float baseB = (float)worldSky.field_1350;
+            Vec3d worldSky = context.world().getSkyColor(context.camera().getPos(), tickDelta);
+            float baseR = (float)worldSky.x;
+            float baseG = (float)worldSky.y;
+            float baseB = (float)worldSky.z;
             float mix = tint[3];
             float finalR;
             float finalG;
@@ -197,158 +197,158 @@ public class GhostDomainSkyRenderer implements SkyRenderer {
                finalG = tint[1];
                finalB = tint[2];
             } else {
-               finalR = MathHelper.method_15363(baseR * (1.0F - mix) + tint[0] * mix, 0.0F, 1.0F);
-               finalG = MathHelper.method_15363(baseG * (1.0F - mix) + tint[1] * mix, 0.0F, 1.0F);
-               finalB = MathHelper.method_15363(baseB * (1.0F - mix) + tint[2] * mix, 0.0F, 1.0F);
+               finalR = MathHelper.clamp(baseR * (1.0F - mix) + tint[0] * mix, 0.0F, 1.0F);
+               finalG = MathHelper.clamp(baseG * (1.0F - mix) + tint[1] * mix, 0.0F, 1.0F);
+               finalB = MathHelper.clamp(baseB * (1.0F - mix) + tint[2] * mix, 0.0F, 1.0F);
             }
 
-            Tessellator tess = Tessellator.method_1348();
-            BufferBuilder buffer = tess.method_1349();
-            matrices.method_22903();
-            Matrix4f matrix = matrices.method_23760().method_23761();
+            Tessellator tess = Tessellator.getInstance();
+            BufferBuilder buffer = tess.getBuffer();
+            matrices.push();
+            Matrix4f matrix = matrices.peek().getPositionMatrix();
             float topR = finalR * 0.6F;
             float topG = finalG * 0.6F;
             float topB = finalB * 0.6F;
             float bottomR = finalR * 0.6F;
             float bottomG = finalG * 0.6F;
             float bottomB = finalB * 0.6F;
-            RenderSystem.setShader(GameRenderer::method_34540);
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
             RenderSystem.disableCull();
             RenderSystem.depthMask(false);
-            buffer.method_1328(DrawMode.field_27382, VertexFormats.field_1576);
-            int renderDistance = (Integer)MinecraftClient.method_1551().field_1690.method_42503().method_41753();
+            buffer.begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            int renderDistance = (Integer)MinecraftClient.getInstance().options.getViewDistance().getValue();
             float size = Math.max(renderDistance * 32.0F, 256.0F);
             float yTop = size * 0.1F;
             float yBottom = -size * 0.1F;
-            buffer.method_22918(matrix, -size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, -size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yBottom, size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yTop, size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yTop, -size).method_22915(topR, topG, topB, 1.0F).method_1344();
-            buffer.method_22918(matrix, size, yBottom, -size).method_22915(bottomR, bottomG, bottomB, 1.0F).method_1344();
-            tess.method_1350();
+            buffer.vertex(matrix, -size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, size, yTop, size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, -size, yTop, size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, -size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, -size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, -size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, -size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, -size, yTop, size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, size, yTop, size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, -size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, -size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, -size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, -size, yTop, size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, -size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, size, yBottom, size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            buffer.vertex(matrix, size, yTop, size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, size, yTop, -size).color(topR, topG, topB, 1.0F).next();
+            buffer.vertex(matrix, size, yBottom, -size).color(bottomR, bottomG, bottomB, 1.0F).next();
+            tess.draw();
             RenderSystem.depthMask(true);
             RenderSystem.enableCull();
-            matrices.method_22909();
+            matrices.pop();
          }
       }
    }
 
    private static float[] computeGhostDomainTint() {
-      PlayerEntity player = MinecraftClient.method_1551().field_1724;
+      PlayerEntity player = MinecraftClient.getInstance().player;
       if (player == null) {
          return new float[]{0.0F, 0.0F, 0.0F, 0.0F};
       }
 
-      StatusEffectInstance e = player.method_6112(ModEffects.RED_GHOST_DOMAIN);
+      StatusEffectInstance e = player.getStatusEffect(ModEffects.RED_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.RED_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.RED_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.9F, 0.0F, 0.0F, 1.0F};
       }
 
-      e = player.method_6112(ModEffects.GREEN_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.GREEN_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.GREEN_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.1F, 1.0F, 0.1F, 0.65F};
       }
 
-      e = player.method_6112(ModEffects.BLUE_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.BLUE_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.BLUE_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.BLUE_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.1F, 0.1F, 1.0F, 0.65F};
       }
 
-      e = player.method_6112(ModEffects.GRAY_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.GRAY_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.GRAY_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.GRAY_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.6F, 0.6F, 0.6F, 1.0F};
       }
 
-      e = player.method_6112(ModEffects.GOLDEN_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{1.0F, 0.84F, 0.0F, 0.6F};
       }
 
-      e = player.method_6112(ModEffects.PURPLE_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.PURPLE_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN_TARGET);
       }
 
       if (e == null) {
-         e = player.method_6112(ModEffects.PURPLE_GHOST_DOMAIN_VISUAL);
+         e = player.getStatusEffect(ModEffects.PURPLE_GHOST_DOMAIN_VISUAL);
       }
 
       if (e != null) {
          return new float[]{0.6F, 0.0F, 0.6F, 0.6F};
       }
 
-      e = player.method_6112(ModEffects.BLACK_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.BLACK_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.BLACK_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.0F, 0.0F, 0.0F, 1.0F};
       }
 
-      e = player.method_6112(ModEffects.CYAN_GHOST_DOMAIN);
+      e = player.getStatusEffect(ModEffects.CYAN_GHOST_DOMAIN);
       if (e == null) {
-         e = player.method_6112(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
+         e = player.getStatusEffect(ModEffects.CYAN_GHOST_DOMAIN_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.0F, 1.0F, 1.0F, 0.6F};
       }
 
-      e = player.method_6112(ModEffects.THICK_FOG);
+      e = player.getStatusEffect(ModEffects.THICK_FOG);
       if (e == null) {
-         e = player.method_6112(ModEffects.THICK_FOG_TARGET);
+         e = player.getStatusEffect(ModEffects.THICK_FOG_TARGET);
       }
 
       if (e != null) {
          return new float[]{0.8F, 0.8F, 0.8F, 0.6F};
       }
 
-      e = player.method_6112(StatusEffects.field_38092);
+      e = player.getStatusEffect(StatusEffects.DARKNESS);
       return e != null ? new float[]{0.0F, 0.0F, 0.0F, 1.0F} : new float[]{0.0F, 0.0F, 0.0F, 0.0F};
    }
 
    private static float[] getGhostDreamSkyColor() {
-      PlayerEntity player = MinecraftClient.method_1551().field_1724;
+      PlayerEntity player = MinecraftClient.getInstance().player;
       if (player == null) {
          return new float[]{0.4F, 0.4F, 0.4F};
       }

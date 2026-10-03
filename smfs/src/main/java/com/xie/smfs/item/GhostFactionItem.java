@@ -24,49 +24,43 @@ public class GhostFactionItem extends Item {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (!world.field_9236) {
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (!world.isClient) {
          LivingEntity firstGhost = null;
 
-         for (GhostEntity entity : world.method_8390(GhostEntity.class, user.method_5829().method_1014(5.0), e -> true)) {
+         for (GhostEntity entity : world.getEntitiesByClass(GhostEntity.class, user.getBoundingBox().expand(5.0), e -> true)) {
             if (firstGhost != null) {
                GhostEntity ghost1 = (GhostEntity)firstGhost;
                GhostEntity ghost2 = entity;
                ghost1.setGhostFactionTarget(ghost2);
                ghost2.setGhostFactionTarget(ghost1);
-               world.method_43128(
-                  null, user.method_23317(), user.method_23318(), user.method_23321(), SoundEvents.field_19149, SoundCategory.field_15248, 1.0F, 1.0F
-               );
+               world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_PLAYER_BURP, SoundCategory.PLAYERS, 1.0F, 1.0F);
                ServerWorld serverWorld = (ServerWorld)world;
-               serverWorld.method_14199(
-                  ParticleTypes.field_11211, ghost1.method_23317(), ghost1.method_23318() + 1.0, ghost1.method_23321(), 10, 0.5, 0.5, 0.5, 0.1
-               );
-               serverWorld.method_14199(
-                  ParticleTypes.field_11211, ghost2.method_23317(), ghost2.method_23318() + 1.0, ghost2.method_23321(), 10, 0.5, 0.5, 0.5, 0.1
-               );
-               if (!user.method_7337()) {
-                  stack.method_7934(1);
+               serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER, ghost1.getX(), ghost1.getY() + 1.0, ghost1.getZ(), 10, 0.5, 0.5, 0.5, 0.1);
+               serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER, ghost2.getX(), ghost2.getY() + 1.0, ghost2.getZ(), 10, 0.5, 0.5, 0.5, 0.1);
+               if (!user.isCreative()) {
+                  stack.decrement(1);
                }
 
-               return TypedActionResult.method_22427(stack);
+               return TypedActionResult.success(stack);
             }
 
             firstGhost = entity;
          }
       }
 
-      return TypedActionResult.method_22430(stack);
+      return TypedActionResult.pass(stack);
    }
 
-   public UseAction method_7853(ItemStack stack) {
-      return UseAction.field_8953;
+   public UseAction getUseAction(ItemStack stack) {
+      return UseAction.BOW;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_faction.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_faction.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_faction.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_faction.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_faction.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_faction.description.type"));
    }
 }

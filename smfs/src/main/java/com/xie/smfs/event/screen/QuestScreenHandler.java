@@ -21,15 +21,15 @@ public class QuestScreenHandler extends ScreenHandler {
       this(syncId, playerInventory);
    }
 
-   public boolean method_7597(PlayerEntity player) {
+   public boolean canUse(PlayerEntity player) {
       return true;
    }
 
-   public boolean method_7604(PlayerEntity player, int id) {
+   public boolean onButtonClick(PlayerEntity player, int id) {
       return false;
    }
 
-   public ItemStack method_7601(PlayerEntity player, int slot) {
+   public ItemStack quickMove(PlayerEntity player, int slot) {
       return null;
    }
 
@@ -39,14 +39,14 @@ public class QuestScreenHandler extends ScreenHandler {
 
       public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
          if (player instanceof ServerPlayerEntity serverPlayer) {
-            Smfs.LOGGER.info("玩家 {} (UUID: {}) 打开了任务界面", serverPlayer.method_5477().getString(), serverPlayer.method_5667());
+            Smfs.LOGGER.info("玩家 {} (UUID: {}) 打开了任务界面", serverPlayer.getName().getString(), serverPlayer.getUuid());
          }
 
          return new QuestScreenHandler(syncId, inv);
       }
 
-      public Text method_5476() {
-         return Text.method_43471("screen.smfs.quest");
+      public Text getDisplayName() {
+         return Text.translatable("screen.smfs.quest");
       }
    }
 }

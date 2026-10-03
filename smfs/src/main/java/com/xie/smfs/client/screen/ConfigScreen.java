@@ -36,60 +36,60 @@ public class ConfigScreen extends Screen {
    private String searchFilter = "";
 
    public ConfigScreen(Screen parent) {
-      super(Text.method_43471("smfs.config.title"));
+      super(Text.translatable("smfs.config.title"));
       this.parent = parent;
       this.config = ModConfig.getInstance();
       this.initializeConfigEntries();
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      this.searchField = new TextFieldWidget(this.field_22793, this.field_22789 - 145, 10, 130, 16, Text.method_43470(""));
-      this.searchField.method_1880(50);
-      this.searchField.method_1887(Text.method_43471("smfs.config.search").getString());
-      this.searchField.method_1863(text -> {
+   protected void init() {
+      super.init();
+      this.searchField = new TextFieldWidget(this.textRenderer, this.width - 145, 10, 130, 16, Text.literal(""));
+      this.searchField.setMaxLength(50);
+      this.searchField.setSuggestion(Text.translatable("smfs.config.search").getString());
+      this.searchField.setChangedListener(text -> {
          this.searchFilter = text.toLowerCase().trim();
          this.rebuildConfigList();
       });
-      this.method_37063(this.searchField);
-      this.configList = new ConfigScreen.ConfigListWidget(this.field_22787, this.field_22789, this.field_22790, 32, this.field_22790 - 64, 25);
-      this.method_25429(this.configList);
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.save"), button -> this.saveAndClose())
-            .method_46434(this.field_22789 / 2 - 206, this.field_22790 - 28, 100, 20)
-            .method_46431()
+      this.addDrawableChild(this.searchField);
+      this.configList = new ConfigScreen.ConfigListWidget(this.client, this.width, this.height, 32, this.height - 64, 25);
+      this.addSelectableChild(this.configList);
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.save"), button -> this.saveAndClose())
+            .dimensions(this.width / 2 - 206, this.height - 28, 100, 20)
+            .build()
       );
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.reset"), button -> this.resetToDefaults())
-            .method_46434(this.field_22789 / 2 - 102, this.field_22790 - 28, 100, 20)
-            .method_46431()
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.reset"), button -> this.resetToDefaults())
+            .dimensions(this.width / 2 - 102, this.height - 28, 100, 20)
+            .build()
       );
-      this.method_37063(ButtonWidget.method_46430(Text.method_43471("smfs.personal_config.title"), button -> {
-         if (this.field_22787 != null) {
-            this.field_22787.method_1507(new PersonalConfigScreen(this));
+      this.addDrawableChild(ButtonWidget.builder(Text.translatable("smfs.personal_config.title"), button -> {
+         if (this.client != null) {
+            this.client.setScreen(new PersonalConfigScreen(this));
          }
-      }).method_46434(this.field_22789 / 2 + 2, this.field_22790 - 28, 100, 20).method_46431());
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.cancel"), button -> this.cancelAndClose())
-            .method_46434(this.field_22789 / 2 + 106, this.field_22790 - 28, 100, 20)
-            .method_46431()
+      }).dimensions(this.width / 2 + 2, this.height - 28, 100, 20).build());
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.cancel"), button -> this.cancelAndClose())
+            .dimensions(this.width / 2 + 106, this.height - 28, 100, 20)
+            .build()
       );
    }
 
-   public boolean method_25404(int keyCode, int scanCode, int modifiers) {
-      return this.focusedTextField != null && this.focusedTextField.method_25404(keyCode, scanCode, modifiers)
+   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+      return this.focusedTextField != null && this.focusedTextField.keyPressed(keyCode, scanCode, modifiers)
          ? true
-         : super.method_25404(keyCode, scanCode, modifiers);
+         : super.keyPressed(keyCode, scanCode, modifiers);
    }
 
-   public boolean method_25400(char chr, int modifiers) {
-      return this.focusedTextField != null && this.focusedTextField.method_25400(chr, modifiers) ? true : super.method_25400(chr, modifiers);
+   public boolean charTyped(char chr, int modifiers) {
+      return this.focusedTextField != null && this.focusedTextField.charTyped(chr, modifiers) ? true : super.charTyped(chr, modifiers);
    }
 
-   public boolean method_25402(double mouseX, double mouseY, int button) {
-      boolean handled = super.method_25402(mouseX, mouseY, button);
-      if (this.searchField != null && this.searchField.method_25370() && this.focusedTextField != null) {
-         this.focusedTextField.method_25365(false);
+   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+      boolean handled = super.mouseClicked(mouseX, mouseY, button);
+      if (this.searchField != null && this.searchField.isFocused() && this.focusedTextField != null) {
+         this.focusedTextField.setFocused(false);
          this.focusedTextField = null;
       }
 
@@ -100,25 +100,25 @@ public class ConfigScreen extends Screen {
       return handled;
    }
 
-   public void method_25393() {
+   public void tick() {
       if (this.searchField != null) {
-         this.searchField.method_1865();
+         this.searchField.tick();
       }
 
       if (this.focusedTextField != null) {
-         this.focusedTextField.method_1865();
+         this.focusedTextField.tick();
       }
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      this.configList.method_25394(context, mouseX, mouseY, delta);
-      context.method_27534(this.field_22793, this.field_22785, this.field_22789 / 2, 13, 16777215);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      this.configList.render(context, mouseX, mouseY, delta);
+      context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 13, 16777215);
       if (this.searchField != null) {
-         this.searchField.method_25394(context, mouseX, mouseY, delta);
+         this.searchField.render(context, mouseX, mouseY, delta);
       }
 
-      super.method_25394(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    private void addGhostRespawnConfig(ModConfig config, String configKey, String ghostName) {
@@ -618,7 +618,7 @@ public class ConfigScreen extends Screen {
 
    private void saveAndClose() {
       this.config.validate();
-      if (this.field_22787 != null && this.field_22787.method_1562() != null && !this.field_22787.method_1542()) {
+      if (this.client != null && this.client.getNetworkHandler() != null && !this.client.isInSingleplayer()) {
          PacketByteBuf buf = PacketByteBufs.create();
          new ConfigSyncC2SPacket(this.config).write(buf);
          ClientPlayNetworking.send(ConfigSyncC2SPacket.ID, buf);
@@ -628,23 +628,23 @@ public class ConfigScreen extends Screen {
       }
 
       ModConfig.reload();
-      if (this.field_22787 != null) {
-         this.field_22787.method_1507(this.parent);
+      if (this.client != null) {
+         this.client.setScreen(this.parent);
       }
    }
 
    private void resetToDefaults() {
       this.config.resetToDefaults();
-      this.field_22787.method_1507(new ConfigScreen(this.parent));
+      this.client.setScreen(new ConfigScreen(this.parent));
    }
 
    private void cancelAndClose() {
       ModConfig.reload();
-      this.field_22787.method_1507(this.parent);
+      this.client.setScreen(this.parent);
    }
 
-   public void method_25419() {
-      this.field_22787.method_1507(this.parent);
+   public void close() {
+      this.client.setScreen(this.parent);
    }
 
    private static class ConfigEntry {
@@ -802,34 +802,34 @@ public class ConfigScreen extends Screen {
          super(client, width, height, top, bottom, itemHeight);
 
          for (ConfigScreen.ConfigEntry entry : ConfigScreen.this.configEntries) {
-            this.method_25321(new ConfigScreen.ConfigListWidget.Entry(entry));
+            this.addEntry(new ConfigScreen.ConfigListWidget.Entry(entry));
          }
       }
 
-      protected void method_25325(DrawContext context) {
+      protected void renderBackground(DrawContext context) {
       }
 
-      public int method_25322() {
+      public int getRowWidth() {
          return 400;
       }
 
-      protected int method_25329() {
-         return this.field_22742 - 6;
+      protected int getScrollbarPositionX() {
+         return this.width - 6;
       }
 
-      public void method_37020(NarrationMessageBuilder builder) {
-         builder.method_37033(NarrationPart.field_33788, "配置选项列表");
-         if (this.method_25334() != null) {
-            builder.method_37033(NarrationPart.field_33791, "使用方向键导航，Enter键选择");
+      public void appendNarrations(NarrationMessageBuilder builder) {
+         builder.put(NarrationPart.TITLE, "配置选项列表");
+         if (this.getSelectedOrNull() != null) {
+            builder.put(NarrationPart.USAGE, "使用方向键导航，Enter键选择");
          }
       }
 
       public void rebuildWithFilter(String filter) {
-         int scrollAmount = (int)this.method_25341();
-         this.method_25339();
+         int scrollAmount = (int)this.getScrollAmount();
+         this.clearEntries();
          if (filter.isEmpty()) {
             for (ConfigScreen.ConfigEntry entry : ConfigScreen.this.allConfigEntries) {
-               this.method_25321(new ConfigScreen.ConfigListWidget.Entry(entry));
+               this.addEntry(new ConfigScreen.ConfigListWidget.Entry(entry));
             }
          } else {
             ConfigScreen.ConfigEntry currentCategory = null;
@@ -848,19 +848,19 @@ public class ConfigScreen extends Screen {
             this.flushBlock(currentCategory, currentBlock, filter);
          }
 
-         this.method_25307(Math.min(scrollAmount, this.method_25317()));
+         this.setScrollAmount(Math.min(scrollAmount, this.getMaxPosition()));
       }
 
       private void flushBlock(ConfigScreen.ConfigEntry category, List<ConfigScreen.ConfigEntry> entries, String filter) {
          if (category != null) {
-            boolean categoryMatches = Text.method_43471(category.key).getString().toLowerCase().contains(filter);
-            boolean anyEntryMatches = entries.stream().anyMatch(e -> Text.method_43471(e.key).getString().toLowerCase().contains(filter));
+            boolean categoryMatches = Text.translatable(category.key).getString().toLowerCase().contains(filter);
+            boolean anyEntryMatches = entries.stream().anyMatch(e -> Text.translatable(e.key).getString().toLowerCase().contains(filter));
             if (categoryMatches || anyEntryMatches) {
-               this.method_25321(new ConfigScreen.ConfigListWidget.Entry(category));
+               this.addEntry(new ConfigScreen.ConfigListWidget.Entry(category));
 
                for (ConfigScreen.ConfigEntry entry : entries) {
-                  if (categoryMatches || Text.method_43471(entry.key).getString().toLowerCase().contains(filter)) {
-                     this.method_25321(new ConfigScreen.ConfigListWidget.Entry(entry));
+                  if (categoryMatches || Text.translatable(entry.key).getString().toLowerCase().contains(filter)) {
+                     this.addEntry(new ConfigScreen.ConfigListWidget.Entry(entry));
                   }
                }
             }
@@ -876,26 +876,26 @@ public class ConfigScreen extends Screen {
             if (configEntry.type == ConfigScreen.ConfigEntry.Type.CATEGORY) {
                this.controlWidget = null;
             } else if (configEntry.type == ConfigScreen.ConfigEntry.Type.TOGGLE) {
-               this.controlWidget = CyclingButtonWidget.method_32613(configEntry.getBooleanValue())
-                  .method_32617(0, 0, 150, 20, Text.method_43471(configEntry.key), (button, value) -> configEntry.setBooleanValue(value));
+               this.controlWidget = CyclingButtonWidget.onOffBuilder(configEntry.getBooleanValue())
+                  .build(0, 0, 150, 20, Text.translatable(configEntry.key), (button, value) -> configEntry.setBooleanValue(value));
             } else if (configEntry.type == ConfigScreen.ConfigEntry.Type.SLIDER) {
                this.controlWidget = new SliderWidget(
-                  0, 0, 150, 20, Text.method_43469(configEntry.key + ".value", new Object[]{configEntry.getDoubleValue()}), configEntry.normalizeValue()
+                  0, 0, 150, 20, Text.translatable(configEntry.key + ".value", new Object[]{configEntry.getDoubleValue()}), configEntry.normalizeValue()
                ) {
-                  protected void method_25346() {
-                     this.method_25355(Text.method_43469(configEntry.key + ".value", new Object[]{configEntry.getDoubleValue()}));
+                  protected void updateMessage() {
+                     this.setMessage(Text.translatable(configEntry.key + ".value", new Object[]{configEntry.getDoubleValue()}));
                   }
 
-                  protected void method_25344() {
-                     configEntry.setDoubleValue(configEntry.denormalizeValue(this.field_22753));
+                  protected void applyValue() {
+                     configEntry.setDoubleValue(configEntry.denormalizeValue(this.value));
                   }
                };
             } else if (configEntry.type == ConfigScreen.ConfigEntry.Type.BUTTON) {
-               this.controlWidget = ButtonWidget.method_46430(Text.method_43471(configEntry.key), button -> {
+               this.controlWidget = ButtonWidget.builder(Text.translatable(configEntry.key), button -> {
                   if (configEntry.buttonAction != null) {
                      configEntry.buttonAction.run();
                   }
-               }).method_46434(0, 0, 150, 20).method_46431();
+               }).dimensions(0, 0, 150, 20).build();
             } else if (configEntry.type == ConfigScreen.ConfigEntry.Type.SELECTOR) {
                List<Integer> values = new ArrayList<>();
 
@@ -903,74 +903,72 @@ public class ConfigScreen extends Screen {
                   values.add(i);
                }
 
-               this.controlWidget = CyclingButtonWidget.method_32606(
-                     value -> value >= 0 && value < configEntry.options.size()
-                        ? Text.method_43471(configEntry.options.get(value))
-                        : Text.method_43470("Unknown")
+               this.controlWidget = CyclingButtonWidget.builder(
+                     value -> value >= 0 && value < configEntry.options.size() ? Text.translatable(configEntry.options.get(value)) : Text.literal("Unknown")
                   )
-                  .method_32620(values)
-                  .method_32619(configEntry.getIntValue())
-                  .method_32617(0, 0, 150, 20, Text.method_43471(configEntry.key), (button, value) -> configEntry.setIntValue(value));
+                  .values(values)
+                  .initially(configEntry.getIntValue())
+                  .build(0, 0, 150, 20, Text.translatable(configEntry.key), (button, value) -> configEntry.setIntValue(value));
             } else if (configEntry.type == ConfigScreen.ConfigEntry.Type.TEXT_INPUT) {
-               TextFieldWidget textField = new TextFieldWidget(ConfigScreen.this.field_22793, 0, 0, 150, 20, Text.method_43471(configEntry.key));
-               textField.method_1852(configEntry.getStringValue());
-               textField.method_1880(64);
-               textField.method_1854((text, offset) -> {
+               TextFieldWidget textField = new TextFieldWidget(ConfigScreen.this.textRenderer, 0, 0, 150, 20, Text.translatable(configEntry.key));
+               textField.setText(configEntry.getStringValue());
+               textField.setMaxLength(64);
+               textField.setRenderTextProvider((text, offset) -> {
                   StringBuilder masked = new StringBuilder();
 
                   for (int ix = 0; ix < text.length(); ix++) {
                      masked.append('*');
                   }
 
-                  return Text.method_43470(masked.toString()).method_30937();
+                  return Text.literal(masked.toString()).asOrderedText();
                });
-               textField.method_1863(value -> configEntry.setStringValue(value));
+               textField.setChangedListener(value -> configEntry.setStringValue(value));
                this.controlWidget = textField;
             }
          }
 
-         public void method_25343(
+         public void render(
             DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta
          ) {
             if (this.configEntry.type == ConfigScreen.ConfigEntry.Type.CATEGORY) {
-               context.method_25303(ConfigScreen.this.field_22793, Text.method_43471(this.configEntry.key).getString(), x + 10, y + 6, 16776960);
+               context.drawTextWithShadow(ConfigScreen.this.textRenderer, Text.translatable(this.configEntry.key).getString(), x + 10, y + 6, 16776960);
             } else {
-               context.method_25303(ConfigScreen.this.field_22793, Text.method_43471(this.configEntry.key).getString(), x + 10, y + 6, 16777215);
+               context.drawTextWithShadow(ConfigScreen.this.textRenderer, Text.translatable(this.configEntry.key).getString(), x + 10, y + 6, 16777215);
                if (this.controlWidget != null) {
-                  this.controlWidget.method_46421(x + entryWidth - 160);
-                  this.controlWidget.method_46419(y);
-                  this.controlWidget.method_25394(context, mouseX, mouseY, tickDelta);
+                  this.controlWidget.setX(x + entryWidth - 160);
+                  this.controlWidget.setY(y);
+                  this.controlWidget.render(context, mouseX, mouseY, tickDelta);
                }
             }
          }
 
-         public boolean method_25402(double mouseX, double mouseY, int button) {
-            if (this.controlWidget != null && this.controlWidget.method_25402(mouseX, mouseY, button)) {
+         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (this.controlWidget != null && this.controlWidget.mouseClicked(mouseX, mouseY, button)) {
                if (this.controlWidget instanceof TextFieldWidget) {
                   if (ConfigScreen.this.focusedTextField != null && ConfigScreen.this.focusedTextField != this.controlWidget) {
-                     ConfigScreen.this.focusedTextField.method_25365(false);
+                     ConfigScreen.this.focusedTextField.setFocused(false);
                   }
 
                   ConfigScreen.this.focusedTextField = (TextFieldWidget)this.controlWidget;
-                  ConfigScreen.this.focusedTextField.method_25365(true);
+                  ConfigScreen.this.focusedTextField.setFocused(true);
                } else if (ConfigScreen.this.focusedTextField != null) {
-                  ConfigScreen.this.focusedTextField.method_25365(false);
+                  ConfigScreen.this.focusedTextField.setFocused(false);
                   ConfigScreen.this.focusedTextField = null;
                }
 
                return true;
             } else {
                if (ConfigScreen.this.focusedTextField != null) {
-                  ConfigScreen.this.focusedTextField.method_25365(false);
+                  ConfigScreen.this.focusedTextField.setFocused(false);
                   ConfigScreen.this.focusedTextField = null;
                }
 
-               return super.method_25402(mouseX, mouseY, button);
+               return super.mouseClicked(mouseX, mouseY, button);
             }
          }
 
-         public boolean method_25406(double mouseX, double mouseY, int button) {
-            return this.controlWidget != null ? this.controlWidget.method_25406(mouseX, mouseY, button) : super.method_25406(mouseX, mouseY, button);
+         public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            return this.controlWidget != null ? this.controlWidget.mouseReleased(mouseX, mouseY, button) : super.mouseReleased(mouseX, mouseY, button);
          }
       }
    }

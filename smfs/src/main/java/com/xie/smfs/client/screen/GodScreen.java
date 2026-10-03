@@ -27,15 +27,15 @@ public class GodScreen extends Screen {
    private int scrollOffset = 0;
 
    public GodScreen() {
-      super(Text.method_43470("神"));
+      super(Text.literal("神"));
       this.availableGhostTypes = new ArrayList<>();
       this.ghostButtons = new ArrayList<>();
    }
 
-   protected void method_25426() {
-      this.method_37067();
-      this.screenX = (this.field_22789 - 300) / 2;
-      this.screenY = (this.field_22790 - 250) / 2;
+   protected void init() {
+      this.clearChildren();
+      this.screenX = (this.width - 300) / 2;
+      this.screenY = (this.height - 250) / 2;
       this.loadAvailableGhostTypes();
       this.createButtons();
    }
@@ -51,11 +51,11 @@ public class GodScreen extends Screen {
          int listIndex = this.scrollOffset + i;
          String ghostType = this.availableGhostTypes.get(listIndex);
          int buttonY = startY + i * 30;
-         ButtonWidget button = ButtonWidget.method_46430(Text.method_43470(this.formatGhostName(ghostType)), btn -> this.selectGhost(ghostType))
-            .method_46434(startX, buttonY, buttonWidth, 25)
-            .method_46431();
+         ButtonWidget button = ButtonWidget.builder(Text.literal(this.formatGhostName(ghostType)), btn -> this.selectGhost(ghostType))
+            .dimensions(startX, buttonY, buttonWidth, 25)
+            .build();
          this.ghostButtons.add(button);
-         this.method_37063(button);
+         this.addDrawableChild(button);
       }
 
       int totalPages = (this.availableGhostTypes.size() + 6 - 1) / 6;
@@ -66,44 +66,44 @@ public class GodScreen extends Screen {
          int nextButtonWidth = 50;
          int totalWidth = prevButtonWidth + closeButtonWidth + nextButtonWidth;
          int startBottomX = this.screenX + (300 - totalWidth) / 2;
-         this.upButton = ButtonWidget.method_46430(Text.method_43470("上一页"), btn -> {
+         this.upButton = ButtonWidget.builder(Text.literal("上一页"), btn -> {
             if (this.scrollOffset > 0) {
                this.scrollOffset = Math.max(0, this.scrollOffset - 6);
-               this.method_25426();
+               this.init();
             }
-         }).method_46434(startBottomX, bottomY, prevButtonWidth, 20).method_46431();
-         this.method_37063(this.upButton);
-         this.closeButton = ButtonWidget.method_46430(Text.method_43470("关闭"), btn -> this.method_25419())
-            .method_46434(startBottomX + prevButtonWidth, bottomY, closeButtonWidth, 20)
-            .method_46431();
-         this.method_37063(this.closeButton);
-         this.downButton = ButtonWidget.method_46430(Text.method_43470("下一页"), btn -> {
+         }).dimensions(startBottomX, bottomY, prevButtonWidth, 20).build();
+         this.addDrawableChild(this.upButton);
+         this.closeButton = ButtonWidget.builder(Text.literal("关闭"), btn -> this.close())
+            .dimensions(startBottomX + prevButtonWidth, bottomY, closeButtonWidth, 20)
+            .build();
+         this.addDrawableChild(this.closeButton);
+         this.downButton = ButtonWidget.builder(Text.literal("下一页"), btn -> {
             if (this.scrollOffset < this.availableGhostTypes.size() - 6) {
                this.scrollOffset = Math.min(this.availableGhostTypes.size() - 6, this.scrollOffset + 6);
-               this.method_25426();
+               this.init();
             }
-         }).method_46434(startBottomX + prevButtonWidth + closeButtonWidth, bottomY, nextButtonWidth, 20).method_46431();
-         this.method_37063(this.downButton);
+         }).dimensions(startBottomX + prevButtonWidth + closeButtonWidth, bottomY, nextButtonWidth, 20).build();
+         this.addDrawableChild(this.downButton);
       } else {
-         this.closeButton = ButtonWidget.method_46430(Text.method_43470("关闭"), btn -> this.method_25419())
-            .method_46434(this.screenX + 120, this.screenY + 250 - 30, 60, 20)
-            .method_46431();
-         this.method_37063(this.closeButton);
+         this.closeButton = ButtonWidget.builder(Text.literal("关闭"), btn -> this.close())
+            .dimensions(this.screenX + 120, this.screenY + 250 - 30, 60, 20)
+            .build();
+         this.addDrawableChild(this.closeButton);
       }
    }
 
    private void loadAvailableGhostTypes() {
       this.availableGhostTypes.clear();
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+      if (this.client != null && this.client.player != null) {
          try {
-            NbtCompound spiritData = PlayerEvents.getCachedData(this.field_22787.field_1724);
-            if (spiritData != null && spiritData.method_10545("GhostChildData")) {
-               NbtCompound ghostChildData = spiritData.method_10562("GhostChildData");
-               if (ghostChildData.method_10545("fedGhostTypes")) {
-                  NbtList list = ghostChildData.method_10554("fedGhostTypes", 8);
+            NbtCompound spiritData = PlayerEvents.getCachedData(this.client.player);
+            if (spiritData != null && spiritData.contains("GhostChildData")) {
+               NbtCompound ghostChildData = spiritData.getCompound("GhostChildData");
+               if (ghostChildData.contains("fedGhostTypes")) {
+                  NbtList list = ghostChildData.getList("fedGhostTypes", 8);
 
                   for (int i = 0; i < list.size(); i++) {
-                     String ghostType = list.method_10608(i);
+                     String ghostType = list.getString(i);
                      if (ghostType != null && !ghostType.isEmpty() && !ghostType.startsWith("minecraft:")) {
                         this.availableGhostTypes.add(ghostType);
                      }
@@ -120,38 +120,38 @@ public class GodScreen extends Screen {
    }
 
    private void selectGhost(String ghostType) {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-         this.field_22787.method_1507(new GhostChildSwapScreen(ghostType));
+      if (this.client != null && this.client.player != null) {
+         this.client.setScreen(new GhostChildSwapScreen(ghostType));
       }
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
       int backgroundColor = -2145772994;
-      context.method_25294(this.screenX, this.screenY, this.screenX + 300, this.screenY + 250, backgroundColor);
+      context.fill(this.screenX, this.screenY, this.screenX + 300, this.screenY + 250, backgroundColor);
       int borderColor = -10496;
-      context.method_49601(this.screenX, this.screenY, 300, 250, borderColor);
+      context.drawBorder(this.screenX, this.screenY, 300, 250, borderColor);
       String title = "神";
-      int titleWidth = this.field_22793.method_1727(title);
+      int titleWidth = this.textRenderer.getWidth(title);
       int titleX = this.screenX + (300 - titleWidth) / 2;
       int titleY = this.screenY + 10;
-      context.method_51433(this.field_22793, title, titleX, titleY, -10496, false);
+      context.drawText(this.textRenderer, title, titleX, titleY, -10496, false);
       if (this.availableGhostTypes.isEmpty()) {
          String emptyText = "没有可选择的灵异";
-         int textWidth = this.field_22793.method_1727(emptyText);
+         int textWidth = this.textRenderer.getWidth(emptyText);
          int textX = this.screenX + (300 - textWidth) / 2;
          int textY = this.screenY + 125;
-         context.method_51433(this.field_22793, emptyText, textX, textY, 16746632, false);
+         context.drawText(this.textRenderer, emptyText, textX, textY, 16746632, false);
       }
 
-      super.method_25394(context, mouseX, mouseY, delta);
+      super.render(context, mouseX, mouseY, delta);
    }
 
-   public void method_25419() {
-      super.method_25419();
+   public void close() {
+      super.close();
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 }

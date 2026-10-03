@@ -33,13 +33,13 @@ public class PlayNoticeScreen extends Screen {
    private static final int[] PAGE_WAIT_TICKS = new int[]{130, 130, 195, 70, 100, 140};
 
    public PlayNoticeScreen() {
-      super(Text.method_43470("游玩须知"));
+      super(Text.literal("游玩须知"));
       this.playPageSound(1);
    }
 
    private void playPageSound(int pageNumber) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null && pageNumber >= 1 && pageNumber <= 6) {
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null && pageNumber >= 1 && pageNumber <= 6) {
          SoundEvent[] pageSounds = new SoundEvent[]{
             ModSounds.NOTICE_PAGE_1,
             ModSounds.NOTICE_PAGE_2,
@@ -48,24 +48,24 @@ public class PlayNoticeScreen extends Screen {
             ModSounds.NOTICE_PAGE_5,
             ModSounds.NOTICE_PAGE_6
          };
-         client.field_1724.method_17356(pageSounds[pageNumber - 1], SoundCategory.field_15246, 1.0F, 1.0F);
+         client.player.playSound(pageSounds[pageNumber - 1], SoundCategory.VOICE, 1.0F, 1.0F);
       }
    }
 
-   protected void method_25426() {
-      super.method_25426();
+   protected void init() {
+      super.init();
       int buttonWidth = 100;
       int buttonHeight = 20;
-      int buttonY = this.field_22790 - 40 - buttonHeight;
-      this.nextButton = ButtonWidget.method_46430(Text.method_43470("点击继续"), button -> this.nextPage())
-         .method_46434(this.field_22789 / 2 - buttonWidth / 2, buttonY, buttonWidth, buttonHeight)
-         .method_46431();
-      this.confirmButton = ButtonWidget.method_46430(Text.method_43470("我已知晓"), button -> this.handleConfirm())
-         .method_46434(this.field_22789 / 2 - buttonWidth - 10, buttonY, buttonWidth, buttonHeight)
-         .method_46431();
-      this.supportButton = ButtonWidget.method_46430(Text.method_43470("创作者"), button -> this.openCreatorPage())
-         .method_46434(this.field_22789 / 2 + 10, buttonY, buttonWidth, buttonHeight)
-         .method_46431();
+      int buttonY = this.height - 40 - buttonHeight;
+      this.nextButton = ButtonWidget.builder(Text.literal("点击继续"), button -> this.nextPage())
+         .dimensions(this.width / 2 - buttonWidth / 2, buttonY, buttonWidth, buttonHeight)
+         .build();
+      this.confirmButton = ButtonWidget.builder(Text.literal("我已知晓"), button -> this.handleConfirm())
+         .dimensions(this.width / 2 - buttonWidth - 10, buttonY, buttonWidth, buttonHeight)
+         .build();
+      this.supportButton = ButtonWidget.builder(Text.literal("创作者"), button -> this.openCreatorPage())
+         .dimensions(this.width / 2 + 10, buttonY, buttonWidth, buttonHeight)
+         .build();
       this.resetTimer();
       this.updateButtons();
    }
@@ -84,8 +84,8 @@ public class PlayNoticeScreen extends Screen {
       }
    }
 
-   public void method_25393() {
-      super.method_25393();
+   public void tick() {
+      super.tick();
       if (!this.canProceed) {
          this.waitTimer++;
          if (this.waitTimer >= this.getCurrentPageWaitTicks()) {
@@ -100,15 +100,15 @@ public class PlayNoticeScreen extends Screen {
    }
 
    private void updateButtons() {
-      this.method_37067();
+      this.clearChildren();
       if (this.canProceed) {
-         this.method_37063(this.confirmButton);
-         this.method_37063(this.supportButton);
+         this.addDrawableChild(this.confirmButton);
+         this.addDrawableChild(this.supportButton);
       }
    }
 
    private void openCreatorPage() {
-      MinecraftClient.method_1551().method_1507(new CreditsScreen());
+      MinecraftClient.getInstance().setScreen(new CreditsScreen());
    }
 
    private void nextPage() {
@@ -120,29 +120,29 @@ public class PlayNoticeScreen extends Screen {
       }
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      context.method_25294(0, 0, this.field_22789, this.field_22790, -16777216);
-      super.method_25394(context, mouseX, mouseY, delta);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      context.fill(0, 0, this.width, this.height, -16777216);
+      super.render(context, mouseX, mouseY, delta);
       String content = PAGES[this.currentPage].replace("\\n", "\n");
-      Text noticeText = Text.method_43470(content);
-      List<OrderedText> wrappedText = this.field_22793.method_1728(noticeText, 400);
-      int textY = this.field_22790 / 2 - wrappedText.size() * (9 + 12) / 2;
+      Text noticeText = Text.literal(content);
+      List<OrderedText> wrappedText = this.textRenderer.wrapLines(noticeText, 400);
+      int textY = this.height / 2 - wrappedText.size() * (9 + 12) / 2;
 
       for (OrderedText line : wrappedText) {
-         int lineWidth = this.field_22793.method_30880(line);
-         int textX = this.field_22789 / 2 - lineWidth / 2;
-         context.method_35720(this.field_22793, line, textX, textY, -65536);
+         int lineWidth = this.textRenderer.getWidth(line);
+         int textX = this.width / 2 - lineWidth / 2;
+         context.drawTextWithShadow(this.textRenderer, line, textX, textY, -65536);
          textY += 9 + 12;
       }
    }
 
-   public boolean method_25404(int keyCode, int scanCode, int modifiers) {
+   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
       if (!this.canProceed) {
-         return super.method_25404(keyCode, scanCode, modifiers);
+         return super.keyPressed(keyCode, scanCode, modifiers);
       }
 
       if (keyCode != 32 && keyCode != 257) {
-         return super.method_25404(keyCode, scanCode, modifiers);
+         return super.keyPressed(keyCode, scanCode, modifiers);
       }
 
       if (this.currentPage < PAGES.length - 1) {
@@ -156,15 +156,15 @@ public class PlayNoticeScreen extends Screen {
 
    private void handleConfirm() {
       ClientDataManager.setHasSeenPlayNotice(true);
-      this.method_25419();
+      this.close();
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return false;
    }
 
-   public void method_25419() {
-      this.field_22787.method_1507(null);
+   public void close() {
+      this.client.setScreen(null);
    }
 
    public static boolean shouldShow() {
@@ -172,7 +172,7 @@ public class PlayNoticeScreen extends Screen {
    }
 
    public static void show() {
-      MinecraftClient.method_1551().execute(() -> MinecraftClient.method_1551().method_1507(new PlayNoticeScreen()));
+      MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().setScreen(new PlayNoticeScreen()));
    }
 
    public static void markAsShown() {

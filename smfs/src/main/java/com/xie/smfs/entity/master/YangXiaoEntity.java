@@ -29,8 +29,8 @@ public class YangXiaoEntity extends GhostMasterEntity {
       this.shouldAttackPlayers = false;
       this.shouldProtectPlayers = true;
       this.shouldAttackGhostsNearPlayers = true;
-      this.method_5665(Text.method_43470("§5[鬼梦]杨孝"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§5[鬼梦]杨孝"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.FOLK_GHOST_MASTER;
    }
 
@@ -39,12 +39,12 @@ public class YangXiaoEntity extends GhostMasterEntity {
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 

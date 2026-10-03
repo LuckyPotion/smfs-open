@@ -202,17 +202,17 @@ public class ModNetwork {
       );
       ServerPlayNetworking.registerGlobalReceiver(GhostChildFeedScreenHandler.FEED_BUTTON_CLICK_PACKET_ID, (server, player, handler, buf, responseSender) -> {
          int syncId = buf.readInt();
-         LOGGER.debug("接收到鬼童喂食界面按钮点击包 - 玩家: {}, 同步ID: {}", player != null ? player.method_5477().getString() : "null", syncId);
+         LOGGER.debug("接收到鬼童喂食界面按钮点击包 - 玩家: {}, 同步ID: {}", player != null ? player.getName().getString() : "null", syncId);
          server.execute(() -> {
-            LOGGER.debug("开始处理鬼童喂食界面按钮点击包 - 玩家: {}, 同步ID: {}", player != null ? player.method_5477().getString() : "null", syncId);
-            ScreenHandler currentHandler = player.field_7512;
+            LOGGER.debug("开始处理鬼童喂食界面按钮点击包 - 玩家: {}, 同步ID: {}", player != null ? player.getName().getString() : "null", syncId);
+            ScreenHandler currentHandler = player.currentScreenHandler;
             if (currentHandler != null) {
                LOGGER.debug("玩家当前界面类型: {}", currentHandler.getClass().getName());
 
                try {
                   if (currentHandler instanceof GhostChildFeedScreenHandler feedHandler) {
                      feedHandler.feedGhostChild();
-                     LOGGER.debug("鬼童喂食操作执行完成 - 玩家: {}", player.method_5477().getString());
+                     LOGGER.debug("鬼童喂食操作执行完成 - 玩家: {}", player.getName().getString());
                   } else {
                      LOGGER.warn("忽略喂食请求：当前未打开鬼童喂食界面");
                   }
@@ -221,23 +221,23 @@ public class ModNetwork {
                   e.printStackTrace();
                }
             } else {
-               LOGGER.warn("玩家当前没有打开任何界面 - 玩家: {}", player.method_5477().getString());
+               LOGGER.warn("玩家当前没有打开任何界面 - 玩家: {}", player.getName().getString());
             }
          });
       });
       ServerPlayNetworking.registerGlobalReceiver(GhostTamingScreenHandler.BUTTON_CLICK_PACKET_ID, (server, player, handler, buf, responseSender) -> {
          int buttonId = buf.readInt();
          int syncId = buf.readInt();
-         LOGGER.debug("接收到驭鬼界面按钮点击包 - 玩家: {}, 按钮ID: {}, 同步ID: {}", player != null ? player.method_5477().getString() : "null", buttonId, syncId);
+         LOGGER.debug("接收到驭鬼界面按钮点击包 - 玩家: {}, 按钮ID: {}, 同步ID: {}", player != null ? player.getName().getString() : "null", buttonId, syncId);
          server.execute(() -> {
-            LOGGER.debug("开始处理驭鬼界面按钮点击包 - 玩家: {}, 按钮ID: {}, 同步ID: {}", player != null ? player.method_5477().getString() : "null", buttonId, syncId);
-            ScreenHandler currentHandler = player.field_7512;
+            LOGGER.debug("开始处理驭鬼界面按钮点击包 - 玩家: {}, 按钮ID: {}, 同步ID: {}", player != null ? player.getName().getString() : "null", buttonId, syncId);
+            ScreenHandler currentHandler = player.currentScreenHandler;
             if (currentHandler != null) {
                LOGGER.debug("玩家当前界面类型: {}", currentHandler.getClass().getName());
             }
 
             if (buttonId == 0 || buttonId == 1) {
-               if (player.field_7512 instanceof GhostTamingScreenHandler tamingHandler) {
+               if (player.currentScreenHandler instanceof GhostTamingScreenHandler tamingHandler) {
                   if (buttonId == 1) {
                      tamingHandler.handleTaming(player);
                   } else {
@@ -253,14 +253,14 @@ public class ModNetwork {
          new Identifier("smfs", "open_taming_screen"), (server, player, handler, buf, responseSender) -> server.execute(() -> {
             if (player != null) {
                ItemStack containerStack = new ItemStack(ModItems.GOLDEN_CONTAINER);
-               player.method_17355(new GhostTamingScreenHandler.GhostTamingFactory(containerStack));
+               player.openHandledScreen(new GhostTamingScreenHandler.GhostTamingFactory(containerStack));
             }
          })
       );
       ServerPlayNetworking.registerGlobalReceiver(
          new Identifier("smfs", "open_royal_curse_screen"), (server, player, handler, buf, responseSender) -> server.execute(() -> {
             if (player != null) {
-               player.method_17355(new RoyalCurseScreenHandler.RoyalCurseFactory());
+               player.openHandledScreen(new RoyalCurseScreenHandler.RoyalCurseFactory());
             }
          })
       );
@@ -269,9 +269,9 @@ public class ModNetwork {
             if (player != null) {
                try {
                   PlayerGhostChildManager.initializeGhostChild(player);
-                  player.method_17355(new GhostChildCultivationScreenHandler.GhostChildCultivationFactory());
+                  player.openHandledScreen(new GhostChildCultivationScreenHandler.GhostChildCultivationFactory());
                } catch (Exception e) {
-                  LOGGER.error("Error opening Ghost Child Cultivation Screen for player: {}", player.method_5477().getString(), e);
+                  LOGGER.error("Error opening Ghost Child Cultivation Screen for player: {}", player.getName().getString(), e);
                }
             }
          })
@@ -338,11 +338,11 @@ public class ModNetwork {
       ServerPlayNetworking.registerGlobalReceiver(
          new Identifier("smfs", "open_ghost_screen"), (server, player, handler, buf, responseSender) -> server.execute(() -> {
             try {
-               player.method_17355(new GhostControlScreenHandler.GhostControlFactory());
-               LOGGER.debug("玩家 {} 通过按钮打开了厉鬼控制界面", player.method_5477().getString());
+               player.openHandledScreen(new GhostControlScreenHandler.GhostControlFactory());
+               LOGGER.debug("玩家 {} 通过按钮打开了厉鬼控制界面", player.getName().getString());
             } catch (Exception e) {
                LOGGER.error("打开厉鬼控制界面失败", e);
-               player.method_7353(Text.method_43470("§c打开界面失败: " + e.getMessage()), true);
+               player.sendMessage(Text.literal("§c打开界面失败: " + e.getMessage()), true);
             }
          })
       );
@@ -351,14 +351,14 @@ public class ModNetwork {
             try {
                ModConfig config = ModConfig.getInstance();
                if (!config.enableQuestSystem) {
-                  player.method_7353(Text.method_43470("§c任务系统已禁用，无法打开任务界面"), true);
+                  player.sendMessage(Text.literal("§c任务系统已禁用，无法打开任务界面"), true);
                   return;
                }
 
-               player.method_17355(new QuestScreenHandler.QuestScreenFactory());
+               player.openHandledScreen(new QuestScreenHandler.QuestScreenFactory());
             } catch (Exception e) {
                LOGGER.error("打开任务界面失败", e);
-               player.method_7353(Text.method_43470("§c打开界面失败: " + e.getMessage()), true);
+               player.sendMessage(Text.literal("§c打开界面失败: " + e.getMessage()), true);
             }
          })
       );
@@ -386,9 +386,9 @@ public class ModNetwork {
 
    public static void sendQuestAcceptResultToClient(String questId, boolean success, NbtCompound updatedQuestData, ServerPlayerEntity player) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(questId);
+      buf.writeString(questId);
       buf.writeBoolean(success);
-      buf.method_10794(updatedQuestData);
+      buf.writeNbt(updatedQuestData);
       ServerPlayNetworking.send(player, QuestAcceptResultPacket.ID, buf);
    }
 
@@ -396,10 +396,10 @@ public class ModNetwork {
       String questId, String objectiveId, boolean success, NbtCompound updatedQuestData, ServerPlayerEntity player
    ) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(questId);
-      buf.method_10814(objectiveId);
+      buf.writeString(questId);
+      buf.writeString(objectiveId);
       buf.writeBoolean(success);
-      buf.method_10794(updatedQuestData);
+      buf.writeNbt(updatedQuestData);
       ServerPlayNetworking.send(player, QuestDetectionResultPacket.ID, buf);
    }
 
@@ -412,7 +412,7 @@ public class ModNetwork {
    public static void sendGhostDreamTimeToClient(long remainingTime, ServerPlayerEntity player) {
       GhostDreamTimeS2CPacket packet = new GhostDreamTimeS2CPacket(remainingTime);
       PacketByteBuf buf = PacketByteBufs.create();
-      packet.method_11052(buf);
+      packet.write(buf);
       ServerPlayNetworking.send(player, new Identifier("smfs", "ghost_dream_time"), buf);
    }
 }

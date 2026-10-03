@@ -23,12 +23,12 @@ public class RedCoffinBlockEntity extends BlockEntity implements GeoBlockEntity 
    @Override
    public void registerControllers(ControllerRegistrar controllers) {
       controllers.add(new AnimationController<>(this, "state_controller", 0, state -> {
-         BlockState blockState = this.method_11010();
-         if (!blockState.method_28498(RedCoffinBlock.OPEN)) {
+         BlockState blockState = this.getCachedState();
+         if (!blockState.contains(RedCoffinBlock.OPEN)) {
             return PlayState.STOP;
          }
 
-         boolean isOpen = (Boolean)blockState.method_11654(RedCoffinBlock.OPEN);
+         boolean isOpen = (Boolean)blockState.get(RedCoffinBlock.OPEN);
          if (isOpen) {
             state.setAndContinue(RawAnimation.begin().thenPlay("animation.red_coffin.open"));
          } else {

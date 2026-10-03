@@ -22,11 +22,11 @@ public class GhostLimitManager {
    }
 
    public static boolean isOverLimit(MinecraftServer server) {
-      return server.method_3760().method_14571().size() > getMaxPlayers();
+      return server.getPlayerManager().getPlayerList().size() > getMaxPlayers();
    }
 
    public static void kickExcessPlayers(MinecraftServer server) {
-      List<ServerPlayerEntity> players = server.method_3760().method_14571();
+      List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
       int max = getMaxPlayers();
       int count = players.size();
       if (count > max) {
@@ -35,7 +35,7 @@ public class GhostLimitManager {
          for (int i = players.size() - 1; i >= 0 && excess > 0; i--) {
             ServerPlayerEntity player = players.get(i);
             if (player != null) {
-               player.field_13987.method_14367(Text.method_43471("message.smfs.server_full"));
+               player.networkHandler.disconnect(Text.translatable("message.smfs.server_full"));
                excess--;
             }
          }
@@ -50,8 +50,8 @@ public class GhostLimitManager {
       ServerPlayConnectionEvents.JOIN.register((Join)(handler, sender, server) -> {
          if (isOverLimit(server)) {
             triggered = true;
-            ServerPlayerEntity player = handler.method_32311();
-            player.field_13987.method_14367(Text.method_43471("message.smfs.server_full"));
+            ServerPlayerEntity player = handler.getPlayer();
+            player.networkHandler.disconnect(Text.translatable("message.smfs.server_full"));
          }
       });
       ServerTickEvents.END_SERVER_TICK.register((EndTick)server -> {

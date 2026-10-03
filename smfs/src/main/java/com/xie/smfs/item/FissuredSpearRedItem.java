@@ -25,17 +25,17 @@ public class FissuredSpearRedItem extends BoundSpearItem {
    }
 
    @Override
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43471("item.smfs.fissured_spear_red.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.fissured_spear_red.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.fissured_spear_red.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.fissured_spear_red.skill.description"));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{Math.round(this.getSpiritDamageMultiplier() * 100.0F)}));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.translatable("item.smfs.fissured_spear_red.description.source"));
+      tooltip.add(Text.translatable("item.smfs.fissured_spear_red.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.fissured_spear_red.description.type"));
+      tooltip.add(Text.translatable("item.smfs.fissured_spear_red.skill.description"));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{Math.round(this.getSpiritDamageMultiplier() * 100.0F)}));
       if (this.isBound(stack)) {
-         tooltip.add(Text.method_43470("已认主").method_27692(Formatting.field_1054));
+         tooltip.add(Text.literal("已认主").formatted(Formatting.YELLOW));
       } else {
-         tooltip.add(Text.method_43470("未认主").method_27692(Formatting.field_1080));
+         tooltip.add(Text.literal("未认主").formatted(Formatting.GRAY));
       }
    }
 }

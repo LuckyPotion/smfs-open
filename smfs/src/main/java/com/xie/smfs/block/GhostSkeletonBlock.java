@@ -13,24 +13,24 @@ import net.minecraft.world.BlockView;
 import org.jetbrains.annotations.Nullable;
 
 public class GhostSkeletonBlock extends GhostFurnitureBlock {
-   protected static final VoxelShape SHAPE = Block.method_9541(0.0, 0.0, 0.0, 16.0, 2.0, 16.0);
+   protected static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 2.0, 16.0);
 
    public GhostSkeletonBlock(Settings settings) {
       super(settings);
    }
 
    @Override
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
       return SHAPE;
    }
 
-   public VoxelShape method_9549(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+   public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
       return SHAPE;
    }
 
    @Nullable
    @Override
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new StaticAnimatable(ModBlockEntities.GHOST_SKELETON_BLOCK_ENTITY, pos, state);
    }
 }

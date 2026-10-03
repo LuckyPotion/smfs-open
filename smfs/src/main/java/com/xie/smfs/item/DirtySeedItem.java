@@ -20,28 +20,28 @@ public class DirtySeedItem extends Item {
       super(settings);
    }
 
-   public ActionResult method_7884(ItemUsageContext context) {
-      World world = context.method_8045();
-      BlockPos blockPos = context.method_8037();
-      BlockState blockState = world.method_8320(blockPos);
-      if (blockState.method_27852(Blocks.field_10362)) {
-         BlockPos cropPos = blockPos.method_10084();
-         if (world.method_8320(cropPos).method_26215()) {
-            world.method_8501(cropPos, ModBlocks.DIRTY_CROP.method_9564());
-            if (!context.method_8036().method_31549().field_7477) {
-               context.method_8041().method_7934(1);
+   public ActionResult useOnBlock(ItemUsageContext context) {
+      World world = context.getWorld();
+      BlockPos blockPos = context.getBlockPos();
+      BlockState blockState = world.getBlockState(blockPos);
+      if (blockState.isOf(Blocks.FARMLAND)) {
+         BlockPos cropPos = blockPos.up();
+         if (world.getBlockState(cropPos).isAir()) {
+            world.setBlockState(cropPos, ModBlocks.DIRTY_CROP.getDefaultState());
+            if (!context.getPlayer().getAbilities().creativeMode) {
+               context.getStack().decrement(1);
             }
 
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
       }
 
-      return super.method_7884(context);
+      return super.useOnBlock(context);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.dirty_seed.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.dirty_seed.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.dirty_seed.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.dirty_seed.description.type"));
    }
 }

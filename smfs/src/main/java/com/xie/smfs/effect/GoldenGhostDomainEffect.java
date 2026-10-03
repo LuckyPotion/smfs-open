@@ -16,24 +16,24 @@ public class GoldenGhostDomainEffect extends StatusEffect implements ICurseEffec
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/GoldenGhostDomainEffect");
 
    public GoldenGhostDomainEffect() {
-      super(StatusEffectCategory.field_18272, 16766720);
+      super(StatusEffectCategory.HARMFUL, 16766720);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
       if (entity instanceof PlayerEntity player) {
-         boolean isTargetVersion = player.method_6059(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
+         boolean isTargetVersion = player.hasStatusEffect(ModEffects.GOLDEN_GHOST_DOMAIN_TARGET);
          if (!isTargetVersion) {
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5925, 5, 0, false, false, false));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 5, 0, false, false, false));
          }
       }
    }
 
    public static void updateRevivalDegreeInGhostDomain(PlayerEntity player) {
-      if (!player.method_37908().method_8608()) {
+      if (!player.getWorld().isClient()) {
          int ghostEyeSlot = PlayerEvents.findEquippedGhostEyeSlot(player);
          int ghostFireSlot = PlayerEvents.findEquippedGhostFireSlot(player);
          if (ghostEyeSlot != -1) {
@@ -46,7 +46,7 @@ public class GoldenGhostDomainEffect extends StatusEffect implements ICurseEffec
       }
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      super.method_5562(entity, attributes, amplifier);
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      super.onRemoved(entity, attributes, amplifier);
    }
 }

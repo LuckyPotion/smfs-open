@@ -42,12 +42,12 @@ public class ClientGhostOfficerGSkillC2SPacket {
          try {
             GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "ghost_officer", ModItems.GHOST_OFFICER, 5);
             if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-               player.method_7353(Text.method_43470("§c您没有驾驭鬼差，无法使用此技能"), true);
+               player.sendMessage(Text.literal("§c您没有驾驭鬼差，无法使用此技能"), true);
                return;
             }
 
             if (result == GhostDomainManager.SkillCheckResult.LEVEL_TOO_LOW) {
-               player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+               player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
                return;
             }
 
@@ -63,44 +63,44 @@ public class ClientGhostOfficerGSkillC2SPacket {
       LivingEntity targetEntity = TargetingUtil.findEntityInLookDirection(player, 8.0, 0.7);
       if (targetEntity != null) {
          if (targetEntity instanceof ServerPlayerEntity targetPlayer) {
-            if (targetPlayer.method_6059(ModEffects.SILENCE)) {
-               if (targetPlayer.method_6059(ModEffects.MUSIC_BOX_CURSE)) {
-                  player.method_7353(Text.method_43470("§c鬼差G键：秒杀失败"), true);
+            if (targetPlayer.hasStatusEffect(ModEffects.SILENCE)) {
+               if (targetPlayer.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE)) {
+                  player.sendMessage(Text.literal("§c鬼差G键：秒杀失败"), true);
                } else {
                   executeInstantKill(targetPlayer, player);
-                  player.method_7353(Text.method_43470("§a鬼差G键：成功秒杀沉寂状态下的玩家 " + targetPlayer.method_5477().getString()), true);
-                  LOGGER.debug("玩家 {} 使用鬼差G键技能秒杀沉寂状态玩家：{}", player.method_5477().getString(), targetPlayer.method_5477().getString());
+                  player.sendMessage(Text.literal("§a鬼差G键：成功秒杀沉寂状态下的玩家 " + targetPlayer.getName().getString()), true);
+                  LOGGER.debug("玩家 {} 使用鬼差G键技能秒杀沉寂状态玩家：{}", player.getName().getString(), targetPlayer.getName().getString());
                }
             } else {
-               player.method_7353(Text.method_43470("§c鬼差G键：目标玩家不处于沉寂状态"), true);
+               player.sendMessage(Text.literal("§c鬼差G键：目标玩家不处于沉寂状态"), true);
             }
          } else if (targetEntity instanceof GhostMasterEntity ghostMaster) {
-            if (ghostMaster.method_6059(ModEffects.SILENCE)) {
+            if (ghostMaster.hasStatusEffect(ModEffects.SILENCE)) {
                executeInstantKill(ghostMaster, player);
-               player.method_7353(Text.method_43470("§a鬼差G键：成功秒杀沉寂状态下的遇鬼者 " + ghostMaster.method_5477().getString()), true);
-               LOGGER.debug("玩家 {} 使用鬼差G键技能秒杀沉寂状态遇鬼者：{}", player.method_5477().getString(), ghostMaster.method_5477().getString());
+               player.sendMessage(Text.literal("§a鬼差G键：成功秒杀沉寂状态下的遇鬼者 " + ghostMaster.getName().getString()), true);
+               LOGGER.debug("玩家 {} 使用鬼差G键技能秒杀沉寂状态遇鬼者：{}", player.getName().getString(), ghostMaster.getName().getString());
             } else {
-               player.method_7353(Text.method_43470("§c鬼差G键：目标遇鬼者不处于沉寂状态"), true);
+               player.sendMessage(Text.literal("§c鬼差G键：目标遇鬼者不处于沉寂状态"), true);
             }
          } else if (targetEntity instanceof LuoQianGhostEntity) {
-            player.method_7353(Text.method_43470("§c鬼差G键：无法吞噬"), true);
+            player.sendMessage(Text.literal("§c鬼差G键：无法吞噬"), true);
          } else if (targetEntity instanceof GhostEntity ghostEntity) {
             if (!AdvancementManager.hasAdvancement(player, "smfs:become_god")) {
-               player.method_7353(Text.method_43470("§c鬼差G键：需要成神后才能吞噬厉鬼"), true);
+               player.sendMessage(Text.literal("§c鬼差G键：需要成神后才能吞噬厉鬼"), true);
                return;
             }
 
             executeGhostEntityKill(ghostEntity, player);
             GhostSkillManager.addBonusSuppressionSlot(player, 1);
-            player.method_7353(Text.method_43470("§a鬼差G键：成功压制并吞噬 " + ghostEntity.method_5477().getString()), true);
-            LOGGER.debug("玩家 {} 使用鬼差G键技能压制鬼实体：{}，获得额外压制名额", player.method_5477().getString(), ghostEntity.method_5477().getString());
+            player.sendMessage(Text.literal("§a鬼差G键：成功压制并吞噬 " + ghostEntity.getName().getString()), true);
+            LOGGER.debug("玩家 {} 使用鬼差G键技能压制鬼实体：{}，获得额外压制名额", player.getName().getString(), ghostEntity.getName().getString());
          } else {
-            player.method_7353(Text.method_43470("§c鬼差G键：只能对玩家、遇鬼者或鬼实体使用"), true);
+            player.sendMessage(Text.literal("§c鬼差G键：只能对玩家、遇鬼者或鬼实体使用"), true);
          }
 
          spawnSkillParticles(player);
       } else {
-         player.method_7353(Text.method_43470("§c鬼差G键：准星位置没有可攻击的目标"), true);
+         player.sendMessage(Text.literal("§c鬼差G键：准星位置没有可攻击的目标"), true);
       }
    }
 
@@ -108,11 +108,11 @@ public class ClientGhostOfficerGSkillC2SPacket {
       ModEvents.processingSpiritDamage.set(true);
 
       try {
-         float lethalDamage = targetPlayer.method_6032() * 2.0F;
-         DamageSource damageSource = attacker.method_48923().method_48802(attacker);
-         targetPlayer.method_5643(damageSource, lethalDamage);
-         if (targetPlayer.method_5805()) {
-            targetPlayer.method_6033(0.0F);
+         float lethalDamage = targetPlayer.getHealth() * 2.0F;
+         DamageSource damageSource = attacker.getDamageSources().playerAttack(attacker);
+         targetPlayer.damage(damageSource, lethalDamage);
+         if (targetPlayer.isAlive()) {
+            targetPlayer.setHealth(0.0F);
          }
 
          spawnKillParticles(targetPlayer);
@@ -125,11 +125,11 @@ public class ClientGhostOfficerGSkillC2SPacket {
       ModEvents.processingSpiritDamage.set(true);
 
       try {
-         float lethalDamage = ghostMaster.method_6032() * 2.0F;
-         DamageSource damageSource = attacker.method_48923().method_48802(attacker);
-         ghostMaster.method_5643(damageSource, lethalDamage);
-         if (ghostMaster.method_5805()) {
-            ghostMaster.method_6033(0.0F);
+         float lethalDamage = ghostMaster.getHealth() * 2.0F;
+         DamageSource damageSource = attacker.getDamageSources().playerAttack(attacker);
+         ghostMaster.damage(damageSource, lethalDamage);
+         if (ghostMaster.isAlive()) {
+            ghostMaster.setHealth(0.0F);
          }
 
          spawnKillParticles(ghostMaster);
@@ -140,30 +140,30 @@ public class ClientGhostOfficerGSkillC2SPacket {
 
    private static void executeGhostEntityKill(GhostEntity ghostEntity, ServerPlayerEntity attacker) {
       GhostDeathHandler.markLegitimateRemoval(ghostEntity);
-      ghostEntity.method_31472();
+      ghostEntity.discard();
    }
 
    private static void spawnKillParticles(ServerPlayerEntity targetPlayer) {
-      World world = targetPlayer.method_37908();
+      World world = targetPlayer.getWorld();
 
       for (int i = 0; i < 50; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            targetPlayer.method_23317() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            targetPlayer.method_23318() + world.field_9229.method_43058() * 3.0,
-            targetPlayer.method_23321() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            (world.field_9229.method_43058() - 0.5) * 0.5,
-            world.field_9229.method_43058() * 0.5,
-            (world.field_9229.method_43058() - 0.5) * 0.5
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            targetPlayer.getX() + (world.random.nextDouble() - 0.5) * 3.0,
+            targetPlayer.getY() + world.random.nextDouble() * 3.0,
+            targetPlayer.getZ() + (world.random.nextDouble() - 0.5) * 3.0,
+            (world.random.nextDouble() - 0.5) * 0.5,
+            world.random.nextDouble() * 0.5,
+            (world.random.nextDouble() - 0.5) * 0.5
          );
       }
 
       for (int i = 0; i < 20; i++) {
-         world.method_8406(
-            ParticleTypes.field_11236,
-            targetPlayer.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            targetPlayer.method_23318() + world.field_9229.method_43058() * 2.0,
-            targetPlayer.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.EXPLOSION,
+            targetPlayer.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            targetPlayer.getY() + world.random.nextDouble() * 2.0,
+            targetPlayer.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.0,
             0.0
@@ -172,26 +172,26 @@ public class ClientGhostOfficerGSkillC2SPacket {
    }
 
    private static void spawnKillParticles(GhostMasterEntity ghostMaster) {
-      World world = ghostMaster.method_37908();
+      World world = ghostMaster.getWorld();
 
       for (int i = 0; i < 50; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            ghostMaster.method_23317() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            ghostMaster.method_23318() + world.field_9229.method_43058() * 3.0,
-            ghostMaster.method_23321() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            (world.field_9229.method_43058() - 0.5) * 0.5,
-            world.field_9229.method_43058() * 0.5,
-            (world.field_9229.method_43058() - 0.5) * 0.5
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            ghostMaster.getX() + (world.random.nextDouble() - 0.5) * 3.0,
+            ghostMaster.getY() + world.random.nextDouble() * 3.0,
+            ghostMaster.getZ() + (world.random.nextDouble() - 0.5) * 3.0,
+            (world.random.nextDouble() - 0.5) * 0.5,
+            world.random.nextDouble() * 0.5,
+            (world.random.nextDouble() - 0.5) * 0.5
          );
       }
 
       for (int i = 0; i < 20; i++) {
-         world.method_8406(
-            ParticleTypes.field_11236,
-            ghostMaster.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            ghostMaster.method_23318() + world.field_9229.method_43058() * 2.0,
-            ghostMaster.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.EXPLOSION,
+            ghostMaster.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            ghostMaster.getY() + world.random.nextDouble() * 2.0,
+            ghostMaster.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.0,
             0.0
@@ -200,14 +200,14 @@ public class ClientGhostOfficerGSkillC2SPacket {
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 15; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            player.method_23318() + world.field_9229.method_43058() * 3.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 3.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            player.getX() + (world.random.nextDouble() - 0.5) * 3.0,
+            player.getY() + world.random.nextDouble() * 3.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 3.0,
             0.0,
             0.1,
             0.0

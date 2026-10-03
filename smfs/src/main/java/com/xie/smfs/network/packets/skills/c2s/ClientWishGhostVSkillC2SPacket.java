@@ -28,7 +28,7 @@ public class ClientWishGhostVSkillC2SPacket {
       server.execute(() -> {
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "wish_ghost", ModItems.WISH_GHOST, -1);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭许愿鬼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭许愿鬼，无法使用此技能"), true);
          } else {
             GhostDomainManager.handleWishGhostVSkill(player);
             PlayerEvents.balanceRevivalDegree(player);

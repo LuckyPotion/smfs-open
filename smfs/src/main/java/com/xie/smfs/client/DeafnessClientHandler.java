@@ -10,8 +10,8 @@ public class DeafnessClientHandler {
 
    public static void init() {
       ClientTickEvents.END_CLIENT_TICK.register((EndTick)client -> {
-         if (client.field_1724 != null) {
-            isDeaf = client.field_1724.method_6059(ModEffects.DEAFNESS);
+         if (client.player != null) {
+            isDeaf = client.player.hasStatusEffect(ModEffects.DEAFNESS);
          }
       });
    }

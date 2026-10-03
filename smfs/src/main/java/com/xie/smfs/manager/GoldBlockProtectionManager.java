@@ -22,23 +22,23 @@ public class GoldBlockProtectionManager {
    public static void setPlayerInGoldBlockShelter(PlayerEntity player, boolean inShelter) {
       PLAYERS_IN_GOLD_BLOCK_SHELTER.put(player, inShelter);
       if (inShelter) {
-         LOGGER.debug("玩家 {} 被金块包裹，获得鬼魂攻击免疫效果", player.method_5477().getString());
-         player.method_6016(ModEffects.LOST);
+         LOGGER.debug("玩家 {} 被金块包裹，获得鬼魂攻击免疫效果", player.getName().getString());
+         player.removeStatusEffect(ModEffects.LOST);
       } else {
-         LOGGER.debug("玩家 {} 离开金块包裹，失去鬼魂攻击免疫效果", player.method_5477().getString());
+         LOGGER.debug("玩家 {} 离开金块包裹，失去鬼魂攻击免疫效果", player.getName().getString());
       }
    }
 
    public static boolean checkPlayerSurroundedByGoldBlocks(PlayerEntity player) {
-      World world = player.method_37908();
-      BlockPos playerPos = player.method_24515();
+      World world = player.getWorld();
+      BlockPos playerPos = player.getBlockPos();
 
       for (int x = -1; x <= 1; x++) {
          for (int y = -1; y <= 2; y++) {
             for (int z = -1; z <= 1; z++) {
-               BlockPos checkPos = playerPos.method_10069(x, y, z);
-               Block block = world.method_8320(checkPos).method_26204();
-               if (!block.equals(Blocks.field_10205) && (x != 0 || y < 0 || y > 1 || z != 0)) {
+               BlockPos checkPos = playerPos.add(x, y, z);
+               Block block = world.getBlockState(checkPos).getBlock();
+               if (!block.equals(Blocks.GOLD_BLOCK) && (x != 0 || y < 0 || y > 1 || z != 0)) {
                   return false;
                }
             }
@@ -58,7 +58,7 @@ public class GoldBlockProtectionManager {
 
    public static void removePlayerFromGoldBlockShelter(PlayerEntity player) {
       PLAYERS_IN_GOLD_BLOCK_SHELTER.remove(player);
-      LOGGER.debug("移除玩家 {} 的金块包裹状态", player.method_5477().getString());
+      LOGGER.debug("移除玩家 {} 的金块包裹状态", player.getName().getString());
    }
 
    public static void validatePlayerGoldBlockShelterStatus(PlayerEntity player) {

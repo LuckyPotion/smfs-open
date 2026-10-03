@@ -16,7 +16,7 @@ public class YangJianChatHandler {
 
    public static void register() {
       ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((AllowChatMessage)(message, sender, params) -> {
-         String content = message.method_44862();
+         String content = message.getSignedContent();
          if (content.trim().equalsIgnoreCase("杨戬")) {
             summonYangJian(sender);
          }
@@ -24,9 +24,9 @@ public class YangJianChatHandler {
          return true;
       });
       ServerMessageEvents.ALLOW_COMMAND_MESSAGE.register((AllowCommandMessage)(message, sender, params) -> {
-         String content = message.method_44862();
+         String content = message.getSignedContent();
          if (content.trim().equalsIgnoreCase("杨戬")) {
-            ServerPlayerEntity player = sender.method_44023();
+            ServerPlayerEntity player = sender.getPlayer();
             if (player != null) {
                summonYangJian(player);
             }
@@ -37,20 +37,20 @@ public class YangJianChatHandler {
    }
 
    private static void summonYangJian(ServerPlayerEntity player) {
-      World world = player.method_37908();
-      if (!world.method_8608()) {
-         if (!player.method_5687(2)) {
-            player.method_7353(Text.method_43470("§c只有房主才能召唤杨戬！"), false);
+      World world = player.getWorld();
+      if (!world.isClient()) {
+         if (!player.hasPermissionLevel(2)) {
+            player.sendMessage(Text.literal("§c只有房主才能召唤杨戬！"), false);
          } else {
-            BlockPos playerPos = player.method_24515();
-            BlockPos spawnPos = playerPos.method_10086(3);
+            BlockPos playerPos = player.getBlockPos();
+            BlockPos spawnPos = playerPos.up(3);
 
             try {
                YangJianEntity yangJian = new YangJianEntity(ModEntities.YANG_JIAN, world);
-               yangJian.method_5808(spawnPos.method_10263() + 0.5, spawnPos.method_10264(), spawnPos.method_10260() + 0.5, player.method_36454(), 0.0F);
-               world.method_8649(yangJian);
+               yangJian.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYaw(), 0.0F);
+               world.spawnEntity(yangJian);
             } catch (Exception e) {
-               player.method_7353(Text.method_43470("§c召唤杨戬时出现错误！"), false);
+               player.sendMessage(Text.literal("§c召唤杨戬时出现错误！"), false);
             }
          }
       }

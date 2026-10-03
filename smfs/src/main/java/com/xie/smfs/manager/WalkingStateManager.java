@@ -25,16 +25,16 @@ public class WalkingStateManager {
          if (this.isForcedWalking) {
             if (!this.isWalking) {
                this.isWalking = true;
-               LOGGER.debug("Entity {} 进入强制行走状态", this.entity.method_5845());
+               LOGGER.debug("Entity {} 进入强制行走状态", this.entity.getUuidAsString());
             }
          } else {
-            Vec3d velocity = this.entity.method_18798();
-            double currentHorizontalSpeedSquared = velocity.method_37268();
+            Vec3d velocity = this.entity.getVelocity();
+            double currentHorizontalSpeedSquared = velocity.horizontalLengthSquared();
             double smoothedSpeed = this.smoothSpeed(currentHorizontalSpeedSquared);
             boolean shouldBeWalking = smoothedSpeed > 0.01;
             if (this.isWalking != shouldBeWalking) {
                this.isWalking = shouldBeWalking;
-               LOGGER.debug("Entity {} 行走状态更新为: {} (速度: {})", this.entity.method_5845(), shouldBeWalking, smoothedSpeed);
+               LOGGER.debug("Entity {} 行走状态更新为: {} (速度: {})", this.entity.getUuidAsString(), shouldBeWalking, smoothedSpeed);
             }
 
             this.lastHorizontalSpeedSquared = currentHorizontalSpeedSquared;
@@ -50,12 +50,12 @@ public class WalkingStateManager {
    public void setForcedWalking(boolean forced) {
       if (this.isForcedWalking != forced) {
          this.isForcedWalking = forced;
-         LOGGER.debug("Entity {} 强制行走状态: {}", this.entity.method_5845(), forced);
+         LOGGER.debug("Entity {} 强制行走状态: {}", this.entity.getUuidAsString(), forced);
          if (forced) {
             this.isWalking = true;
          } else {
-            Vec3d velocity = this.entity.method_18798();
-            double speed = velocity.method_37268();
+            Vec3d velocity = this.entity.getVelocity();
+            double speed = velocity.horizontalLengthSquared();
             this.isWalking = speed > 0.01;
          }
       }
@@ -73,7 +73,7 @@ public class WalkingStateManager {
       this.isWalking = false;
       this.isForcedWalking = false;
       this.lastHorizontalSpeedSquared = 0.0;
-      LOGGER.debug("Entity {} 行走状态已重置", this.entity.method_5845());
+      LOGGER.debug("Entity {} 行走状态已重置", this.entity.getUuidAsString());
    }
 
    public double getCurrentHorizontalSpeedSquared() {

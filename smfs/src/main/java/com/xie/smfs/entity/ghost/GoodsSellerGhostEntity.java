@@ -30,18 +30,18 @@ public class GoodsSellerGhostEntity extends GhostEntity {
    }
 
    private void initSellerAttributes() {
-      this.method_5996(EntityAttributes.field_23716).method_6192(100000.0);
-      this.method_5996(EntityAttributes.field_23719).method_6192(0.25);
-      this.method_5996(EntityAttributes.field_23717).method_6192(20.0);
-      this.method_6033(40.0F);
+      this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(100000.0);
+      this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.25);
+      this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE).setBaseValue(20.0);
+      this.setHealth(40.0F);
    }
 
    @Override
    protected void executeAttack(PlayerEntity player, boolean isTimeoutAttack) {
       super.executeAttack(player, isTimeoutAttack);
-      if (!this.method_37908().field_9236 && player.method_5805()) {
+      if (!this.getWorld().isClient && player.isAlive()) {
          if (!PlayerEvents.isGhostChildFused(player)) {
-            WorldConfig config = WorldConfig.getInstance(this.method_37908());
+            WorldConfig config = WorldConfig.getInstance(this.getWorld());
             if (!"linear".equals(config.endingMode)) {
                GoodsSellerKillScreenS2CPacket.send((ServerPlayerEntity)player);
             }
@@ -49,17 +49,17 @@ public class GoodsSellerGhostEntity extends GhostEntity {
       }
    }
 
-   public ActionResult method_5992(PlayerEntity player, Hand hand) {
-      if (this.method_37908().field_9236) {
-         return ActionResult.field_5812;
+   public ActionResult interactMob(PlayerEntity player, Hand hand) {
+      if (this.getWorld().isClient) {
+         return ActionResult.SUCCESS;
       }
 
-      if (player.method_5715()) {
-         return super.method_5992(player, hand);
+      if (player.isSneaking()) {
+         return super.interactMob(player, hand);
       }
 
       this.injectQuestToManager(player);
-      return ActionResult.field_5812;
+      return ActionResult.SUCCESS;
    }
 
    private void injectQuestToManager(PlayerEntity player) {
@@ -77,12 +77,12 @@ public class GoodsSellerGhostEntity extends GhostEntity {
          }
 
          if (result != null && result) {
-            player.method_7353(Text.method_43470("§6你与卖货郎进行了一笔交易，打开任务界面查看详细！"), false);
-            LOGGER.info("为玩家 {} 注入了限时黄金容器收集任务", player.method_5477().getString());
+            player.sendMessage(Text.literal("§6你与卖货郎进行了一笔交易，打开任务界面查看详细！"), false);
+            LOGGER.info("为玩家 {} 注入了限时黄金容器收集任务", player.getName().getString());
          }
       } catch (Exception e) {
          LOGGER.error("注入任务失败: {}", e.getMessage());
-         player.method_7353(Text.method_43470("§c任务注入失败：系统错误"), false);
+         player.sendMessage(Text.literal("§c任务注入失败：系统错误"), false);
       }
    }
 
@@ -92,12 +92,12 @@ public class GoodsSellerGhostEntity extends GhostEntity {
          Method getQuestDataMethod = questManagerClass.getDeclaredMethod("getQuestData", PlayerEntity.class);
          getQuestDataMethod.setAccessible(true);
          NbtCompound questData = (NbtCompound)getQuestDataMethod.invoke(null, player);
-         NbtList completedQuests = questData.method_10554("completedQuests", 10);
+         NbtList completedQuests = questData.getList("completedQuests", 10);
          int count = 0;
 
          for (int i = 0; i < completedQuests.size(); i++) {
-            NbtCompound quest = completedQuests.method_10602(i);
-            if ("seller_basic_collection".equals(quest.method_10558("id"))) {
+            NbtCompound quest = completedQuests.getCompound(i);
+            if ("seller_basic_collection".equals(quest.getString("id"))) {
                count++;
             }
          }

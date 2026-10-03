@@ -44,11 +44,11 @@ public class GhostTamingProgressPacket {
    ) {
       GhostTamingProgressPacket packet = read(buf);
       server.execute(() -> {
-         if (player.field_7512 instanceof GhostTamingScreenHandler tamingHandler && tamingHandler.field_7763 == packet.getSyncId()) {
+         if (player.currentScreenHandler instanceof GhostTamingScreenHandler tamingHandler && tamingHandler.syncId == packet.getSyncId()) {
             float progress = packet.getTotalProgress();
             if (progress > 0.0F) {
-               player.method_6092(new StatusEffectInstance(StatusEffects.field_5920, 20, 1));
-               player.method_6092(new StatusEffectInstance(StatusEffects.field_5924, 20, 0));
+               player.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 20, 1));
+               player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 20, 0));
             }
          }
       });

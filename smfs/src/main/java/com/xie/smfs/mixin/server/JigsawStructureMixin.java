@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class JigsawStructureMixin {
    @Inject(method = "validate", at = @At("HEAD"), cancellable = true)
    private static void validate(JigsawStructure structure, CallbackInfoReturnable<DataResult<JigsawStructure>> cir) {
-      int i = switch (structure.method_42701()) {
-         case field_28922 -> 0;
-         case field_28923, field_38431, field_38432 -> 12;
+      int i = switch (structure.getTerrainAdaptation()) {
+         case NONE -> 0;
+         case BURY, BEARD_THIN, BEARD_BOX -> 12;
          default -> throw new IncompatibleClassChangeError();
       };
 

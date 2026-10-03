@@ -28,15 +28,15 @@ public abstract class BoundSpearItem extends FissuredSpearPurpleItem {
    }
 
    public boolean isBound(ItemStack stack) {
-      return stack.method_7985() && stack.method_7969().method_10577("IsBound");
+      return stack.hasNbt() && stack.getNbt().getBoolean("IsBound");
    }
 
    public UUID getOwnerUUID(ItemStack stack) {
-      if (!stack.method_7985()) {
+      if (!stack.hasNbt()) {
          return null;
       }
 
-      String uuidStr = stack.method_7969().method_10558("OwnerUUID");
+      String uuidStr = stack.getNbt().getString("OwnerUUID");
 
       try {
          return UUID.fromString(uuidStr);
@@ -46,51 +46,51 @@ public abstract class BoundSpearItem extends FissuredSpearPurpleItem {
    }
 
    public String getCorrectAnswer(ItemStack stack) {
-      return !stack.method_7985() ? "" : stack.method_7969().method_10558("CorrectAnswer");
+      return !stack.hasNbt() ? "" : stack.getNbt().getString("CorrectAnswer");
    }
 
    public void bindToOwner(ItemStack stack, PlayerEntity owner, String answer) {
-      NbtCompound nbt = stack.method_7948();
-      nbt.method_10582("OwnerUUID", owner.method_5845());
-      nbt.method_10582("CorrectAnswer", answer);
-      nbt.method_10556("IsBound", true);
+      NbtCompound nbt = stack.getOrCreateNbt();
+      nbt.putString("OwnerUUID", owner.getUuidAsString());
+      nbt.putString("CorrectAnswer", answer);
+      nbt.putBoolean("IsBound", true);
    }
 
    public boolean isOwner(ItemStack stack, PlayerEntity player) {
       UUID ownerUUID = this.getOwnerUUID(stack);
-      return ownerUUID != null && ownerUUID.equals(player.method_5667());
+      return ownerUUID != null && ownerUUID.equals(player.getUuid());
    }
 
-   public void method_7888(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-      super.method_7888(stack, world, entity, slot, selected);
-      if (!world.field_9236 && entity instanceof ServerPlayerEntity player) {
+   public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+      super.inventoryTick(stack, world, entity, slot, selected);
+      if (!world.isClient && entity instanceof ServerPlayerEntity player) {
          if (selected) {
-            long lastAttemptPlayerId = stack.method_7985() ? stack.method_7969().method_10537("LastAttemptPlayer") : 0L;
-            long currentPlayerId = player.method_5628();
+            long lastAttemptPlayerId = stack.hasNbt() ? stack.getNbt().getLong("LastAttemptPlayer") : 0L;
+            long currentPlayerId = player.getId();
             if (this.isBound(stack) && !this.isOwner(stack, player) && lastAttemptPlayerId != currentPlayerId) {
-               stack.method_7948().method_10551("LastUITick");
-               stack.method_7948().method_10544("LastAttemptPlayer", currentPlayerId);
+               stack.getOrCreateNbt().remove("LastUITick");
+               stack.getOrCreateNbt().putLong("LastAttemptPlayer", currentPlayerId);
             }
 
-            long currentTick = world.method_8510();
-            long lastUITick = stack.method_7985() ? stack.method_7969().method_10537("LastUITick") : 0L;
+            long currentTick = world.getTime();
+            long lastUITick = stack.hasNbt() ? stack.getNbt().getLong("LastUITick") : 0L;
             if (this.isBound(stack) && !this.isOwner(stack, player) && currentTick - lastUITick < 600L) {
-               long lastFailedPlayerId = stack.method_7985() ? stack.method_7969().method_10537("LastFailedPlayer") : 0L;
+               long lastFailedPlayerId = stack.hasNbt() ? stack.getNbt().getLong("LastFailedPlayer") : 0L;
                if (lastFailedPlayerId == currentPlayerId) {
-                  long lastErosionTick = stack.method_7985() ? stack.method_7969().method_10537("LastErosionTick") : 0L;
+                  long lastErosionTick = stack.hasNbt() ? stack.getNbt().getLong("LastErosionTick") : 0L;
                   if (currentTick - lastErosionTick >= 20L) {
-                     player.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 60, 19));
-                     stack.method_7948().method_10544("LastErosionTick", currentTick);
+                     player.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 60, 19));
+                     stack.getOrCreateNbt().putLong("LastErosionTick", currentTick);
                   }
                }
             } else {
                if (!this.isBound(stack)) {
                   SpearBindC2SPacket.sendToClient(player, true, "");
-                  stack.method_7948().method_10544("LastUITick", currentTick);
+                  stack.getOrCreateNbt().putLong("LastUITick", currentTick);
                } else if (!this.isOwner(stack, player)) {
                   SpearBindC2SPacket.sendToClient(player, false, this.getCorrectAnswer(stack));
-                  stack.method_7948().method_10544("LastUITick", currentTick);
-                  stack.method_7948().method_10544("LastAttemptPlayer", currentPlayerId);
+                  stack.getOrCreateNbt().putLong("LastUITick", currentTick);
+                  stack.getOrCreateNbt().putLong("LastAttemptPlayer", currentPlayerId);
                }
             }
          }
@@ -101,20 +101,20 @@ public abstract class BoundSpearItem extends FissuredSpearPurpleItem {
       if (!this.isBound(stack)) {
          this.bindToOwner(stack, player, answer);
       } else if (answer.equals(this.getCorrectAnswer(stack))) {
-         stack.method_7948().method_10551("LastFailedPlayer");
+         stack.getOrCreateNbt().remove("LastFailedPlayer");
       } else {
-         player.method_5643(player.method_48923().method_48830(), 5000.0F);
-         stack.method_7948().method_10544("LastFailedPlayer", player.method_5628());
+         player.damage(player.getDamageSources().generic(), 5000.0F);
+         stack.getOrCreateNbt().putLong("LastFailedPlayer", player.getId());
       }
    }
 
    @Override
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
       if (this.isBound(stack)) {
-         tooltip.add(Text.method_43470("已认主").method_27692(Formatting.field_1054));
+         tooltip.add(Text.literal("已认主").formatted(Formatting.YELLOW));
       } else {
-         tooltip.add(Text.method_43470("未认主").method_27692(Formatting.field_1080));
+         tooltip.add(Text.literal("未认主").formatted(Formatting.GRAY));
       }
    }
 }

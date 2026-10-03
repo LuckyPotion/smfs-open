@@ -28,7 +28,7 @@ public class ClientLostGhostRestartC2SPacket {
       server.execute(() -> {
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "lost_ghost", ModItems.LOST_GHOST, -1);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭遗忘鬼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭遗忘鬼，无法使用此技能"), true);
          } else {
             GhostDomainManager.handleLostGhostRestart(player);
             PlayerEvents.balanceRevivalDegree(player);

@@ -17,15 +17,15 @@ public class UnbreakableRedWoolBlock extends Block {
       super(settings);
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-      if (!world.field_9236) {
-         world.method_8396(null, pos, SoundEvents.field_14927, SoundCategory.field_15245, 1.0F, 1.0F);
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+      if (!world.isClient) {
+         world.playSound(null, pos, SoundEvents.BLOCK_ANVIL_HIT, SoundCategory.BLOCKS, 1.0F, 1.0F);
       }
 
-      return ActionResult.field_21466;
+      return ActionResult.CONSUME;
    }
 
-   public void method_9576(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-      world.method_8396(null, pos, SoundEvents.field_14927, SoundCategory.field_15245, 1.0F, 1.0F);
+   public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
+      world.playSound(null, pos, SoundEvents.BLOCK_ANVIL_HIT, SoundCategory.BLOCKS, 1.0F, 1.0F);
    }
 }

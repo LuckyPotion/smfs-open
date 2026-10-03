@@ -29,8 +29,8 @@ public class OpenCodenameInputS2CPacket {
       ClientPlayNetworking.registerGlobalReceiver(ID, (client, handler, buf, responseSender) -> {
          OpenCodenameInputS2CPacket packet = new OpenCodenameInputS2CPacket(buf);
          client.execute(() -> {
-            if (client.field_1755 == null) {
-               client.method_1507(new CodenameInputScreen(packet.getEntityId()));
+            if (client.currentScreen == null) {
+               client.setScreen(new CodenameInputScreen(packet.getEntityId()));
             }
          });
       });

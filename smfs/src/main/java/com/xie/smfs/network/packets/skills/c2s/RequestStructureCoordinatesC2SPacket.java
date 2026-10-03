@@ -27,15 +27,15 @@ public class RequestStructureCoordinatesC2SPacket {
    public static void receive(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      String structureType = buf.method_19772();
+      String structureType = buf.readString();
       server.execute(() -> {
-         LOGGER.info("收到玩家 {} 的{}坐标请求", player.method_5477().getString(), structureType);
+         LOGGER.info("收到玩家 {} 的{}坐标请求", player.getName().getString(), structureType);
          StructureCoordinatesS2CPacket.sendCoordinates(player, structureType);
       });
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10814(this.structureType);
+      buf.writeString(this.structureType);
    }
 
    public String getStructureType() {

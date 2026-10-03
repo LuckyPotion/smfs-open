@@ -14,7 +14,7 @@ public class WorldCreationConfigScreen extends Screen {
    private String endingMode = "open";
 
    public WorldCreationConfigScreen(Screen parent) {
-      super(Text.method_43471("smfs.config.world_config_title"));
+      super(Text.translatable("smfs.config.world_config_title"));
       this.parent = parent;
       this.loadDefaults();
    }
@@ -25,62 +25,60 @@ public class WorldCreationConfigScreen extends Screen {
       this.endingMode = defaultConfig.endingMode != null ? defaultConfig.endingMode : "open";
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      int centerX = this.field_22789 / 2;
-      int startY = this.field_22790 / 2 - 40;
+   protected void init() {
+      super.init();
+      int centerX = this.width / 2;
+      int startY = this.height / 2 - 40;
       int widgetWidth = 200;
       int leftX = centerX - widgetWidth / 2;
       int y = startY;
       y += 10;
-      this.method_37063(
-         CyclingButtonWidget.method_32606(index -> {
+      this.addDrawableChild(
+         CyclingButtonWidget.builder(index -> {
                switch (index) {
                   case 0:
-                     return Text.method_43471("smfs.config.difficulty.low");
+                     return Text.translatable("smfs.config.difficulty.low");
                   case 2:
-                     return Text.method_43471("smfs.config.difficulty.high");
+                     return Text.translatable("smfs.config.difficulty.high");
                   default:
-                     return Text.method_43471("smfs.config.difficulty.medium");
+                     return Text.translatable("smfs.config.difficulty.medium");
                }
             })
-            .method_32620(Arrays.asList(0, 1, 2))
-            .method_32619(this.modDifficulty)
-            .method_32617(leftX, y, widgetWidth, 20, Text.method_43471("smfs.config.world.mod_difficulty"), (button, value) -> this.modDifficulty = value)
+            .values(Arrays.asList(0, 1, 2))
+            .initially(this.modDifficulty)
+            .build(leftX, y, widgetWidth, 20, Text.translatable("smfs.config.world.mod_difficulty"), (button, value) -> this.modDifficulty = value)
       );
       y += 28;
       y += 10;
-      this.method_37063(
-         CyclingButtonWidget.method_32606(
-               mode -> "linear".equals(mode) ? Text.method_43471("smfs.config.ending_mode.linear") : Text.method_43471("smfs.config.ending_mode.open")
+      this.addDrawableChild(
+         CyclingButtonWidget.builder(
+               mode -> "linear".equals(mode) ? Text.translatable("smfs.config.ending_mode.linear") : Text.translatable("smfs.config.ending_mode.open")
             )
-            .method_32620(Arrays.asList("open", "linear"))
-            .method_32619(this.endingMode)
-            .method_32617(leftX, y, widgetWidth, 20, Text.method_43471("smfs.config.world.ending_mode"), (button, value) -> this.endingMode = value)
+            .values(Arrays.asList("open", "linear"))
+            .initially(this.endingMode)
+            .build(leftX, y, widgetWidth, 20, Text.translatable("smfs.config.world.ending_mode"), (button, value) -> this.endingMode = value)
       );
       y += 28;
       y += 20;
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.save"), button -> this.saveAndClose())
-            .method_46434(centerX - 154, this.field_22790 - 28, 100, 20)
-            .method_46431()
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.save"), button -> this.saveAndClose())
+            .dimensions(centerX - 154, this.height - 28, 100, 20)
+            .build()
       );
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.reset"), button -> this.resetToDefaults())
-            .method_46434(centerX - 50, this.field_22790 - 28, 100, 20)
-            .method_46431()
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.reset"), button -> this.resetToDefaults())
+            .dimensions(centerX - 50, this.height - 28, 100, 20)
+            .build()
       );
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43471("smfs.config.cancel"), button -> this.method_25419())
-            .method_46434(centerX + 54, this.field_22790 - 28, 100, 20)
-            .method_46431()
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.translatable("smfs.config.cancel"), button -> this.close()).dimensions(centerX + 54, this.height - 28, 100, 20).build()
       );
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      context.method_27534(this.field_22793, this.field_22785, this.field_22789 / 2, 15, 16777215);
-      super.method_25394(context, mouseX, mouseY, delta);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 15, 16777215);
+      super.render(context, mouseX, mouseY, delta);
    }
 
    private void saveAndClose() {
@@ -89,18 +87,18 @@ public class WorldCreationConfigScreen extends Screen {
       defaultConfig.endingMode = this.endingMode;
       defaultConfig.validate();
       defaultConfig.saveDefault();
-      this.method_25419();
+      this.close();
    }
 
    private void resetToDefaults() {
       this.modDifficulty = 1;
       this.endingMode = "open";
-      this.method_41843();
+      this.clearAndInit();
    }
 
-   public void method_25419() {
-      if (this.field_22787 != null) {
-         this.field_22787.method_1507(this.parent);
+   public void close() {
+      if (this.client != null) {
+         this.client.setScreen(this.parent);
       }
    }
 }

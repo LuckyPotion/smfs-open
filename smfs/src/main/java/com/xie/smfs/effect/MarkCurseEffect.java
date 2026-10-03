@@ -6,17 +6,17 @@ import net.minecraft.entity.effect.StatusEffectCategory;
 
 public class MarkCurseEffect extends StatusEffect implements ICurseEffect {
    public MarkCurseEffect() {
-      super(StatusEffectCategory.field_18272, 16766720);
+      super(StatusEffectCategory.HARMFUL, 16766720);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
    }
 
-   public String method_5567() {
+   public String getTranslationKey() {
       return "effect.smfs.mark_curse";
    }
 }

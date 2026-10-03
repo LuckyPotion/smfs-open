@@ -14,7 +14,7 @@ import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 
 public class RustyOldBroadswordRenderer extends GeoItemRenderer<RustyOldBroadswordItem> implements RenderProvider {
-   private ModelTransformationMode currentMode = ModelTransformationMode.field_4315;
+   private ModelTransformationMode currentMode = ModelTransformationMode.NONE;
 
    public RustyOldBroadswordRenderer() {
       super(new RustyOldBroadswordModel());
@@ -46,19 +46,19 @@ public class RustyOldBroadswordRenderer extends GeoItemRenderer<RustyOldBroadswo
    ) {
       super.preRender(matrices, animatable, model, vertexConsumers, buffer, isReRender, tickDelta, light, overlay, red, green, blue, alpha);
       if (!isReRender) {
-         matrices.method_22907(RotationAxis.field_40716.rotationDegrees(180.0F));
-         if (this.currentMode == ModelTransformationMode.field_4321 || this.currentMode == ModelTransformationMode.field_4322) {
-            matrices.method_22907(RotationAxis.field_40716.rotationDegrees(180.0F));
-            matrices.method_22905(1.0F, 1.0F, 1.0F);
-         } else if (this.currentMode != ModelTransformationMode.field_4323 && this.currentMode != ModelTransformationMode.field_4320) {
-            matrices.method_22907(RotationAxis.field_40714.rotationDegrees(30.0F));
-            matrices.method_22907(RotationAxis.field_40716.rotationDegrees(225.0F));
-            matrices.method_22904(0.0, 0.2, 0.0);
-            matrices.method_22905(0.75F, 0.75F, 0.75F);
+         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
+         if (this.currentMode == ModelTransformationMode.FIRST_PERSON_LEFT_HAND || this.currentMode == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND) {
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
+            matrices.scale(1.0F, 1.0F, 1.0F);
+         } else if (this.currentMode != ModelTransformationMode.THIRD_PERSON_LEFT_HAND && this.currentMode != ModelTransformationMode.THIRD_PERSON_RIGHT_HAND) {
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(30.0F));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(225.0F));
+            matrices.translate(0.0, 0.2, 0.0);
+            matrices.scale(0.75F, 0.75F, 0.75F);
          } else {
-            matrices.method_22907(RotationAxis.field_40714.rotationDegrees(15.0F));
-            matrices.method_22907(RotationAxis.field_40716.rotationDegrees(180.0F));
-            matrices.method_22905(1.0F, 1.0F, 1.0F);
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(15.0F));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
+            matrices.scale(1.0F, 1.0F, 1.0F);
          }
       }
    }

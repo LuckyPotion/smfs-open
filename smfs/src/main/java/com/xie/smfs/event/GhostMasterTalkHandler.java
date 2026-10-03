@@ -37,22 +37,22 @@ public class GhostMasterTalkHandler implements UseEntityCallback {
          customDialogues = caoYanHua.getGreetingDialogues();
       } else {
          if (!(entity instanceof LiuXiaoYuEntity liuXiaoYu)) {
-            return ActionResult.field_5811;
+            return ActionResult.PASS;
          }
 
          customDialogues = liuXiaoYu.getGreetingDialogues();
       }
 
-      if (world.method_8608()) {
-         return ActionResult.field_5811;
-      } else if (!player.method_5998(hand).method_7960()) {
-         return ActionResult.field_5811;
+      if (world.isClient()) {
+         return ActionResult.PASS;
+      } else if (!player.getStackInHand(hand).isEmpty()) {
+         return ActionResult.PASS;
       } else if (this.isHoldingCoffinNail(player)) {
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       } else if (ghostMaster != null && ghostMaster.isSuppressed()) {
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       } else if (!(player instanceof ServerPlayerEntity serverPlayer)) {
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       } else {
          boolean var19 = false;
          boolean useStoryMode = ghostMaster != null
@@ -79,18 +79,18 @@ public class GhostMasterTalkHandler implements UseEntityCallback {
          List<String> dialogueList = dialogues != null ? Arrays.asList(dialogues) : List.of();
          List<String> storyDialogues = useStoryMode && ghostMaster != null ? ghostMaster.getStoryDialogues() : null;
          PacketByteBuf buf = PacketByteBufs.create();
-         buf.writeInt(entity.method_5628());
+         buf.writeInt(entity.getId());
          buf.writeInt(dialogueList.size());
 
          for (String dialogue : dialogueList) {
-            buf.method_10814(dialogue);
+            buf.writeString(dialogue);
          }
 
          if (storyDialogues != null) {
             buf.writeInt(storyDialogues.size());
 
             for (String dialogue : storyDialogues) {
-               buf.method_10814(dialogue);
+               buf.writeString(dialogue);
             }
          } else {
             buf.writeInt(0);
@@ -98,17 +98,17 @@ public class GhostMasterTalkHandler implements UseEntityCallback {
 
          buf.writeBoolean(var19);
          ServerPlayNetworking.send(serverPlayer, OpenGhostHunterTalkScreenS2CPacket.ID, buf);
-         return ActionResult.field_5812;
+         return ActionResult.SUCCESS;
       }
    }
 
    private boolean isHoldingCoffinNail(PlayerEntity player) {
-      ItemStack mainHandStack = player.method_6047();
-      if (!mainHandStack.method_7960() && mainHandStack.method_7909() == ModItems.COFFIN_NAIL) {
+      ItemStack mainHandStack = player.getMainHandStack();
+      if (!mainHandStack.isEmpty() && mainHandStack.getItem() == ModItems.COFFIN_NAIL) {
          return true;
       }
 
-      ItemStack offHandStack = player.method_6079();
-      return !offHandStack.method_7960() && offHandStack.method_7909() == ModItems.COFFIN_NAIL;
+      ItemStack offHandStack = player.getOffHandStack();
+      return !offHandStack.isEmpty() && offHandStack.getItem() == ModItems.COFFIN_NAIL;
    }
 }

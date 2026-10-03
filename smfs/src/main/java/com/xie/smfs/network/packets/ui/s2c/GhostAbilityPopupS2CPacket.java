@@ -16,7 +16,7 @@ public class GhostAbilityPopupS2CPacket {
          ID,
          (client, handler, buf, responseSender) -> {
             try {
-               NbtCompound ghostData = buf.method_10798();
+               NbtCompound ghostData = buf.readNbt();
                if (ghostData == null) {
                   System.err.println("[SMFS] GhostAbilityPopupS2CPacket: Received null ghost data");
                   return;
@@ -25,14 +25,14 @@ public class GhostAbilityPopupS2CPacket {
                client.execute(
                   () -> {
                      try {
-                        if (!ghostData.method_10545("Type")) {
+                        if (!ghostData.contains("Type")) {
                            System.err.println("[SMFS] GhostAbilityPopupS2CPacket: Missing 'Type' field in ghost data");
                            return;
                         }
 
-                        String ghostType = ghostData.method_10558("Type");
-                        String ghostName = ghostData.method_10545("CustomName")
-                           ? Serializer.method_10877(ghostData.method_10558("CustomName")).getString()
+                        String ghostType = ghostData.getString("Type");
+                        String ghostName = ghostData.contains("CustomName")
+                           ? Serializer.fromJson(ghostData.getString("CustomName")).getString()
                            : GhostUtils.getGhostDisplayName(ghostType);
                         List<String> abilityDescriptions = GhostUtils.getGhostAbilityDescriptions(ghostType);
                         GhostAbilityPopupScreen.show(ghostName, abilityDescriptions);

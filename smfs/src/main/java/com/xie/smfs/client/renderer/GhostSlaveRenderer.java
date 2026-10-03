@@ -20,7 +20,7 @@ public class GhostSlaveRenderer extends BipedEntityRenderer<GhostSlaveEntity, Bi
    }
 
    private static ModelPart getModelPart(Context ctx) {
-      return ctx.method_32167(EntityModelLayers.field_27577);
+      return ctx.getPart(EntityModelLayers.PLAYER);
    }
 
    public Identifier getTexture(GhostSlaveEntity entity) {
@@ -29,12 +29,12 @@ public class GhostSlaveRenderer extends BipedEntityRenderer<GhostSlaveEntity, Bi
 
    public void render(GhostSlaveEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
       if (entity.isVisible()) {
-         matrices.method_22903();
-         matrices.method_22905(1.2F, 1.2F, 1.2F);
+         matrices.push();
+         matrices.scale(1.2F, 1.2F, 1.2F);
          Identifier texture = this.getTexture(entity);
-         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.method_23580(texture));
-         super.method_4072(entity, yaw, tickDelta, matrices, vertexConsumers, light);
-         matrices.method_22909();
+         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(texture));
+         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+         matrices.pop();
       }
    }
 }

@@ -7,16 +7,16 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class StarvingGhostCurseEffect extends StatusEffect implements ICurseEffect {
    public StarvingGhostCurseEffect() {
-      super(StatusEffectCategory.field_18272, 6684672);
+      super(StatusEffectCategory.HARMFUL, 6684672);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      if (entity instanceof PlayerEntity player && !player.method_29504()) {
-         player.method_7322(0.025F);
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      if (entity instanceof PlayerEntity player && !player.isDead()) {
+         player.addExhaustion(0.025F);
       }
    }
 }

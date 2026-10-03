@@ -31,23 +31,18 @@ public class DeathSightGhostEntity extends GhostEntity {
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
       if (!this.isSuppressed() && !this.isDeadlocked() && !RedGhostCandleItem.isHoldingCandle(player)) {
-         double distance = this.method_5858(player);
+         double distance = this.squaredDistanceTo(player);
          if (distance > 400.0) {
             return false;
          }
 
-         Vec3d playerLookVec = player.method_5828(1.0F).method_1029();
-         Vec3d toGhostVec = new Vec3d(
-               this.method_23317() - player.method_23317(), this.method_23320() - player.method_23320(), this.method_23321() - player.method_23321()
-            )
-            .method_1029();
-         double dot = playerLookVec.method_1026(toGhostVec);
+         Vec3d playerLookVec = player.getRotationVec(1.0F).normalize();
+         Vec3d toGhostVec = new Vec3d(this.getX() - player.getX(), this.getEyeY() - player.getEyeY(), this.getZ() - player.getZ()).normalize();
+         double dot = playerLookVec.dotProduct(toGhostVec);
          return dot < 0.5
             ? false
-            : this.method_37908()
-                  .method_17742(new RaycastContext(player.method_33571(), this.method_33571(), ShapeType.field_17558, FluidHandling.field_1348, this))
-                  .method_17783()
-               == Type.field_1333;
+            : this.getWorld().raycast(new RaycastContext(player.getEyePos(), this.getEyePos(), ShapeType.COLLIDER, FluidHandling.NONE, this)).getType()
+               == Type.MISS;
       } else {
          return false;
       }
@@ -58,18 +53,18 @@ public class DeathSightGhostEntity extends GhostEntity {
       if (!this.isDeadlocked()) {
          if (this.attackCooldown <= 0) {
             this.attackCooldown = 20;
-            DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+            DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
             PlayerEvents.handleSpiritDamage(player, this.getSpiritualDamage(), this.getSpiritualDamage(), damageSource);
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5919, 60, 0, false, false, true));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 60, 0, false, false, true));
          }
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236 && !this.isDeadlocked() && !this.isSuppressed()) {
-         this.method_37908().method_18456().stream().filter(this::shouldAttackPlayer).forEach(this::executeAttack);
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient && !this.isDeadlocked() && !this.isSuppressed()) {
+         this.getWorld().getPlayers().stream().filter(this::shouldAttackPlayer).forEach(this::executeAttack);
       }
    }
 }

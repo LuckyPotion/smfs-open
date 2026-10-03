@@ -25,17 +25,17 @@ public class JumpGhostEntity extends GhostEntity {
    private final Map<UUID, Boolean> playerPreviousOnGround = new HashMap<>();
 
    public static Builder createLivingAttributes() {
-      return LivingEntity.method_26827()
-         .method_26868(EntityAttributes.field_23716, 100000.0)
-         .method_26868(EntityAttributes.field_23719, 0.25)
-         .method_26868(EntityAttributes.field_23721, 5.0);
+      return LivingEntity.createLivingAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 100000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5.0);
    }
 
    public JumpGhostEntity(EntityType<? extends GhostEntity> entityType, World world) {
       super(entityType, world, true, 0, 32.0, 'C', 700, 70, 35, 0.15F);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23716)).method_6192(100000.0);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(0.25);
-      Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(5.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(100000.0);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.25);
+      Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(5.0);
       this.attackCooldown = 20;
    }
 
@@ -45,9 +45,9 @@ public class JumpGhostEntity extends GhostEntity {
          this.jumpCooldown--;
          return false;
       } else {
-         UUID playerId = player.method_5667();
-         boolean isOnGround = player.method_24828();
-         double yVelocity = player.method_18798().field_1351;
+         UUID playerId = player.getUuid();
+         boolean isOnGround = player.isOnGround();
+         double yVelocity = player.getVelocity().y;
          boolean wasOnGround = this.playerPreviousOnGround.getOrDefault(playerId, true);
          boolean justJumped = wasOnGround && !isOnGround && yVelocity > 0.1;
          this.playerPreviousOnGround.put(playerId, isOnGround);
@@ -61,13 +61,13 @@ public class JumpGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (this.field_6012 % 100 == 0) {
-         int playerCount = this.method_37908().method_18456().size();
+   public void tick() {
+      super.tick();
+      if (this.age % 100 == 0) {
+         int playerCount = this.getWorld().getPlayers().size();
          int inRangeCount = 0;
 
-         for (PlayerEntity player : this.method_37908().method_18456()) {
+         for (PlayerEntity player : this.getWorld().getPlayers()) {
             if (this.isInDetectionRange(player)) {
                inRangeCount++;
             }
@@ -79,8 +79,8 @@ public class JumpGhostEntity extends GhostEntity {
          int initialSize = this.playerPreviousOnGround.size();
          this.checkInterval = 0;
          this.playerPreviousOnGround.keySet().removeIf(playerId -> {
-            PlayerEntity playerx = this.method_37908().method_18470(playerId);
-            boolean shouldRemove = playerx == null || !playerx.method_5805() || !this.isInDetectionRange(playerx);
+            PlayerEntity playerx = this.getWorld().getPlayerByUuid(playerId);
+            boolean shouldRemove = playerx == null || !playerx.isAlive() || !this.isInDetectionRange(playerx);
             if (shouldRemove) {
             }
 
@@ -90,7 +90,7 @@ public class JumpGhostEntity extends GhostEntity {
    }
 
    private boolean isInDetectionRange(PlayerEntity player) {
-      double distanceSquared = this.method_5858(player);
+      double distanceSquared = this.squaredDistanceTo(player);
       return distanceSquared <= 1024.0;
    }
 }

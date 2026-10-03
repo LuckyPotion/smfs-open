@@ -19,44 +19,44 @@ public class KnockingCurseEffect extends StatusEffect implements ICurseEffect {
    private static final Random random = new Random();
 
    public KnockingCurseEffect() {
-      super(StatusEffectCategory.field_18272, 4860970);
+      super(StatusEffectCategory.HARMFUL, 4860970);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return duration % 20 == 0 || duration == 1;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      if (entity instanceof PlayerEntity player && !player.method_37908().field_9236) {
-         StatusEffectInstance effect = player.method_6112(ModEffects.KNOCKING_CURSE);
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      if (entity instanceof PlayerEntity player && !player.getWorld().isClient) {
+         StatusEffectInstance effect = player.getStatusEffect(ModEffects.KNOCKING_CURSE);
          if (effect == null) {
             return;
          }
 
-         int duration = effect.method_5584();
+         int duration = effect.getDuration();
          if (duration == 1) {
-            player.method_6016(ModEffects.KNOCKING_CURSE);
-            player.method_6092(new StatusEffectInstance(ModEffects.GHOST_KNOCK, 36000, 0));
-            spawnQiaomenGhost(player.method_37908(), player.method_24515());
+            player.removeStatusEffect(ModEffects.KNOCKING_CURSE);
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.GHOST_KNOCK, 36000, 0));
+            spawnQiaomenGhost(player.getWorld(), player.getBlockPos());
          }
       }
    }
 
    private static void spawnQiaomenGhost(World world, BlockPos pos) {
-      if (!world.field_9236) {
-         boolean hasNearbyQiaomenGhost = world.method_8390(QiaomenGhostEntity.class, new Box(pos).method_1014(50.0), entity -> true)
+      if (!world.isClient) {
+         boolean hasNearbyQiaomenGhost = world.getEntitiesByClass(QiaomenGhostEntity.class, new Box(pos).expand(50.0), entity -> true)
             .stream()
-            .anyMatch(entity -> entity.method_5864() == ModEntities.QIAOMEN_GHOST);
+            .anyMatch(entity -> entity.getType() == ModEntities.QIAOMEN_GHOST);
          if (!hasNearbyQiaomenGhost) {
             QiaomenGhostEntity ghost = new QiaomenGhostEntity(ModEntities.QIAOMEN_GHOST, world);
-            ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264(), pos.method_10260() + 0.5, 0.0F, 0.0F);
-            ghost.method_5971();
-            world.method_8649(ghost);
+            ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0.0F, 0.0F);
+            ghost.setPersistent();
+            world.spawnEntity(ghost);
          }
       }
    }
 
-   public String method_5567() {
+   public String getTranslationKey() {
       return "effect.smfs.knocking_curse";
    }
 }

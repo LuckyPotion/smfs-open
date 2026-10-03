@@ -22,48 +22,48 @@ public class MysteryInfoItem extends Item {
       super(settings);
    }
 
-   public Text method_7848() {
-      return Text.method_43471("item.smfs.mystery_info");
+   public Text getName() {
+      return Text.translatable("item.smfs.mystery_info");
    }
 
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43471("item.smfs.mystery_info");
+   public Text getName(ItemStack stack) {
+      return Text.translatable("item.smfs.mystery_info");
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (!world.field_9236) {
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (!world.isClient) {
          String boneTreeCoords = this.getBoneTreeCoordinates(user);
-         user.method_7353(Text.method_43469("message.smfs.mystery_info.bone_tree_location", new Object[]{boneTreeCoords}), false);
-         if (boneTreeCoords.equals(Text.method_43471("message.smfs.mystery_info.no_bone_tree_found").getString())) {
-            return TypedActionResult.method_22427(stack);
+         user.sendMessage(Text.translatable("message.smfs.mystery_info.bone_tree_location", new Object[]{boneTreeCoords}), false);
+         if (boneTreeCoords.equals(Text.translatable("message.smfs.mystery_info.no_bone_tree_found").getString())) {
+            return TypedActionResult.success(stack);
          }
 
-         stack.method_7934(1);
-         return TypedActionResult.method_22427(stack);
+         stack.decrement(1);
+         return TypedActionResult.success(stack);
       } else {
          ClientModNetwork.sendToServer(new RequestBoneTreeCoordinatesC2SPacket());
-         return TypedActionResult.method_22427(stack);
+         return TypedActionResult.success(stack);
       }
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43471("tooltip.smfs.mystery_info.coordinates"));
-      tooltip.add(Text.method_43471("tooltip.smfs.mystery_info.consumable"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.translatable("tooltip.smfs.mystery_info.coordinates"));
+      tooltip.add(Text.translatable("tooltip.smfs.mystery_info.consumable"));
    }
 
    private String getBoneTreeCoordinates(PlayerEntity player) {
-      if (player.method_37908().method_8608()) {
-         return Text.method_43471("message.smfs.mystery_info.getting_coordinates").getString();
+      if (player.getWorld().isClient()) {
+         return Text.translatable("message.smfs.mystery_info.getting_coordinates").getString();
       }
 
       if (player instanceof ServerPlayerEntity serverPlayer) {
          BlockPos boneTreePos = StructureCoordinatesS2CPacket.findNearestStructure(serverPlayer, "bone_tree");
          if (boneTreePos != null) {
-            return "X: " + boneTreePos.method_10263() + ", Z: " + boneTreePos.method_10260();
+            return "X: " + boneTreePos.getX() + ", Z: " + boneTreePos.getZ();
          }
       }
 
-      return Text.method_43471("message.smfs.mystery_info.no_bone_tree_found").getString();
+      return Text.translatable("message.smfs.mystery_info.no_bone_tree_found").getString();
    }
 }

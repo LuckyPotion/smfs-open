@@ -40,23 +40,23 @@ public class GhostPressureEntity extends GhostEntity {
    }
 
    private void initPressureAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(25.0);
+         healthAttribute.setBaseValue(25.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.45);
+         speedAttribute.setBaseValue(0.45);
       }
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
-      this.field_6201.method_6277(1, new MeleeAttackGoal(this, 1.5, true));
-      this.field_6185
-         .method_6277(
+   protected void initGoals() {
+      super.initGoals();
+      this.goalSelector.add(1, new MeleeAttackGoal(this, 1.5, true));
+      this.targetSelector
+         .add(
             0,
             new ActiveTargetGoal(
                this,
@@ -69,8 +69,8 @@ public class GhostPressureEntity extends GhostEntity {
                      if (!RedGhostCandleItem.isHoldingCandle(player)
                         && !CoffinEffectManager.isPlayerInGoldCoffin(player)
                         && !GoldBlockProtectionManager.isPlayerInGoldBlockShelter(player)
-                        && !player.method_6059(ModEffects.SPIRIT_IMMUNITY)) {
-                        double distanceSq = this.method_5858(player);
+                        && !player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)) {
+                        double distanceSq = this.squaredDistanceTo(player);
                         double trackRange = 32.0;
                         return distanceSq <= trackRange * trackRange;
                      } else {
@@ -85,17 +85,17 @@ public class GhostPressureEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608() && this.method_5805()) {
-         LivingEntity target = this.method_5968();
-         if (target != null && target.method_5805() && !this.hasStartedChase) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient() && this.isAlive()) {
+         LivingEntity target = this.getTarget();
+         if (target != null && target.isAlive() && !this.hasStartedChase) {
             this.hasStartedChase = true;
-            this.method_5942().method_6344(1.5);
+            this.getNavigation().setSpeed(1.5);
          }
 
-         if (this.hasStartedChase && target != null && target.method_5805()) {
-            double distance = this.method_5739(target);
+         if (this.hasStartedChase && target != null && target.isAlive()) {
+            double distance = this.distanceTo(target);
             if (target instanceof PlayerEntity player) {
                boolean var5 = WhiteGhostCandleItem.isHoldingWhiteCandle(player);
             }
@@ -103,33 +103,33 @@ public class GhostPressureEntity extends GhostEntity {
             if (distance < 3.0) {
                this.hasStartedChase = false;
                if (target instanceof PlayerEntity player) {
-                  player.method_6092(GhostPressureEffect.createEffect(this, 100, 1));
-                  player.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 100, 5));
-                  player.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 100, 3));
-                  player.method_6092(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 100, 0));
+                  player.addStatusEffect(GhostPressureEffect.createEffect(this, 100, 1));
+                  player.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 100, 5));
+                  player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 3));
+                  player.addStatusEffect(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 100, 0));
                }
 
                this.setVisible(false);
-               this.method_5980(null);
+               this.setTarget(null);
                this.invisibleTicks = 100;
                return;
             }
 
-            double distanceSq = this.method_5858(target);
+            double distanceSq = this.squaredDistanceTo(target);
             if (distanceSq > 1024.0) {
                this.hasStartedChase = false;
-               this.method_5980(null);
+               this.setTarget(null);
             }
          }
 
-         if (this.hasStartedChase && (target == null || !target.method_5805())) {
+         if (this.hasStartedChase && (target == null || !target.isAlive())) {
             this.hasStartedChase = false;
-            if (target != null && !target.method_5805()) {
+            if (target != null && !target.isAlive()) {
                this.setVisible(true);
             }
          }
 
-         if (!this.isVisible() && target != null && !target.method_5805()) {
+         if (!this.isVisible() && target != null && !target.isAlive()) {
             this.setVisible(true);
             this.hasStartedChase = false;
             this.invisibleTicks = 0;
@@ -141,30 +141,30 @@ public class GhostPressureEntity extends GhostEntity {
                this.setVisible(true);
                this.invisibleTicks = 0;
                this.hasStartedChase = false;
-               List<PlayerEntity> nearbyPlayers = this.method_37908()
-                  .method_8390(
+               List<PlayerEntity> nearbyPlayers = this.getWorld()
+                  .getEntitiesByClass(
                      PlayerEntity.class,
-                     this.method_5829().method_1014(32.0),
+                     this.getBoundingBox().expand(32.0),
                      playerx -> !RedGhostCandleItem.isHoldingCandle(playerx)
                         && !CoffinEffectManager.isPlayerInGoldCoffin(playerx)
                         && !GoldBlockProtectionManager.isPlayerInGoldBlockShelter(playerx)
-                        && !playerx.method_6059(ModEffects.SPIRIT_IMMUNITY)
+                        && !playerx.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)
                   );
                if (!nearbyPlayers.isEmpty()) {
                   PlayerEntity nearestPlayer = nearbyPlayers.get(0);
-                  double minDistance = this.method_5739(nearestPlayer);
+                  double minDistance = this.distanceTo(nearestPlayer);
 
                   for (PlayerEntity player : nearbyPlayers) {
-                     double distance = this.method_5739(player);
+                     double distance = this.distanceTo(player);
                      if (distance < minDistance) {
                         minDistance = distance;
                         nearestPlayer = player;
                      }
                   }
 
-                  this.method_5980(nearestPlayer);
+                  this.setTarget(nearestPlayer);
                   this.hasStartedChase = true;
-                  this.method_5942().method_6344(1.5);
+                  this.getNavigation().setSpeed(1.5);
                }
             }
          }

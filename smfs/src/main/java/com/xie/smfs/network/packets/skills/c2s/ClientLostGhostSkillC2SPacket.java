@@ -44,22 +44,22 @@ public class ClientLostGhostSkillC2SPacket {
       LivingEntity bestTarget = TargetingUtil.findEntityInLookDirection(player, 4.0, 0.5);
       if (bestTarget != null) {
          GhostDomainManager.executeSkillSpiritAttack(player, bestTarget);
-         LOGGER.debug("玩家 {} 使用遗忘鬼J键技能攻击目标 {}，距离: {}", player.method_5477().getString(), bestTarget.method_5477().getString(), player.method_5739(bestTarget));
+         LOGGER.debug("玩家 {} 使用遗忘鬼J键技能攻击目标 {}，距离: {}", player.getName().getString(), bestTarget.getName().getString(), player.distanceTo(bestTarget));
          spawnSkillParticles(player);
       } else {
-         player.method_7353(Text.method_43470("§c遗忘鬼J键：准星位置没有可攻击的目标"), true);
+         player.sendMessage(Text.literal("§c遗忘鬼J键：准星位置没有可攻击的目标"), true);
       }
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_22246,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            player.method_23318() + world.field_9229.method_43058() * 2.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.SOUL_FIRE_FLAME,
+            player.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            player.getY() + world.random.nextDouble() * 2.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0

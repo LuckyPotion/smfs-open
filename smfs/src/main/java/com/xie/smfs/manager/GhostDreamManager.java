@@ -31,24 +31,24 @@ public class GhostDreamManager {
    private static final long REAL_TIME_15MIN = 900000L;
 
    public static boolean hasTalkedToYangXiao(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       return data != null && data.hasTalkedToYangXiao;
    }
 
    public static boolean isNaturalTrigger(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       return data != null && data.isNaturalTrigger;
    }
 
    public static void markTalkedToYangXiao(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       if (data != null) {
          data.hasTalkedToYangXiao = true;
       }
    }
 
    public static void resetYangXiaoTalkStatus(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       if (data != null) {
          data.hasTalkedToYangXiao = false;
       }
@@ -59,36 +59,29 @@ public class GhostDreamManager {
    }
 
    public static void enterGhostDream(ServerPlayerEntity player, boolean isNaturalTrigger) {
-      Vec3d originalPos = player.method_19538();
-      ServerWorld originalWorld = player.method_51469();
+      Vec3d originalPos = player.getPos();
+      ServerWorld originalWorld = player.getServerWorld();
       GhostDreamManager.GhostDreamPlayerData data = new GhostDreamManager.GhostDreamPlayerData(originalPos, originalWorld, isNaturalTrigger);
-      PLAYER_DATA_MAP.put(player.method_5667(), data);
+      PLAYER_DATA_MAP.put(player.getUuid(), data);
       resetYangXiaoTalkStatus(player);
-      ServerWorld ghostDreamWorld = player.method_5682().method_3847(Smfs.GHOST_DREAM_DIMENSION);
+      ServerWorld ghostDreamWorld = player.getServer().getWorld(Smfs.GHOST_DREAM_DIMENSION);
       if (ghostDreamWorld != null) {
-         int x = (int)(player.method_23317() + (player.method_6051().method_43058() - 0.5) * 100.0);
-         int z = (int)(player.method_23321() + (player.method_6051().method_43058() - 0.5) * 100.0);
-         int minY = ghostDreamWorld.method_31607();
-         int maxY = ghostDreamWorld.method_31600();
+         int x = (int)(player.getX() + (player.getRandom().nextDouble() - 0.5) * 100.0);
+         int z = (int)(player.getZ() + (player.getRandom().nextDouble() - 0.5) * 100.0);
+         int minY = ghostDreamWorld.getBottomY();
+         int maxY = ghostDreamWorld.getTopY();
          BlockPos grassPos = findGrassBlockPosition(ghostDreamWorld, x, z, minY, maxY);
          BlockPos targetPos;
          if (grassPos != null) {
             targetPos = createSafePlatform(ghostDreamWorld, grassPos);
          } else {
-            int surfaceY = ghostDreamWorld.method_8624(Type.field_13197, x, z);
+            int surfaceY = ghostDreamWorld.getTopY(Type.MOTION_BLOCKING, x, z);
             targetPos = createSafePlatform(ghostDreamWorld, new BlockPos(x, surfaceY, z));
          }
 
-         player.method_14251(
-            ghostDreamWorld,
-            targetPos.method_10263() + 0.5,
-            targetPos.method_10264(),
-            targetPos.method_10260() + 0.5,
-            player.method_36454(),
-            player.method_36455()
-         );
-         player.method_7353(Text.method_43470("§c你进入了鬼梦之中...").method_27692(Formatting.field_1061), true);
-         Smfs.LOGGER.debug("玩家 {} 进入了鬼梦维度", player.method_5477().getString());
+         player.teleport(ghostDreamWorld, targetPos.getX() + 0.5, targetPos.getY(), targetPos.getZ() + 0.5, player.getYaw(), player.getPitch());
+         player.sendMessage(Text.literal("§c你进入了鬼梦之中...").formatted(Formatting.RED), true);
+         Smfs.LOGGER.debug("玩家 {} 进入了鬼梦维度", player.getName().getString());
          ModNetwork.sendGhostDreamTimeToClient(data.remainingGameTime, player);
       }
    }
@@ -102,7 +95,7 @@ public class GhostDreamManager {
          long elapsedRealTime = currentTime - data.startTime;
          double progress = elapsedRealTime / 900000.0;
          data.remainingGameTime = 12000L - (long)(progress * 12000.0);
-         ServerPlayerEntity player = server.method_3760().method_14602(playerId);
+         ServerPlayerEntity player = server.getPlayerManager().getPlayer(playerId);
          if (player != null) {
             ModNetwork.sendGhostDreamTimeToClient(data.remainingGameTime, player);
          }
@@ -122,8 +115,8 @@ public class GhostDreamManager {
          BlockPos pos = new BlockPos(x, y, z);
          if (isGrassBlock(world, pos)
             && y + 2 < maxY
-            && world.method_8320(new BlockPos(x, y + 1, z)).method_26215()
-            && world.method_8320(new BlockPos(x, y + 2, z)).method_26215()) {
+            && world.getBlockState(new BlockPos(x, y + 1, z)).isAir()
+            && world.getBlockState(new BlockPos(x, y + 2, z)).isAir()) {
             return pos;
          }
       }
@@ -139,8 +132,8 @@ public class GhostDreamManager {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -151,8 +144,8 @@ public class GhostDreamManager {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -166,8 +159,8 @@ public class GhostDreamManager {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -178,8 +171,8 @@ public class GhostDreamManager {
                BlockPos pos = new BlockPos(newX, y, newZ);
                if (isGrassBlock(world, pos)
                   && y + 2 < maxY
-                  && world.method_8320(new BlockPos(newX, y + 1, newZ)).method_26215()
-                  && world.method_8320(new BlockPos(newX, y + 2, newZ)).method_26215()) {
+                  && world.getBlockState(new BlockPos(newX, y + 1, newZ)).isAir()
+                  && world.getBlockState(new BlockPos(newX, y + 2, newZ)).isAir()) {
                   return pos;
                }
             }
@@ -192,54 +185,47 @@ public class GhostDreamManager {
    private static BlockPos createSafePlatform(ServerWorld world, BlockPos pos) {
       for (int x = -1; x <= 1; x++) {
          for (int z = -1; z <= 1; z++) {
-            BlockPos currentPos = pos.method_10069(x, 0, z);
-            world.method_8501(currentPos, Blocks.field_10540.method_9564());
+            BlockPos currentPos = pos.add(x, 0, z);
+            world.setBlockState(currentPos, Blocks.OBSIDIAN.getDefaultState());
          }
       }
 
       for (int y = 1; y <= 2; y++) {
          for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-               BlockPos airPos = pos.method_10069(x, y, z);
-               world.method_8501(airPos, Blocks.field_10124.method_9564());
+               BlockPos airPos = pos.add(x, y, z);
+               world.setBlockState(airPos, Blocks.AIR.getDefaultState());
             }
          }
       }
 
-      return new BlockPos(pos.method_10263(), pos.method_10264() + 1, pos.method_10260());
+      return new BlockPos(pos.getX(), pos.getY() + 1, pos.getZ());
    }
 
    private static boolean isGrassBlock(ServerWorld world, BlockPos pos) {
-      Block block = world.method_8320(pos).method_26204();
+      Block block = world.getBlockState(pos).getBlock();
       return block instanceof GrassBlock;
    }
 
    public static void exitGhostDream(ServerPlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.remove(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.remove(player.getUuid());
       if (data != null) {
-         ServerWorld originalWorld = player.method_5682().method_3847(data.originalWorldKey.toRegistryKey());
+         ServerWorld originalWorld = player.getServer().getWorld(data.originalWorldKey.toRegistryKey());
          if (originalWorld != null) {
-            player.method_14251(
-               originalWorld,
-               data.originalPos.field_1352,
-               data.originalPos.field_1351,
-               data.originalPos.field_1350,
-               player.method_36454(),
-               player.method_36455()
-            );
-            player.method_7353(Text.method_43470("§a你从鬼梦中醒来...").method_27692(Formatting.field_1060), true);
-            Smfs.LOGGER.debug("玩家 {} 从鬼梦维度返回", player.method_5477().getString());
+            player.teleport(originalWorld, data.originalPos.x, data.originalPos.y, data.originalPos.z, player.getYaw(), player.getPitch());
+            player.sendMessage(Text.literal("§a你从鬼梦中醒来...").formatted(Formatting.GREEN), true);
+            Smfs.LOGGER.debug("玩家 {} 从鬼梦维度返回", player.getName().getString());
             if (data.isNaturalTrigger) {
                if (data.hasTalkedToYangXiao) {
                   ItemStack ghostDreamItem = new ItemStack(ModItems.GHOST_DREAM);
-                  if (!player.method_31548().method_7394(ghostDreamItem)) {
-                     player.method_7328(ghostDreamItem, false);
+                  if (!player.getInventory().insertStack(ghostDreamItem)) {
+                     player.dropItem(ghostDreamItem, false);
                   }
 
-                  player.method_7353(Text.method_43470("§a你获得了鬼梦驾驭物品！").method_27692(Formatting.field_1060), true);
-                  Smfs.LOGGER.debug("玩家 {} 与杨孝对话过，获得了鬼梦驾驭物品", player.method_5477().getString());
+                  player.sendMessage(Text.literal("§a你获得了鬼梦驾驭物品！").formatted(Formatting.GREEN), true);
+                  Smfs.LOGGER.debug("玩家 {} 与杨孝对话过，获得了鬼梦驾驭物品", player.getName().getString());
                } else {
-                  Smfs.LOGGER.debug("玩家 {} 未与杨孝对话，无法驾驭鬼梦", player.method_5477().getString());
+                  Smfs.LOGGER.debug("玩家 {} 未与杨孝对话，无法驾驭鬼梦", player.getName().getString());
                }
             }
 
@@ -253,15 +239,15 @@ public class GhostDreamManager {
    }
 
    public static boolean isInGhostDream(PlayerEntity player) {
-      return PLAYER_DATA_MAP.containsKey(player.method_5667());
+      return PLAYER_DATA_MAP.containsKey(player.getUuid());
    }
 
    public static GhostDreamManager.GhostDreamPlayerData getPlayerData(PlayerEntity player) {
-      return PLAYER_DATA_MAP.get(player.method_5667());
+      return PLAYER_DATA_MAP.get(player.getUuid());
    }
 
    public static int getRemainingMinutes(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       if (data == null) {
          return 0;
       }
@@ -271,7 +257,7 @@ public class GhostDreamManager {
    }
 
    public static String getFormattedTime(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       if (data == null) {
          return "08:00";
       }
@@ -289,7 +275,7 @@ public class GhostDreamManager {
    }
 
    public static long getRemainingGameTime(PlayerEntity player) {
-      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.method_5667());
+      GhostDreamManager.GhostDreamPlayerData data = PLAYER_DATA_MAP.get(player.getUuid());
       return data == null ? 0L : data.remainingGameTime;
    }
 
@@ -298,23 +284,23 @@ public class GhostDreamManager {
    }
 
    public static void onPlayerDisconnect(ServerPlayerEntity player) {
-      PLAYER_DATA_MAP.remove(player.method_5667());
+      PLAYER_DATA_MAP.remove(player.getUuid());
       ModNetwork.sendGhostDreamTimeToClient(0L, player);
    }
 
    public static void onPlayerDeath(ServerPlayerEntity player) {
-      if (PLAYER_DATA_MAP.containsKey(player.method_5667())) {
-         PLAYER_DATA_MAP.remove(player.method_5667());
+      if (PLAYER_DATA_MAP.containsKey(player.getUuid())) {
+         PLAYER_DATA_MAP.remove(player.getUuid());
          ModNetwork.sendGhostDreamTimeToClient(0L, player);
-         Smfs.LOGGER.debug("玩家 {} 在鬼梦中死亡，已清空计时数据", player.method_5477().getString());
+         Smfs.LOGGER.debug("玩家 {} 在鬼梦中死亡，已清空计时数据", player.getName().getString());
       }
    }
 
    public static void checkPlayerDimension(ServerPlayerEntity player) {
-      if (isInGhostDream(player) && player.method_37908().method_27983() != Smfs.GHOST_DREAM_DIMENSION) {
-         PLAYER_DATA_MAP.remove(player.method_5667());
+      if (isInGhostDream(player) && player.getWorld().getRegistryKey() != Smfs.GHOST_DREAM_DIMENSION) {
+         PLAYER_DATA_MAP.remove(player.getUuid());
          ModNetwork.sendGhostDreamTimeToClient(0L, player);
-         Smfs.LOGGER.debug("玩家 {} 离开了鬼梦维度，已清空计时数据", player.method_5477().getString());
+         Smfs.LOGGER.debug("玩家 {} 离开了鬼梦维度，已清空计时数据", player.getName().getString());
       }
    }
 
@@ -332,7 +318,7 @@ public class GhostDreamManager {
 
       public GhostDreamPlayerData(Vec3d pos, World world, boolean isNaturalTrigger) {
          this.originalPos = pos;
-         this.originalWorldKey = new GhostDreamManager.RegistryKeyWrapper(world.method_27983());
+         this.originalWorldKey = new GhostDreamManager.RegistryKeyWrapper(world.getRegistryKey());
          this.startTime = System.currentTimeMillis();
          this.remainingGameTime = 12000L;
          this.isNaturalTrigger = isNaturalTrigger;
@@ -344,12 +330,12 @@ public class GhostDreamManager {
       private final String path;
 
       public RegistryKeyWrapper(RegistryKey<World> key) {
-         this.namespace = key.method_29177().method_12836();
-         this.path = key.method_29177().method_12832();
+         this.namespace = key.getValue().getNamespace();
+         this.path = key.getValue().getPath();
       }
 
       public RegistryKey<World> toRegistryKey() {
-         return RegistryKey.method_29179(RegistryKeys.field_41223, new Identifier(this.namespace, this.path));
+         return RegistryKey.of(RegistryKeys.WORLD, new Identifier(this.namespace, this.path));
       }
    }
 }

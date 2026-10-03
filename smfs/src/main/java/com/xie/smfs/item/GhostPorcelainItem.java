@@ -47,7 +47,7 @@ public class GhostPorcelainItem extends Item {
    private static int tickCounter = 0;
 
    public GhostPorcelainItem(Settings settings) {
-      super(settings.method_7895(1000));
+      super(settings.maxDamage(1000));
       if (!eventsRegistered) {
          this.registerEvents();
          eventsRegistered = true;
@@ -55,28 +55,24 @@ public class GhostPorcelainItem extends Item {
    }
 
    private void registerEvents() {
-      ServerLivingEntityEvents.ALLOW_DAMAGE
-         .register(
-            (AllowDamage)(entity, source, amount) -> {
-               if (entity instanceof PlayerEntity player && !entity.method_37908().method_8608()) {
-                  boolean isGhostOrSkillDamage = this.isGhostDamage(source) || GhostSkillManager.isSkillDamage(source);
-                  if (isGhostOrSkillDamage && this.checkAndResistAttack(player, source, amount)) {
-                     return false;
-                  }
-
-                  if (source.method_49708(RegistryKey.method_29179(RegistryKeys.field_42534, new Identifier("wither")))
-                     && player instanceof ServerPlayerEntity serverPlayer) {
-                     this.checkAndResistWitherEffect(serverPlayer);
-                  }
-               }
-
-               return true;
+      ServerLivingEntityEvents.ALLOW_DAMAGE.register((AllowDamage)(entity, source, amount) -> {
+         if (entity instanceof PlayerEntity player && !entity.getWorld().isClient()) {
+            boolean isGhostOrSkillDamage = this.isGhostDamage(source) || GhostSkillManager.isSkillDamage(source);
+            if (isGhostOrSkillDamage && this.checkAndResistAttack(player, source, amount)) {
+               return false;
             }
-         );
+
+            if (source.isOf(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier("wither"))) && player instanceof ServerPlayerEntity serverPlayer) {
+               this.checkAndResistWitherEffect(serverPlayer);
+            }
+         }
+
+         return true;
+      });
       ServerTickEvents.END_SERVER_TICK.register((EndTick)server -> {
          tickCounter++;
          if (tickCounter % 20 == 0) {
-            for (ServerWorld world : server.method_3738()) {
+            for (ServerWorld world : server.getWorlds()) {
                this.checkBurningGhostPorcelainItems(world);
             }
 
@@ -88,29 +84,22 @@ public class GhostPorcelainItem extends Item {
    private void checkBurningGhostPorcelainItems(ServerWorld world) {
       List<ItemEntity> itemEntities = new ArrayList<>();
 
-      for (PlayerEntity player : world.method_18456()) {
-         BlockPos playerPos = player.method_24515();
+      for (PlayerEntity player : world.getPlayers()) {
+         BlockPos playerPos = player.getBlockPos();
          Box searchBox = new Box(
-            playerPos.method_10263() - 32,
-            playerPos.method_10264() - 32,
-            playerPos.method_10260() - 32,
-            playerPos.method_10263() + 32,
-            playerPos.method_10264() + 32,
-            playerPos.method_10260() + 32
+            playerPos.getX() - 32, playerPos.getY() - 32, playerPos.getZ() - 32, playerPos.getX() + 32, playerPos.getY() + 32, playerPos.getZ() + 32
          );
          itemEntities.addAll(
-            world.method_8390(
+            world.getEntitiesByClass(
                ItemEntity.class,
                searchBox,
-               entity -> EntityPredicates.field_6154.test(entity)
-                  && entity.method_6983().method_31574(ModItems.GHOST_PORCELAIN)
-                  && isBound(entity.method_6983())
+               entity -> EntityPredicates.VALID_ENTITY.test(entity) && entity.getStack().isOf(ModItems.GHOST_PORCELAIN) && isBound(entity.getStack())
             )
          );
       }
 
       for (ItemEntity itemEntity : itemEntities) {
-         ItemStack stack = itemEntity.method_6983();
+         ItemStack stack = itemEntity.getStack();
          if (this.isItemEntityOnFire(itemEntity)) {
             this.handleGhostPorcelainBurning(stack, world, itemEntity);
          }
@@ -118,50 +107,50 @@ public class GhostPorcelainItem extends Item {
    }
 
    private boolean isItemEntityOnFire(ItemEntity itemEntity) {
-      BlockPos pos = itemEntity.method_24515();
-      World world = itemEntity.method_37908();
-      BlockState blockState = world.method_8320(pos);
-      if (blockState.method_27852(Blocks.field_10036) || blockState.method_27852(Blocks.field_22089)) {
+      BlockPos pos = itemEntity.getBlockPos();
+      World world = itemEntity.getWorld();
+      BlockState blockState = world.getBlockState(pos);
+      if (blockState.isOf(Blocks.FIRE) || blockState.isOf(Blocks.SOUL_FIRE)) {
          return true;
       }
 
-      if (itemEntity.method_5771()) {
+      if (itemEntity.isInLava()) {
          return true;
       }
 
-      if (itemEntity.method_5809()) {
+      if (itemEntity.isOnFire()) {
          return true;
       }
 
-      BlockPos belowPos = pos.method_10074();
-      BlockState belowState = world.method_8320(belowPos);
-      return belowState.method_27852(Blocks.field_10036)
-         || belowState.method_27852(Blocks.field_22089)
-         || belowState.method_27852(Blocks.field_10092)
-         || belowState.method_27852(Blocks.field_17350)
-         || belowState.method_27852(Blocks.field_23860);
+      BlockPos belowPos = pos.down();
+      BlockState belowState = world.getBlockState(belowPos);
+      return belowState.isOf(Blocks.FIRE)
+         || belowState.isOf(Blocks.SOUL_FIRE)
+         || belowState.isOf(Blocks.MAGMA_BLOCK)
+         || belowState.isOf(Blocks.CAMPFIRE)
+         || belowState.isOf(Blocks.SOUL_CAMPFIRE);
    }
 
    private void handleGhostPorcelainBurning(ItemStack stack, World world, ItemEntity itemEntity) {
-      NbtCompound nbt = stack.method_7969();
-      if (nbt != null && nbt.method_25928("BoundPlayerUUID")) {
-         UUID boundPlayerUuid = nbt.method_25926("BoundPlayerUUID");
+      NbtCompound nbt = stack.getNbt();
+      if (nbt != null && nbt.containsUuid("BoundPlayerUUID")) {
+         UUID boundPlayerUuid = nbt.getUuid("BoundPlayerUUID");
          killBoundPlayer(boundPlayerUuid, world);
-         itemEntity.method_6979(ItemStack.field_8037);
-         itemEntity.method_31472();
-         if (!world.field_9236) {
-            world.method_8396(null, itemEntity.method_24515(), SoundEvents.field_15081, SoundCategory.field_15245, 1.0F, 1.0F);
+         itemEntity.setStack(ItemStack.EMPTY);
+         itemEntity.discard();
+         if (!world.isClient) {
+            world.playSound(null, itemEntity.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F);
          }
       }
    }
 
    private boolean isGhostDamage(DamageSource source) {
-      return source.method_49708(ModDamageSources.GHOST);
+      return source.isOf(ModDamageSources.GHOST);
    }
 
    private boolean checkAndResistAttack(PlayerEntity player, DamageSource source, float amount) {
-      for (ItemStack stack : player.method_31548().field_7547) {
-         if (stack.method_31574(ModItems.GHOST_PORCELAIN) && isBound(stack) && tryResistAttack(player, amount, stack, source)) {
+      for (ItemStack stack : player.getInventory().main) {
+         if (stack.isOf(ModItems.GHOST_PORCELAIN) && isBound(stack) && tryResistAttack(player, amount, stack, source)) {
             return true;
          }
       }
@@ -170,41 +159,41 @@ public class GhostPorcelainItem extends Item {
    }
 
    private boolean checkOffHandAttack(PlayerEntity player, DamageSource source, float amount) {
-      ItemStack offHandStack = player.method_6079();
-      return offHandStack.method_31574(ModItems.GHOST_PORCELAIN) && isBound(offHandStack) ? tryResistAttack(player, amount, offHandStack, source) : false;
+      ItemStack offHandStack = player.getOffHandStack();
+      return offHandStack.isOf(ModItems.GHOST_PORCELAIN) && isBound(offHandStack) ? tryResistAttack(player, amount, offHandStack, source) : false;
    }
 
    private static void damageItem(ItemStack stack, int amount, PlayerEntity player) {
-      stack.method_7956(amount, player, p -> p.method_20236(Hand.field_5808));
-      if (stack.method_7919() >= stack.method_7936()) {
-         NbtCompound nbt = stack.method_7969();
-         if (nbt != null && nbt.method_25928("BoundPlayerUUID")) {
-            UUID boundPlayerUuid = nbt.method_25926("BoundPlayerUUID");
-            killBoundPlayer(boundPlayerUuid, player.method_37908());
+      stack.damage(amount, player, p -> p.sendToolBreakStatus(Hand.MAIN_HAND));
+      if (stack.getDamage() >= stack.getMaxDamage()) {
+         NbtCompound nbt = stack.getNbt();
+         if (nbt != null && nbt.containsUuid("BoundPlayerUUID")) {
+            UUID boundPlayerUuid = nbt.getUuid("BoundPlayerUUID");
+            killBoundPlayer(boundPlayerUuid, player.getWorld());
          }
       }
    }
 
    private void checkAndResistWitherEffect(ServerPlayerEntity player) {
-      StatusEffectInstance witherEffect = player.method_6112(StatusEffects.field_5920);
+      StatusEffectInstance witherEffect = player.getStatusEffect(StatusEffects.WITHER);
       if (witherEffect != null) {
          boolean mainInventoryResisted = false;
 
-         for (ItemStack stack : player.method_31548().field_7547) {
+         for (ItemStack stack : player.getInventory().main) {
             if (this.removeWitherEffect(player, stack)) {
                mainInventoryResisted = true;
                break;
             }
          }
 
-         if (mainInventoryResisted || this.removeWitherEffect(player, player.method_6079())) {
-            player.method_6016(StatusEffects.field_5920);
+         if (mainInventoryResisted || this.removeWitherEffect(player, player.getOffHandStack())) {
+            player.removeStatusEffect(StatusEffects.WITHER);
          }
       }
    }
 
    private boolean removeWitherEffect(ServerPlayerEntity player, ItemStack stack) {
-      if (stack.method_31574(ModItems.GHOST_PORCELAIN) && isBound(stack)) {
+      if (stack.isOf(ModItems.GHOST_PORCELAIN) && isBound(stack)) {
          damageItem(stack, 1, player);
          return true;
       } else {
@@ -212,81 +201,81 @@ public class GhostPorcelainItem extends Item {
       }
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (!world.field_9236) {
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (!world.isClient) {
          if (isBound(stack)) {
             this.unbindPlayer(stack);
-            user.method_7353(Text.method_43471("item.smfs.ghost_porcelain.unbound"), true);
-            return TypedActionResult.method_22427(stack);
+            user.sendMessage(Text.translatable("item.smfs.ghost_porcelain.unbound"), true);
+            return TypedActionResult.success(stack);
          } else {
             return this.bindPlayerIfHealthAllows(user, stack);
          }
       } else {
-         return TypedActionResult.method_22430(stack);
+         return TypedActionResult.pass(stack);
       }
    }
 
    private TypedActionResult<ItemStack> bindPlayerIfHealthAllows(PlayerEntity user, ItemStack stack) {
-      if (user.method_6032() > 4.0F) {
-         user.method_6033(user.method_6032() - 4.0F);
+      if (user.getHealth() > 4.0F) {
+         user.setHealth(user.getHealth() - 4.0F);
          this.bindPlayer(stack, user);
-         user.method_7353(Text.method_43471("item.smfs.ghost_porcelain.bound"), true);
-         return TypedActionResult.method_22427(stack);
+         user.sendMessage(Text.translatable("item.smfs.ghost_porcelain.bound"), true);
+         return TypedActionResult.success(stack);
       } else {
-         user.method_7353(Text.method_43471("item.smfs.ghost_porcelain.not_enough_health"), true);
-         return TypedActionResult.method_22430(stack);
+         user.sendMessage(Text.translatable("item.smfs.ghost_porcelain.not_enough_health"), true);
+         return TypedActionResult.pass(stack);
       }
    }
 
    public static boolean isBound(ItemStack stack) {
-      NbtCompound nbt = stack.method_7969();
-      return nbt != null && nbt.method_10577("IsBound");
+      NbtCompound nbt = stack.getNbt();
+      return nbt != null && nbt.getBoolean("IsBound");
    }
 
    private void bindPlayer(ItemStack stack, PlayerEntity player) {
       this.unbindAllPlayersGhostPorcelain(player);
-      NbtCompound nbt = stack.method_7948();
-      nbt.method_10556("IsBound", true);
-      nbt.method_25927("BoundPlayerUUID", player.method_5667());
+      NbtCompound nbt = stack.getOrCreateNbt();
+      nbt.putBoolean("IsBound", true);
+      nbt.putUuid("BoundPlayerUUID", player.getUuid());
    }
 
    private void unbindAllPlayersGhostPorcelain(PlayerEntity player) {
-      for (int i = 0; i < player.method_31548().method_5439(); i++) {
-         ItemStack invStack = player.method_31548().method_5438(i);
-         if (invStack.method_31574(ModItems.GHOST_PORCELAIN) && isBound(invStack)) {
+      for (int i = 0; i < player.getInventory().size(); i++) {
+         ItemStack invStack = player.getInventory().getStack(i);
+         if (invStack.isOf(ModItems.GHOST_PORCELAIN) && isBound(invStack)) {
             this.unbindPlayer(invStack);
          }
       }
    }
 
    private void unbindPlayer(ItemStack stack) {
-      NbtCompound nbt = stack.method_7948();
-      nbt.method_10551("IsBound");
-      nbt.method_10551("BoundPlayerUUID");
+      NbtCompound nbt = stack.getOrCreateNbt();
+      nbt.remove("IsBound");
+      nbt.remove("BoundPlayerUUID");
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_porcelain.fire_warning").method_27692(Formatting.field_1061));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_porcelain.fire_warning").formatted(Formatting.RED));
       if (isBound(stack)) {
-         tooltip.add(Text.method_43471("item.smfs.ghost_porcelain.bound_status"));
-         NbtCompound nbt = stack.method_7969();
-         if (nbt != null && nbt.method_25928("BoundPlayerUUID")) {
-            UUID uuid = nbt.method_25926("BoundPlayerUUID");
-            tooltip.add(Text.method_43469("item.smfs.ghost_porcelain.bound_to", new Object[]{uuid.toString().substring(0, 8)}));
+         tooltip.add(Text.translatable("item.smfs.ghost_porcelain.bound_status"));
+         NbtCompound nbt = stack.getNbt();
+         if (nbt != null && nbt.containsUuid("BoundPlayerUUID")) {
+            UUID uuid = nbt.getUuid("BoundPlayerUUID");
+            tooltip.add(Text.translatable("item.smfs.ghost_porcelain.bound_to", new Object[]{uuid.toString().substring(0, 8)}));
          }
       } else {
-         tooltip.add(Text.method_43471("item.smfs.ghost_porcelain.unbound_status"));
+         tooltip.add(Text.translatable("item.smfs.ghost_porcelain.unbound_status"));
       }
 
-      tooltip.add(Text.method_43471("item.smfs.ghost_porcelain.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_porcelain.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_porcelain.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_porcelain.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_porcelain.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_porcelain.description.type"));
    }
 
    public static boolean tryResistAttack(PlayerEntity player, float damageAmount, ItemStack stack, DamageSource source) {
-      if (stack.method_31574(ModItems.GHOST_PORCELAIN) && isBound(stack)) {
+      if (stack.isOf(ModItems.GHOST_PORCELAIN) && isBound(stack)) {
          int durabilityToConsume = Math.max(1, (int)Math.ceil(damageAmount * 0.6));
          damageItem(stack, durabilityToConsume, player);
          return true;
@@ -297,12 +286,12 @@ public class GhostPorcelainItem extends Item {
 
    private static void killBoundPlayer(UUID boundPlayerUuid, World world) {
       if (boundPlayerUuid != null) {
-         PlayerEntity player = world.method_18470(boundPlayerUuid);
+         PlayerEntity player = world.getPlayerByUuid(boundPlayerUuid);
          if (player != null) {
             DamageSource damageSource = ModDamageSources.of(world, ModDamageSources.GHOST);
             PlayerEvents.handleSpiritDamage(player, 999.0F, 999.0F, damageSource);
-            if (!world.field_9236) {
-               player.method_7353(Text.method_43471("item.smfs.ghost_porcelain.burned_death").method_27692(Formatting.field_1079), false);
+            if (!world.isClient) {
+               player.sendMessage(Text.translatable("item.smfs.ghost_porcelain.burned_death").formatted(Formatting.DARK_RED), false);
             }
          }
       }

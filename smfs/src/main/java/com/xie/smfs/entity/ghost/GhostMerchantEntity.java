@@ -45,18 +45,18 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
    }
 
    private void initMerchantAttributes() {
-      this.method_5996(EntityAttributes.field_23716).method_6192(100000.0);
-      this.method_5996(EntityAttributes.field_23719).method_6192(0.3);
-      this.method_5996(EntityAttributes.field_23717).method_6192(16.0);
-      this.method_6033(30.0F);
+      this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(100000.0);
+      this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3);
+      this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE).setBaseValue(16.0);
+      this.setHealth(30.0F);
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
-      if (this.field_6201 != null) {
-         this.field_6201.method_35115().removeIf(goal -> {
-            String goalClassName = goal.method_19058().getClass().getSimpleName();
+   protected void initGoals() {
+      super.initGoals();
+      if (this.goalSelector != null) {
+         this.goalSelector.getGoals().removeIf(goal -> {
+            String goalClassName = goal.getGoal().getClass().getSimpleName();
             return goalClassName.contains("Wander") || goalClassName.contains("WanderAround");
          });
       }
@@ -88,18 +88,18 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236 && !this.tradeOffersInitialized) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient && !this.tradeOffersInitialized) {
          this.initTradeOffers();
       }
 
-      if (!this.method_37908().field_9236 && !this.isSuppressed() && !this.isDeadlocked() && this.method_5942().method_23966()) {
-         this.method_5942().method_6340();
+      if (!this.getWorld().isClient && !this.isSuppressed() && !this.isDeadlocked() && this.getNavigation().isFollowingPath()) {
+         this.getNavigation().stop();
       }
 
-      if (!this.method_37908().field_9236 && !this.isSuppressed() && !this.isDeadlocked() && this.isKillingRulesEnabled() && this.customer == null) {
-         for (PlayerEntity player : this.method_37908().method_18456()) {
+      if (!this.getWorld().isClient && !this.isSuppressed() && !this.isDeadlocked() && this.isKillingRulesEnabled() && this.customer == null) {
+         for (PlayerEntity player : this.getWorld().getPlayers()) {
             boolean attackable = this.shouldAttackPlayer(player);
             boolean reachable = this.canReachPlayer(player);
             if (attackable && reachable) {
@@ -111,14 +111,14 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
    }
 
    private boolean canReachPlayer(PlayerEntity player) {
-      double distanceSq = this.method_5858(player);
+      double distanceSq = this.squaredDistanceTo(player);
       return distanceSq <= 256.0;
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
       if (!this.isSuppressed() && !this.isDeadlocked() && this.isKillingRulesEnabled() && this.attackCooldown <= 0) {
-         if (this.method_5858(player) > 1024.0) {
+         if (this.squaredDistanceTo(player) > 1024.0) {
             return false;
          }
 
@@ -129,9 +129,9 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
          if (this.customer != null && this.customer.equals(player)) {
             boolean hasGhostMoney = false;
 
-            for (int i = 0; i < player.method_31548().method_5439(); i++) {
-               ItemStack stack = player.method_31548().method_5438(i);
-               if (stack.method_7909() instanceof GhostMoneyItem && stack.method_7947() > 0) {
+            for (int i = 0; i < player.getInventory().size(); i++) {
+               ItemStack stack = player.getInventory().getStack(i);
+               if (stack.getItem() instanceof GhostMoneyItem && stack.getCount() > 0) {
                   hasGhostMoney = true;
                   break;
                }
@@ -146,46 +146,46 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
       }
    }
 
-   public ActionResult method_5992(PlayerEntity player, Hand hand) {
-      if (this.method_37908().field_9236) {
-         return ActionResult.field_5812;
+   public ActionResult interactMob(PlayerEntity player, Hand hand) {
+      if (this.getWorld().isClient) {
+         return ActionResult.SUCCESS;
       }
 
-      if (player.method_5715()) {
-         return super.method_5992(player, hand);
+      if (player.isSneaking()) {
+         return super.interactMob(player, hand);
       }
 
       if (!this.tradeOffersInitialized) {
          this.initTradeOffers();
       }
 
-      if (this.method_8257() != player) {
-         this.method_8259(player);
-         player.method_17355(new NamedScreenHandlerFactory() {
+      if (this.getCustomer() != player) {
+         this.setCustomer(player);
+         player.openHandledScreen(new NamedScreenHandlerFactory() {
             public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity playerx) {
                return new MerchantScreenHandler(syncId, inventory, GhostMerchantEntity.this);
             }
 
-            public Text method_5476() {
-               return GhostMerchantEntity.this.method_5476();
+            public Text getDisplayName() {
+               return GhostMerchantEntity.this.getDisplayName();
             }
          });
-         if (!this.method_37908().field_9236 && player instanceof ServerPlayerEntity serverPlayer) {
+         if (!this.getWorld().isClient && player instanceof ServerPlayerEntity serverPlayer) {
             if (!this.tradeOffersInitialized || this.offers.isEmpty()) {
                this.initTradeOffers();
             }
 
-            int syncId = serverPlayer.field_7512 != null ? serverPlayer.field_7512.field_7763 : 0;
-            serverPlayer.field_13987
-               .method_14364(new SetTradeOffersS2CPacket(syncId, this.method_8264(), 0, this.method_19269(), this.method_19270(), this.method_20708()));
+            int syncId = serverPlayer.currentScreenHandler != null ? serverPlayer.currentScreenHandler.syncId : 0;
+            serverPlayer.networkHandler
+               .sendPacket(new SetTradeOffersS2CPacket(syncId, this.getOffers(), 0, this.getExperience(), this.isLeveledMerchant(), this.canRefreshTrades()));
          }
       }
 
-      return ActionResult.field_21466;
+      return ActionResult.CONSUME;
    }
 
-   public TradeOfferList method_8264() {
-      if (this.method_37908().field_9236) {
+   public TradeOfferList getOffers() {
+      if (this.getWorld().isClient) {
          LOGGER.info("GhostMerchantEntity.getOffers(客户端): offers.size() = {}, tradeOffersInitialized = {}", this.offers.size(), this.tradeOffersInitialized);
          if (this.offers.isEmpty()) {
             LOGGER.info("客户端交易列表为空，创建默认交易列表");
@@ -223,7 +223,7 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
       }
    }
 
-   public void method_8261(TradeOfferList offers) {
+   public void setOffersFromServer(TradeOfferList offers) {
       if (offers != null) {
          LOGGER.info("GhostMerchantEntity.setOffersFromServer: 接收到 {} 个交易项目", offers.size());
 
@@ -233,11 +233,11 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
                LOGGER.info(
                   "交易项目 {}: 输入1={}, 输入2={}, 输出={}, 使用次数={}, 最大使用次数={}",
                   i,
-                  offer.method_8246(),
-                  offer.method_8247(),
-                  offer.method_8250(),
-                  offer.method_8249(),
-                  offer.method_8248()
+                  offer.getOriginalFirstBuyItem(),
+                  offer.getSecondBuyItem(),
+                  offer.getSellItem(),
+                  offer.getUses(),
+                  offer.getMaxUses()
                );
             }
          }
@@ -250,38 +250,38 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
       }
    }
 
-   public void method_8259(PlayerEntity customer) {
+   public void setCustomer(PlayerEntity customer) {
       this.customer = customer;
    }
 
-   public PlayerEntity method_8257() {
+   public PlayerEntity getCustomer() {
       return this.customer;
    }
 
-   public void method_8262(TradeOffer offer) {
-      offer.method_8244();
+   public void trade(TradeOffer offer) {
+      offer.use();
    }
 
-   public void method_8258(ItemStack stack) {
+   public void onSellingItem(ItemStack stack) {
    }
 
-   public int method_19269() {
+   public int getExperience() {
       return 0;
    }
 
-   public void method_19271(int experience) {
+   public void setExperienceFromServer(int experience) {
    }
 
-   public boolean method_19270() {
+   public boolean isLeveledMerchant() {
       return false;
    }
 
-   public SoundEvent method_18010() {
+   public SoundEvent getYesSound() {
       return null;
    }
 
-   public boolean method_38069() {
-      return this.method_37908().field_9236;
+   public boolean isClient() {
+      return this.getWorld().isClient;
    }
 
    @Override
@@ -290,35 +290,35 @@ public class GhostMerchantEntity extends GhostEntity implements Merchant {
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
       NbtList offersNbt = new NbtList();
 
       for (TradeOffer offer : this.offers) {
-         NbtCompound offerNbt = offer.method_8251();
+         NbtCompound offerNbt = offer.toNbt();
          offersNbt.add(offerNbt);
       }
 
-      nbt.method_10566("Offers", offersNbt);
-      nbt.method_10556("TradeOffersInitialized", this.tradeOffersInitialized);
+      nbt.put("Offers", offersNbt);
+      nbt.putBoolean("TradeOffersInitialized", this.tradeOffersInitialized);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10573("Offers", 9)) {
-         NbtList offersNbt = nbt.method_10554("Offers", 10);
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("Offers", 9)) {
+         NbtList offersNbt = nbt.getList("Offers", 10);
          this.offers = new TradeOfferList();
 
          for (int i = 0; i < offersNbt.size(); i++) {
-            NbtCompound offerNbt = offersNbt.method_10602(i);
+            NbtCompound offerNbt = offersNbt.getCompound(i);
             TradeOffer offer = new TradeOffer(offerNbt);
             this.offers.add(offer);
          }
       }
 
-      if (nbt.method_10545("TradeOffersInitialized")) {
-         this.tradeOffersInitialized = nbt.method_10577("TradeOffersInitialized");
+      if (nbt.contains("TradeOffersInitialized")) {
+         this.tradeOffersInitialized = nbt.getBoolean("TradeOffersInitialized");
       }
    }
 }

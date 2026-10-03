@@ -16,24 +16,24 @@ public class SubmitCodenameC2SPacket {
    public static final Identifier ID = new Identifier("smfs", "submit_codename");
 
    public static void handle(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
-      String codename = buf.method_19772();
+      String codename = buf.readString();
       server.execute(() -> {
          if (codename != null && !codename.trim().isEmpty()) {
             if (codename.length() > 16) {
-               player.method_7353(Text.method_43470("§c代号长度不能超过16个字符！").method_27692(Formatting.field_1061), false);
+               player.sendMessage(Text.literal("§c代号长度不能超过16个字符！").formatted(Formatting.RED), false);
             } else {
                FactionManager.setCodename(player, codename.trim());
-               player.method_7353(Text.method_43470("§a代号设置成功！你的代号是：" + codename.trim()).method_27692(Formatting.field_1060), false);
+               player.sendMessage(Text.literal("§a代号设置成功！你的代号是：" + codename.trim()).formatted(Formatting.GREEN), false);
             }
          } else {
-            player.method_7353(Text.method_43470("§c代号不能为空！").method_27692(Formatting.field_1061), false);
+            player.sendMessage(Text.literal("§c代号不能为空！").formatted(Formatting.RED), false);
          }
       });
    }
 
    public static void send(String codename) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(codename);
+      buf.writeString(codename);
       ClientPlayNetworking.send(ID, buf);
    }
 }

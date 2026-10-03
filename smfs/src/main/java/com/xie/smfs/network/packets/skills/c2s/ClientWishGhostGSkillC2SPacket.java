@@ -28,11 +28,11 @@ public class ClientWishGhostGSkillC2SPacket {
       server.execute(() -> {
          GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "wish_ghost", ModItems.WISH_GHOST, -1);
          if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-            player.method_7353(Text.method_43470("§c您没有驾驭许愿鬼，无法使用此技能"), true);
+            player.sendMessage(Text.literal("§c您没有驾驭许愿鬼，无法使用此技能"), true);
          } else {
             GhostDomainManager.handleWishGhostGSkill(player);
             PlayerEvents.balanceRevivalDegree(player);
-            player.method_7353(Text.method_43470("§a我行不可摧，志不可改，力可至无穷"), true);
+            player.sendMessage(Text.literal("§a我行不可摧，志不可改，力可至无穷"), true);
          }
       });
    }

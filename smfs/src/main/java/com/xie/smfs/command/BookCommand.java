@@ -15,77 +15,77 @@ public class BookCommand {
    public static int giveBook(CommandContext<ServerCommandSource> context, ServerPlayerEntity player, String bookId) {
       try {
          ItemStack book = createDefaultBook();
-         if (!player.method_7270(book)) {
-            player.method_7328(book, false);
+         if (!player.giveItemStack(book)) {
+            player.dropItem(book, false);
          }
 
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("§a已给玩家 " + player.method_5477().getString() + " 一本《神秘复苏指南》"), true);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("§a已给玩家 " + player.getName().getString() + " 一本《神秘复苏指南》"), true);
          return 1;
       } catch (Exception e) {
-         ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("§c给书时发生错误: " + e.getMessage()));
+         ((ServerCommandSource)context.getSource()).sendError(Text.literal("§c给书时发生错误: " + e.getMessage()));
          return 0;
       }
    }
 
    public static int listAvailableBooks(CommandContext<ServerCommandSource> context) {
       try {
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("§6可用的书:"), false);
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("§e- default: 神秘复苏指南"), false);
-         ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("§e用法: /xie book give <玩家> default"), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("§6可用的书:"), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("§e- default: 神秘复苏指南"), false);
+         ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("§e用法: /xie book give <玩家> default"), false);
          return 1;
       } catch (Exception e) {
-         ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("§c列出书籍时发生错误: " + e.getMessage()));
+         ((ServerCommandSource)context.getSource()).sendError(Text.literal("§c列出书籍时发生错误: " + e.getMessage()));
          return 0;
       }
    }
 
    private static ItemStack createDefaultBook() {
       try {
-         ItemStack book = new ItemStack(Items.field_8360);
-         NbtCompound tag = book.method_7948();
-         tag.method_10582("title", Text.method_43471("book.smfs.default_book.title").getString());
-         tag.method_10582("author", Text.method_43471("book.smfs.default_book.author").getString());
+         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+         NbtCompound tag = book.getOrCreateNbt();
+         tag.putString("title", Text.translatable("book.smfs.default_book.title").getString());
+         tag.putString("author", Text.translatable("book.smfs.default_book.author").getString());
          NbtList pages = new NbtList();
 
          for (int i = 0; i < 11; i++) {
             String translationKey = "book.smfs.default_book.page" + (i + 1);
-            String pageText = Text.method_43471(translationKey).getString();
-            String jsonText = Serializer.method_10867(Text.method_43470(pageText));
-            pages.add(NbtString.method_23256(jsonText));
+            String pageText = Text.translatable(translationKey).getString();
+            String jsonText = Serializer.toJson(Text.literal(pageText));
+            pages.add(NbtString.of(jsonText));
          }
 
-         tag.method_10566("pages", pages);
-         tag.method_10556("resolved", true);
-         book.method_7977(Text.method_43471("book.smfs.default_book.title"));
+         tag.put("pages", pages);
+         tag.putBoolean("resolved", true);
+         book.setCustomName(Text.translatable("book.smfs.default_book.title"));
          return book;
       } catch (Exception e) {
-         return new ItemStack(Items.field_8360);
+         return new ItemStack(Items.WRITTEN_BOOK);
       }
    }
 
    public static ItemStack createCustomBook(String title, String author, String[] pages) {
-      ItemStack book = new ItemStack(Items.field_8360);
-      NbtCompound tag = book.method_7948();
-      tag.method_10582("title", title);
-      tag.method_10582("author", author);
-      tag.method_10556("resolved", true);
+      ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+      NbtCompound tag = book.getOrCreateNbt();
+      tag.putString("title", title);
+      tag.putString("author", author);
+      tag.putBoolean("resolved", true);
       NbtList pageList = new NbtList();
 
       for (String page : pages) {
-         String jsonText = Serializer.method_10867(Text.method_43470(page));
-         pageList.add(NbtString.method_23256(jsonText));
+         String jsonText = Serializer.toJson(Text.literal(page));
+         pageList.add(NbtString.of(jsonText));
       }
 
-      tag.method_10566("pages", pageList);
-      book.method_7977(Text.method_43470("《" + title + "》"));
+      tag.put("pages", pageList);
+      book.setCustomName(Text.literal("《" + title + "》"));
       return book;
    }
 
    public static boolean giveDefaultBookToPlayer(ServerPlayerEntity player) {
       try {
          ItemStack book = createDefaultBook();
-         if (!player.method_7270(book)) {
-            player.method_7328(book, false);
+         if (!player.giveItemStack(book)) {
+            player.dropItem(book, false);
          }
 
          return true;

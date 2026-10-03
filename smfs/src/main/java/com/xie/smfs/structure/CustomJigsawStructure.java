@@ -21,13 +21,13 @@ import net.minecraft.world.gen.structure.Structure.StructurePosition;
 public class CustomJigsawStructure extends Structure {
    public static final Codec<CustomJigsawStructure> CODEC = RecordCodecBuilder.create(
       instance -> instance.group(
-            method_42697(instance),
-            StructurePool.field_24954.fieldOf("start_pool").forGetter(structure -> structure.startPool),
-            Identifier.field_25139.optionalFieldOf("start_jigsaw_name").forGetter(structure -> structure.startJigsawName),
+            configCodecBuilder(instance),
+            StructurePool.REGISTRY_CODEC.fieldOf("start_pool").forGetter(structure -> structure.startPool),
+            Identifier.CODEC.optionalFieldOf("start_jigsaw_name").forGetter(structure -> structure.startJigsawName),
             Codec.intRange(0, 7).fieldOf("size").forGetter(structure -> structure.size),
-            HeightProvider.field_31540.fieldOf("start_height").forGetter(structure -> structure.startHeight),
+            HeightProvider.CODEC.fieldOf("start_height").forGetter(structure -> structure.startHeight),
             Codec.BOOL.fieldOf("use_expansion_hack").forGetter(structure -> structure.useExpansionHack),
-            Type.field_24772.optionalFieldOf("project_start_to_heightmap").forGetter(structure -> structure.projectStartToHeightmap),
+            Type.CODEC.optionalFieldOf("project_start_to_heightmap").forGetter(structure -> structure.projectStartToHeightmap),
             Codec.intRange(1, 512).fieldOf("max_distance_from_center").forGetter(structure -> structure.maxDistanceFromCenter)
          )
          .apply(instance, CustomJigsawStructure::new)
@@ -60,16 +60,16 @@ public class CustomJigsawStructure extends Structure {
       this.maxDistanceFromCenter = maxDistanceFromCenter;
    }
 
-   public Optional<StructurePosition> method_38676(Context context) {
-      ChunkPos chunkPos = context.comp_568();
-      int i = this.startHeight.method_35391(context.comp_566(), new HeightContext(context.comp_562(), context.comp_569()));
-      BlockPos blockPos = new BlockPos(chunkPos.method_8326(), i, chunkPos.method_8328());
+   public Optional<StructurePosition> getStructurePosition(Context context) {
+      ChunkPos chunkPos = context.chunkPos();
+      int i = this.startHeight.get(context.random(), new HeightContext(context.chunkGenerator(), context.world()));
+      BlockPos blockPos = new BlockPos(chunkPos.getStartX(), i, chunkPos.getStartZ());
       return CustomStructurePoolBasedGenerator.generate(
          context, this.startPool, this.startJigsawName, this.size, blockPos, this.useExpansionHack, this.projectStartToHeightmap, this.maxDistanceFromCenter
       );
    }
 
-   public StructureType<?> method_41618() {
+   public StructureType<?> getType() {
       return ModStructureType.CUSTOM_JIGSAW;
    }
 }

@@ -16,11 +16,11 @@ public class HumanSkinPaperContinueC2SPacket {
 
    public static void handle(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender sender) {
       server.execute(() -> {
-         ItemStack helmetStack = player.method_31548().method_7372(3);
-         if (helmetStack.method_31574(ModItems.HUMAN_SKIN_PAPER)) {
-            player.method_31548().field_7548.set(3, ItemStack.field_8037);
-            if (!player.method_31548().method_7394(helmetStack)) {
-               player.method_7328(helmetStack, false);
+         ItemStack helmetStack = player.getInventory().getArmorStack(3);
+         if (helmetStack.isOf(ModItems.HUMAN_SKIN_PAPER)) {
+            player.getInventory().armor.set(3, ItemStack.EMPTY);
+            if (!player.getInventory().insertStack(helmetStack)) {
+               player.dropItem(helmetStack, false);
             }
          }
       });

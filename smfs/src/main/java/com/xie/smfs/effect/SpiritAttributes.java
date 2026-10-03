@@ -22,8 +22,8 @@ public class SpiritAttributes {
    public static final EntityAttribute TEMP_SANITY = register("temp_sanity", 0.0, 0.0, 100.0);
 
    private static EntityAttribute register(String name, double defaultValue, double min, double max) {
-      return (EntityAttribute)Registry.method_10230(
-         Registries.field_41190, new Identifier("smfs", name), new ClampedEntityAttribute("attribute.smfs." + name, defaultValue, min, max).method_26829(true)
+      return (EntityAttribute)Registry.register(
+         Registries.ATTRIBUTE, new Identifier("smfs", name), new ClampedEntityAttribute("attribute.smfs." + name, defaultValue, min, max).setTracked(true)
       );
    }
 

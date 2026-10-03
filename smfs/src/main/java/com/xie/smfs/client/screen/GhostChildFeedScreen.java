@@ -26,50 +26,50 @@ public class GhostChildFeedScreen extends HandledScreen<GhostChildFeedScreenHand
 
    public GhostChildFeedScreen(GhostChildFeedScreenHandler handler, PlayerInventory inventory, Text title) {
       super(handler, inventory, title);
-      this.field_2792 = 176;
-      this.field_2779 = 166;
-      this.field_25270 = this.field_2779 - 94;
+      this.backgroundWidth = 176;
+      this.backgroundHeight = 166;
+      this.playerInventoryTitleY = this.backgroundHeight - 94;
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      this.field_2776 = (this.field_22789 - this.field_2792) / 2;
-      this.field_2800 = (this.field_22790 - this.field_2779) / 2;
-      this.feedButton = ButtonWidget.method_46430(Text.method_43470("喂食"), button -> {
-         if (this.field_22787 != null && this.field_2797 != null && this.field_22787.field_1724 != null) {
+   protected void init() {
+      super.init();
+      this.x = (this.width - this.backgroundWidth) / 2;
+      this.y = (this.height - this.backgroundHeight) / 2;
+      this.feedButton = ButtonWidget.builder(Text.literal("喂食"), button -> {
+         if (this.client != null && this.handler != null && this.client.player != null) {
             PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeInt(((GhostChildFeedScreenHandler)this.field_2797).field_7763);
+            buf.writeInt(((GhostChildFeedScreenHandler)this.handler).syncId);
             ClientPlayNetworking.send(GhostChildFeedScreenHandler.FEED_BUTTON_CLICK_PACKET_ID, buf);
          }
-      }).method_46434(this.field_2776 + 45 + 3, this.field_2800 + 50 + 5, 40, 16).method_46431();
-      this.closeButton = ButtonWidget.method_46430(
-            Text.method_43470("关闭"),
-            button -> this.field_22787
-               .method_1507(
+      }).dimensions(this.x + 45 + 3, this.y + 50 + 5, 40, 16).build();
+      this.closeButton = ButtonWidget.builder(
+            Text.literal("关闭"),
+            button -> this.client
+               .setScreen(
                   new GhostChildCultivationScreen(
-                     new GhostChildCultivationScreenHandler(0, this.field_22787.field_1724.method_31548()),
-                     this.field_22787.field_1724.method_31548(),
-                     Text.method_43471("screen.smfs.ghost_child_cultivation")
+                     new GhostChildCultivationScreenHandler(0, this.client.player.getInventory()),
+                     this.client.player.getInventory(),
+                     Text.translatable("screen.smfs.ghost_child_cultivation")
                   )
                )
          )
-         .method_46434(this.field_2776 + 95 + 3, this.field_2800 + 50 + 5, 40, 16)
-         .method_46431();
-      this.method_37063(this.feedButton);
-      this.method_37063(this.closeButton);
+         .dimensions(this.x + 95 + 3, this.y + 50 + 5, 40, 16)
+         .build();
+      this.addDrawableChild(this.feedButton);
+      this.addDrawableChild(this.closeButton);
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
-      this.method_2380(context, mouseX, mouseY);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
+      this.drawMouseoverTooltip(context, mouseX, mouseY);
    }
 
-   protected void method_2389(DrawContext context, float delta, int mouseX, int mouseY) {
-      context.method_25302(BACKGROUND_TEXTURE, this.field_2776, this.field_2800, 0, 0, this.field_2792, this.field_2779);
+   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+      context.drawTexture(BACKGROUND_TEXTURE, this.x, this.y, 0, 0, this.backgroundWidth, this.backgroundHeight);
    }
 
-   protected void method_2388(DrawContext context, int mouseX, int mouseY) {
-      context.method_51439(this.field_22793, this.field_29347, this.field_25269, this.field_25270, 4210752, false);
+   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
+      context.drawText(this.textRenderer, this.playerInventoryTitle, this.playerInventoryTitleX, this.playerInventoryTitleY, 4210752, false);
    }
 }

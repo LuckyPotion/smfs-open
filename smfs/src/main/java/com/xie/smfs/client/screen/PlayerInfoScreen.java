@@ -22,34 +22,34 @@ public class PlayerInfoScreen extends Screen {
    private final PlayerEntity player;
 
    public PlayerInfoScreen(PlayerEntity player) {
-      super(Text.method_43470("玩家信息"));
+      super(Text.literal("玩家信息"));
       this.player = player;
    }
 
-   protected void method_25426() {
-      super.method_25426();
+   protected void init() {
+      super.init();
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
       int panelLeft = centerX - 150;
       int panelTop = centerY - 100;
-      context.method_25294(panelLeft, panelTop, panelLeft + 300, panelTop + 200, -872415232);
-      context.method_49601(panelLeft, panelTop, 300, 200, -11184811);
+      context.fill(panelLeft, panelTop, panelLeft + 300, panelTop + 200, -872415232);
+      context.drawBorder(panelLeft, panelTop, 300, 200, -11184811);
       int modelX = panelLeft + 100;
       int modelY = panelTop + 170;
       int modelSize = 50;
       this.drawPlayerModel(context, modelX, modelY, modelSize, mouseX, mouseY);
       int statsX = centerX;
       int statsY = panelTop + 25;
-      Text titleText = Text.method_43470("玩家信息");
-      context.method_51439(this.field_22793, titleText, panelLeft + 150 - this.field_22793.method_1727("玩家信息") / 2, panelTop + 8, 16766720, false);
-      float maxHealth = this.player.method_6063();
-      float currentHealth = this.player.method_6032();
-      int armor = this.player.method_6096();
+      Text titleText = Text.literal("玩家信息");
+      context.drawText(this.textRenderer, titleText, panelLeft + 150 - this.textRenderer.getWidth("玩家信息") / 2, panelTop + 8, 16766720, false);
+      float maxHealth = this.player.getMaxHealth();
+      float currentHealth = this.player.getHealth();
+      int armor = this.player.getArmor();
       NbtCompound spiritAttributes = PlayerEvents.getSpiritAttributes(this.player);
       float spiritResistance = this.getAttr(spiritAttributes, "spiritResistance", 0.0F);
       float tempSpiritResistance = this.getAttr(spiritAttributes, "tempSpiritResistance", 0.0F);
@@ -76,7 +76,7 @@ public class PlayerInfoScreen extends Screen {
       long totalTicks = PlayerEvents.getTotalTime(this.player);
       String survivalDays = String.format("%.1f", survivalTicks / 24000.0);
       String totalDays = String.format("%.1f", totalTicks / 24000.0);
-      String playerName = this.player.method_5477().getString();
+      String playerName = this.player.getName().getString();
       int lineHeight = 12;
       int maxLabelWidth = this.calculateMaxLabelWidth();
       int gap = 5;
@@ -100,7 +100,7 @@ public class PlayerInfoScreen extends Screen {
       int max = 0;
 
       for (String label : labels) {
-         int w = this.field_22793.method_1727(label);
+         int w = this.textRenderer.getWidth(label);
          if (w > max) {
             max = w;
          }
@@ -110,7 +110,7 @@ public class PlayerInfoScreen extends Screen {
    }
 
    private void drawInfoRow(DrawContext context, int x, int y, String label, String value, int maxLabelWidth, int gap) {
-      int labelWidth = this.field_22793.method_1727(label);
+      int labelWidth = this.textRenderer.getWidth(label);
       if (labelWidth < maxLabelWidth && label.length() > 1) {
          float charSpacing = (float)(maxLabelWidth - labelWidth) / (label.length() - 1);
 
@@ -118,22 +118,22 @@ public class PlayerInfoScreen extends Screen {
             String charStr = String.valueOf(label.charAt(i));
             int charX = (int)(i * charSpacing);
             if (i > 0) {
-               charX += this.field_22793.method_1727(label.substring(0, i));
+               charX += this.textRenderer.getWidth(label.substring(0, i));
             }
 
-            context.method_51439(this.field_22793, Text.method_43470(charStr), x + charX, y, 16777215, false);
+            context.drawText(this.textRenderer, Text.literal(charStr), x + charX, y, 16777215, false);
          }
       } else {
-         context.method_51439(this.field_22793, Text.method_43470(label), x, y, 16777215, false);
+         context.drawText(this.textRenderer, Text.literal(label), x, y, 16777215, false);
       }
 
-      context.method_51439(this.field_22793, Text.method_43470(value), x + maxLabelWidth + gap, y, 8900331, false);
+      context.drawText(this.textRenderer, Text.literal(value), x + maxLabelWidth + gap, y, 8900331, false);
    }
 
    private void drawPlayerModel(DrawContext context, int x, int y, int size, int mouseX, int mouseY) {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-         InventoryScreen.method_2486(
-            context, x - size / 2, y - size / 2, size, (float)(x - size / 2) - mouseX, (float)(y - size / 2 - 50) - mouseY, this.field_22787.field_1724
+      if (this.client != null && this.client.player != null) {
+         InventoryScreen.drawEntity(
+            context, x - size / 2, y - size / 2, size, (float)(x - size / 2) - mouseX, (float)(y - size / 2 - 50) - mouseY, this.client.player
          );
       }
    }
@@ -141,16 +141,16 @@ public class PlayerInfoScreen extends Screen {
    private float getAttr(NbtCompound attrs, String key, float defaultValue) {
       if (attrs == null) {
          return defaultValue;
-      } else if (attrs.method_10573(key, 3)) {
-         return attrs.method_10550(key);
-      } else if (attrs.method_10573(key, 5)) {
-         return attrs.method_10583(key);
+      } else if (attrs.contains(key, 3)) {
+         return attrs.getInt(key);
+      } else if (attrs.contains(key, 5)) {
+         return attrs.getFloat(key);
       } else {
-         return attrs.method_10573(key, 6) ? (float)attrs.method_10574(key) : defaultValue;
+         return attrs.contains(key, 6) ? (float)attrs.getDouble(key) : defaultValue;
       }
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 }

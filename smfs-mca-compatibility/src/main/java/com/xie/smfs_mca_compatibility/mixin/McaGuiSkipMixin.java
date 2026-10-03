@@ -46,17 +46,17 @@ public class McaGuiSkipMixin {
 
    private void clearAllPlayerBuffs() {
       try {
-         MinecraftClient client = MinecraftClient.method_1551();
-         if (client.field_1724 != null) {
-            PlayerEntity player = client.field_1724;
-            Collection<StatusEffectInstance> effects = player.method_6026();
+         MinecraftClient client = MinecraftClient.getInstance();
+         if (client.player != null) {
+            PlayerEntity player = client.player;
+            Collection<StatusEffectInstance> effects = player.getStatusEffects();
             int buffCount = effects.size();
             if (buffCount > 0) {
                LOGGER.debug("发现 {} 个Buff，正在清除...", buffCount);
 
                for (StatusEffectInstance effect : new ArrayList<>(effects)) {
-                  String effectName = effect.method_5579().method_5567();
-                  player.method_6016(effect.method_5579());
+                  String effectName = effect.getEffectType().getTranslationKey();
+                  player.removeStatusEffect(effect.getEffectType());
                   LOGGER.debug("  ✓ 已清除Buff: {}", effectName);
                }
 

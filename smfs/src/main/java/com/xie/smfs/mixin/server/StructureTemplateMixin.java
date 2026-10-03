@@ -25,7 +25,7 @@ public class StructureTemplateMixin {
       CallbackInfoReturnable<Boolean> cir
    ) {
       if (cir.getReturnValue()) {
-         for (StructureProcessor processor : placementData.method_16182()) {
+         for (StructureProcessor processor : placementData.getProcessors()) {
             if (processor instanceof GhostSpawnProcessor gsp) {
                gsp.finalize(world);
             }

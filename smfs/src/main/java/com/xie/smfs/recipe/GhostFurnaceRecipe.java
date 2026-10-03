@@ -15,15 +15,15 @@ public class GhostFurnaceRecipe extends AbstractCookingRecipe {
       super(GhostFurnaceRecipeType.INSTANCE, id, group, category, input, output, experience, cookTime);
    }
 
-   public RecipeSerializer<?> method_8119() {
+   public RecipeSerializer<?> getSerializer() {
       return GhostFurnaceRecipeType.SERIALIZER;
    }
 
-   public RecipeType<?> method_17716() {
+   public RecipeType<?> getType() {
       return GhostFurnaceRecipeType.INSTANCE;
    }
 
-   public ItemStack method_17447() {
-      return new ItemStack((ItemConvertible)Registries.field_41178.method_10223(new Identifier("smfs", "ghost_furnace")));
+   public ItemStack createIcon() {
+      return new ItemStack((ItemConvertible)Registries.ITEM.get(new Identifier("smfs", "ghost_furnace")));
    }
 }

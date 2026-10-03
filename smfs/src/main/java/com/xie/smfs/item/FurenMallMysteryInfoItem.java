@@ -5,6 +5,6 @@ import net.minecraft.world.World;
 
 public class FurenMallMysteryInfoItem extends StructureMysteryInfoItem {
    public FurenMallMysteryInfoItem() {
-      super(new FabricItemSettings().maxCount(16), "furen_mall", World.field_25179);
+      super(new FabricItemSettings().maxCount(16), "furen_mall", World.OVERWORLD);
    }
 }

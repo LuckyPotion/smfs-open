@@ -59,25 +59,25 @@ public final class ModBlockEntities {
       SPIRIT_BREWING_STAND_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(SpiritBrewingStandBlockEntity::new, new Block[]{ModBlocks.SPIRIT_BREWING_STAND})
          .build();
       GRAVE_MOUND_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(StaticAnimatable::new, new Block[]{ModBlocks.GRAVE_MOUND}).build();
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_coffin_block_entity"), GHOST_COFFIN_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "red_coffin_block_entity"), RED_COFFIN_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "gold_coffin_block_entity"), GOLD_COFFIN_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_piano_block_entity"), GHOST_PIANO_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_door_block_entity"), GHOST_DOOR_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "new_ghost_door_block_entity"), NEW_GHOST_DOOR_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_bed_block_entity"), GHOST_BED_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_table_block_entity"), GHOST_TABLE_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_table2_block_entity"), GHOST_TABLE2_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_screen_block_entity"), GHOST_SCREEN_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_candle_block_entity"), GHOST_CANDLE_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_skeleton_block_entity"), GHOST_SKELETON_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_portrait_block_entity"), GHOST_PORTRAIT_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_mirror_block_entity"), GHOST_MIRROR_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "footprint_block_entity"), FOOTPRINT_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "footprint2_block_entity"), FOOTPRINT2_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "ghost_furnace_block_entity"), GHOST_FURNACE_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "spirit_brewing_stand_block_entity"), SPIRIT_BREWING_STAND_BLOCK_ENTITY);
-      Registry.method_10230(Registries.field_41181, new Identifier("smfs", "grave_mound_block_entity"), GRAVE_MOUND_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_coffin_block_entity"), GHOST_COFFIN_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "red_coffin_block_entity"), RED_COFFIN_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "gold_coffin_block_entity"), GOLD_COFFIN_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_piano_block_entity"), GHOST_PIANO_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_door_block_entity"), GHOST_DOOR_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "new_ghost_door_block_entity"), NEW_GHOST_DOOR_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_bed_block_entity"), GHOST_BED_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_table_block_entity"), GHOST_TABLE_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_table2_block_entity"), GHOST_TABLE2_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_screen_block_entity"), GHOST_SCREEN_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_candle_block_entity"), GHOST_CANDLE_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_skeleton_block_entity"), GHOST_SKELETON_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_portrait_block_entity"), GHOST_PORTRAIT_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_mirror_block_entity"), GHOST_MIRROR_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "footprint_block_entity"), FOOTPRINT_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "footprint2_block_entity"), FOOTPRINT2_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "ghost_furnace_block_entity"), GHOST_FURNACE_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "spirit_brewing_stand_block_entity"), SPIRIT_BREWING_STAND_BLOCK_ENTITY);
+      Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("smfs", "grave_mound_block_entity"), GRAVE_MOUND_BLOCK_ENTITY);
       Smfs.LOGGER.info("Registered all coffin block entities");
    }
 }

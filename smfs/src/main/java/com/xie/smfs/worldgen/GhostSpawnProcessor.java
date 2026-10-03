@@ -78,7 +78,7 @@ public class GhostSpawnProcessor extends StructureProcessor {
    }
 
    @Nullable
-   public StructureBlockInfo method_15110(
+   public StructureBlockInfo process(
       WorldView world, BlockPos pos, BlockPos pivot, StructureBlockInfo originalBlockInfo, StructureBlockInfo currentBlockInfo, StructurePlacementData data
    ) {
       if (this.lastPivot == null || !this.lastPivot.equals(pivot)) {
@@ -89,8 +89,8 @@ public class GhostSpawnProcessor extends StructureProcessor {
 
       if (!this.spawned && !this.spawnBlocks.isEmpty()) {
          for (GhostSpawnProcessor.SpawnBlockConfig cfg : this.spawnBlocks) {
-            if (currentBlockInfo.comp_1342().method_27852(cfg.block)) {
-               this.matchingPositions.add(currentBlockInfo.comp_1341());
+            if (currentBlockInfo.state().isOf(cfg.block)) {
+               this.matchingPositions.add(currentBlockInfo.pos());
                break;
             }
          }
@@ -99,17 +99,17 @@ public class GhostSpawnProcessor extends StructureProcessor {
          int actualDirX = this.dirX;
          int actualDirZ = this.dirZ;
          if (this.fromCorner) {
-            BlockRotation rotation = data.method_15113();
+            BlockRotation rotation = data.getRotation();
             switch (rotation) {
-               case field_11463:
+               case CLOCKWISE_90:
                   actualDirX = -this.dirZ;
                   actualDirZ = this.dirX;
                   break;
-               case field_11464:
+               case CLOCKWISE_180:
                   actualDirX = -this.dirX;
                   actualDirZ = -this.dirZ;
                   break;
-               case field_11465:
+               case COUNTERCLOCKWISE_90:
                   actualDirX = this.dirZ;
                   actualDirZ = -this.dirX;
             }
@@ -117,9 +117,9 @@ public class GhostSpawnProcessor extends StructureProcessor {
 
          for (int i = 0; i < this.count; i++) {
             String typeId = this.entityTypeIds.get(random.nextInt(this.entityTypeIds.size()));
-            EntityType<?> type = (EntityType<?>)Registries.field_41177.method_10223(new Identifier(typeId));
+            EntityType<?> type = (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier(typeId));
             if (type != null) {
-               Entity entity = type.method_5883(getServerWorld(chunkRegion));
+               Entity entity = type.create(getServerWorld(chunkRegion));
                if (entity != null) {
                   int attempts = 0;
 
@@ -133,20 +133,20 @@ public class GhostSpawnProcessor extends StructureProcessor {
                      int dz = this.fromCorner
                         ? actualDirZ * (this.spread > 0 ? random.nextInt(this.spread + 1) : 0)
                         : (this.spread > 0 ? random.nextInt(this.spread * 2 + 1) - this.spread : 0);
-                     spawnX = pos.method_10263() + dx;
-                     spawnZ = pos.method_10260() + dz;
-                     spawnY = pos.method_10264();
+                     spawnX = pos.getX() + dx;
+                     spawnZ = pos.getZ() + dz;
+                     spawnY = pos.getY();
                      Mutable checkPos = new Mutable(spawnX, spawnY, spawnZ);
 
-                     while (checkPos.method_10264() > world.method_31607() && !world.method_8320(checkPos.method_10100(0, -1, 0)).method_51367()) {
+                     while (checkPos.getY() > world.getBottomY() && !world.getBlockState(checkPos.move(0, -1, 0)).isSolid()) {
                      }
 
-                     spawnY = "absolute".equals(this.heightMode) ? this.heightValue : checkPos.method_10264() + this.heightValue;
-                  } while (spawnY < pos.method_10264() - 10 && ++attempts < 10);
+                     spawnY = "absolute".equals(this.heightMode) ? this.heightValue : checkPos.getY() + this.heightValue;
+                  } while (spawnY < pos.getY() - 10 && ++attempts < 10);
 
-                  entity.method_5808(spawnX + 0.5, spawnY, spawnZ + 0.5, 0.0F, 0.0F);
-                  chunkRegion.method_30771(entity);
-                  Smfs.LOGGER.debug("[GhostSpawnProcessor] {} 生成于 [{}, {}, {}]", entity.method_5477().getString(), spawnX, spawnY, spawnZ);
+                  entity.refreshPositionAndAngles(spawnX + 0.5, spawnY, spawnZ + 0.5, 0.0F, 0.0F);
+                  chunkRegion.spawnEntityAndPassengers(entity);
+                  Smfs.LOGGER.debug("[GhostSpawnProcessor] {} 生成于 [{}, {}, {}]", entity.getName().getString(), spawnX, spawnY, spawnZ);
                }
             }
          }
@@ -171,7 +171,7 @@ public class GhostSpawnProcessor extends StructureProcessor {
             }
 
             String typeId = this.entityTypeIds.get(random.nextInt(this.entityTypeIds.size()));
-            EntityType<?> type = (EntityType<?>)Registries.field_41177.method_10223(new Identifier(typeId));
+            EntityType<?> type = (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier(typeId));
             if (type != null) {
                GhostSpawnProcessor.SpawnBlockConfig matchedCfg = this.spawnBlocks.get(0);
                Iterator entity = this.spawnBlocks.iterator();
@@ -179,7 +179,7 @@ public class GhostSpawnProcessor extends StructureProcessor {
                while (true) {
                   if (entity.hasNext()) {
                      GhostSpawnProcessor.SpawnBlockConfig cfg = (GhostSpawnProcessor.SpawnBlockConfig)entity.next();
-                     if (!world.method_8320(matchPos).method_27852(cfg.block)) {
+                     if (!world.getBlockState(matchPos).isOf(cfg.block)) {
                         continue;
                      }
 
@@ -188,17 +188,17 @@ public class GhostSpawnProcessor extends StructureProcessor {
 
                   Entity entityx = createEntity(world, type);
                   if (entityx != null) {
-                     int spawnX = matchPos.method_10263() + matchedCfg.offsetX;
-                     int spawnY = matchPos.method_10264() + matchedCfg.offsetY;
-                     int spawnZ = matchPos.method_10260() + matchedCfg.offsetZ;
-                     entityx.method_5808(spawnX + 0.5, spawnY, spawnZ + 0.5, 0.0F, 0.0F);
+                     int spawnX = matchPos.getX() + matchedCfg.offsetX;
+                     int spawnY = matchPos.getY() + matchedCfg.offsetY;
+                     int spawnZ = matchPos.getZ() + matchedCfg.offsetZ;
+                     entityx.refreshPositionAndAngles(spawnX + 0.5, spawnY, spawnZ + 0.5, 0.0F, 0.0F);
                      if (world instanceof ServerWorld serverWorld) {
-                        serverWorld.method_30771(entityx);
+                        serverWorld.spawnEntityAndPassengers(entityx);
                      } else if (world instanceof ChunkRegion chunkRegion) {
-                        chunkRegion.method_30771(entityx);
+                        chunkRegion.spawnEntityAndPassengers(entityx);
                      }
 
-                     Smfs.LOGGER.debug("[GhostSpawnProcessor] {} 生成于 [{}, {}, {}]", entityx.method_5477().getString(), spawnX, spawnY, spawnZ);
+                     Smfs.LOGGER.debug("[GhostSpawnProcessor] {} 生成于 [{}, {}, {}]", entityx.getName().getString(), spawnX, spawnY, spawnZ);
                      spawnedCount++;
                   }
                   break;
@@ -211,13 +211,13 @@ public class GhostSpawnProcessor extends StructureProcessor {
    @Nullable
    private static Entity createEntity(WorldAccess world, EntityType<?> type) {
       if (world instanceof ServerWorld serverWorld) {
-         return type.method_5883(serverWorld);
+         return type.create(serverWorld);
       } else {
-         return world instanceof ChunkRegion chunkRegion ? type.method_5883(getServerWorld(chunkRegion)) : null;
+         return world instanceof ChunkRegion chunkRegion ? type.create(getServerWorld(chunkRegion)) : null;
       }
    }
 
-   protected StructureProcessorType<?> method_16772() {
+   protected StructureProcessorType<?> getType() {
       return ModStructureProcessors.GHOST_SPAWN_PROCESSOR;
    }
 
@@ -228,7 +228,7 @@ public class GhostSpawnProcessor extends StructureProcessor {
    public record SpawnBlockConfig(Block block, int offsetX, int offsetY, int offsetZ) {
       public static final Codec<GhostSpawnProcessor.SpawnBlockConfig> CODEC = RecordCodecBuilder.create(
          instance -> instance.group(
-               Registries.field_41175.method_39673().fieldOf("block").forGetter(GhostSpawnProcessor.SpawnBlockConfig::block),
+               Registries.BLOCK.getCodec().fieldOf("block").forGetter(GhostSpawnProcessor.SpawnBlockConfig::block),
                Codec.INT.optionalFieldOf("offset_x", 0).forGetter(GhostSpawnProcessor.SpawnBlockConfig::offsetX),
                Codec.INT.optionalFieldOf("offset_y", 1).forGetter(GhostSpawnProcessor.SpawnBlockConfig::offsetY),
                Codec.INT.optionalFieldOf("offset_z", 0).forGetter(GhostSpawnProcessor.SpawnBlockConfig::offsetZ)

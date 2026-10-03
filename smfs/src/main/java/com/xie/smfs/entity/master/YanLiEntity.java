@@ -35,26 +35,26 @@ public class YanLiEntity extends GhostMasterEntity {
       this.shouldAttackPlayers = false;
       this.shouldProtectPlayers = true;
       this.shouldAttackGhostsNearPlayers = true;
-      this.method_5665(Text.method_43470("§6严力"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6严力"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.FOLK_GHOST_MASTER;
    }
 
    public static Builder createYanLiAttributes() {
-      return MobEntity.method_26828()
-         .method_26868(EntityAttributes.field_23716, 850.0)
-         .method_26868(EntityAttributes.field_23719, 0.3)
-         .method_26868(EntityAttributes.field_23721, 18.0)
-         .method_26868(EntityAttributes.field_23717, 16.0);
+      return MobEntity.createMobAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 850.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 18.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 16.0);
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -64,28 +64,26 @@ public class YanLiEntity extends GhostMasterEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608() && this.method_5968() != null) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient() && this.getTarget() != null) {
       }
    }
 
    @Override
-   public boolean method_6121(Entity target) {
-      boolean attacked = super.method_6121(target);
-      if (!this.method_37908().method_8608() && attacked && target instanceof LivingEntity livingTarget) {
+   public boolean tryAttack(Entity target) {
+      boolean attacked = super.tryAttack(target);
+      if (!this.getWorld().isClient() && attacked && target instanceof LivingEntity livingTarget) {
          StatusEffectInstance silenceEffect = new StatusEffectInstance(ModEffects.SILENCE, 200, 0, false, true, true);
-         livingTarget.method_6092(silenceEffect);
-         if (this.method_37908() instanceof ServerWorld serverWorld) {
-            Vec3d pos = target.method_19538();
+         livingTarget.addStatusEffect(silenceEffect);
+         if (this.getWorld() instanceof ServerWorld serverWorld) {
+            Vec3d pos = target.getPos();
 
             for (int i = 0; i < 15; i++) {
-               double offsetX = (this.method_6051().method_43058() - 0.5) * 2.0;
-               double offsetY = this.method_6051().method_43058() * 2.0;
-               double offsetZ = (this.method_6051().method_43058() - 0.5) * 2.0;
-               serverWorld.method_14199(
-                  ParticleTypes.field_11251, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 2, 0.1, 0.1, 0.1, 0.2
-               );
+               double offsetX = (this.getRandom().nextDouble() - 0.5) * 2.0;
+               double offsetY = this.getRandom().nextDouble() * 2.0;
+               double offsetZ = (this.getRandom().nextDouble() - 0.5) * 2.0;
+               serverWorld.spawnParticles(ParticleTypes.SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 2, 0.1, 0.1, 0.1, 0.2);
             }
          }
       }
@@ -98,10 +96,10 @@ public class YanLiEntity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack ghostMoney3Input = new ItemStack(ModItems.GHOST_MONEY_7, 3);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 78);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 78);
          this.tradeOffers.add(new TradeOffer(ghostMoney3Input, goldIngotOutput2, 12, 5, 0.05F));
          ItemStack eerieYellowPaperInput = new ItemStack(ModItems.EERIE_YELLOW_PAPER, 1);
-         ItemStack goldNuggetOutput = new ItemStack(Items.field_8494, 1);
+         ItemStack goldNuggetOutput = new ItemStack(Items.GOLD_BLOCK, 1);
          this.tradeOffers.add(new TradeOffer(eerieYellowPaperInput, goldNuggetOutput, 64, 1, 0.01F));
          this.tradeOffersInitialized = true;
       }

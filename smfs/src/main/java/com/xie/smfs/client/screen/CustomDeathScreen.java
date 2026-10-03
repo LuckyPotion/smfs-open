@@ -37,14 +37,14 @@ public class CustomDeathScreen extends Screen {
    }
 
    public CustomDeathScreen(Text deathMessage, boolean isHardcore, boolean isSilentGhostReinvade) {
-      super(Text.method_43471(isHardcore ? "deathScreen.title.hardcore" : "deathScreen.title"));
+      super(Text.translatable(isHardcore ? "deathScreen.title.hardcore" : "deathScreen.title"));
       this.deathMessage = deathMessage;
       this.showDeathMessage = !isHardcore;
       this.isSilentGhostReinvade = isSilentGhostReinvade;
    }
 
-   protected void method_25426() {
-      super.method_25426();
+   protected void init() {
+      super.init();
       ClientPlayNetworking.registerGlobalReceiver(RESPAWN_CONFIRMATION, this::handleRespawnConfirmation);
       ClientPlayNetworking.registerGlobalReceiver(SPECTATE_CONFIRMATION, this::handleSpectateConfirmation);
       ClientPlayNetworking.registerGlobalReceiver(REINVADE_CONFIRMATION, this::handleReinvadeConfirmation);
@@ -52,101 +52,101 @@ public class CustomDeathScreen extends Screen {
       int buttonWidth = 200;
       int buttonHeight = 20;
       int buttonSpacing = 25;
-      int centerX = this.field_22789 / 2 - buttonWidth / 2;
-      int startY = this.field_22790 / 2 - 30;
+      int centerX = this.width / 2 - buttonWidth / 2;
+      int startY = this.height / 2 - 30;
       if (this.isSilentGhostReinvade) {
-         this.method_37063(ButtonWidget.method_46430(Text.method_43471("smfs.deathScreen.reinvade"), button -> {
-            if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+         this.addDrawableChild(ButtonWidget.builder(Text.translatable("smfs.deathScreen.reinvade"), button -> {
+            if (this.client != null && this.client.player != null) {
                ClientModNetwork.sendToServer(new ReinvadeRespawnPacket());
-               this.field_22787.field_1724.method_7331();
-               this.field_22787.method_1507(this);
+               this.client.player.requestRespawn();
+               this.client.setScreen(this);
             }
-         }).method_46434(centerX, startY, buttonWidth, buttonHeight).method_46431());
+         }).dimensions(centerX, startY, buttonWidth, buttonHeight).build());
       } else {
-         this.method_37063(
-            ButtonWidget.method_46430(
-                  Text.method_43471("smfs.deathScreen.respawn"),
+         this.addDrawableChild(
+            ButtonWidget.builder(
+                  Text.translatable("smfs.deathScreen.respawn"),
                   button -> {
-                     if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+                     if (this.client != null && this.client.player != null) {
                         if (ModConfig.getInstance().instantReincarnation) {
                            ConfirmScreen confirmScreen = new ConfirmScreen(
                               confirmed -> {
                                  if (confirmed) {
                                     ClientModNetwork.sendToServer(new RequestRespawnPacket());
-                                    this.field_22787.field_1724.method_7331();
-                                    this.field_22787.method_1507(this);
+                                    this.client.player.requestRespawn();
+                                    this.client.setScreen(this);
                                  } else {
                                     this.quitLevel();
                                  }
                               },
-                              Text.method_43471("smfs.deathScreen.respawn.warning.title"),
-                              Text.method_43471("smfs.deathScreen.respawn.warning.message"),
-                              Text.method_43471("smfs.deathScreen.respawn.warning.understand"),
-                              Text.method_43471("smfs.deathScreen.respawn.warning.quit")
+                              Text.translatable("smfs.deathScreen.respawn.warning.title"),
+                              Text.translatable("smfs.deathScreen.respawn.warning.message"),
+                              Text.translatable("smfs.deathScreen.respawn.warning.understand"),
+                              Text.translatable("smfs.deathScreen.respawn.warning.quit")
                            );
-                           this.field_22787.method_1507(confirmScreen);
+                           this.client.setScreen(confirmScreen);
                         } else {
                            ClientModNetwork.sendToServer(new SpectateModePacket());
-                           this.field_22787.field_1724.method_7331();
+                           this.client.player.requestRespawn();
                         }
                      }
                   }
                )
-               .method_46434(centerX, startY, buttonWidth, buttonHeight)
-               .method_46431()
+               .dimensions(centerX, startY, buttonWidth, buttonHeight)
+               .build()
          );
       }
 
-      this.method_37063(ButtonWidget.method_46430(Text.method_43471("smfs.deathScreen.spectate"), button -> {
-         if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+      this.addDrawableChild(ButtonWidget.builder(Text.translatable("smfs.deathScreen.spectate"), button -> {
+         if (this.client != null && this.client.player != null) {
             LOGGER.debug("玩家点击成为亡魂");
             ClientModNetwork.sendToServer(new SpectateModePacket());
-            this.field_22787.field_1724.method_7331();
+            this.client.player.requestRespawn();
             LOGGER.debug("已发送包并触发 requestRespawn()，等待服务端确认包关闭界面");
          }
-      }).method_46434(centerX, startY + buttonSpacing, buttonWidth, buttonHeight).method_46431());
-      this.method_37063(
-         ButtonWidget.method_46430(
-               Text.method_43471("smfs.deathScreen.quit"),
+      }).dimensions(centerX, startY + buttonSpacing, buttonWidth, buttonHeight).build());
+      this.addDrawableChild(
+         ButtonWidget.builder(
+               Text.translatable("smfs.deathScreen.quit"),
                button -> {
-                  if (this.field_22787 != null) {
+                  if (this.client != null) {
                      ConfirmScreen confirmScreen = new ConfirmScreen(
                         confirmed -> {
                            if (confirmed) {
                               this.quitLevel();
                            } else {
-                              this.field_22787.method_1507(this);
+                              this.client.setScreen(this);
                            }
                         },
-                        Text.method_43471("smfs.deathScreen.quit.confirm"),
-                        Text.method_43471("smfs.deathScreen.quit.confirm.detail"),
-                        Text.method_43471("gui.yes"),
-                        Text.method_43471("gui.no")
+                        Text.translatable("smfs.deathScreen.quit.confirm"),
+                        Text.translatable("smfs.deathScreen.quit.confirm.detail"),
+                        Text.translatable("gui.yes"),
+                        Text.translatable("gui.no")
                      );
-                     this.field_22787.method_1507(confirmScreen);
+                     this.client.setScreen(confirmScreen);
                   }
                }
             )
-            .method_46434(centerX, startY + buttonSpacing * 2, buttonWidth, buttonHeight)
-            .method_46431()
+            .dimensions(centerX, startY + buttonSpacing * 2, buttonWidth, buttonHeight)
+            .build()
       );
    }
 
    private void quitLevel() {
-      if (this.field_22787.field_1687 != null) {
-         this.field_22787.field_1687.method_8525();
+      if (this.client.world != null) {
+         this.client.world.disconnect();
       }
 
-      this.field_22787.method_18096(new MessageScreen(Text.method_43471("menu.savingLevel")));
-      this.field_22787.method_1507(new TitleScreen());
+      this.client.disconnect(new MessageScreen(Text.translatable("menu.savingLevel")));
+      this.client.setScreen(new TitleScreen());
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
       if (this.showDeathMessage) {
          Text displayMessage;
          if (this.isSilentGhostReinvade) {
-            displayMessage = Text.method_43471("smfs.deathScreen.silentGhost.message");
+            displayMessage = Text.translatable("smfs.deathScreen.silentGhost.message");
          } else if (this.deathMessage != null) {
             displayMessage = this.deathMessage;
          } else {
@@ -154,35 +154,35 @@ public class CustomDeathScreen extends Screen {
          }
 
          if (displayMessage != null) {
-            context.method_27534(this.field_22793, displayMessage, this.field_22789 / 2, this.field_22790 / 2 - 50, 16777215);
+            context.drawCenteredTextWithShadow(this.textRenderer, displayMessage, this.width / 2, this.height / 2 - 50, 16777215);
          }
       }
 
-      context.method_27534(this.field_22793, this.field_22785, this.field_22789 / 2, this.field_22790 / 2 - 70, 16777215);
-      super.method_25394(context, mouseX, mouseY, delta);
+      context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2 - 70, 16777215);
+      super.render(context, mouseX, mouseY, delta);
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return false;
    }
 
-   public boolean method_25421() {
+   public boolean shouldPause() {
       return false;
    }
 
    private void handleRespawnConfirmation(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
       client.execute(() -> {
          LOGGER.debug("收到立即复活确认包，关闭界面");
-         if (client.field_1755 == this) {
-            client.method_1507(null);
+         if (client.currentScreen == this) {
+            client.setScreen(null);
          }
       });
    }
 
    private boolean hasSilentGhostEquipped() {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+      if (this.client != null && this.client.player != null) {
          for (int i = 0; i < 10; i++) {
-            String ghostType = PlayerEvents.getGhostTypeInSlot(this.field_22787.field_1724, i);
+            String ghostType = PlayerEvents.getGhostTypeInSlot(this.client.player, i);
             if ("silent_ghost".equals(ghostType)) {
                return true;
             }
@@ -195,12 +195,12 @@ public class CustomDeathScreen extends Screen {
    private void handleSpectateConfirmation(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
       client.execute(() -> {
          LOGGER.debug("收到旁观者模式确认包，关闭界面");
-         if (client.field_1755 instanceof CustomDeathScreen) {
-            client.method_1507(null);
+         if (client.currentScreen instanceof CustomDeathScreen) {
+            client.setScreen(null);
             LOGGER.debug("死亡界面已强制关闭");
-         } else if (client.field_1755 != null) {
-            LOGGER.warn("当前界面不是CustomDeathScreen实例，而是: {}", client.field_1755.getClass().getName());
-            client.method_1507(null);
+         } else if (client.currentScreen != null) {
+            LOGGER.warn("当前界面不是CustomDeathScreen实例，而是: {}", client.currentScreen.getClass().getName());
+            client.setScreen(null);
             LOGGER.debug("已强制关闭当前界面");
          } else {
             LOGGER.debug("当前没有显示任何界面");
@@ -210,14 +210,14 @@ public class CustomDeathScreen extends Screen {
 
    private void handleReinvadeConfirmation(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
       client.execute(() -> {
-         if (client.field_1755 instanceof CustomDeathScreen) {
-            client.method_1507(null);
+         if (client.currentScreen instanceof CustomDeathScreen) {
+            client.setScreen(null);
          }
       });
    }
 
-   public void method_25432() {
-      super.method_25432();
+   public void removed() {
+      super.removed();
       LOGGER.debug("CustomDeathScreen被移除，取消注册网络包监听器");
       ClientPlayNetworking.unregisterGlobalReceiver(RESPAWN_CONFIRMATION);
       ClientPlayNetworking.unregisterGlobalReceiver(SPECTATE_CONFIRMATION);

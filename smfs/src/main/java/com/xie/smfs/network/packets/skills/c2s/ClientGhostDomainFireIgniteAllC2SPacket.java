@@ -38,27 +38,27 @@ public class ClientGhostDomainFireIgniteAllC2SPacket {
    private static void igniteAllInGhostDomain(ServerPlayerEntity player) {
       int ghostFireLevel = GhostDomainManager.getEffectiveSkillLevel(player, GhostDomainManager.getGhostFireLevel(player));
       if (ghostFireLevel < 4) {
-         player.method_7353(Text.method_43470(GhostDomainManager.getInsufficientLevelMessage(player)), true);
+         player.sendMessage(Text.literal(GhostDomainManager.getInsufficientLevelMessage(player)), true);
       } else {
          double range = 64.0;
-         BlockPos playerPos = player.method_24515();
-         player.method_7353(Text.method_43470("§a成功点燃生物周围方块！"), true);
-         player.method_37908()
-            .method_8333(player, player.method_5829().method_1014(range), entity -> entity.method_5805() && entity != player && entity instanceof LivingEntity)
+         BlockPos playerPos = player.getBlockPos();
+         player.sendMessage(Text.literal("§a成功点燃生物周围方块！"), true);
+         player.getWorld()
+            .getOtherEntities(player, player.getBoundingBox().expand(range), entity -> entity.isAlive() && entity != player && entity instanceof LivingEntity)
             .forEach(entity -> igniteBlocksAroundEntity(player, entity));
       }
    }
 
    private static void igniteBlocksAroundEntity(ServerPlayerEntity player, Entity entity) {
-      BlockPos entityPos = entity.method_24515();
+      BlockPos entityPos = entity.getBlockPos();
 
-      for (int x = entityPos.method_10263() - 1; x <= entityPos.method_10263() + 1; x++) {
-         for (int y = entityPos.method_10264() - 1; y <= entityPos.method_10264() + 1; y++) {
-            for (int z = entityPos.method_10260() - 1; z <= entityPos.method_10260() + 1; z++) {
+      for (int x = entityPos.getX() - 1; x <= entityPos.getX() + 1; x++) {
+         for (int y = entityPos.getY() - 1; y <= entityPos.getY() + 1; y++) {
+            for (int z = entityPos.getZ() - 1; z <= entityPos.getZ() + 1; z++) {
                BlockPos blockPos = new BlockPos(x, y, z);
-               BlockState blockState = player.method_37908().method_8320(blockPos);
+               BlockState blockState = player.getWorld().getBlockState(blockPos);
                if (canIgniteBlock(blockState)) {
-                  player.method_37908().method_8501(blockPos, Blocks.field_10036.method_9564());
+                  player.getWorld().setBlockState(blockPos, Blocks.FIRE.getDefaultState());
                }
             }
          }
@@ -66,6 +66,6 @@ public class ClientGhostDomainFireIgniteAllC2SPacket {
    }
 
    private static boolean canIgniteBlock(BlockState blockState) {
-      return !blockState.method_26215() && blockState.method_26204() != Blocks.field_10036 && blockState.method_50011();
+      return !blockState.isAir() && blockState.getBlock() != Blocks.FIRE && blockState.isBurnable();
    }
 }

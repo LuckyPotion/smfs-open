@@ -20,9 +20,9 @@ public class MinecraftClientMixin {
    @Inject(method = "doAttack", at = @At("HEAD"))
    private void onDoAttack(CallbackInfoReturnable<Boolean> cir) {
       MinecraftClient client = (MinecraftClient)this;
-      if (client.field_1724 != null && client.field_1687 != null) {
-         ItemStack stack = client.field_1724.method_6047();
-         if (stack.method_7909() instanceof FissuredSpearPurpleItem) {
+      if (client.player != null && client.world != null) {
+         ItemStack stack = client.player.getMainHandStack();
+         if (stack.getItem() instanceof FissuredSpearPurpleItem) {
             String mode = FissuredSpearPurpleItem.getThrowMode(stack);
             if (!mode.equals("wish")) {
                return;
@@ -34,7 +34,7 @@ public class MinecraftClientMixin {
             }
 
             this.performRemoteAttack(client);
-         } else if (stack.method_7909() instanceof RustyOldBroadswordItem) {
+         } else if (stack.getItem() instanceof RustyOldBroadswordItem) {
             if (!RustyOldBroadswordItem.isRangedMode(stack)) {
                return;
             }
@@ -47,17 +47,17 @@ public class MinecraftClientMixin {
    private void performRemoteAttack(MinecraftClient client) {
       double reachDistance = 64.0;
       float tickDelta = 1.0F;
-      Vec3d eyePos = client.field_1724.method_5836(tickDelta);
-      Vec3d lookVec = client.field_1724.method_5828(tickDelta);
-      EntityHitResult entityHit = TargetingUtil.projectileRaycast(client.field_1724, eyePos, lookVec, reachDistance, 1.0);
-      if (entityHit != null && entityHit.method_17782() instanceof LivingEntity target && target != client.field_1724 && target.method_5805()) {
+      Vec3d eyePos = client.player.getCameraPosVec(tickDelta);
+      Vec3d lookVec = client.player.getRotationVec(tickDelta);
+      EntityHitResult entityHit = TargetingUtil.projectileRaycast(client.player, eyePos, lookVec, reachDistance, 1.0);
+      if (entityHit != null && entityHit.getEntity() instanceof LivingEntity target && target != client.player && target.isAlive()) {
          double normalReach = 4.0;
-         double dist = client.field_1724.method_5858(target);
+         double dist = client.player.squaredDistanceTo(target);
          if (dist >= normalReach * normalReach) {
-            SpearRemoteAttackC2SPacket.sendToServer(target.method_5628());
+            SpearRemoteAttackC2SPacket.sendToServer(target.getId());
          }
       } else {
-         client.field_1724.method_7353(Text.method_43470("§c没有目标"), true);
+         client.player.sendMessage(Text.literal("§c没有目标"), true);
       }
    }
 }

@@ -29,68 +29,68 @@ public class GiantShadowGhostEntity extends GhostEntity {
    }
 
    private void initGiantShadowAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.0);
+         speedAttribute.setBaseValue(0.0);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(12.0);
+         attackDamageAttribute.setBaseValue(12.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.5);
+         attackKnockbackAttribute.setBaseValue(0.5);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(32.0);
+         followRangeAttribute.setBaseValue(32.0);
       }
    }
 
    public static Builder createAttributes() {
       return GhostEntity.createGhostAttributes()
-         .method_26868(EntityAttributes.field_23716, 100000.0)
-         .method_26868(EntityAttributes.field_23719, 0.0)
-         .method_26868(EntityAttributes.field_23721, 12.0)
-         .method_26868(EntityAttributes.field_23722, 0.5)
-         .method_26868(EntityAttributes.field_23717, 32.0);
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 100000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.0)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 12.0)
+         .add(EntityAttributes.GENERIC_ATTACK_KNOCKBACK, 0.5)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0);
    }
 
-   public void method_6091(Vec3d movementInput) {
-      if (this.method_24828()) {
-         if (this.method_5942().method_23966()) {
-            super.method_6091(movementInput);
+   public void travel(Vec3d movementInput) {
+      if (this.isOnGround()) {
+         if (this.getNavigation().isFollowingPath()) {
+            super.travel(movementInput);
          } else {
-            this.method_18799(Vec3d.field_1353);
+            this.setVelocity(Vec3d.ZERO);
          }
       } else {
-         super.method_6091(movementInput);
+         super.travel(movementInput);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          if (this.moveCooldown > 0) {
             this.moveCooldown--;
          }
 
          if (this.isSuppressed() || this.isDeadlocked()) {
-            this.method_18799(Vec3d.field_1353);
-            this.method_5942().method_6340();
+            this.setVelocity(Vec3d.ZERO);
+            this.getNavigation().stop();
             return;
          }
 
-         PlayerEntity nearestPlayer = this.method_37908().method_18460(this, 32.0);
+         PlayerEntity nearestPlayer = this.getWorld().getClosestPlayer(this, 32.0);
          if (nearestPlayer != null) {
             this.handlePlayerInteraction(nearestPlayer);
          }
@@ -98,7 +98,7 @@ public class GiantShadowGhostEntity extends GhostEntity {
    }
 
    private void handlePlayerInteraction(PlayerEntity player) {
-      double distance = this.method_5739(player);
+      double distance = this.distanceTo(player);
       boolean isPlayerFacingAway = this.isPlayerFacingAway(player);
       if (isPlayerFacingAway) {
          if (this.moveCooldown <= 0) {
@@ -113,34 +113,28 @@ public class GiantShadowGhostEntity extends GhostEntity {
    }
 
    private boolean isPlayerFacingAway(PlayerEntity player) {
-      Vec3d playerLookVec = player.method_5828(1.0F).method_1029();
-      Vec3d toGhostVec = new Vec3d(
-            this.method_23317() - player.method_23317(), this.method_23318() - player.method_23318(), this.method_23321() - player.method_23321()
-         )
-         .method_1029();
-      double dotProduct = playerLookVec.method_1026(toGhostVec);
+      Vec3d playerLookVec = player.getRotationVec(1.0F).normalize();
+      Vec3d toGhostVec = new Vec3d(this.getX() - player.getX(), this.getY() - player.getY(), this.getZ() - player.getZ()).normalize();
+      double dotProduct = playerLookVec.dotProduct(toGhostVec);
       return dotProduct < 0.0;
    }
 
    private void moveTowardsPlayer(PlayerEntity player) {
-      Vec3d direction = new Vec3d(
-            player.method_23317() - this.method_23317(), player.method_23318() - this.method_23318(), player.method_23321() - this.method_23321()
-         )
-         .method_1029();
-      double distanceToPlayer = this.method_5739(player);
+      Vec3d direction = new Vec3d(player.getX() - this.getX(), player.getY() - this.getY(), player.getZ() - this.getZ()).normalize();
+      double distanceToPlayer = this.distanceTo(player);
       double actualMoveDistance = Math.min(8.0, distanceToPlayer - 1.0);
       if (actualMoveDistance > 0.0) {
-         double targetX = this.method_23317() + direction.field_1352 * actualMoveDistance;
-         double targetY = this.method_23318() + direction.field_1351 * actualMoveDistance;
-         double targetZ = this.method_23321() + direction.field_1350 * actualMoveDistance;
-         this.method_20620(targetX, targetY, targetZ);
+         double targetX = this.getX() + direction.x * actualMoveDistance;
+         double targetY = this.getY() + direction.y * actualMoveDistance;
+         double targetZ = this.getZ() + direction.z * actualMoveDistance;
+         this.teleport(targetX, targetY, targetZ);
          LOGGER.debug("高大鬼影瞬移到玩家: 距离={}, 移动距离={}, 目标位置=({}, {}, {})", distanceToPlayer, actualMoveDistance, targetX, targetY, targetZ);
       }
    }
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      return !RedGhostCandleItem.isHoldingCandle(player) && this.isPlayerFacingAway(player) && this.method_5739(player) <= 4.0 && this.attackCooldown <= 0;
+      return !RedGhostCandleItem.isHoldingCandle(player) && this.isPlayerFacingAway(player) && this.distanceTo(player) <= 4.0 && this.attackCooldown <= 0;
    }
 
    @Override

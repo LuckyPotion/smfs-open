@@ -46,13 +46,13 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
    private static final int VANILLA_MATERIAL_SLOT = 2;
    private static final int GOLD_CONTAINER_SLOT = 3;
    private static final int BOTTLE_SLOT = 4;
-   private final DefaultedList<ItemStack> inventory = DefaultedList.method_10213(5, ItemStack.field_8037);
+   private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(5, ItemStack.EMPTY);
    private int brewingTime = 0;
    private int maxBrewingTime = 0;
    private boolean isBrewing = false;
-   private ItemStack brewingResult = ItemStack.field_8037;
+   private ItemStack brewingResult = ItemStack.EMPTY;
    protected final PropertyDelegate propertyDelegate = new PropertyDelegate() {
-      public int method_17390(int index) {
+      public int get(int index) {
          return switch (index) {
             case 0 -> SpiritBrewingStandBlockEntity.this.brewingTime;
             case 1 -> SpiritBrewingStandBlockEntity.this.maxBrewingTime;
@@ -61,7 +61,7 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
          };
       }
 
-      public void method_17391(int index, int value) {
+      public void set(int index, int value) {
          switch (index) {
             case 0:
                SpiritBrewingStandBlockEntity.this.brewingTime = value;
@@ -74,7 +74,7 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
          }
       }
 
-      public int method_17389() {
+      public int size() {
          return 3;
       }
    };
@@ -93,22 +93,22 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
          ItemStack vanillaMaterial = (ItemStack)this.inventory.get(2);
          ItemStack goldContainer = (ItemStack)this.inventory.get(3);
          ItemStack bottle = (ItemStack)this.inventory.get(4);
-         if (modMaterial1.method_7960()) {
+         if (modMaterial1.isEmpty()) {
             return false;
-         } else if (!this.isModMaterial(modMaterial1.method_7909())) {
+         } else if (!this.isModMaterial(modMaterial1.getItem())) {
             return false;
-         } else if (modMaterial2.method_7960()) {
+         } else if (modMaterial2.isEmpty()) {
             return false;
-         } else if (!this.isModMaterial(modMaterial2.method_7909())) {
+         } else if (!this.isModMaterial(modMaterial2.getItem())) {
             return false;
-         } else if (vanillaMaterial.method_7960()) {
+         } else if (vanillaMaterial.isEmpty()) {
             return false;
-         } else if (goldContainer.method_7960()) {
+         } else if (goldContainer.isEmpty()) {
             return false;
          } else if (!this.isGoldContainerWithGhost(goldContainer)) {
             return false;
          } else {
-            return bottle.method_7960() ? false : bottle.method_31574(Items.field_8469);
+            return bottle.isEmpty() ? false : bottle.isOf(Items.GLASS_BOTTLE);
          }
       }
    }
@@ -118,9 +118,7 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
    }
 
    private boolean isGoldContainerWithGhost(ItemStack stack) {
-      return stack.method_31574(ModItems.GOLDEN_CONTAINER)
-         && stack.method_7948().method_10577("HasGhost")
-         && stack.method_7948().method_10545("ContainedGhost");
+      return stack.isOf(ModItems.GOLDEN_CONTAINER) && stack.getOrCreateNbt().getBoolean("HasGhost") && stack.getOrCreateNbt().contains("ContainedGhost");
    }
 
    public void startBrewing() {
@@ -129,12 +127,12 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
       this.setBrewingTimeByPotionType(potionId);
       this.isBrewing = true;
       this.brewingTime = this.maxBrewingTime;
-      this.method_5431();
+      this.markDirty();
    }
 
    private String getPotionIdFromResult(ItemStack result) {
       for (Entry<String, SpiritBrewingStandBlockEntity.PotionConfig> entry : POTION_CONFIGS.entrySet()) {
-         if (result.method_31574(entry.getValue().potionItem)) {
+         if (result.isOf(entry.getValue().potionItem)) {
             return entry.getKey();
          }
       }
@@ -154,20 +152,20 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
    public void stopBrewing() {
       if (this.isBrewing) {
          ItemStack result = new ItemStack(ModItems.DISGUSTING_LIQUID);
-         if (!result.method_7960() && !((ItemStack)this.inventory.get(4)).method_7960()) {
-            ((ItemStack)this.inventory.get(4)).method_7934(1);
+         if (!result.isEmpty() && !((ItemStack)this.inventory.get(4)).isEmpty()) {
+            ((ItemStack)this.inventory.get(4)).decrement(1);
             this.inventory.set(4, result);
          }
 
-         this.inventory.set(0, ItemStack.field_8037);
-         this.inventory.set(1, ItemStack.field_8037);
-         this.inventory.set(2, ItemStack.field_8037);
+         this.inventory.set(0, ItemStack.EMPTY);
+         this.inventory.set(1, ItemStack.EMPTY);
+         this.inventory.set(2, ItemStack.EMPTY);
          this.inventory.set(3, new ItemStack(ModItems.GOLDEN_CONTAINER));
          this.isBrewing = false;
          this.brewingTime = 0;
          this.maxBrewingTime = 0;
-         this.brewingResult = ItemStack.field_8037;
-         this.method_5431();
+         this.brewingResult = ItemStack.EMPTY;
+         this.markDirty();
       }
    }
 
@@ -177,20 +175,20 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
       ItemStack modMaterial2 = (ItemStack)this.inventory.get(1);
       ItemStack vanillaMaterial = (ItemStack)this.inventory.get(2);
       Random random = new Random();
-      if (!modMaterial1.method_7960()) {
-         int count1 = modMaterial1.method_7947();
+      if (!modMaterial1.isEmpty()) {
+         int count1 = modMaterial1.getCount();
          int optimal1 = 4 + random.nextInt(5);
          value += 15.0F * (float)Math.exp(-0.08 * Math.pow(count1 - optimal1, 2.0));
       }
 
-      if (!modMaterial2.method_7960()) {
-         int count2 = modMaterial2.method_7947();
+      if (!modMaterial2.isEmpty()) {
+         int count2 = modMaterial2.getCount();
          int optimal2 = 4 + random.nextInt(5);
          value += 15.0F * (float)Math.exp(-0.08 * Math.pow(count2 - optimal2, 2.0));
       }
 
-      if (!vanillaMaterial.method_7960()) {
-         int count3 = vanillaMaterial.method_7947();
+      if (!vanillaMaterial.isEmpty()) {
+         int count3 = vanillaMaterial.getCount();
          int optimal3 = 3 + random.nextInt(4);
          value += 8.0F * (float)Math.exp(-0.12 * Math.pow(count3 - optimal3, 2.0));
       }
@@ -208,11 +206,11 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
    }
 
    private String getGhostTypeFromContainer(ItemStack container) {
-      NbtCompound nbt = container.method_7948();
-      if (nbt.method_10577("HasGhost") && nbt.method_10545("ContainedGhost")) {
-         NbtCompound ghostData = nbt.method_10562("ContainedGhost");
-         if (ghostData.method_10545("id")) {
-            String ghostId = ghostData.method_10558("id");
+      NbtCompound nbt = container.getOrCreateNbt();
+      if (nbt.getBoolean("HasGhost") && nbt.contains("ContainedGhost")) {
+         NbtCompound ghostData = nbt.getCompound("ContainedGhost");
+         if (ghostData.contains("id")) {
+            String ghostId = ghostData.getString("id");
             if (ghostId.contains(":")) {
                return ghostId.split(":")[1];
             }
@@ -245,26 +243,26 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
    }
 
    private void adjustProbabilitiesByMaterial(Map<String, Float> probabilities, ItemStack modMaterial1, ItemStack modMaterial2, ItemStack vanillaMaterial) {
-      Item material1 = modMaterial1.method_7909();
-      Item material2 = modMaterial2.method_7909();
-      Item vanilla = vanillaMaterial.method_7909();
+      Item material1 = modMaterial1.getItem();
+      Item material2 = modMaterial2.getItem();
+      Item vanilla = vanillaMaterial.getItem();
       Random random = new Random();
       if (material1 == ModItems.DEFILED_FRAGMENT) {
-         int count1 = modMaterial1.method_7947();
+         int count1 = modMaterial1.getCount();
          int optimal1 = 4 + random.nextInt(5);
          float boost1 = (float)(5.0 * Math.exp(-0.08 * Math.pow(count1 - optimal1, 2.0)));
          probabilities.put("spirit_erosion_potion", probabilities.get("spirit_erosion_potion") + boost1);
       }
 
       if (material2 == ModItems.GHOST_CHINESE_MEDICINE) {
-         int count2 = modMaterial2.method_7947();
+         int count2 = modMaterial2.getCount();
          int optimal2 = 4 + random.nextInt(5);
          float boost2 = (float)(5.0 * Math.exp(-0.08 * Math.pow(count2 - optimal2, 2.0)));
          probabilities.put("ghost_suppression_potion", probabilities.get("ghost_suppression_potion") + boost2);
       }
 
-      if (vanilla == Items.field_8695) {
-         int count3 = vanillaMaterial.method_7947();
+      if (vanilla == Items.GOLD_INGOT) {
+         int count3 = vanillaMaterial.getCount();
          int optimal3 = 3 + random.nextInt(4);
          float boost3 = (float)(5.0 * Math.exp(-0.12 * Math.pow(count3 - optimal3, 2.0)));
          probabilities.put("spirit_immunity_potion", probabilities.get("spirit_immunity_potion") + boost3);
@@ -311,62 +309,62 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
       if (!blockEntity.isBrewing && hasFireBelow(world, pos)) {
          if (blockEntity.canStartBrewing()) {
             blockEntity.startBrewing();
-            world.method_8501(pos, (BlockState)state.method_11657(SpiritBrewingStandBlock.LIT, true));
+            world.setBlockState(pos, (BlockState)state.with(SpiritBrewingStandBlock.LIT, true));
          } else {
-            BlockPos belowPos = pos.method_10074();
-            world.method_8501(belowPos, Blocks.field_10124.method_9564());
+            BlockPos belowPos = pos.down();
+            world.setBlockState(belowPos, Blocks.AIR.getDefaultState());
          }
       } else if (blockEntity.isBrewing && !hasFireBelow(world, pos)) {
          blockEntity.stopBrewing();
-         world.method_8501(pos, (BlockState)state.method_11657(SpiritBrewingStandBlock.LIT, false));
+         world.setBlockState(pos, (BlockState)state.with(SpiritBrewingStandBlock.LIT, false));
       }
 
       if (blockEntity.isBrewing) {
          blockEntity.brewingTime--;
          if (blockEntity.brewingTime <= 0) {
             blockEntity.finishBrewing();
-            world.method_8501(pos, (BlockState)state.method_11657(SpiritBrewingStandBlock.LIT, false));
+            world.setBlockState(pos, (BlockState)state.with(SpiritBrewingStandBlock.LIT, false));
          }
       }
    }
 
    private static boolean hasFireBelow(World world, BlockPos pos) {
-      BlockPos belowPos = pos.method_10074();
-      BlockState belowState = world.method_8320(belowPos);
-      return belowState.method_27852(Blocks.field_10036) || belowState.method_27852(Blocks.field_22089);
+      BlockPos belowPos = pos.down();
+      BlockState belowState = world.getBlockState(belowPos);
+      return belowState.isOf(Blocks.FIRE) || belowState.isOf(Blocks.SOUL_FIRE);
    }
 
    private void finishBrewing() {
-      if (!this.brewingResult.method_7960() && !((ItemStack)this.inventory.get(4)).method_7960()) {
-         ((ItemStack)this.inventory.get(4)).method_7934(1);
+      if (!this.brewingResult.isEmpty() && !((ItemStack)this.inventory.get(4)).isEmpty()) {
+         ((ItemStack)this.inventory.get(4)).decrement(1);
          this.inventory.set(4, this.brewingResult);
       }
 
-      this.inventory.set(0, ItemStack.field_8037);
-      this.inventory.set(1, ItemStack.field_8037);
-      this.inventory.set(2, ItemStack.field_8037);
+      this.inventory.set(0, ItemStack.EMPTY);
+      this.inventory.set(1, ItemStack.EMPTY);
+      this.inventory.set(2, ItemStack.EMPTY);
       this.inventory.set(3, new ItemStack(ModItems.GOLDEN_CONTAINER));
       this.isBrewing = false;
       this.brewingTime = 0;
       this.maxBrewingTime = 0;
-      this.brewingResult = ItemStack.field_8037;
-      this.method_5431();
+      this.brewingResult = ItemStack.EMPTY;
+      this.markDirty();
    }
 
-   public void method_11014(NbtCompound nbt) {
-      super.method_11014(nbt);
-      Inventories.method_5429(nbt, this.inventory);
-      this.brewingTime = nbt.method_10550("BrewingTime");
-      this.maxBrewingTime = nbt.method_10550("MaxBrewingTime");
-      this.isBrewing = nbt.method_10577("IsBrewing");
+   public void readNbt(NbtCompound nbt) {
+      super.readNbt(nbt);
+      Inventories.readNbt(nbt, this.inventory);
+      this.brewingTime = nbt.getInt("BrewingTime");
+      this.maxBrewingTime = nbt.getInt("MaxBrewingTime");
+      this.isBrewing = nbt.getBoolean("IsBrewing");
    }
 
-   public void method_11007(NbtCompound nbt) {
-      super.method_11007(nbt);
-      Inventories.method_5426(nbt, this.inventory);
-      nbt.method_10569("BrewingTime", this.brewingTime);
-      nbt.method_10569("MaxBrewingTime", this.maxBrewingTime);
-      nbt.method_10556("IsBrewing", this.isBrewing);
+   public void writeNbt(NbtCompound nbt) {
+      super.writeNbt(nbt);
+      Inventories.writeNbt(nbt, this.inventory);
+      nbt.putInt("BrewingTime", this.brewingTime);
+      nbt.putInt("MaxBrewingTime", this.maxBrewingTime);
+      nbt.putBoolean("IsBrewing", this.isBrewing);
    }
 
    public DefaultedList<ItemStack> getItems() {
@@ -377,13 +375,13 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
       return this.isBrewing;
    }
 
-   public int method_5439() {
+   public int size() {
       return this.inventory.size();
    }
 
-   public boolean method_5442() {
+   public boolean isEmpty() {
       for (ItemStack stack : this.inventory) {
-         if (!stack.method_7960()) {
+         if (!stack.isEmpty()) {
             return false;
          }
       }
@@ -391,44 +389,44 @@ public class SpiritBrewingStandBlockEntity extends BlockEntity implements Invent
       return true;
    }
 
-   public ItemStack method_5438(int slot) {
+   public ItemStack getStack(int slot) {
       return (ItemStack)this.inventory.get(slot);
    }
 
-   public ItemStack method_5434(int slot, int amount) {
-      return this.isBrewing ? ItemStack.field_8037 : Inventories.method_5430(this.inventory, slot, amount);
+   public ItemStack removeStack(int slot, int amount) {
+      return this.isBrewing ? ItemStack.EMPTY : Inventories.splitStack(this.inventory, slot, amount);
    }
 
-   public ItemStack method_5441(int slot) {
-      return this.isBrewing ? ItemStack.field_8037 : Inventories.method_5428(this.inventory, slot);
+   public ItemStack removeStack(int slot) {
+      return this.isBrewing ? ItemStack.EMPTY : Inventories.removeStack(this.inventory, slot);
    }
 
-   public void method_5447(int slot, ItemStack stack) {
+   public void setStack(int slot, ItemStack stack) {
       if (!this.isBrewing) {
          if (slot == 4) {
-            if (!stack.method_7960()) {
-               stack.method_7939(1);
+            if (!stack.isEmpty()) {
+               stack.setCount(1);
             }
-         } else if (stack.method_7947() > this.method_5444()) {
-            stack.method_7939(this.method_5444());
+         } else if (stack.getCount() > this.getMaxCountPerStack()) {
+            stack.setCount(this.getMaxCountPerStack());
          }
 
          this.inventory.set(slot, stack);
       }
    }
 
-   public boolean method_5443(PlayerEntity player) {
+   public boolean canPlayerUse(PlayerEntity player) {
       return true;
    }
 
-   public void method_5448() {
+   public void clear() {
       if (!this.isBrewing) {
          this.inventory.clear();
       }
    }
 
-   public Text method_5476() {
-      return Text.method_43471("container.smfs.spirit_brewing_stand");
+   public Text getDisplayName() {
+      return Text.translatable("container.smfs.spirit_brewing_stand");
    }
 
    @Nullable

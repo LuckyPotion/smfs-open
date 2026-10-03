@@ -53,8 +53,8 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    private static final double GHOST_DOMAIN_RADIUS = 64.0;
    private static final char TERROR_LEVEL = 'A';
    private static final int KNOCK_DELAY = 10;
-   private static final TrackedData<Integer> CURRENT_PHASE = DataTracker.method_12791(QiaomenGhostEntity.class, TrackedDataHandlerRegistry.field_13327);
-   private static final TrackedData<Integer> PHASE_TIMER = DataTracker.method_12791(QiaomenGhostEntity.class, TrackedDataHandlerRegistry.field_13327);
+   private static final TrackedData<Integer> CURRENT_PHASE = DataTracker.registerData(QiaomenGhostEntity.class, TrackedDataHandlerRegistry.INTEGER);
+   private static final TrackedData<Integer> PHASE_TIMER = DataTracker.registerData(QiaomenGhostEntity.class, TrackedDataHandlerRegistry.INTEGER);
    private QiaomenGhostEntity.Phase currentPhase = QiaomenGhostEntity.Phase.PREPARE_KNOCK;
    private int phaseTimer = 0;
    private boolean isInitialPhase = true;
@@ -80,30 +80,23 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    private boolean lastAttackSuccessful = false;
 
    private void registerDeathListener() {
-      if (!this.deathListenerRegistered && !this.method_37908().method_8608()) {
-         ServerLivingEntityEvents.ALLOW_DEATH
-            .register(
-               (AllowDeath)(entity, source, damageAmount) -> {
-                  if (entity != this && !(entity instanceof GhostEntity) && !(entity instanceof GhostSlaveEntity) && this.method_5858(entity) <= 4096.0) {
-                     QiaomenGhostEntity.DeathRecord record = new QiaomenGhostEntity.DeathRecord(
-                        entity.method_19538(), this.method_37908().method_8510(), entity.method_5864()
-                     );
-                     this.deathRecords.add(record);
-                     LOGGER.debug(
-                        "敲门鬼检测到精确死亡事件: 实体类型={}, 死亡位置=({}, {}, {})", entity.method_5864(), entity.method_23317(), entity.method_23318(), entity.method_23321()
-                     );
-                  }
+      if (!this.deathListenerRegistered && !this.getWorld().isClient()) {
+         ServerLivingEntityEvents.ALLOW_DEATH.register((AllowDeath)(entity, source, damageAmount) -> {
+            if (entity != this && !(entity instanceof GhostEntity) && !(entity instanceof GhostSlaveEntity) && this.squaredDistanceTo(entity) <= 4096.0) {
+               QiaomenGhostEntity.DeathRecord record = new QiaomenGhostEntity.DeathRecord(entity.getPos(), this.getWorld().getTime(), entity.getType());
+               this.deathRecords.add(record);
+               LOGGER.debug("敲门鬼检测到精确死亡事件: 实体类型={}, 死亡位置=({}, {}, {})", entity.getType(), entity.getX(), entity.getY(), entity.getZ());
+            }
 
-                  return true;
-               }
-            );
+            return true;
+         });
          this.deathListenerRegistered = true;
          LOGGER.debug("敲门鬼死亡事件监听器已注册");
       }
    }
 
    private void cleanupOldDeathRecords() {
-      long currentTime = this.method_37908().method_8510();
+      long currentTime = this.getWorld().getTime();
       this.deathRecords.removeIf(record -> currentTime - record.deathTime > 600L);
    }
 
@@ -118,9 +111,9 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
             this.spawnGhostSlaveAtExactPosition(recentDeath.deathPosition, recentDeath.entityType);
             LOGGER.debug(
                "敲门鬼在精确死亡位置生成鬼奴，位置: ({}, {}, {}), 实体类型: {}",
-               recentDeath.deathPosition.field_1352,
-               recentDeath.deathPosition.field_1351,
-               recentDeath.deathPosition.field_1350,
+               recentDeath.deathPosition.x,
+               recentDeath.deathPosition.y,
+               recentDeath.deathPosition.z,
                recentDeath.entityType
             );
          }
@@ -128,10 +121,10 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void spawnGhostSlaveAtExactPosition(Vec3d position, EntityType<?> entityType) {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          GhostSlaveEntity slave = this.spawnGhostSlave();
          if (slave != null) {
-            slave.method_5808(position.field_1352, position.field_1351, position.field_1350, this.method_36454(), this.method_36455());
+            slave.refreshPositionAndAngles(position.x, position.y, position.z, this.getYaw(), this.getPitch());
          }
       }
    }
@@ -169,7 +162,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
       this.phaseTimer = QiaomenGhostEntity.Phase.PREPARE_KNOCK.getDuration();
       this.knockSoundCounter = 0;
       this.knockSoundDelay = 0;
-      this.method_5875(false);
+      this.setNoGravity(false);
       this.attackDamageMultiplier = 1;
       this.failedAttackCycles = 0;
       this.emptyCycles = 0;
@@ -178,31 +171,31 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
-      this.field_6011.method_12784(CURRENT_PHASE, QiaomenGhostEntity.Phase.PREPARE_KNOCK.ordinal());
-      this.field_6011.method_12784(PHASE_TIMER, QiaomenGhostEntity.Phase.PREPARE_KNOCK.getDuration());
+   protected void initDataTracker() {
+      super.initDataTracker();
+      this.dataTracker.startTracking(CURRENT_PHASE, QiaomenGhostEntity.Phase.PREPARE_KNOCK.ordinal());
+      this.dataTracker.startTracking(PHASE_TIMER, QiaomenGhostEntity.Phase.PREPARE_KNOCK.getDuration());
    }
 
    public int getCurrentPhaseOrdinal() {
-      return (Integer)this.field_6011.method_12789(CURRENT_PHASE);
+      return (Integer)this.dataTracker.get(CURRENT_PHASE);
    }
 
    public void setCurrentPhaseOrdinal(int phaseOrdinal) {
-      this.field_6011.method_12778(CURRENT_PHASE, phaseOrdinal);
+      this.dataTracker.set(CURRENT_PHASE, phaseOrdinal);
    }
 
    public int getPhaseTimerValue() {
-      return (Integer)this.field_6011.method_12789(PHASE_TIMER);
+      return (Integer)this.dataTracker.get(PHASE_TIMER);
    }
 
    public void setPhaseTimerValue(int timer) {
-      this.field_6011.method_12778(PHASE_TIMER, timer);
+      this.dataTracker.set(PHASE_TIMER, timer);
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
       LOGGER.debug("敲门鬼AI目标初始化完成");
    }
 
@@ -212,72 +205,72 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (!this.isSuppressed() && !this.isDeadlocked()) {
-         if (this.method_37908().field_9236) {
+         if (this.getWorld().isClient) {
             this.handleClientTick();
          } else {
             this.registerDeathListener();
-            if (this.field_6012 % 100 == 0) {
+            if (this.age % 100 == 0) {
                this.cleanupOldDeathRecords();
             }
 
             boolean isMoving = this.isWalking();
-            if (!this.method_37908().field_9236 && !this.isInCriticalActionPhase() && this.field_6012 % 60 == 0) {
-               PlayerEntity nearest = this.method_37908()
-                  .method_18456()
+            if (!this.getWorld().isClient && !this.isInCriticalActionPhase() && this.age % 60 == 0) {
+               PlayerEntity nearest = this.getWorld()
+                  .getPlayers()
                   .stream()
-                  .filter(p -> !p.method_7325())
-                  .min((a, b) -> Double.compare(this.method_5858(a), this.method_5858(b)))
+                  .filter(p -> !p.isSpectator())
+                  .min((a, b) -> Double.compare(this.squaredDistanceTo(a), this.squaredDistanceTo(b)))
                   .orElse(null);
                if (nearest != null) {
-                  double dx = nearest.method_23317() - this.method_23317();
-                  double dz = nearest.method_23321() - this.method_23321();
+                  double dx = nearest.getX() - this.getX();
+                  double dz = nearest.getZ() - this.getZ();
                   double dist = Math.sqrt(dx * dx + dz * dz);
                   if (dist > 2.5) {
-                     double nx = this.method_23317() + dx / dist * 2.0;
-                     double nz = this.method_23321() + dz / dist * 2.0;
-                     this.method_5942().method_6337(nx, this.method_23318(), nz, 1.0);
-                     this.method_5942().method_6344(1.0);
+                     double nx = this.getX() + dx / dist * 2.0;
+                     double nz = this.getZ() + dz / dist * 2.0;
+                     this.getNavigation().startMovingTo(nx, this.getY(), nz, 1.0);
+                     this.getNavigation().setSpeed(1.0);
                   }
                }
             }
 
             if (isMoving && (this.currentPhase == QiaomenGhostEntity.Phase.KNOCKING || this.currentPhase == QiaomenGhostEntity.Phase.ATTACKING)) {
-               this.method_5942().method_6340();
-               this.method_18800(0.0, this.method_18798().field_1351, 0.0);
+               this.getNavigation().stop();
+               this.setVelocity(0.0, this.getVelocity().y, 0.0);
             }
 
             if (this.currentPhase == QiaomenGhostEntity.Phase.KNOCKING || this.currentPhase == QiaomenGhostEntity.Phase.ATTACKING) {
-               this.method_5942().method_6340();
-               this.method_18800(0.0, this.method_18798().field_1351, 0.0);
+               this.getNavigation().stop();
+               this.setVelocity(0.0, this.getVelocity().y, 0.0);
             }
 
-            if (!this.method_37908().field_9236) {
-               this.field_6252 = this.currentPhase == QiaomenGhostEntity.Phase.ATTACKING;
+            if (!this.getWorld().isClient) {
+               this.handSwinging = this.currentPhase == QiaomenGhostEntity.Phase.ATTACKING;
             }
 
             if (this.knockSoundCounter > 0 && this.knockSoundDelay > 0) {
                this.knockSoundDelay--;
                if (this.knockSoundDelay <= 0) {
-                  this.method_5783(ModSounds.KNOCKING_SOUND, 0.6F, 0.8F);
+                  this.playSound(ModSounds.KNOCKING_SOUND, 0.6F, 0.8F);
                   this.knockSoundCounter = 0;
                }
             }
 
-            if (!this.method_37908().field_9236 && this.field_6012 % 100 == 0) {
+            if (!this.getWorld().isClient && this.age % 100 == 0) {
                this.replaceBlockUnderFeet();
             }
 
-            if (!this.method_37908().field_9236) {
-               boolean following = this.method_5942().method_23966();
-               double hs = this.method_18798().method_37268();
-               if ((!following || hs < 2.0E-4) && this.method_24828()) {
+            if (!this.getWorld().isClient) {
+               boolean following = this.getNavigation().isFollowingPath();
+               double hs = this.getVelocity().horizontalLengthSquared();
+               if ((!following || hs < 2.0E-4) && this.isOnGround()) {
                   if (hs > 2.0E-5) {
-                     this.method_18799(this.method_18798().method_18805(0.3, 1.0, 0.3));
+                     this.setVelocity(this.getVelocity().multiply(0.3, 1.0, 0.3));
                   } else {
-                     this.method_18800(0.0, this.method_18798().field_1351, 0.0);
+                     this.setVelocity(0.0, this.getVelocity().y, 0.0);
                   }
                }
             }
@@ -289,7 +282,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
                }
 
                GhostDeathHandler.markLegitimateRemoval(this);
-               this.method_31472();
+               this.discard();
             } else {
                this.handleGhostSlaveSpawning();
                if (this.isInitialPhase) {
@@ -340,8 +333,8 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void handleClientTick() {
-      QiaomenGhostEntity.Phase clientPhase = QiaomenGhostEntity.Phase.values()[this.field_6011.method_12789(CURRENT_PHASE)];
-      this.field_6252 = clientPhase == QiaomenGhostEntity.Phase.ATTACKING;
+      QiaomenGhostEntity.Phase clientPhase = QiaomenGhostEntity.Phase.values()[this.dataTracker.get(CURRENT_PHASE)];
+      this.handSwinging = clientPhase == QiaomenGhostEntity.Phase.ATTACKING;
    }
 
    @Override
@@ -350,7 +343,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void playDelayedKnockSounds(float volume, float pitch, int knockCount) {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          this.knockSoundCounter = knockCount;
          this.knockSoundDelay = 1;
       }
@@ -359,7 +352,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    private boolean shouldDespawn() {
       boolean hasPlayers = this.hasPlayersInDomain();
       if (hasPlayers) {
-         this.lastPlayerSeenTick = this.field_6012;
+         this.lastPlayerSeenTick = this.age;
          return false;
       }
 
@@ -367,7 +360,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
          return false;
       }
 
-      boolean exceedGrace = this.field_6012 - this.lastPlayerSeenTick > 200;
+      boolean exceedGrace = this.age - this.lastPlayerSeenTick > 200;
       if (exceedGrace) {
          LOGGER.debug("敲门鬼检测到玩家离开且超过宽限，准备移除并切换到待机状态");
          if (this.walkingStateManager != null) {
@@ -385,33 +378,33 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private boolean hasPlayersInDomain() {
-      return this.method_37908()
-         .method_18456()
+      return this.getWorld()
+         .getPlayers()
          .stream()
-         .filter(LivingEntity::method_5805)
-         .filter(player -> !player.method_6059(ModEffects.DEAFNESS))
-         .anyMatch(player -> this.method_5858(player) <= 4096.0);
+         .filter(LivingEntity::isAlive)
+         .filter(player -> !player.hasStatusEffect(ModEffects.DEAFNESS))
+         .anyMatch(player -> this.squaredDistanceTo(player) <= 4096.0);
    }
 
    private void replaceBlockUnderFeet() {
-      World world = this.method_37908();
-      BlockPos centerPos = this.method_24515();
+      World world = this.getWorld();
+      BlockPos centerPos = this.getBlockPos();
       int replacedCount = 0;
       int radius = 1;
 
       for (int x = -radius; x <= radius; x++) {
          for (int y = -radius; y <= radius; y++) {
             for (int z = -radius; z <= radius; z++) {
-               BlockPos checkPos = centerPos.method_10069(x, y, z);
-               BlockState currentState = world.method_8320(checkPos);
-               if (currentState.method_26204() == Blocks.field_10219) {
-                  world.method_8501(checkPos, Blocks.field_10520.method_9564());
+               BlockPos checkPos = centerPos.add(x, y, z);
+               BlockState currentState = world.getBlockState(checkPos);
+               if (currentState.getBlock() == Blocks.GRASS_BLOCK) {
+                  world.setBlockState(checkPos, Blocks.PODZOL.getDefaultState());
                   replacedCount++;
-                  world.method_8396(null, checkPos, SoundEvents.field_14653, SoundCategory.field_15245, 0.3F, 1.0F);
-               } else if (currentState.method_26204() == Blocks.field_10340) {
-                  world.method_8501(checkPos, Blocks.field_9989.method_9564());
+                  world.playSound(null, checkPos, SoundEvents.BLOCK_GRASS_PLACE, SoundCategory.BLOCKS, 0.3F, 1.0F);
+               } else if (currentState.getBlock() == Blocks.STONE) {
+                  world.setBlockState(checkPos, Blocks.MOSSY_COBBLESTONE.getDefaultState());
                   replacedCount++;
-                  world.method_8396(null, checkPos, SoundEvents.field_14574, SoundCategory.field_15245, 0.3F, 1.0F);
+                  world.playSound(null, checkPos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 0.3F, 1.0F);
                }
             }
          }
@@ -419,12 +412,12 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void handleGhostSlaveSpawning() {
-      if (!this.method_37908().field_9236) {
-         boolean hasPlayersInDomain = this.method_37908()
-            .method_18456()
+      if (!this.getWorld().isClient) {
+         boolean hasPlayersInDomain = this.getWorld()
+            .getPlayers()
             .stream()
-            .filter(player -> !player.method_6059(ModEffects.DEAFNESS))
-            .anyMatch(player -> this.method_5858(player) <= 4096.0);
+            .filter(player -> !player.hasStatusEffect(ModEffects.DEAFNESS))
+            .anyMatch(player -> this.squaredDistanceTo(player) <= 4096.0);
          if (hasPlayersInDomain && !this.hasInitialSpawnedGhostSlaves) {
             LOGGER.debug("敲门鬼检测到鬼域内有玩家，开始初始生成鬼奴");
             this.spawnGhostSlaves(5);
@@ -439,7 +432,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
 
    private void checkPlayerDeathAndSpawnGhostSlaves() {
       int currentSlaveCount = this.countGhostSlavesInDomain();
-      if (currentSlaveCount < 30 && this.field_6012 % 100 == 0) {
+      if (currentSlaveCount < 30 && this.age % 100 == 0) {
          this.checkForPlayerDeathAndSpawn();
       }
    }
@@ -449,8 +442,8 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private int countGhostSlavesInDomain() {
-      return this.method_37908()
-         .method_8390(GhostSlaveEntity.class, this.method_5829().method_1014(64.0), slave -> slave.getMaster() == this && slave.method_5805())
+      return this.getWorld()
+         .getEntitiesByClass(GhostSlaveEntity.class, this.getBoundingBox().expand(64.0), slave -> slave.getMaster() == this && slave.isAlive())
          .size();
    }
 
@@ -462,47 +455,47 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void spawnGhostSlaveAtCurrentPosition() {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          GhostSlaveEntity slave = this.spawnGhostSlave();
          if (slave != null) {
-            slave.method_5808(this.method_23317(), this.method_23318(), this.method_23321(), this.method_36454(), this.method_36455());
+            slave.refreshPositionAndAngles(this.getX(), this.getY(), this.getZ(), this.getYaw(), this.getPitch());
             LOGGER.debug("敲门鬼在空循环时于当前位置生成鬼奴");
          }
       }
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10556("HasInitialSpawnedGhostSlaves", this.hasInitialSpawnedGhostSlaves);
-      nbt.method_10556("hasItem", this.hasItem);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putBoolean("HasInitialSpawnedGhostSlaves", this.hasInitialSpawnedGhostSlaves);
+      nbt.putBoolean("hasItem", this.hasItem);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("HasInitialSpawnedGhostSlaves")) {
-         this.hasInitialSpawnedGhostSlaves = nbt.method_10577("HasInitialSpawnedGhostSlaves");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("HasInitialSpawnedGhostSlaves")) {
+         this.hasInitialSpawnedGhostSlaves = nbt.getBoolean("HasInitialSpawnedGhostSlaves");
       }
 
-      if (nbt.method_10545("hasItem")) {
-         this.hasItem = nbt.method_10577("hasItem");
+      if (nbt.contains("hasItem")) {
+         this.hasItem = nbt.getBoolean("hasItem");
       }
    }
 
    private void executeKillPhase() {
       LOGGER.debug("敲门鬼开始杀人阶段行为");
-      List<PlayerEntity> targets = this.method_37908()
-         .method_18456()
+      List<PlayerEntity> targets = this.getWorld()
+         .getPlayers()
          .stream()
-         .filter(player -> this.method_5858(player) <= 4096.0)
-         .filter(player -> player.method_6059(ModEffects.GHOST_KNOCK))
+         .filter(player -> this.squaredDistanceTo(player) <= 4096.0)
+         .filter(player -> player.hasStatusEffect(ModEffects.GHOST_KNOCK))
          .filter(player -> !this.isPlayerProtected(player))
-         .filter(player -> !player.method_6059(ModEffects.DEAFNESS))
+         .filter(player -> !player.hasStatusEffect(ModEffects.DEAFNESS))
          .collect(Collectors.toList());
       if (!targets.isEmpty()) {
          this.emptyCycles = 0;
-         PlayerEntity target = targets.stream().min((p1, p2) -> Double.compare(this.method_5858(p1), this.method_5858(p2))).orElse(null);
+         PlayerEntity target = targets.stream().min((p1, p2) -> Double.compare(this.squaredDistanceTo(p1), this.squaredDistanceTo(p2))).orElse(null);
          this.executeAttack(target);
       } else {
          this.emptyCycles++;
@@ -522,19 +515,19 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void handleEmptyDomainDisappear() {
-      if (this.method_5805()) {
+      if (this.isAlive()) {
          this.sendDisappearMessageToPlayers();
          GhostDeathHandler.markLegitimateRemoval(this);
-         this.method_31472();
+         this.discard();
       }
    }
 
    private void sendDisappearMessageToPlayers() {
-      World world = this.method_37908();
-      if (!world.field_9236) {
-         for (PlayerEntity player : world.method_18456().stream().filter(playerx -> this.method_5858(playerx) <= 4096.0).collect(Collectors.toList())) {
+      World world = this.getWorld();
+      if (!world.isClient) {
+         for (PlayerEntity player : world.getPlayers().stream().filter(playerx -> this.squaredDistanceTo(playerx) <= 4096.0).collect(Collectors.toList())) {
             if (player instanceof ServerPlayerEntity serverPlayer) {
-               serverPlayer.method_7353(Text.method_43470("§a似乎安全了？").method_27692(Formatting.field_1060), true);
+               serverPlayer.sendMessage(Text.literal("§a似乎安全了？").formatted(Formatting.GREEN), true);
             }
          }
       }
@@ -572,25 +565,25 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    protected void executeAttack(PlayerEntity player) {
       if (!this.isDeadlocked() && !this.isSuppressed()) {
          if (this.attackCooldown <= 0) {
-            this.method_20620(player.method_23317(), player.method_23318(), player.method_23321());
-            DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+            this.teleport(player.getX(), player.getY(), player.getZ());
+            DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
             float baseDamage = this.getSpiritualDamage();
             float actualDamage = baseDamage * this.attackDamageMultiplier;
-            float playerHealthBeforeAttack = player.method_6032();
+            float playerHealthBeforeAttack = player.getHealth();
             PlayerEvents.handleSpiritDamage(player, actualDamage, actualDamage, damageSource);
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5911, 400, 1));
-            this.spawnDoorAt(this.method_24515());
-            boolean isPlayerDead = !player.method_5805() || player.method_6032() <= 0.0F;
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 400, 1));
+            this.spawnDoorAt(this.getBlockPos());
+            boolean isPlayerDead = !player.isAlive() || player.getHealth() <= 0.0F;
             if (isPlayerDead) {
                this.attackDamageMultiplier = 1;
                this.failedAttackCycles = 0;
                this.lastAttackSuccessful = true;
-               LOGGER.debug("敲门鬼成功击杀玩家 {}，伤害倍率已重置为1x", player.method_5477().getString());
+               LOGGER.debug("敲门鬼成功击杀玩家 {}，伤害倍率已重置为1x", player.getName().getString());
             } else {
                this.attackDamageMultiplier *= 2;
                this.failedAttackCycles++;
                this.lastAttackSuccessful = false;
-               LOGGER.debug("敲门鬼攻击玩家 {} 失败，下次攻击伤害倍率提升至 {}x，连续失败次数：{}", player.method_5477().getString(), this.attackDamageMultiplier, this.failedAttackCycles);
+               LOGGER.debug("敲门鬼攻击玩家 {} 失败，下次攻击伤害倍率提升至 {}x，连续失败次数：{}", player.getName().getString(), this.attackDamageMultiplier, this.failedAttackCycles);
             }
 
             this.attackCooldown = 100;
@@ -599,12 +592,12 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    @Override
-   public boolean method_5643(DamageSource source, float amount) {
-      if (source.method_5529() instanceof PlayerEntity player) {
-         player.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 100, 9, false, false, true));
+   public boolean damage(DamageSource source, float amount) {
+      if (source.getAttacker() instanceof PlayerEntity player) {
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 100, 9, false, false, true));
       }
 
-      return super.method_5643(source, amount);
+      return super.damage(source, amount);
    }
 
    private void executeKnockPhase() {
@@ -612,34 +605,34 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void spawnDoorAt(BlockPos pos) {
-      World world = this.method_37908();
-      Direction facing = Direction.field_11043;
-      world.method_8501(
+      World world = this.getWorld();
+      Direction facing = Direction.NORTH;
+      world.setBlockState(
          pos,
-         (BlockState)((BlockState)((BlockState)((BlockState)Blocks.field_10149.method_9564().method_11657(DoorBlock.field_10938, facing))
-                  .method_11657(DoorBlock.field_10941, DoorHinge.field_12588))
-               .method_11657(DoorBlock.field_10945, false))
-            .method_11657(DoorBlock.field_10946, DoubleBlockHalf.field_12607)
+         (BlockState)((BlockState)((BlockState)((BlockState)Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING, facing))
+                  .with(DoorBlock.HINGE, DoorHinge.LEFT))
+               .with(DoorBlock.OPEN, false))
+            .with(DoorBlock.HALF, DoubleBlockHalf.LOWER)
       );
-      world.method_8501(
-         pos.method_10084(),
-         (BlockState)((BlockState)((BlockState)((BlockState)Blocks.field_10149.method_9564().method_11657(DoorBlock.field_10938, facing))
-                  .method_11657(DoorBlock.field_10941, DoorHinge.field_12588))
-               .method_11657(DoorBlock.field_10945, false))
-            .method_11657(DoorBlock.field_10946, DoubleBlockHalf.field_12609)
+      world.setBlockState(
+         pos.up(),
+         (BlockState)((BlockState)((BlockState)((BlockState)Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING, facing))
+                  .with(DoorBlock.HINGE, DoorHinge.LEFT))
+               .with(DoorBlock.OPEN, false))
+            .with(DoorBlock.HALF, DoubleBlockHalf.UPPER)
       );
    }
 
    private void searchDoorsAndSpreadBuff() {
       List<BlockPos> doorPositions = new ArrayList<>();
-      BlockPos center = this.method_24515();
+      BlockPos center = this.getBlockPos();
       int radius = 64;
 
       for (int x = -radius; x <= radius; x++) {
          for (int y = -radius; y <= radius; y++) {
             for (int z = -radius; z <= radius; z++) {
-               BlockPos pos = center.method_10069(x, y, z);
-               if (this.method_37908().method_8320(pos).method_26204() instanceof DoorBlock) {
+               BlockPos pos = center.add(x, y, z);
+               if (this.getWorld().getBlockState(pos).getBlock() instanceof DoorBlock) {
                   doorPositions.add(pos);
                }
             }
@@ -647,7 +640,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
       }
 
       if (doorPositions.isEmpty()) {
-         BlockPos selfPos = this.method_24515();
+         BlockPos selfPos = this.getBlockPos();
          this.spawnDoorAt(selfPos);
          doorPositions.add(selfPos);
       }
@@ -655,21 +648,21 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
       LOGGER.debug("敲门鬼开始随机敲门 ");
 
       for (BlockPos doorPos : doorPositions) {
-         this.method_20620(doorPos.method_10263() + 0.5, doorPos.method_10264(), doorPos.method_10260() + 0.5);
+         this.teleport(doorPos.getX() + 0.5, doorPos.getY(), doorPos.getZ() + 0.5);
          if (doorPos == doorPositions.get(0)) {
             this.playDelayedKnockSounds(1.5F, 1.0F, 3);
          } else {
-            this.method_5783(ModSounds.KNOCKING_SOUND, 1.5F, 1.0F);
+            this.playSound(ModSounds.KNOCKING_SOUND, 1.5F, 1.0F);
          }
 
-         for (PlayerEntity player : this.method_37908()
-            .method_18456()
+         for (PlayerEntity player : this.getWorld()
+            .getPlayers()
             .stream()
-            .filter(playerx -> playerx.method_5649(doorPos.method_10263(), doorPos.method_10264(), doorPos.method_10260()) <= 100.0)
-            .filter(playerx -> !playerx.method_6059(ModEffects.GHOST_KNOCK))
-            .filter(playerx -> !playerx.method_6059(ModEffects.DEAFNESS))
+            .filter(playerx -> playerx.squaredDistanceTo(doorPos.getX(), doorPos.getY(), doorPos.getZ()) <= 100.0)
+            .filter(playerx -> !playerx.hasStatusEffect(ModEffects.GHOST_KNOCK))
+            .filter(playerx -> !playerx.hasStatusEffect(ModEffects.DEAFNESS))
             .collect(Collectors.toList())) {
-            player.method_37222(new StatusEffectInstance(ModEffects.GHOST_KNOCK, 3600, 0), this);
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.GHOST_KNOCK, 3600, 0), this);
             LOGGER.debug("玩家被添加了鬼敲门效果。");
          }
       }
@@ -682,7 +675,7 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
 
    @Override
    public double getTick(Object object) {
-      return this.field_6012;
+      return this.age;
    }
 
    @Override
@@ -692,10 +685,10 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    protected PlayState handleKnockAnimations(AnimationState<QiaomenGhostEntity> state) {
-      if (!this.method_31481() && this.method_5805()) {
+      if (!this.isRemoved() && this.isAlive()) {
          QiaomenGhostEntity.Phase currentPhase;
-         if (this.method_37908().field_9236) {
-            currentPhase = QiaomenGhostEntity.Phase.values()[this.field_6011.method_12789(CURRENT_PHASE)];
+         if (this.getWorld().isClient) {
+            currentPhase = QiaomenGhostEntity.Phase.values()[this.dataTracker.get(CURRENT_PHASE)];
          } else {
             currentPhase = this.currentPhase;
          }
@@ -714,38 +707,30 @@ public class QiaomenGhostEntity extends GhostEntity implements GeoAnimatable {
    }
 
    private void spawnDoorAroundPlayer() {
-      if (!this.method_37908().field_9236) {
-         PlayerEntity nearestPlayer = this.method_37908().method_18460(this, 64.0);
+      if (!this.getWorld().isClient) {
+         PlayerEntity nearestPlayer = this.getWorld().getClosestPlayer(this, 64.0);
          if (nearestPlayer != null) {
-            BlockPos playerPos = nearestPlayer.method_24515();
+            BlockPos playerPos = nearestPlayer.getBlockPos();
             int offsetX = (int)(Math.random() * 16.0 - 8.0);
             int offsetZ = (int)(Math.random() * 16.0 - 8.0);
-            BlockPos doorPos = playerPos.method_10069(offsetX, 0, offsetZ);
+            BlockPos doorPos = playerPos.add(offsetX, 0, offsetZ);
             doorPos = this.findSuitableDoorPosition(doorPos);
             if (doorPos != null) {
                this.spawnDoorAt(doorPos);
-               LOGGER.debug(
-                  "敲门鬼在玩家{}周围生成一扇门，位置: ({}, {}, {})",
-                  nearestPlayer.method_5477().getString(),
-                  doorPos.method_10263(),
-                  doorPos.method_10264(),
-                  doorPos.method_10260()
-               );
+               LOGGER.debug("敲门鬼在玩家{}周围生成一扇门，位置: ({}, {}, {})", nearestPlayer.getName().getString(), doorPos.getX(), doorPos.getY(), doorPos.getZ());
             }
          }
       }
    }
 
    private BlockPos findSuitableDoorPosition(BlockPos pos) {
-      World world = this.method_37908();
+      World world = this.getWorld();
 
       for (int yOffset = -3; yOffset <= 3; yOffset++) {
-         BlockPos checkPos = pos.method_10069(0, yOffset, 0);
-         BlockPos abovePos = checkPos.method_10084();
-         BlockPos belowPos = checkPos.method_10074();
-         if (world.method_8320(belowPos).method_26212(world, belowPos)
-            && world.method_8320(checkPos).method_26215()
-            && world.method_8320(abovePos).method_26215()) {
+         BlockPos checkPos = pos.add(0, yOffset, 0);
+         BlockPos abovePos = checkPos.up();
+         BlockPos belowPos = checkPos.down();
+         if (world.getBlockState(belowPos).isSolidBlock(world, belowPos) && world.getBlockState(checkPos).isAir() && world.getBlockState(abovePos).isAir()) {
             return checkPos;
          }
       }

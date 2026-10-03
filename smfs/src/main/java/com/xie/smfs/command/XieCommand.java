@@ -34,258 +34,249 @@ import net.minecraft.util.Identifier;
 public class XieCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
       dispatcher.register(
-         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
+         (LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal(
                                                    "xie"
                                                 )
                                                 .then(
-                                                   ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
+                                                   ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal(
                                                                            "gui"
                                                                         )
-                                                                        .then(CommandManager.method_9247("ghost").executes(OpenGhostScreenCommand::execute)))
-                                                                     .then(CommandManager.method_9247("taming").executes(OpenTamingScreenCommand::execute)))
-                                                                  .then(CommandManager.method_9247("credits").executes(OpenCreditsCommand::execute)))
+                                                                        .then(CommandManager.literal("ghost").executes(OpenGhostScreenCommand::execute)))
+                                                                     .then(CommandManager.literal("taming").executes(OpenTamingScreenCommand::execute)))
+                                                                  .then(CommandManager.literal("credits").executes(OpenCreditsCommand::execute)))
                                                                .then(
-                                                                  CommandManager.method_9247("ghostchild")
+                                                                  CommandManager.literal("ghostchild")
                                                                      .executes(OpenGhostChildCultivationScreenCommand::execute)
                                                                ))
-                                                            .then(CommandManager.method_9247("royalcurse").executes(OpenRoyalCurseScreenCommand::execute)))
-                                                         .then(CommandManager.method_9247("feed").executes(OpenGhostChildFeedScreenCommand::execute)))
-                                                      .then(CommandManager.method_9247("quest").executes(OpenQuestScreenCommand::execute))
+                                                            .then(CommandManager.literal("royalcurse").executes(OpenRoyalCurseScreenCommand::execute)))
+                                                         .then(CommandManager.literal("feed").executes(OpenGhostChildFeedScreenCommand::execute)))
+                                                      .then(CommandManager.literal("quest").executes(OpenQuestScreenCommand::execute))
                                                 ))
                                              .then(
-                                                ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
+                                                ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal(
                                                                   "servant"
                                                                )
-                                                               .requires(source -> source.method_9259(0)))
+                                                               .requires(source -> source.hasPermissionLevel(0)))
                                                             .then(
-                                                               CommandManager.method_9247("summon")
-                                                                  .then(
-                                                                     CommandManager.method_9244("index", IntegerArgumentType.integer(0)).executes(context -> {
-                                                                        int index = IntegerArgumentType.getInteger(context, "index");
-                                                                        PlayerRoyalCurseManager.summonServant(
-                                                                           ((ServerCommandSource)context.getSource()).method_44023(), index
-                                                                        );
-                                                                        return 1;
-                                                                     })
-                                                                  )
+                                                               CommandManager.literal("summon")
+                                                                  .then(CommandManager.argument("index", IntegerArgumentType.integer(0)).executes(context -> {
+                                                                     int index = IntegerArgumentType.getInteger(context, "index");
+                                                                     PlayerRoyalCurseManager.summonServant(
+                                                                        ((ServerCommandSource)context.getSource()).getPlayer(), index
+                                                                     );
+                                                                     return 1;
+                                                                  }))
                                                             ))
                                                          .then(
-                                                            CommandManager.method_9247("recall")
-                                                               .then(CommandManager.method_9244("index", IntegerArgumentType.integer(0)).executes(context -> {
+                                                            CommandManager.literal("recall")
+                                                               .then(CommandManager.argument("index", IntegerArgumentType.integer(0)).executes(context -> {
                                                                   int index = IntegerArgumentType.getInteger(context, "index");
                                                                   PlayerRoyalCurseManager.recallServant(
-                                                                     ((ServerCommandSource)context.getSource()).method_44023(), index
+                                                                     ((ServerCommandSource)context.getSource()).getPlayer(), index
                                                                   );
                                                                   return 1;
                                                                }))
                                                          ))
-                                                      .then(CommandManager.method_9247("summon_all").executes(context -> {
-                                                         PlayerRoyalCurseManager.summonAllServants(((ServerCommandSource)context.getSource()).method_44023());
+                                                      .then(CommandManager.literal("summon_all").executes(context -> {
+                                                         PlayerRoyalCurseManager.summonAllServants(((ServerCommandSource)context.getSource()).getPlayer());
                                                          return 1;
                                                       })))
-                                                   .then(CommandManager.method_9247("recall_all").executes(context -> {
-                                                      PlayerRoyalCurseManager.recallAllServants(((ServerCommandSource)context.getSource()).method_44023());
+                                                   .then(CommandManager.literal("recall_all").executes(context -> {
+                                                      PlayerRoyalCurseManager.recallAllServants(((ServerCommandSource)context.getSource()).getPlayer());
                                                       return 1;
                                                    }))
                                              ))
                                           .then(
-                                             ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
-                                                            "playerghost"
-                                                         )
-                                                         .requires(source -> source.method_9259(2)))
+                                             ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("playerghost")
+                                                         .requires(source -> source.hasPermissionLevel(2)))
                                                       .then(
-                                                         CommandManager.method_9247("info")
+                                                         CommandManager.literal("info")
                                                             .then(
-                                                               CommandManager.method_9244("ghost", EntityArgumentType.method_9309())
+                                                               CommandManager.argument("ghost", EntityArgumentType.entity())
                                                                   .executes(PlayerGhostCommand::getGhostInfo)
                                                             )
                                                       ))
                                                    .then(
-                                                      CommandManager.method_9247("retrieve")
+                                                      CommandManager.literal("retrieve")
                                                          .then(
-                                                            CommandManager.method_9244("ghost", EntityArgumentType.method_9309())
+                                                            CommandManager.argument("ghost", EntityArgumentType.entity())
                                                                .executes(PlayerGhostCommand::retrieveCoffinNail)
                                                          )
                                                    ))
                                                 .then(
-                                                   CommandManager.method_9247("suppress")
+                                                   CommandManager.literal("suppress")
                                                       .then(
-                                                         CommandManager.method_9244("ghost", EntityArgumentType.method_9309())
+                                                         CommandManager.argument("ghost", EntityArgumentType.entity())
                                                             .executes(PlayerGhostCommand::suppressGhost)
                                                       )
                                                 )
                                           ))
                                        .then(
-                                          ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
+                                          ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal(
                                                                "quest"
                                                             )
-                                                            .then(CommandManager.method_9247("list").executes(QuestCommand::listQuests)))
+                                                            .then(CommandManager.literal("list").executes(QuestCommand::listQuests)))
                                                          .then(
-                                                            CommandManager.method_9247("start")
+                                                            CommandManager.literal("start")
                                                                .then(
-                                                                  CommandManager.method_9244("questId", StringArgumentType.string())
+                                                                  CommandManager.argument("questId", StringArgumentType.string())
                                                                      .executes(QuestCommand::startQuest)
                                                                )
                                                          ))
                                                       .then(
-                                                         CommandManager.method_9247("abandon")
+                                                         CommandManager.literal("abandon")
                                                             .then(
-                                                               CommandManager.method_9244("questId", StringArgumentType.string())
+                                                               CommandManager.argument("questId", StringArgumentType.string())
                                                                   .executes(QuestCommand::abandonQuest)
                                                             )
                                                       ))
                                                    .then(
-                                                      CommandManager.method_9247("info")
+                                                      CommandManager.literal("info")
                                                          .then(
-                                                            CommandManager.method_9244("questId", StringArgumentType.string())
-                                                               .executes(QuestCommand::questInfo)
+                                                            CommandManager.argument("questId", StringArgumentType.string()).executes(QuestCommand::questInfo)
                                                          )
                                                    ))
                                                 .then(
-                                                   ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("complete")
-                                                            .requires(source -> source.method_9259(2)))
+                                                   ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("complete")
+                                                            .requires(source -> source.hasPermissionLevel(2)))
                                                          .executes(QuestCommand::completeAllActiveQuests))
                                                       .then(
-                                                         CommandManager.method_9244("questId", StringArgumentType.string())
-                                                            .executes(QuestCommand::completeQuest)
+                                                         CommandManager.argument("questId", StringArgumentType.string()).executes(QuestCommand::completeQuest)
                                                       )
                                                 ))
                                              .then(
-                                                ((LiteralArgumentBuilder)CommandManager.method_9247("reset").requires(source -> source.method_9259(2)))
+                                                ((LiteralArgumentBuilder)CommandManager.literal("reset").requires(source -> source.hasPermissionLevel(2)))
                                                    .executes(QuestCommand::resetAllQuests)
                                              )
                                        ))
                                     .then(
-                                       ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("book")
-                                                .requires(source -> source.method_9259(2)))
+                                       ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("book")
+                                                .requires(source -> source.hasPermissionLevel(2)))
                                              .then(
-                                                CommandManager.method_9247("give")
+                                                CommandManager.literal("give")
                                                    .then(
-                                                      CommandManager.method_9244("player", EntityArgumentType.method_9305())
+                                                      CommandManager.argument("player", EntityArgumentType.player())
                                                          .then(
-                                                            CommandManager.method_9244("bookId", StringArgumentType.string())
+                                                            CommandManager.argument("bookId", StringArgumentType.string())
                                                                .executes(
                                                                   context -> BookCommand.giveBook(
                                                                      context,
-                                                                     EntityArgumentType.method_9315(context, "player"),
+                                                                     EntityArgumentType.getPlayer(context, "player"),
                                                                      StringArgumentType.getString(context, "bookId")
                                                                   )
                                                                )
                                                          )
                                                    )
                                              ))
-                                          .then(CommandManager.method_9247("list").executes(BookCommand::listAvailableBooks))
+                                          .then(CommandManager.literal("list").executes(BookCommand::listAvailableBooks))
                                     ))
                                  .then(
-                                    ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("timer")
-                                             .requires(source -> source.method_9259(2)))
+                                    ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("timer")
+                                             .requires(source -> source.hasPermissionLevel(2)))
                                           .then(
-                                             ((LiteralArgumentBuilder)CommandManager.method_9247("ghost_timer")
+                                             ((LiteralArgumentBuilder)CommandManager.literal("ghost_timer")
                                                    .executes(ctx -> GhostTimerCommand.execute(ctx, "minecraft:overworld")))
                                                 .then(
-                                                   CommandManager.method_9244("dimension", StringArgumentType.greedyString())
+                                                   CommandManager.argument("dimension", StringArgumentType.greedyString())
                                                       .executes(ctx -> GhostTimerCommand.execute(ctx, StringArgumentType.getString(ctx, "dimension")))
                                                 )
                                           ))
                                        .then(
-                                          ((LiteralArgumentBuilder)CommandManager.method_9247("complete_timers").executes(CompleteGhostTimersCommand::execute))
+                                          ((LiteralArgumentBuilder)CommandManager.literal("complete_timers").executes(CompleteGhostTimersCommand::execute))
                                              .then(
-                                                CommandManager.method_9244("dimension", StringArgumentType.greedyString())
+                                                CommandManager.argument("dimension", StringArgumentType.greedyString())
                                                    .executes(ctx -> CompleteGhostTimersCommand.execute(ctx, StringArgumentType.getString(ctx, "dimension")))
                                              )
                                        )
                                  ))
-                              .then(CommandManager.method_9247("locked_ghosts").executes(LockedGhostTypesCommand::execute)))
+                              .then(CommandManager.literal("locked_ghosts").executes(LockedGhostTypesCommand::execute)))
                            .then(
-                              ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
+                              ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal(
                                                 "unlock"
                                              )
-                                             .requires(source -> source.method_9259(2)))
-                                          .then(CommandManager.method_9247("aberration").executes(UnlockCommand::executeAberration)))
-                                       .then(CommandManager.method_9247("slots").executes(UnlockCommand::executeSlots)))
-                                    .then(CommandManager.method_9247("fusion").executes(UnlockCommand::executeFusion)))
+                                             .requires(source -> source.hasPermissionLevel(2)))
+                                          .then(CommandManager.literal("aberration").executes(UnlockCommand::executeAberration)))
+                                       .then(CommandManager.literal("slots").executes(UnlockCommand::executeSlots)))
+                                    .then(CommandManager.literal("fusion").executes(UnlockCommand::executeFusion)))
                                  .then(
-                                    ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("advancement")
-                                                .then(CommandManager.method_9247("test").executes(AdvancementTestCommand::executeTest)))
-                                             .then(CommandManager.method_9247("check").executes(AdvancementTestCommand::executeCheck)))
-                                          .then(CommandManager.method_9247("info").executes(AdvancementTestCommand::executeInfo)))
+                                    ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("advancement")
+                                                .then(CommandManager.literal("test").executes(AdvancementTestCommand::executeTest)))
+                                             .then(CommandManager.literal("check").executes(AdvancementTestCommand::executeCheck)))
+                                          .then(CommandManager.literal("info").executes(AdvancementTestCommand::executeInfo)))
                                        .then(
-                                          ((LiteralArgumentBuilder)CommandManager.method_9247("force").requires(source -> source.method_9259(2)))
+                                          ((LiteralArgumentBuilder)CommandManager.literal("force").requires(source -> source.hasPermissionLevel(2)))
                                              .executes(AdvancementTestCommand::executeForce)
                                        )
                                  )
                            ))
                         .then(
-                           CommandManager.method_9247("ghost_swap")
+                           CommandManager.literal("ghost_swap")
                               .then(
-                                 ((RequiredArgumentBuilder)CommandManager.method_9244("ghostType", IdentifierArgumentType.method_9441())
+                                 ((RequiredArgumentBuilder)CommandManager.argument("ghostType", IdentifierArgumentType.identifier())
                                        .executes(XieCommand::executeGhostSwap))
-                                    .then(CommandManager.method_9244("slotIndex", IntegerArgumentType.integer(0, 9)).executes(XieCommand::executeGhostSwap))
+                                    .then(CommandManager.argument("slotIndex", IntegerArgumentType.integer(0, 9)).executes(XieCommand::executeGhostSwap))
                               )
                         ))
                      .then(
-                        ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247(
-                                          "faction"
-                                       )
-                                       .requires(source -> source.method_9259(2)))
+                        ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("faction")
+                                       .requires(source -> source.hasPermissionLevel(2)))
                                     .then(
-                                       CommandManager.method_9247("add_reputation")
-                                          .then(CommandManager.method_9244("amount", IntegerArgumentType.integer(1)).executes(context -> {
-                                             ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                                       CommandManager.literal("add_reputation")
+                                          .then(CommandManager.argument("amount", IntegerArgumentType.integer(1)).executes(context -> {
+                                             ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                                              if (player == null) {
-                                                ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                                                ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
                                                 return 0;
                                              } else {
                                                 int amount = IntegerArgumentType.getInteger(context, "amount");
                                                 FactionManager.addReputation(player, amount);
                                                 int newRep = FactionManager.getReputation(player);
-                                                player.method_7353(Text.method_43470("§a增加了 " + amount + " 点声望，当前声望：" + newRep), false);
+                                                player.sendMessage(Text.literal("§a增加了 " + amount + " 点声望，当前声望：" + newRep), false);
                                                 return 1;
                                              }
                                           }))
                                     ))
                                  .then(
-                                    CommandManager.method_9247("set_reputation")
-                                       .then(CommandManager.method_9244("value", IntegerArgumentType.integer(0)).executes(context -> {
-                                          ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                                    CommandManager.literal("set_reputation")
+                                       .then(CommandManager.argument("value", IntegerArgumentType.integer(0)).executes(context -> {
+                                          ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                                           if (player == null) {
-                                             ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                                             ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
                                              return 0;
                                           } else {
                                              int value = IntegerArgumentType.getInteger(context, "value");
                                              FactionManager.setReputation(player, value);
-                                             player.method_7353(Text.method_43470("§a声望已设置为 " + value), false);
+                                             player.sendMessage(Text.literal("§a声望已设置为 " + value), false);
                                              return 1;
                                           }
                                        }))
                                  ))
                               .then(
-                                 CommandManager.method_9247("set_codename")
-                                    .then(CommandManager.method_9244("name", StringArgumentType.string()).executes(context -> {
-                                       ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
-                                       if (player == null) {
-                                          ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                                 CommandManager.literal("set_codename").then(CommandManager.argument("name", StringArgumentType.string()).executes(context -> {
+                                    ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
+                                    if (player == null) {
+                                       ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
+                                       return 0;
+                                    } else {
+                                       String name = StringArgumentType.getString(context, "name");
+                                       if (name.length() > 16) {
+                                          player.sendMessage(Text.literal("§c代号长度不能超过16个字符！"), false);
                                           return 0;
                                        } else {
-                                          String name = StringArgumentType.getString(context, "name");
-                                          if (name.length() > 16) {
-                                             player.method_7353(Text.method_43470("§c代号长度不能超过16个字符！"), false);
-                                             return 0;
-                                          } else {
-                                             FactionManager.setCodename(player, name);
-                                             player.method_7353(Text.method_43470("§a代号已设置为：" + name), false);
-                                             return 1;
-                                          }
+                                          FactionManager.setCodename(player, name);
+                                          player.sendMessage(Text.literal("§a代号已设置为：" + name), false);
+                                          return 1;
                                        }
-                                    }))
+                                    }
+                                 }))
                               ))
                            .then(
-                              CommandManager.method_9247("info")
+                              CommandManager.literal("info")
                                  .executes(
                                     context -> {
-                                       ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                                       ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                                        if (player == null) {
-                                          ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                                          ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
                                           return 0;
                                        } else {
                                           PlayerFaction faction = FactionManager.getFaction(player);
@@ -293,8 +284,8 @@ public class XieCommand {
                                           int salary = FactionManager.getGoldSalary(player);
                                           String codename = FactionManager.getCodename(player);
                                           String displayCodename = codename != null && !codename.isEmpty() ? codename : "暂无";
-                                          player.method_7353(
-                                             Text.method_43470(
+                                          player.sendMessage(
+                                             Text.literal(
                                                 "§e阵营: " + faction.getDisplayName() + " | 声望: " + rep + " | 薪资: " + salary + " | 代号: " + displayCodename
                                              ),
                                              false
@@ -305,90 +296,89 @@ public class XieCommand {
                                  )
                            )
                      ))
-                  .then(CommandManager.method_9247("tutorial").then(CommandManager.method_9247("reset").executes(context -> {
-                     ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                  .then(CommandManager.literal("tutorial").then(CommandManager.literal("reset").executes(context -> {
+                     ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                      if (player != null) {
                         ResetPlayNoticeS2CPacket.send(player);
-                        player.method_7353(Text.method_43470("教程已重置"), false);
+                        player.sendMessage(Text.literal("教程已重置"), false);
                      }
 
                      return 1;
                   }))))
                .then(
-                  ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("ghostitem").requires(source -> source.method_9259(2)))
+                  ((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("ghostitem").requires(source -> source.hasPermissionLevel(2)))
                         .then(
-                           CommandManager.method_9247("set")
+                           CommandManager.literal("set")
                               .then(
-                                 CommandManager.method_9244("revivalDegree", IntegerArgumentType.integer(0, 1000))
-                                    .then(CommandManager.method_9244("level", IntegerArgumentType.integer(1, 10)).executes(context -> {
-                                       ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                                 CommandManager.argument("revivalDegree", IntegerArgumentType.integer(0, 1000))
+                                    .then(CommandManager.argument("level", IntegerArgumentType.integer(1, 10)).executes(context -> {
+                                       ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                                        int revivalDegree = IntegerArgumentType.getInteger(context, "revivalDegree");
                                        int level = IntegerArgumentType.getInteger(context, "level");
                                        return GhostItemCommand.executeSet(context, player, revivalDegree, level);
                                     }))
                               )
                         ))
-                     .then(CommandManager.method_9247("get").executes(context -> {
-                        ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                     .then(CommandManager.literal("get").executes(context -> {
+                        ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                         return GhostItemCommand.executeGet(context, player);
                      }))
                ))
             .then(
-               ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.method_9247("shard")
-                           .requires(source -> source.method_9259(2)))
+               ((LiteralArgumentBuilder)((LiteralArgumentBuilder)((LiteralArgumentBuilder)CommandManager.literal("shard")
+                           .requires(source -> source.hasPermissionLevel(2)))
                         .executes(context -> {
-                           ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                           ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                            if (player == null) {
-                              ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                              ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
                               return 0;
                            } else {
-                              ItemStack stack = player.method_6047();
-                              if (!(stack.method_7909() instanceof BaseGhostEyeItem)) {
-                                 ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("手上拿的不是驾驭物品"));
+                              ItemStack stack = player.getMainHandStack();
+                              if (!(stack.getItem() instanceof BaseGhostEyeItem)) {
+                                 ((ServerCommandSource)context.getSource()).sendError(Text.literal("手上拿的不是驾驭物品"));
                                  return 0;
                               } else {
                                  boolean current = BaseGhostEyeItem.isShard(stack);
                                  BaseGhostEyeItem.setShard(stack, !current);
                                  String state = !current ? "§a碎片模式" : "§c正常模式";
-                                 ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("已切换为" + state), true);
+                                 ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("已切换为" + state), true);
                                  return 1;
                               }
                            }
                         }))
-                     .then(CommandManager.method_9247("set").then(CommandManager.method_9244("state", BoolArgumentType.bool()).executes(context -> {
-                        ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                     .then(CommandManager.literal("set").then(CommandManager.argument("state", BoolArgumentType.bool()).executes(context -> {
+                        ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                         if (player == null) {
-                           ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                           ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
                            return 0;
                         } else {
                            boolean state = BoolArgumentType.getBool(context, "state");
-                           ItemStack stack = player.method_6047();
-                           if (!(stack.method_7909() instanceof BaseGhostEyeItem)) {
-                              ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("手上拿的不是驾驭物品"));
+                           ItemStack stack = player.getMainHandStack();
+                           if (!(stack.getItem() instanceof BaseGhostEyeItem)) {
+                              ((ServerCommandSource)context.getSource()).sendError(Text.literal("手上拿的不是驾驭物品"));
                               return 0;
                            } else {
                               BaseGhostEyeItem.setShard(stack, state);
                               String stateText = state ? "§a碎片模式" : "§c正常模式";
-                              ((ServerCommandSource)context.getSource()).method_9226(() -> Text.method_43470("已设置为" + stateText), true);
+                              ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("已设置为" + stateText), true);
                               return 1;
                            }
                         }
                      }))))
-                  .then(CommandManager.method_9247("get").executes(context -> {
-                     ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+                  .then(CommandManager.literal("get").executes(context -> {
+                     ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
                      if (player == null) {
-                        ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+                        ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
                         return 0;
                      } else {
-                        ItemStack stack = player.method_6047();
-                        if (stack.method_7909() instanceof BaseGhostEyeItem item) {
+                        ItemStack stack = player.getMainHandStack();
+                        if (stack.getItem() instanceof BaseGhostEyeItem item) {
                            boolean isShard = BaseGhostEyeItem.isShard(stack);
                            String stateText = isShard ? "§a是碎片" : "§c不是碎片";
-                           ((ServerCommandSource)context.getSource())
-                              .method_9226(() -> Text.method_43470("类型：" + item.getGhostType() + "，状态：" + stateText), false);
+                           ((ServerCommandSource)context.getSource()).sendFeedback(() -> Text.literal("类型：" + item.getGhostType() + "，状态：" + stateText), false);
                            return 1;
                         } else {
-                           ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("手上拿的不是驾驭物品"));
+                           ((ServerCommandSource)context.getSource()).sendError(Text.literal("手上拿的不是驾驭物品"));
                            return 0;
                         }
                      }
@@ -398,14 +388,14 @@ public class XieCommand {
    }
 
    public static int executeGhostSwap(CommandContext<ServerCommandSource> context) {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
       if (player == null) {
-         ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("该指令只能由玩家执行"));
+         ((ServerCommandSource)context.getSource()).sendError(Text.literal("该指令只能由玩家执行"));
          return 0;
       }
 
       try {
-         Identifier ghostTypeId = IdentifierArgumentType.method_9443(context, "ghostType");
+         Identifier ghostTypeId = IdentifierArgumentType.getIdentifier(context, "ghostType");
          String ghostType = ghostTypeId.toString();
          String simpleGhostType = ghostType;
          if (ghostType.contains(":")) {
@@ -415,15 +405,15 @@ public class XieCommand {
          GhostChildData data = PlayerGhostChildManager.getGhostChildData(player);
          if (data != null && data.getFedGhostTypes().contains(simpleGhostType)) {
             ItemStack newGhostItem = GhostUtils.createTamedItem(simpleGhostType);
-            if (newGhostItem.method_7960()) {
-               player.method_7353(Text.method_43470("§c无效的鬼类型"), true);
+            if (newGhostItem.isEmpty()) {
+               player.sendMessage(Text.literal("§c无效的鬼类型"), true);
                return 0;
             }
 
             if (AdvancementManager.hasAdvancement(player, "smfs:become_god")) {
-               NbtCompound nbt = newGhostItem.method_7948();
-               nbt.method_10569("StoredLevel", 10);
-               nbt.method_10569("StoredRevivalDegree", 0);
+               NbtCompound nbt = newGhostItem.getOrCreateNbt();
+               nbt.putInt("StoredLevel", 10);
+               nbt.putInt("StoredRevivalDegree", 0);
             }
 
             boolean hasSlotIndex = false;
@@ -435,7 +425,7 @@ public class XieCommand {
             } catch (Exception e) {
                slotIndex = PlayerEvents.getUnlockedGhostSlot(player);
                if (slotIndex == -1) {
-                  player.method_7353(Text.method_43470("§c没有可用的驾驭槽位"), true);
+                  player.sendMessage(Text.literal("§c没有可用的驾驭槽位"), true);
                   return 0;
                }
             }
@@ -443,17 +433,15 @@ public class XieCommand {
             if (hasSlotIndex) {
                NbtCompound ghostSlots = PlayerEvents.getGhostSlots(player);
                String slotKey = "Slot" + slotIndex;
-               if (!ghostSlots.method_10545(slotKey) || !ghostSlots.method_10562(slotKey).method_10577("unlocked")) {
-                  player.method_7353(Text.method_43470("§c该槽位未解锁！"), true);
+               if (!ghostSlots.contains(slotKey) || !ghostSlots.getCompound(slotKey).getBoolean("unlocked")) {
+                  player.sendMessage(Text.literal("§c该槽位未解锁！"), true);
                   return 0;
                }
             }
 
             if (hasSlotIndex) {
                ItemStack oldGhostItem = PlayerEvents.getGhostSlotItem(player, slotIndex);
-               if (!oldGhostItem.method_7960()
-                  && !oldGhostItem.method_31574(Items.field_8162)
-                  && oldGhostItem.method_7909() instanceof BaseGhostEyeItem oldItem) {
+               if (!oldGhostItem.isEmpty() && !oldGhostItem.isOf(Items.AIR) && oldGhostItem.getItem() instanceof BaseGhostEyeItem oldItem) {
                   String oldGhostType = oldItem.getGhostType();
                   if (oldGhostType != null && !oldGhostType.isEmpty() && !oldGhostType.startsWith("minecraft:")) {
                      data.getFedGhostTypes().add(oldGhostType);
@@ -465,24 +453,24 @@ public class XieCommand {
                data.getFedGhostTypes().remove(simpleGhostType);
                PlayerGhostChildManager.saveGhostChildData(player, data);
                String ghostName = GhostUtils.getGhostDisplayName(simpleGhostType);
-               player.method_7353(Text.method_43470("§a成功将 " + ghostName + " 放入槽位 " + slotIndex + "！"), true);
+               player.sendMessage(Text.literal("§a成功将 " + ghostName + " 放入槽位 " + slotIndex + "！"), true);
             } else {
                PlayerEvents.setGhostSlotData(player, slotIndex, newGhostItem);
                PlayerEvents.validateGhostSlots(player);
                data.getFedGhostTypes().remove(simpleGhostType);
                PlayerGhostChildManager.saveGhostChildData(player, data);
                String ghostName = GhostUtils.getGhostDisplayName(simpleGhostType);
-               player.method_7353(Text.method_43470("§a成功将 " + ghostName + " 加入驾驭槽位 " + slotIndex + "！"), true);
+               player.sendMessage(Text.literal("§a成功将 " + ghostName + " 加入驾驭槽位 " + slotIndex + "！"), true);
             }
 
             return 1;
          } else {
-            player.method_7353(Text.method_43470("§c没有找到该鬼类型"), true);
+            player.sendMessage(Text.literal("§c没有找到该鬼类型"), true);
             return 0;
          }
       } catch (Exception e) {
          Smfs.LOGGER.error("交换鬼失败", e);
-         player.method_7353(Text.method_43470("§c交换失败: " + e.getMessage()), true);
+         player.sendMessage(Text.literal("§c交换失败: " + e.getMessage()), true);
          return 0;
       }
    }

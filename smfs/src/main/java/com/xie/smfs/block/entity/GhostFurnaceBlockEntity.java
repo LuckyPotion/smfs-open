@@ -23,21 +23,21 @@ public class GhostFurnaceBlockEntity extends AbstractFurnaceBlockEntity implemen
       super(ModBlockEntities.GHOST_FURNACE_BLOCK_ENTITY, pos, state, GhostFurnaceRecipeType.INSTANCE);
    }
 
-   protected Text method_17823() {
-      return Text.method_43471("container.smfs.ghost_furnace");
+   protected Text getContainerName() {
+      return Text.translatable("container.smfs.ghost_furnace");
    }
 
-   protected ScreenHandler method_5465(int syncId, PlayerInventory playerInventory) {
-      return new FurnaceScreenHandler(syncId, playerInventory, this, this.field_17374);
+   protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
+      return new FurnaceScreenHandler(syncId, playerInventory, this, this.propertyDelegate);
    }
 
-   protected int method_11200(ItemStack fuel) {
-      return super.method_11200(fuel);
+   protected int getFuelTime(ItemStack fuel) {
+      return super.getFuelTime(fuel);
    }
 
    public static void tick(World world, BlockPos pos, BlockState state, GhostFurnaceBlockEntity blockEntity) {
-      if (!state.method_26215()) {
-         AbstractFurnaceBlockEntity.method_31651(world, pos, state, blockEntity);
+      if (!state.isAir()) {
+         AbstractFurnaceBlockEntity.tick(world, pos, state, blockEntity);
       }
    }
 

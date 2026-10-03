@@ -16,14 +16,14 @@ public class UntouchableGhostEntity extends GhostEntity {
    }
 
    @Override
-   public boolean method_5643(DamageSource source, float amount) {
-      if (source.method_5529() instanceof PlayerEntity player) {
-         player.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 2400, 19, false, false, true));
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5916, 200, 254, false, false, true));
-         player.method_6092(new StatusEffectInstance(StatusEffects.field_5919, 300, 254, false, false, true));
+   public boolean damage(DamageSource source, float amount) {
+      if (source.getAttacker() instanceof PlayerEntity player) {
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 2400, 19, false, false, true));
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 200, 254, false, false, true));
+         player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 300, 254, false, false, true));
       }
 
-      return super.method_5643(source, amount);
+      return super.damage(source, amount);
    }
 
    @Override

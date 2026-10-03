@@ -12,7 +12,7 @@ class DaySurvivalStrategy implements QuestDetectionStrategy {
 
    @Override
    public int getCurrentProgress(PlayerEntity player, String objectiveId) {
-      return player instanceof ServerPlayerEntity serverPlayer && serverPlayer.method_37908() instanceof ServerWorld serverWorld
+      return player instanceof ServerPlayerEntity serverPlayer && serverPlayer.getWorld() instanceof ServerWorld serverWorld
          ? TutorialManager.calculateCurrentDay(serverWorld)
          : 0;
    }

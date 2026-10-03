@@ -18,10 +18,10 @@ public class RecipeUnlockEventHandler {
       ServerPlayerEvents.AFTER_RESPAWN.register((AfterRespawn)(oldPlayer, newPlayer, alive) -> checkRecipeUnlocks(newPlayer));
       ServerTickEvents.START_SERVER_TICK.register((StartTick)server -> {
          PLAYERS_CHECKED_THIS_TICK.clear();
-         server.method_3760().method_14571().forEach(player -> {
-            if (!PLAYERS_CHECKED_THIS_TICK.contains(player.method_5845())) {
+         server.getPlayerManager().getPlayerList().forEach(player -> {
+            if (!PLAYERS_CHECKED_THIS_TICK.contains(player.getUuidAsString())) {
                checkRecipeUnlocks(player);
-               PLAYERS_CHECKED_THIS_TICK.add(player.method_5845());
+               PLAYERS_CHECKED_THIS_TICK.add(player.getUuidAsString());
             }
          });
       });

@@ -25,7 +25,7 @@ public class SpearBindC2SPacket {
    public static void sendToClient(ServerPlayerEntity player, boolean isSettingOwner, String correctAnswer) {
       PacketByteBuf buf = PacketByteBufs.create();
       buf.writeBoolean(isSettingOwner);
-      buf.method_10814(correctAnswer);
+      buf.writeString(correctAnswer);
       ServerPlayNetworking.send(player, BIND_ID, buf);
    }
 
@@ -34,9 +34,9 @@ public class SpearBindC2SPacket {
          BIND_ID,
          (client, handler, buf, responseSender) -> {
             boolean isSettingOwner = buf.readBoolean();
-            String correctAnswer = buf.method_19772();
+            String correctAnswer = buf.readString();
             client.execute(
-               () -> client.method_1507(new SpearBindScreen(Text.method_43470("请选择手持位置"), correctAnswer, isSettingOwner, choice -> sendAnswerToServer(choice)))
+               () -> client.setScreen(new SpearBindScreen(Text.literal("请选择手持位置"), correctAnswer, isSettingOwner, choice -> sendAnswerToServer(choice)))
             );
          }
       );
@@ -44,17 +44,17 @@ public class SpearBindC2SPacket {
 
    private static void sendAnswerToServer(String choice) {
       PacketByteBuf buf = PacketByteBufs.create();
-      buf.method_10814(choice);
+      buf.writeString(choice);
       ClientPlayNetworking.send(ANSWER_ID, buf);
    }
 
    public static void registerServer() {
       ServerPlayNetworking.registerGlobalReceiver(ANSWER_ID, (server, player, handler, buf, responseSender) -> {
-         String choice = buf.method_19772();
+         String choice = buf.readString();
          server.execute(() -> {
-            ItemStack stack = player.method_6047();
-            if (stack.method_7909() instanceof BoundSpearItem) {
-               ((BoundSpearItem)stack.method_7909()).handleAnswer(choice, stack, player);
+            ItemStack stack = player.getMainHandStack();
+            if (stack.getItem() instanceof BoundSpearItem) {
+               ((BoundSpearItem)stack.getItem()).handleAnswer(choice, stack, player);
             }
          });
       });

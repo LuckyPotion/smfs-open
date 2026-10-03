@@ -17,20 +17,20 @@ import net.minecraft.text.Text;
 
 public class OpenTamingScreenCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
-      dispatcher.register((LiteralArgumentBuilder)CommandManager.method_9247("open_taming_screen").executes(OpenTamingScreenCommand::execute));
+      dispatcher.register((LiteralArgumentBuilder)CommandManager.literal("open_taming_screen").executes(OpenTamingScreenCommand::execute));
    }
 
    public static int execute(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
 
       try {
          ItemStack containerStack = new ItemStack(ModItems.GOLDEN_CONTAINER);
-         player.method_17355(new GhostTamingScreenHandler.GhostTamingFactory(containerStack));
-         player.method_7353(Text.method_43471("command.smfs.open_taming_screen.success"), true);
+         player.openHandledScreen(new GhostTamingScreenHandler.GhostTamingFactory(containerStack));
+         player.sendMessage(Text.translatable("command.smfs.open_taming_screen.success"), true);
          return 1;
       } catch (Exception e) {
          Smfs.LOGGER.error("打开驭鬼界面失败", e);
-         player.method_7353(Text.method_43470("§c打开驭鬼界面失败: " + e.getMessage()), true);
+         player.sendMessage(Text.literal("§c打开驭鬼界面失败: " + e.getMessage()), true);
          return 0;
       }
    }

@@ -10,20 +10,20 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class SpiritErosionEffect extends StatusEffect {
    public SpiritErosionEffect() {
-      super(StatusEffectCategory.field_18272, 9055202);
+      super(StatusEffectCategory.HARMFUL, 9055202);
    }
 
-   public String method_5567() {
+   public String getTranslationKey() {
       return "effect.smfs.spirit_erosion";
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       int tickInterval = 20;
       return duration % tickInterval == 0;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
-      if (!entity.method_37908().method_8608()) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+      if (!entity.getWorld().isClient()) {
          this.handleSpiritErosionDamage(entity, amplifier);
       }
    }
@@ -34,9 +34,9 @@ public class SpiritErosionEffect extends StatusEffect {
 
       try {
          if (entity instanceof PlayerEntity player) {
-            PlayerEvents.handleSpiritDamage(player, baseDamage, baseDamage, ModDamageSources.ghost(entity.method_37908()));
+            PlayerEvents.handleSpiritDamage(player, baseDamage, baseDamage, ModDamageSources.ghost(entity.getWorld()));
          } else {
-            entity.method_5643(ModDamageSources.ghost(entity.method_37908()), baseDamage);
+            entity.damage(ModDamageSources.ghost(entity.getWorld()), baseDamage);
          }
       } finally {
          ModEvents.processingSpiritDamage.set(false);

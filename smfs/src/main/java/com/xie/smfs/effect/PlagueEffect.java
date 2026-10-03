@@ -14,54 +14,54 @@ import net.minecraft.world.World;
 
 public class PlagueEffect extends StatusEffect {
    public PlagueEffect() {
-      super(StatusEffectCategory.field_18272, 4876097);
+      super(StatusEffectCategory.HARMFUL, 4876097);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return true;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
       if (entity instanceof PlayerEntity player) {
-         if (player.method_6059(ModEffects.SILENCE) || player.method_6059(ModEffects.DREAM)) {
+         if (player.hasStatusEffect(ModEffects.SILENCE) || player.hasStatusEffect(ModEffects.DREAM)) {
             return;
          }
 
          if (GhostSkillManager.hasPlagueGhostEquipped(player)) {
-            player.method_6016(this);
+            player.removeStatusEffect(this);
             return;
          }
       }
 
-      if (entity.field_6012 % 20 == 0) {
-         entity.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 40, 1));
+      if (entity.age % 20 == 0) {
+         entity.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 40, 1));
       }
 
-      if (!entity.method_37908().method_8608()) {
-         ServerWorld serverWorld = (ServerWorld)entity.method_37908();
-         Vec3d pos = entity.method_19538();
+      if (!entity.getWorld().isClient()) {
+         ServerWorld serverWorld = (ServerWorld)entity.getWorld();
+         Vec3d pos = entity.getPos();
 
          for (int i = 0; i < 5; i++) {
-            double offsetX = (entity.method_6051().method_43058() - 0.5) * 1.5;
-            double offsetY = entity.method_6051().method_43058() * 2.0;
-            double offsetZ = (entity.method_6051().method_43058() - 0.5) * 1.5;
-            serverWorld.method_14199(
-               ParticleTypes.field_11251, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 3, 0.1, 0.1, 0.1, 0.02
-            );
+            double offsetX = (entity.getRandom().nextDouble() - 0.5) * 1.5;
+            double offsetY = entity.getRandom().nextDouble() * 2.0;
+            double offsetZ = (entity.getRandom().nextDouble() - 0.5) * 1.5;
+            serverWorld.spawnParticles(ParticleTypes.SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 3, 0.1, 0.1, 0.1, 0.02);
          }
       }
 
-      if (entity.field_6012 % 40 == 0 && !entity.method_37908().method_8608()) {
-         World world = entity.method_37908();
+      if (entity.age % 40 == 0 && !entity.getWorld().isClient()) {
+         World world = entity.getWorld();
 
-         for (LivingEntity nearbyEntity : world.method_8390(LivingEntity.class, entity.method_5829().method_1014(3.0), e -> e != entity && !e.method_6059(this))) {
+         for (LivingEntity nearbyEntity : world.getEntitiesByClass(
+            LivingEntity.class, entity.getBoundingBox().expand(3.0), e -> e != entity && !e.hasStatusEffect(this)
+         )) {
             int plagueDuration = 600 + amplifier * 5 * 20;
-            nearbyEntity.method_6092(new StatusEffectInstance(this, plagueDuration, amplifier));
+            nearbyEntity.addStatusEffect(new StatusEffectInstance(this, plagueDuration, amplifier));
          }
       }
    }
 
-   public boolean method_5573() {
+   public boolean isBeneficial() {
       return false;
    }
 }

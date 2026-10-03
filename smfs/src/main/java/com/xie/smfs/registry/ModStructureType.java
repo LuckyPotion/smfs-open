@@ -7,8 +7,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.gen.structure.StructureType;
 
 public class ModStructureType {
-   public static final StructureType<CustomJigsawStructure> CUSTOM_JIGSAW = (StructureType<CustomJigsawStructure>)Registry.method_10230(
-      Registries.field_41147, new Identifier("smfs", "custom_jigsaw"), (StructureType)() -> CustomJigsawStructure.CODEC
+   public static final StructureType<CustomJigsawStructure> CUSTOM_JIGSAW = (StructureType<CustomJigsawStructure>)Registry.register(
+      Registries.STRUCTURE_TYPE, new Identifier("smfs", "custom_jigsaw"), (StructureType)() -> CustomJigsawStructure.CODEC
    );
 
    public static void registerStructureTypes() {

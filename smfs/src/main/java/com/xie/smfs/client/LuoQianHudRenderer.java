@@ -29,8 +29,8 @@ public class LuoQianHudRenderer {
    }
 
    private static void onClientTick(MinecraftClient client) {
-      PlayerEntity player = client.field_1724;
-      if (isInCombat && (player == null || player.method_29504() || player != trackedPlayer)) {
+      PlayerEntity player = client.player;
+      if (isInCombat && (player == null || player.isDead() || player != trackedPlayer)) {
          reset();
       }
 
@@ -83,10 +83,10 @@ public class LuoQianHudRenderer {
    }
 
    private static void render(DrawContext context, float tickDelta) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      PlayerEntity player = client.field_1724;
+      MinecraftClient client = MinecraftClient.getInstance();
+      PlayerEntity player = client.player;
       if (player != null && isInCombat) {
-         int screenWidth = context.method_51421();
+         int screenWidth = context.getScaledWindowWidth();
          float alpha = calculateFadeInProgress();
          if (!(alpha <= 0.0F)) {
             updateDisplayValue();
@@ -94,16 +94,16 @@ public class LuoQianHudRenderer {
             int barHeight = 10;
             int barX = (screenWidth - barWidth) / 2;
             int barY = 20;
-            context.method_25294(barX, barY, barX + barWidth, barY + barHeight, -1879048192);
+            context.fill(barX, barY, barX + barWidth, barY + barHeight, -1879048192);
             float fillPercent = (float)displaySpiritualPower / maxSpiritualPower;
             int fillWidth = (int)((barWidth - 4) * fillPercent);
             int barColor = getBarColor(fillPercent);
-            context.method_25294(barX + 2, barY + 2, barX + 2 + fillWidth, barY + barHeight - 2, barColor);
+            context.fill(barX + 2, barY + 2, barX + 2 + fillWidth, barY + barHeight - 2, barColor);
             int borderColor = isInvincible ? -10496 : (isFlashing ? getFlashColor() : -65536);
-            context.method_49601(barX, barY, barWidth, barHeight, borderColor);
+            context.drawBorder(barX, barY, barWidth, barHeight, borderColor);
             String title = isInvincible ? "§6罗千" : "§c罗千";
-            int titleWidth = client.field_1772.method_1727(title);
-            context.method_51433(client.field_1772, title, barX + (barWidth - titleWidth) / 2, barY - 10, 16777215, true);
+            int titleWidth = client.textRenderer.getWidth(title);
+            context.drawText(client.textRenderer, title, barX + (barWidth - titleWidth) / 2, barY - 10, 16777215, true);
          }
       }
    }

@@ -16,38 +16,38 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 public class Footprint2Block extends Block implements BlockEntityProvider {
-   private static final VoxelShape SHAPE = Block.method_9541(0.0, 0.0, 0.0, 16.0, 0.01, 16.0);
+   private static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 0.01, 16.0);
 
    public Footprint2Block(Settings settings) {
       super(settings);
    }
 
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
       return SHAPE;
    }
 
-   public VoxelShape method_9549(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return VoxelShapes.method_1073();
+   public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return VoxelShapes.empty();
    }
 
-   public void method_9615(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
-      super.method_9615(state, world, pos, oldState, notify);
-      if (!world.method_8608()) {
-         world.method_39279(pos, this, 20);
+   public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
+      super.onBlockAdded(state, world, pos, oldState, notify);
+      if (!world.isClient()) {
+         world.scheduleBlockTick(pos, this, 20);
       }
    }
 
-   public void method_9588(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-      if (!world.method_8608()) {
-         world.method_8650(pos, false);
+   public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+      if (!world.isClient()) {
+         world.removeBlock(pos, false);
       }
    }
 
-   public boolean method_9579(BlockState state, BlockView world, BlockPos pos) {
+   public boolean isTransparent(BlockState state, BlockView world, BlockPos pos) {
       return true;
    }
 
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new Footprint2BlockEntity(pos, state);
    }
 }

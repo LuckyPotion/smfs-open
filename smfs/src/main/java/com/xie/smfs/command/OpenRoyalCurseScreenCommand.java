@@ -11,17 +11,17 @@ import net.minecraft.text.Text;
 
 public class OpenRoyalCurseScreenCommand {
    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-      dispatcher.register((LiteralArgumentBuilder)CommandManager.method_9247("royalcurse").executes(OpenRoyalCurseScreenCommand::openRoyalCurseScreen));
+      dispatcher.register((LiteralArgumentBuilder)CommandManager.literal("royalcurse").executes(OpenRoyalCurseScreenCommand::openRoyalCurseScreen));
    }
 
    private static int openRoyalCurseScreen(CommandContext<ServerCommandSource> context) {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_44023();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayer();
       if (player != null) {
-         player.method_17355(new RoyalCurseScreenHandler.RoyalCurseFactory());
-         player.method_7353(Text.method_43470("已打开王家诅咒界面"), false);
+         player.openHandledScreen(new RoyalCurseScreenHandler.RoyalCurseFactory());
+         player.sendMessage(Text.literal("已打开王家诅咒界面"), false);
          return 1;
       } else {
-         ((ServerCommandSource)context.getSource()).method_9213(Text.method_43470("只有玩家可以执行此命令"));
+         ((ServerCommandSource)context.getSource()).sendError(Text.literal("只有玩家可以执行此命令"));
          return 0;
       }
    }

@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
 public class GraveWarningRenderer extends EntityRenderer<GraveWarningEntity> {
    public GraveWarningRenderer(Context context) {
       super(context);
-      this.field_4673 = 0.0F;
+      this.shadowRadius = 0.0F;
    }
 
    public Identifier getTexture(GraveWarningEntity entity) {

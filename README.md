@@ -58,7 +58,32 @@
    └─ 6. 归类             src/main/java + src/main/resources
 ```
 
-**第 3 步是关键**：jar 里的字节码使用 Fabric 的 `intermediary` 命名（`net.minecraft.class_310`），直接反编译会得到满屏 `class_1234`、`method_5678`，完全不可读。经 TinyRemapper 重映射到 Yarn 命名后，源码中**零残留** `class_*` / `method_*` / `field_*`，可读性与正常开发项目一致。
+**第 3 步是关键**：jar 里的字节码使用 Fabric 的 `intermediary` 命名（`net.minecraft.class_310`），直接反编译会得到满屏 `class_1234`、`method_5678`，完全不可读。经 TinyRemapper 重映射到 Yarn 命名后，类名**零残留** `class_*`，成员名残留 38 处（详见下节），可读性已与正常开发项目接近。
+
+### 重映射的一个关键前提：必须提供 Minecraft 类路径
+
+这一点容易踩坑，值得单独说明。TinyRemapper 处理**成员**（方法、字段）映射时，需要先确定该成员属于哪个类，也就是要求**被调用者的类型能在类路径中解析出来**。如果只给映射表、不给 Minecraft 的类文件，结果是：
+
+- **类名会正确重映射**（`class_2561` → `Text`）—— 因为类映射是按名字直接查表，不依赖解析
+- **成员名一个都不会改**（`method_43470` 保持原样，尽管映射表里明明写着它应改成 `literal`）—— 因为解析不出属主
+
+本项目第一版就栽在这里，产出物中有 **27,434 处**成员引用停留在 intermediary 命名。补上 Minecraft 的 intermediary 类路径后，降到 **38 处**。
+
+修复方式是给 remapper 传入一个 Minecraft 的 intermediary jar：
+
+```bash
+# 1) 用官方 client.jar + intermediary 映射，先造出 intermediary 版 Minecraft
+java -cp "$CP" Remap minecraft-1.20.1-client.jar mc-intermediary-1.20.1.jar \
+     mappings-official-intermediary.tiny official intermediary
+
+# 2) 再重映射模组，并把上一步的产物作为类路径传入
+java -cp "$CP" Remap smfs-1.5.0.jar smfs-named.jar mappings.tiny intermediary named \
+     -cp mc-intermediary-1.20.1.jar
+```
+
+**剩余的 38 处为何无法消除**：它们集中在模组自有实体类上，例如 `yinQi.method_5808(...)`（应为 `refreshPositionAndAngles`）。`method_5808` 的真实属主是 `Entity`（`class_1297`，确实在类路径中），但调用点写在 `YinQiEntity` 这样的模组类上，而该类又无法在类路径中解析出其继承链，TinyRemapper 就放弃了这个调用点。同一行的 `getX()` / `getY()` 都能正常改名，只有这一个方法名保留原样——属于重映射的固有限制，不影响阅读。
+
+核对残留数量的命令见 [`TOOLS.md`](TOOLS.md#5-校验)。
 
 复现所需工具与参数见 [`TOOLS.md`](TOOLS.md)。
 
@@ -284,7 +309,7 @@ This repository contains **decompiled sources** for the Minecraft **Fabric 1.20.
 
 **Pipeline:** unpack → remap `intermediary` → `named` with TinyRemapper (Yarn `1.20.1+build.10`, Mixin extension enabled so `@Mixin`/`@Inject` annotation payloads are rewritten too) → decompile with Vineflower 1.12.0 → repair a compile-time UTF-8↔GBK encoding defect → lay out as `src/main/java` + `src/main/resources`.
 
-**The result contains zero leftover `class_*` / `method_*` / `field_*` identifiers**, so it reads like a normal development project.
+**All `class_*` identifiers are gone**, so the sources read close to a normal development project. 38 member references (in 14 files) still carry intermediary names; these are calls made on the mod's own entity classes, whose inheritance chain TinyRemapper cannot resolve, so it leaves the member name untouched. See the Chinese section above for the cause and the fix.
 
 **Caveats:** decompiled output is not guaranteed to compile (local variable names, generic erasure, and syntactic sugar are lossy). Localisation strings that the author's build corrupted through a GBK misread have been losslessly recovered via `GB18030.decode(GBK.encode(mojibake))`.
 

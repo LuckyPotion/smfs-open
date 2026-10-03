@@ -16,70 +16,69 @@ public class GraveWarningEntity extends Entity {
 
    public GraveWarningEntity(EntityType<? extends GraveWarningEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5875(true);
-      this.method_5684(true);
-      this.method_5648(false);
-      this.method_5803(true);
+      this.setNoGravity(true);
+      this.setInvulnerable(true);
+      this.setInvisible(false);
+      this.setSilent(true);
    }
 
-   protected void method_5693() {
+   protected void initDataTracker() {
    }
 
-   protected void method_5749(NbtCompound nbt) {
-      this.warningTimer = nbt.method_10550("WarningTimer");
+   protected void readCustomDataFromNbt(NbtCompound nbt) {
+      this.warningTimer = nbt.getInt("WarningTimer");
    }
 
-   protected void method_5652(NbtCompound nbt) {
-      nbt.method_10569("WarningTimer", this.warningTimer);
+   protected void writeCustomDataToNbt(NbtCompound nbt) {
+      nbt.putInt("WarningTimer", this.warningTimer);
    }
 
-   public void method_5773() {
-      super.method_5773();
-      if (this.method_37908().method_8608()) {
-         double x = this.method_23317();
-         double y = this.method_23318();
-         double z = this.method_23321();
-         this.method_37908().method_8406(ParticleTypes.field_11251, x, y + 0.3, z, 0.0, 0.02, 0.0);
+   public void tick() {
+      super.tick();
+      if (this.getWorld().isClient()) {
+         double x = this.getX();
+         double y = this.getY();
+         double z = this.getZ();
+         this.getWorld().addParticle(ParticleTypes.SMOKE, x, y + 0.3, z, 0.0, 0.02, 0.0);
       }
 
-      if (!this.method_37908().method_8608()) {
+      if (!this.getWorld().isClient()) {
          this.warningTimer--;
          if (this.warningTimer <= 0) {
             this.generateGrave();
-            this.method_31472();
+            this.discard();
          }
       }
    }
 
    public int getWarningTimer() {
-      return this.method_37908().method_8608() ? Math.max(0, 40 - this.field_6012) : this.warningTimer;
+      return this.getWorld().isClient() ? Math.max(0, 40 - this.age) : this.warningTimer;
    }
 
    private void generateGrave() {
-      double x = this.method_23317();
-      double y = this.method_23318();
-      double z = this.method_23321();
+      double x = this.getX();
+      double y = this.getY();
+      double z = this.getZ();
       int blockX = (int)Math.floor(x);
       int blockY = (int)Math.floor(y);
       int blockZ = (int)Math.floor(z);
 
-      while (blockY > 0 && this.method_37908().method_8320(new BlockPos(blockX, blockY, blockZ)).method_26215()) {
+      while (blockY > 0 && this.getWorld().getBlockState(new BlockPos(blockX, blockY, blockZ)).isAir()) {
          blockY--;
       }
 
       BlockPos gravePos = new BlockPos(blockX, blockY + 1, blockZ);
-      if (this.method_37908().method_8320(gravePos).method_26215()
-         && this.method_37908().method_8320(gravePos.method_10074()).method_26212(this.method_37908(), gravePos.method_10074())) {
-         this.method_37908().method_8396(null, gravePos, SoundEvents.field_14609, SoundCategory.field_15251, 1.0F, 0.8F);
-         this.method_37908().method_8501(gravePos, ModBlocks.GRAVE_MOUND.method_9564());
+      if (this.getWorld().getBlockState(gravePos).isAir() && this.getWorld().getBlockState(gravePos.down()).isSolidBlock(this.getWorld(), gravePos.down())) {
+         this.getWorld().playSound(null, gravePos, SoundEvents.BLOCK_GRAVEL_PLACE, SoundCategory.HOSTILE, 1.0F, 0.8F);
+         this.getWorld().setBlockState(gravePos, ModBlocks.GRAVE_MOUND.getDefaultState());
       }
    }
 
-   public boolean method_5640(double distance) {
+   public boolean shouldRender(double distance) {
       return distance < 4096.0;
    }
 
-   public boolean method_5767() {
+   public boolean isInvisible() {
       return false;
    }
 }

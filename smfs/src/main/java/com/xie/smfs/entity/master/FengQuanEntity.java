@@ -38,8 +38,8 @@ public class FengQuanEntity extends GhostMasterEntity {
       this.shouldAttackPlayers = false;
       this.shouldProtectPlayers = true;
       this.shouldAttackGhostsNearPlayers = true;
-      this.method_5665(Text.method_43470("§6[鬼雾]冯全"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6[鬼雾]冯全"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.HEADQUARTERS;
    }
 
@@ -48,12 +48,12 @@ public class FengQuanEntity extends GhostMasterEntity {
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -64,7 +64,7 @@ public class FengQuanEntity extends GhostMasterEntity {
 
    @Override
    protected void enableGhostDomain(PlayerEntity player, StatusEffect effect) {
-      player.method_6092(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, 20, this.getGhostDomainLevel() - 1, false, false, false));
    }
 
    @Override
@@ -72,10 +72,10 @@ public class FengQuanEntity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack ghostMoney3Input = new ItemStack(ModItems.GHOST_MONEY_3, 7);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 21);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 21);
          this.tradeOffers.add(new TradeOffer(ghostMoney3Input, goldIngotOutput2, 12, 5, 0.05F));
          ItemStack ghostMirrorInput = new ItemStack(ModItems.GHOST_MIRROR, 1);
-         ItemStack goldNuggetOutput = new ItemStack(Items.field_8494, 16);
+         ItemStack goldNuggetOutput = new ItemStack(Items.GOLD_BLOCK, 16);
          this.tradeOffers.add(new TradeOffer(ghostMirrorInput, goldNuggetOutput, 8, 5, 0.08F));
          this.tradeOffersInitialized = true;
       }
@@ -83,43 +83,43 @@ public class FengQuanEntity extends GhostMasterEntity {
 
    private void applyFogGhostDomainToNearbyPlayers() {
       double radius = 16.0;
-      this.method_37908()
-         .method_8390(PlayerEntity.class, this.method_5829().method_1014(radius), player -> player != this.method_5968() && player instanceof PlayerEntity)
+      this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(radius), player -> player != this.getTarget() && player instanceof PlayerEntity)
          .forEach(player -> {
-            double distance = this.method_5739(player);
+            double distance = this.distanceTo(player);
             if (distance <= radius) {
-               player.method_6092(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, 100, 0, false, false, false));
+               player.addStatusEffect(new StatusEffectInstance(ModEffects.THICK_FOG_TARGET, 100, 0, false, false, false));
             }
          });
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
-         if (this.field_6012 % 20 == 0) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
+         if (this.age % 20 == 0) {
             this.checkStationaryPlayers();
          }
       }
    }
 
    private void checkStationaryPlayers() {
-      if (!(this.method_6032() > this.method_6063() * 0.5F)) {
-         if (this.method_37908() instanceof ServerWorld) {
+      if (!(this.getHealth() > this.getMaxHealth() * 0.5F)) {
+         if (this.getWorld() instanceof ServerWorld) {
             double range = 20.0;
 
-            for (PlayerEntity player : this.method_37908().method_18456()) {
-               if (!player.method_7325()
-                  && !player.method_7337()
+            for (PlayerEntity player : this.getWorld().getPlayers()) {
+               if (!player.isSpectator()
+                  && !player.isCreative()
                   && !RedGhostCandleItem.isHoldingCandle(player)
-                  && !player.method_6059(ModEffects.SPIRIT_IMMUNITY)
-                  && !(this.method_5858(player) > range * range)) {
-                  Vec3d currentPos = player.method_19538();
-                  Vec3d prevPos = new Vec3d(player.field_6014, player.field_6036, player.field_5969);
-                  if (currentPos.method_1025(prevPos) < 0.01) {
+                  && !player.hasStatusEffect(ModEffects.SPIRIT_IMMUNITY)
+                  && !(this.squaredDistanceTo(player) > range * range)) {
+                  Vec3d currentPos = player.getPos();
+                  Vec3d prevPos = new Vec3d(player.prevX, player.prevY, player.prevZ);
+                  if (currentPos.squaredDistanceTo(prevPos) < 0.01) {
                      this.stationaryPlayerTimer += 20;
                      if (this.stationaryPlayerTimer >= 60) {
-                        this.spawnGraveMoundAt(player.method_24515());
+                        this.spawnGraveMoundAt(player.getBlockPos());
                         this.stationaryPlayerTimer = 0;
                      }
                   } else {
@@ -132,16 +132,16 @@ public class FengQuanEntity extends GhostMasterEntity {
    }
 
    private void spawnGraveMoundAt(BlockPos pos) {
-      if (this.method_37908() instanceof ServerWorld serverWorld) {
+      if (this.getWorld() instanceof ServerWorld serverWorld) {
          BlockPos var5 = pos;
 
-         while (var5.method_10264() > serverWorld.method_31607() && serverWorld.method_8320(var5).method_26215()) {
-            var5 = var5.method_10074();
+         while (var5.getY() > serverWorld.getBottomY() && serverWorld.getBlockState(var5).isAir()) {
+            var5 = var5.down();
          }
 
-         BlockPos placePos = var5.method_10084();
-         if (serverWorld.method_8320(placePos).method_26215()) {
-            serverWorld.method_8501(placePos, ModBlocks.GRAVE_MOUND.method_9564());
+         BlockPos placePos = var5.up();
+         if (serverWorld.getBlockState(placePos).isAir()) {
+            serverWorld.setBlockState(placePos, ModBlocks.GRAVE_MOUND.getDefaultState());
          }
       }
    }

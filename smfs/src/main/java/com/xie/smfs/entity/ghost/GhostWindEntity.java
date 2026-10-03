@@ -33,34 +33,34 @@ public class GhostWindEntity extends GhostEntity {
    }
 
    private void initWindAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.25);
+         speedAttribute.setBaseValue(0.25);
       }
    }
 
    @Override
    protected void applyDefaultEffects(PlayerEntity player) {
-      player.method_6092(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN_TARGET, 200, this.getGhostDomainActualLevel() - 1, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.CYAN_GHOST_DOMAIN_TARGET, 200, this.getGhostDomainActualLevel() - 1, false, false));
       this.applyWindFieldEffect(player);
    }
 
    private void applyWindFieldEffect(PlayerEntity player) {
-      if (this.isInGhostDomain(player) && !player.method_6059(ModEffects.GHOST_WIND_EFFECT)) {
-         player.method_6092(new StatusEffectInstance(ModEffects.GHOST_WIND_EFFECT, 600, 0));
+      if (this.isInGhostDomain(player) && !player.hasStatusEffect(ModEffects.GHOST_WIND_EFFECT)) {
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.GHOST_WIND_EFFECT, 600, 0));
          NbtCompound playerData = PlayerEvents.getCachedData(player);
          NbtCompound ghostWindData = new NbtCompound();
-         ghostWindData.method_25927("ghost_wind_entity", this.method_5667());
-         ghostWindData.method_10544("wind_start_time", this.method_37908().method_8510());
-         ghostWindData.method_10548("wind_progress", 0.0F);
-         ghostWindData.method_10544("last_update_time", this.method_37908().method_8510());
-         playerData.method_10566("ghost_wind_effect", ghostWindData);
-         LOGGER.info("玩家 {} 获得鬼风效果，来源鬼风鬼: {}，位置: {}", player.method_5477().getString(), this.method_5667(), player.method_24515());
+         ghostWindData.putUuid("ghost_wind_entity", this.getUuid());
+         ghostWindData.putLong("wind_start_time", this.getWorld().getTime());
+         ghostWindData.putFloat("wind_progress", 0.0F);
+         ghostWindData.putLong("last_update_time", this.getWorld().getTime());
+         playerData.put("ghost_wind_effect", ghostWindData);
+         LOGGER.info("玩家 {} 获得鬼风效果，来源鬼风鬼: {}，位置: {}", player.getName().getString(), this.getUuid(), player.getBlockPos());
          this.windEffectApplyCount++;
          if (this.windEffectApplyCount > 1) {
             this.executeSpiritAttack(player);
@@ -72,9 +72,9 @@ public class GhostWindEntity extends GhostEntity {
       if (!this.isDeadlocked()) {
          if (this.attackCooldown <= 0) {
             this.attackCooldown = 60;
-            DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+            DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
             PlayerEvents.handleSpiritDamage(player, this.getSpiritualDamage(), this.getSpiritualDamage(), damageSource);
-            LOGGER.info("鬼风鬼 {} 对玩家 {} 执行灵异袭击，造成 {} 点灵异伤害", this.method_5667(), player.method_5477().getString(), this.getSpiritualDamage());
+            LOGGER.info("鬼风鬼 {} 对玩家 {} 执行灵异袭击，造成 {} 点灵异伤害", this.getUuid(), player.getName().getString(), this.getSpiritualDamage());
          }
       }
    }

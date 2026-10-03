@@ -29,7 +29,7 @@ public class ClientSuonaGhostSkillC2SPacket {
       server.execute(() -> {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             try {
-               LOGGER.info("玩家 {} 执行唢呐鬼J键技能：吹唢呐标记", player.method_5477().getString());
+               LOGGER.info("玩家 {} 执行唢呐鬼J键技能：吹唢呐标记", player.getName().getString());
                PlayerEvents.balanceRevivalDegree(player);
                handleSuonaGhostSkill(player);
             } catch (Exception e) {
@@ -41,16 +41,16 @@ public class ClientSuonaGhostSkillC2SPacket {
 
    private static void handleSuonaGhostSkill(ServerPlayerEntity player) {
       int radius = 10;
-      List<LivingEntity> entitiesInRange = player.method_37908()
-         .method_8390(LivingEntity.class, player.method_5829().method_1014(radius), entityx -> entityx != player && entityx instanceof LivingEntity);
+      List<LivingEntity> entitiesInRange = player.getWorld()
+         .getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius), entityx -> entityx != player && entityx instanceof LivingEntity);
       if (entitiesInRange.isEmpty()) {
-         player.method_7353(Text.method_43470("§c唢呐鬼J键：范围内没有可攻击的生物"), true);
+         player.sendMessage(Text.literal("§c唢呐鬼J键：范围内没有可攻击的生物"), true);
       } else {
          LivingEntity nearestEntity = null;
          double minDistance = Double.MAX_VALUE;
 
          for (LivingEntity entity : entitiesInRange) {
-            double distance = player.method_5739(entity);
+            double distance = player.distanceTo(entity);
             if (distance < minDistance) {
                minDistance = distance;
                nearestEntity = entity;
@@ -59,7 +59,7 @@ public class ClientSuonaGhostSkillC2SPacket {
 
          if (nearestEntity != null) {
             GhostDomainManager.executeSkillSpiritAttack(player, nearestEntity);
-            LOGGER.info("玩家 {} 使用唢呐鬼J键技能攻击生物 {}，距离: {}", player.method_5477().getString(), nearestEntity.method_5477().getString(), minDistance);
+            LOGGER.info("玩家 {} 使用唢呐鬼J键技能攻击生物 {}，距离: {}", player.getName().getString(), nearestEntity.getName().getString(), minDistance);
          }
       }
    }

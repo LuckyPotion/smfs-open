@@ -56,21 +56,21 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
    }
 
    public static Builder createGhostDreamAttributes() {
-      return MobEntity.method_26828()
-         .method_26868(EntityAttributes.field_23716, 50.0)
-         .method_26868(EntityAttributes.field_23719, 0.3)
-         .method_26868(EntityAttributes.field_23721, 5.0)
-         .method_26868(EntityAttributes.field_23717, 24.0);
+      return MobEntity.createMobAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 50.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 24.0);
    }
 
-   protected void method_5959() {
-      this.field_6201.method_6277(1, new MeleeAttackGoal(this, 1.2, false));
-      this.field_6201.method_6277(2, new GhostDreamEntity.LayDownGoal(this));
-      this.field_6201.method_6277(3, new WanderAroundFarGoal(this, 1.0));
-      this.field_6201.method_6277(4, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
-      this.field_6201.method_6277(5, new LookAroundGoal(this));
-      this.field_6185
-         .method_6277(
+   protected void initGoals() {
+      this.goalSelector.add(1, new MeleeAttackGoal(this, 1.2, false));
+      this.goalSelector.add(2, new GhostDreamEntity.LayDownGoal(this));
+      this.goalSelector.add(3, new WanderAroundFarGoal(this, 1.0));
+      this.goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
+      this.goalSelector.add(5, new LookAroundGoal(this));
+      this.targetSelector
+         .add(
             1,
             new ActiveTargetGoal(
                this,
@@ -83,8 +83,8 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
          );
    }
 
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.isLayingDown) {
          this.layDownTimer++;
          if (this.layDownTimer >= 120) {
@@ -100,11 +100,11 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
          PlayerEntity targetPlayer = null;
          double playerDistance = followRange * followRange;
 
-         for (PlayerEntity player : this.method_37908().method_18456()) {
-            if (player != this.owner && !player.method_7325() && player.method_5805()) {
+         for (PlayerEntity player : this.getWorld().getPlayers()) {
+            if (player != this.owner && !player.isSpectator() && player.isAlive()) {
                boolean otherHasGhostDream = PlayerEvents.hasGhostType(player, "ghost_dream");
                if (!otherHasGhostDream) {
-                  double distance = this.method_5858(player);
+                  double distance = this.squaredDistanceTo(player);
                   if (distance < playerDistance) {
                      playerDistance = distance;
                      targetPlayer = player;
@@ -114,22 +114,22 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
          }
 
          if (targetPlayer != null) {
-            double distance = this.method_5858(targetPlayer);
+            double distance = this.squaredDistanceTo(targetPlayer);
             if (distance <= attackRange * attackRange) {
                this.triggerGhostDreamEvent(targetPlayer);
                return;
             }
 
-            this.method_5942().method_6335(targetPlayer, 1.0);
+            this.getNavigation().startMovingTo(targetPlayer, 1.0);
          }
 
          GhostMasterEntity ghostMasterEntity = null;
          double ghostMasterDistance = followRange * followRange;
 
-         for (GhostMasterEntity entity : this.method_37908()
-            .method_8390(GhostMasterEntity.class, this.method_5829().method_1014(followRange), e -> e.method_5805())) {
+         for (GhostMasterEntity entity : this.getWorld()
+            .getEntitiesByClass(GhostMasterEntity.class, this.getBoundingBox().expand(followRange), e -> e.isAlive())) {
             if (!(entity instanceof LiLePingEntity)) {
-               double distance = this.method_5858(entity);
+               double distance = this.squaredDistanceTo(entity);
                if (distance < ghostMasterDistance) {
                   ghostMasterDistance = distance;
                   ghostMasterEntity = entity;
@@ -138,28 +138,28 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
          }
 
          if (ghostMasterEntity != null) {
-            double distance = this.method_5858(ghostMasterEntity);
+            double distance = this.squaredDistanceTo(ghostMasterEntity);
             if (distance <= attackRange * attackRange) {
-               DamageSource damageSource = this.method_48923().method_48812(this);
+               DamageSource damageSource = this.getDamageSources().mobAttack(this);
                InstantKillUtil.executeMultiLevelInstantKill(ghostMasterEntity, damageSource);
                this.spawnBlackParticles();
-               this.method_31472();
+               this.discard();
                return;
             }
 
-            this.method_5942().method_6335(ghostMasterEntity, 1.0);
+            this.getNavigation().startMovingTo(ghostMasterEntity, 1.0);
          }
 
          LivingEntity targetEntity = null;
          double nearestDistance = followRange * followRange;
 
-         for (LivingEntity entity : this.method_37908()
-            .method_8390(LivingEntity.class, this.method_5829().method_1014(followRange), e -> e != this && e != this.owner && e.method_5805())) {
+         for (LivingEntity entity : this.getWorld()
+            .getEntitiesByClass(LivingEntity.class, this.getBoundingBox().expand(followRange), e -> e != this && e != this.owner && e.isAlive())) {
             if (!(entity instanceof PlayerEntity)
                && !(entity instanceof GhostMasterEntity)
                && !(entity instanceof GhostEntity)
                && !(entity instanceof YangJianEntity)) {
-               double distance = this.method_5858(entity);
+               double distance = this.squaredDistanceTo(entity);
                if (distance < nearestDistance) {
                   nearestDistance = distance;
                   targetEntity = entity;
@@ -168,31 +168,31 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
          }
 
          if (targetEntity != null && ghostMasterEntity == null) {
-            double distance = this.method_5858(targetEntity);
+            double distance = this.squaredDistanceTo(targetEntity);
             if (distance <= attackRange * attackRange) {
-               DamageSource damageSource = this.method_48923().method_48812(this);
+               DamageSource damageSource = this.getDamageSources().mobAttack(this);
                InstantKillUtil.executeMultiLevelInstantKill(targetEntity, damageSource);
                this.spawnBlackParticles();
-               this.method_31472();
+               this.discard();
                return;
             }
 
-            this.method_5942().method_6335(targetEntity, 1.0);
+            this.getNavigation().startMovingTo(targetEntity, 1.0);
          }
 
          if (this.tamedLifespanTimer >= 200) {
             this.spawnBlackParticles();
-            this.method_31472();
+            this.discard();
          }
       } else {
-         LivingEntity target = this.method_5968();
-         if (target != null && target.method_5805()) {
+         LivingEntity target = this.getTarget();
+         if (target != null && target.isAlive()) {
             this.noTargetTimer = 0;
          } else {
             this.noTargetTimer++;
             if (this.noTargetTimer >= 200) {
                this.spawnBlackParticles();
-               this.method_31472();
+               this.discard();
             }
          }
       }
@@ -207,19 +207,19 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
       this.layDownTimer = 0;
    }
 
-   public boolean method_5643(DamageSource source, float amount) {
-      return this.tamed && this.owner != null ? false : super.method_5643(source, amount);
+   public boolean damage(DamageSource source, float amount) {
+      return this.tamed && this.owner != null ? false : super.damage(source, amount);
    }
 
-   public boolean method_5679(DamageSource damageSource) {
-      return this.tamed && this.owner != null ? true : super.method_5679(damageSource);
+   public boolean isInvulnerableTo(DamageSource damageSource) {
+      return this.tamed && this.owner != null ? true : super.isInvulnerableTo(damageSource);
    }
 
-   public boolean method_6181() {
+   public boolean isTamed() {
       return this.tamed;
    }
 
-   public void method_6173(boolean tamed) {
+   public void setTamed(boolean tamed) {
       this.tamed = tamed;
    }
 
@@ -227,15 +227,15 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
       return this.owner;
    }
 
-   public void method_6170(PlayerEntity owner) {
-      this.owner = owner;
+   public void setOwner(PlayerEntity player) {
+      this.owner = player;
    }
 
-   public boolean method_5931(PlayerEntity player) {
+   public boolean canBeLeashedBy(PlayerEntity player) {
       return false;
    }
 
-   public UUID method_6139() {
+   public UUID getOwnerUuid() {
       return null;
    }
 
@@ -243,7 +243,7 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
       return null;
    }
 
-   public void method_6174(UUID uuid) {
+   public void setOwnerUuid(UUID uuid) {
    }
 
    private void triggerGhostDreamEvent(PlayerEntity player) {
@@ -252,39 +252,39 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
       }
 
       this.spawnBlackParticles();
-      this.method_31472();
+      this.discard();
    }
 
    private void spawnBlackParticles() {
-      double x = this.method_23317();
-      double y = this.method_23318();
-      double z = this.method_23321();
-      if (this.method_37908().method_8608()) {
-         World world = this.method_37908();
+      double x = this.getX();
+      double y = this.getY();
+      double z = this.getZ();
+      if (this.getWorld().isClient()) {
+         World world = this.getWorld();
 
          for (int i = 0; i < 50; i++) {
-            double offsetX = (this.field_5974.method_43058() - 0.5) * 4.0;
-            double offsetY = (this.field_5974.method_43058() - 0.5) * 4.0;
-            double offsetZ = (this.field_5974.method_43058() - 0.5) * 4.0;
-            double velocityX = (this.field_5974.method_43058() - 0.5) * 0.2;
-            double velocityY = (this.field_5974.method_43058() - 0.5) * 0.2;
-            double velocityZ = (this.field_5974.method_43058() - 0.5) * 0.2;
-            world.method_8406(ParticleTypes.field_11251, x + offsetX, y + offsetY, z + offsetZ, velocityX, velocityY, velocityZ);
-            world.method_8406(ParticleTypes.field_11237, x + offsetX, y + offsetY, z + offsetZ, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5);
+            double offsetX = (this.random.nextDouble() - 0.5) * 4.0;
+            double offsetY = (this.random.nextDouble() - 0.5) * 4.0;
+            double offsetZ = (this.random.nextDouble() - 0.5) * 4.0;
+            double velocityX = (this.random.nextDouble() - 0.5) * 0.2;
+            double velocityY = (this.random.nextDouble() - 0.5) * 0.2;
+            double velocityZ = (this.random.nextDouble() - 0.5) * 0.2;
+            world.addParticle(ParticleTypes.SMOKE, x + offsetX, y + offsetY, z + offsetZ, velocityX, velocityY, velocityZ);
+            world.addParticle(ParticleTypes.LARGE_SMOKE, x + offsetX, y + offsetY, z + offsetZ, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5);
          }
       } else {
-         ServerWorld serverWorld = (ServerWorld)this.method_37908();
+         ServerWorld serverWorld = (ServerWorld)this.getWorld();
 
          for (int i = 0; i < 50; i++) {
-            double offsetX = (this.field_5974.method_43058() - 0.5) * 4.0;
-            double offsetY = (this.field_5974.method_43058() - 0.5) * 4.0;
-            double offsetZ = (this.field_5974.method_43058() - 0.5) * 4.0;
-            double velocityX = (this.field_5974.method_43058() - 0.5) * 0.2;
-            double velocityY = (this.field_5974.method_43058() - 0.5) * 0.2;
-            double velocityZ = (this.field_5974.method_43058() - 0.5) * 0.2;
-            serverWorld.method_14199(ParticleTypes.field_11251, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX, velocityY, velocityZ, 0.0);
-            serverWorld.method_14199(
-               ParticleTypes.field_11237, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5, 0.0
+            double offsetX = (this.random.nextDouble() - 0.5) * 4.0;
+            double offsetY = (this.random.nextDouble() - 0.5) * 4.0;
+            double offsetZ = (this.random.nextDouble() - 0.5) * 4.0;
+            double velocityX = (this.random.nextDouble() - 0.5) * 0.2;
+            double velocityY = (this.random.nextDouble() - 0.5) * 0.2;
+            double velocityZ = (this.random.nextDouble() - 0.5) * 0.2;
+            serverWorld.spawnParticles(ParticleTypes.SMOKE, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX, velocityY, velocityZ, 0.0);
+            serverWorld.spawnParticles(
+               ParticleTypes.LARGE_SMOKE, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5, 0.0
             );
          }
       }
@@ -297,12 +297,12 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
    }
 
    private PlayState handleMovementAnimations(AnimationState<GhostDreamEntity> state) {
-      if (this.method_31481() || !this.method_5805()) {
+      if (this.isRemoved() || !this.isAlive()) {
          return PlayState.STOP;
       } else if (this.isLayingDown) {
          state.setAnimation(LAY_DOWN_ANIM);
          return PlayState.CONTINUE;
-      } else if (this.method_18798().method_37268() > 0.01) {
+      } else if (this.getVelocity().horizontalLengthSquared() > 0.01) {
          state.setAnimation(WALK_ANIM);
          return PlayState.CONTINUE;
       } else {
@@ -312,7 +312,7 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
    }
 
    private PlayState handleAttackAnimations(AnimationState<GhostDreamEntity> state) {
-      if (this.method_6510()) {
+      if (this.isAttacking()) {
          state.setAnimation(ATTACK_ANIM);
          return PlayState.CONTINUE;
       } else {
@@ -327,7 +327,7 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
 
    @Override
    public double getTick(Object o) {
-      return this.field_6012;
+      return this.age;
    }
 
    static class LayDownGoal extends Goal {
@@ -338,27 +338,27 @@ public class GhostDreamEntity extends WolfEntity implements GeoAnimatable {
          this.ghostDream = ghostDream;
       }
 
-      public boolean method_6264() {
-         return !this.ghostDream.method_6510()
-            && this.ghostDream.method_5968() == null
-            && this.ghostDream.field_5974.method_43048(200) == 0
+      public boolean canStart() {
+         return !this.ghostDream.isAttacking()
+            && this.ghostDream.getTarget() == null
+            && this.ghostDream.random.nextInt(200) == 0
             && !this.ghostDream.isLayingDown();
       }
 
-      public void method_6269() {
+      public void start() {
          this.ghostDream.setLayingDown(true);
          this.timer = 0;
       }
 
-      public boolean method_6266() {
+      public boolean shouldContinue() {
          return this.ghostDream.isLayingDown() && this.timer < 120;
       }
 
-      public void method_6268() {
+      public void tick() {
          this.timer++;
       }
 
-      public void method_6270() {
+      public void stop() {
          this.ghostDream.setLayingDown(false);
       }
    }

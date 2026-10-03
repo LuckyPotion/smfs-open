@@ -17,12 +17,12 @@ import net.minecraft.util.Formatting;
 
 public class GhostTimerCommand {
    public static int execute(CommandContext<ServerCommandSource> context, String dimensionKey) throws CommandSyntaxException {
-      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).method_9207();
+      ServerPlayerEntity player = ((ServerCommandSource)context.getSource()).getPlayerOrThrow();
 
       try {
          Map<EntityType<?>, Integer> ghostTimers = ModEvents.getAllGhostSpawnTimers(dimensionKey);
          if (ghostTimers.isEmpty()) {
-            player.method_7353(Text.method_43470("§c维度 " + dimensionKey + " 当前没有活跃的鬼刷新计时器").method_27692(Formatting.field_1061), false);
+            player.sendMessage(Text.literal("§c维度 " + dimensionKey + " 当前没有活跃的鬼刷新计时器").formatted(Formatting.RED), false);
             return 1;
          }
 
@@ -34,7 +34,7 @@ public class GhostTimerCommand {
             int remainingTicksB = spawnIntervalB - b.getValue();
             return Integer.compare(remainingTicksB, remainingTicksA);
          });
-         player.method_7353(Text.method_43470("§6=== " + dimensionKey + " 鬼刷新冷却计时器 ===").method_27692(Formatting.field_1065), false);
+         player.sendMessage(Text.literal("§6=== " + dimensionKey + " 鬼刷新冷却计时器 ===").formatted(Formatting.GOLD), false);
 
          for (Entry<EntityType<?>, Integer> entry : sortedEntries) {
             EntityType<?> ghostType = entry.getKey();
@@ -44,13 +44,13 @@ public class GhostTimerCommand {
             String timeFormat = formatTicksToTime(remainingTicks);
             String ghostName = GhostUtils.getGhostDisplayName(ghostType);
             Formatting color = getColorByRemainingTime(remainingTicks, spawnInterval);
-            player.method_7353(Text.method_43470(String.format("§f%s: §e%s 剩余", ghostName, timeFormat)).method_27692(color), false);
+            player.sendMessage(Text.literal(String.format("§f%s: §e%s 剩余", ghostName, timeFormat)).formatted(color), false);
          }
 
-         player.method_7353(Text.method_43470("§6========================").method_27692(Formatting.field_1065), false);
+         player.sendMessage(Text.literal("§6========================").formatted(Formatting.GOLD), false);
          return 1;
       } catch (Exception e) {
-         player.method_7353(Text.method_43470("§c获取鬼刷新计时器信息失败: " + e.getMessage()).method_27692(Formatting.field_1061), false);
+         player.sendMessage(Text.literal("§c获取鬼刷新计时器信息失败: " + e.getMessage()).formatted(Formatting.RED), false);
          return 0;
       }
    }
@@ -74,15 +74,15 @@ public class GhostTimerCommand {
 
    private static Formatting getColorByRemainingTime(int remainingTicks, int totalInterval) {
       if (totalInterval <= 0) {
-         return Formatting.field_1060;
+         return Formatting.GREEN;
       } else {
          double ratio = (double)remainingTicks / totalInterval;
          if (ratio <= 0.1) {
-            return Formatting.field_1060;
+            return Formatting.GREEN;
          } else if (ratio <= 0.3) {
-            return Formatting.field_1054;
+            return Formatting.YELLOW;
          } else {
-            return ratio <= 0.6 ? Formatting.field_1065 : Formatting.field_1061;
+            return ratio <= 0.6 ? Formatting.GOLD : Formatting.RED;
          }
       }
    }

@@ -29,7 +29,7 @@ public class ClientGhostEyeJSkillC2SPacket {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "silent_ghost_eye", ModItems.SILENT_GHOST_EYE, -1);
             if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-               player.method_7353(Text.method_43470("§c您没有驾驭鬼眼，无法使用此技能"), true);
+               player.sendMessage(Text.literal("§c您没有驾驭鬼眼，无法使用此技能"), true);
             } else {
                GhostDomainManager.handleGhostEyeJSkill(player);
                PlayerEvents.balanceRevivalDegree(player);

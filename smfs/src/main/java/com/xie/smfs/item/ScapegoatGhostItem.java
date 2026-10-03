@@ -31,7 +31,7 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/ScapegoatGhostItem");
 
    public ScapegoatGhostItem(Settings settings) {
-      super(settings.method_7889(1), 20, 15, 0, 0, 0.15);
+      super(settings.maxCount(1), 20, 15, 0, 0, 0.15);
    }
 
    @Override
@@ -40,28 +40,28 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
    }
 
    @Override
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43471("item.smfs.scapegoat_ghost");
+   public Text getName(ItemStack stack) {
+      return Text.translatable("item.smfs.scapegoat_ghost");
    }
 
    @Override
    protected Text getBindSuccessMessage(int slot) {
-      return Text.method_43471("item.smfs.scapegoat_ghost.bind_success").method_10852(Text.method_43470(" (槽位 " + (slot + 1) + ")"));
+      return Text.translatable("item.smfs.scapegoat_ghost.bind_success").append(Text.literal(" (槽位 " + (slot + 1) + ")"));
    }
 
    @Override
    protected void sendSlotsFullMessage(PlayerEntity player) {
-      player.method_7353(Text.method_43471("item.smfs.scapegoat_ghost.slots_full"), true);
+      player.sendMessage(Text.translatable("item.smfs.scapegoat_ghost.slots_full"), true);
    }
 
    @Override
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      return super.method_7836(world, user, hand);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      return super.use(world, user, hand);
    }
 
    @Override
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
    }
 
    public static boolean handleScapegoatPassiveSkill(PlayerEntity player, DamageSource source, float amount) {
@@ -69,16 +69,16 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
          return false;
       }
 
-      if (!player.method_6059(ModEffects.SILENCE) && !player.method_6059(ModEffects.DREAM)) {
-         if (player.method_6032() - amount <= 0.0F && !player.method_37908().method_8608()) {
+      if (!player.hasStatusEffect(ModEffects.SILENCE) && !player.hasStatusEffect(ModEffects.DREAM)) {
+         if (player.getHealth() - amount <= 0.0F && !player.getWorld().isClient()) {
             LivingEntity transferTarget = findTransferTargetInGhostDomain(player);
             if (transferTarget != null) {
                boolean isGhostMasterOrGhost = transferTarget instanceof GhostMasterEntity || transferTarget instanceof GhostEntity;
-               if (hasScapegoatAbility(transferTarget) && transferTarget.method_6032() - amount <= 0.0F) {
-                  LOGGER.debug("替死鬼被动技能触发：转移目标 {} 也有替死能力且处于致命状态，跳过转移避免递归", transferTarget.method_5477().getString());
-                  if (player.method_37908().method_8608()) {
-                     player.method_7353(
-                        Text.method_43469("item.smfs.scapegoat_ghost.recursion_prevented", new Object[]{transferTarget.method_5477().getString()}), true
+               if (hasScapegoatAbility(transferTarget) && transferTarget.getHealth() - amount <= 0.0F) {
+                  LOGGER.debug("替死鬼被动技能触发：转移目标 {} 也有替死能力且处于致命状态，跳过转移避免递归", transferTarget.getName().getString());
+                  if (player.getWorld().isClient()) {
+                     player.sendMessage(
+                        Text.translatable("item.smfs.scapegoat_ghost.recursion_prevented", new Object[]{transferTarget.getName().getString()}), true
                      );
                   }
 
@@ -86,18 +86,17 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
                }
 
                if (isGhostMasterOrGhost) {
-                  LOGGER.debug("替死鬼被动技能触发：转移目标为驭鬼者/鬼魂类 {}，直接返回true", transferTarget.method_5477().getString());
+                  LOGGER.debug("替死鬼被动技能触发：转移目标为驭鬼者/鬼魂类 {}，直接返回true", transferTarget.getName().getString());
                   ModEvents.processingSpiritDamage.set(true);
-                  DamageSource spiritDamageSource = ModDamageSources.ghost(player.method_37908());
-                  boolean damageApplied = transferTarget.method_5643(spiritDamageSource, amount);
+                  DamageSource spiritDamageSource = ModDamageSources.ghost(player.getWorld());
+                  boolean damageApplied = transferTarget.damage(spiritDamageSource, amount);
                   ModEvents.processingSpiritDamage.set(false);
                   if (damageApplied) {
-                     LOGGER.debug("替死鬼被动技能：成功对驭鬼者/鬼魂类 {} 造成灵异伤害", transferTarget.method_5477().getString());
+                     LOGGER.debug("替死鬼被动技能：成功对驭鬼者/鬼魂类 {} 造成灵异伤害", transferTarget.getName().getString());
                   }
 
-                  player.method_6033(player.method_6063());
-                  player.method_37908()
-                     .method_8406(ParticleTypes.field_22246, player.method_23317(), player.method_23318() + 1.0, player.method_23321(), 0.0, 0.0, 0.0);
+                  player.setHealth(player.getMaxHealth());
+                  player.getWorld().addParticle(ParticleTypes.SOUL_FIRE_FLAME, player.getX(), player.getY() + 1.0, player.getZ(), 0.0, 0.0, 0.0);
                   int scapegoatLevel = getScapegoatGhostLevel(player);
                   float sanityRecoveryPercent = getSanityRecoveryPercent(scapegoatLevel);
                   float spiritRecoveryPercent = getSpiritRecoveryPercent(scapegoatLevel);
@@ -107,21 +106,20 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
                   float maxSpirit = PlayerEvents.getMaxSpirit(player);
                   float spiritRecovery = maxSpirit * spiritRecoveryPercent;
                   PlayerEvents.setCurrentSpirit(player, PlayerEvents.getCurrentSpirit(player) + spiritRecovery);
-                  player.method_7353(
-                     Text.method_43469(
-                        "item.smfs.scapegoat_ghost.damage_transfer", new Object[]{String.format("%.1f", amount), transferTarget.method_5477().getString()}
+                  player.sendMessage(
+                     Text.translatable(
+                        "item.smfs.scapegoat_ghost.damage_transfer", new Object[]{String.format("%.1f", amount), transferTarget.getName().getString()}
                      ),
                      true
                   );
                   return true;
                }
 
-               DamageSource spiritDamageSource = ModDamageSources.ghost(player.method_37908());
-               boolean damageApplied = transferTarget.method_5643(spiritDamageSource, amount);
+               DamageSource spiritDamageSource = ModDamageSources.ghost(player.getWorld());
+               boolean damageApplied = transferTarget.damage(spiritDamageSource, amount);
                if (damageApplied) {
-                  player.method_6033(player.method_6063());
-                  player.method_37908()
-                     .method_8406(ParticleTypes.field_22246, player.method_23317(), player.method_23318() + 1.0, player.method_23321(), 0.0, 0.0, 0.0);
+                  player.setHealth(player.getMaxHealth());
+                  player.getWorld().addParticle(ParticleTypes.SOUL_FIRE_FLAME, player.getX(), player.getY() + 1.0, player.getZ(), 0.0, 0.0, 0.0);
                   int scapegoatLevel = getScapegoatGhostLevel(player);
                   float sanityRecoveryPercent = getSanityRecoveryPercent(scapegoatLevel);
                   float spiritRecoveryPercent = getSpiritRecoveryPercent(scapegoatLevel);
@@ -131,17 +129,17 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
                   float maxSpirit = PlayerEvents.getMaxSpirit(player);
                   float spiritRecovery = maxSpirit * spiritRecoveryPercent;
                   PlayerEvents.setCurrentSpirit(player, PlayerEvents.getCurrentSpirit(player) + spiritRecovery);
-                  player.method_7353(
-                     Text.method_43469(
-                        "item.smfs.scapegoat_ghost.damage_transfer", new Object[]{String.format("%.1f", amount), transferTarget.method_5477().getString()}
+                  player.sendMessage(
+                     Text.translatable(
+                        "item.smfs.scapegoat_ghost.damage_transfer", new Object[]{String.format("%.1f", amount), transferTarget.getName().getString()}
                      ),
                      true
                   );
-                  LOGGER.debug("替死鬼被动技能触发：伤害已转移到目标 {}，玩家生命值已恢复", transferTarget.method_5477().getString());
+                  LOGGER.debug("替死鬼被动技能触发：伤害已转移到目标 {}，玩家生命值已恢复", transferTarget.getName().getString());
                   return true;
                }
 
-               LOGGER.warn("替死鬼被动技能触发：伤害转移失败，目标 {} 免疫伤害", transferTarget.method_5477().getString());
+               LOGGER.warn("替死鬼被动技能触发：伤害转移失败，目标 {} 免疫伤害", transferTarget.getName().getString());
             }
          }
 
@@ -153,23 +151,21 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
 
    private static LivingEntity findTransferTargetInGhostDomain(PlayerEntity player) {
       int radius = getGhostDomainRadius(player);
-      List<LivingEntity> nearbyEntities = player.method_37908()
-         .method_8390(
-            LivingEntity.class,
-            player.method_5829().method_1014(radius),
-            entityx -> entityx != player && entityx.method_5805() && !(entityx instanceof GhostEntity)
+      List<LivingEntity> nearbyEntities = player.getWorld()
+         .getEntitiesByClass(
+            LivingEntity.class, player.getBoundingBox().expand(radius), entityx -> entityx != player && entityx.isAlive() && !(entityx instanceof GhostEntity)
          );
       if (!nearbyEntities.isEmpty()) {
          for (LivingEntity entity : nearbyEntities) {
-            if (entity.method_6059(ModEffects.SCAPEGOAT_MARK)) {
-               entity.method_6016(ModEffects.SCAPEGOAT_MARK);
+            if (entity.hasStatusEffect(ModEffects.SCAPEGOAT_MARK)) {
+               entity.removeStatusEffect(ModEffects.SCAPEGOAT_MARK);
                return entity;
             }
          }
 
          nearbyEntities.sort((entity1, entity2) -> {
-            double distance1 = player.method_5858(entity1);
-            double distance2 = player.method_5858(entity2);
+            double distance1 = player.squaredDistanceTo(entity1);
+            double distance2 = player.squaredDistanceTo(entity2);
             return Double.compare(distance1, distance2);
          });
          return nearbyEntities.get(0);
@@ -183,7 +179,7 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
 
       for (int i = 0; i < 10; i++) {
          ItemStack ghostItem = PlayerEvents.getGhostSlotItem(player, i);
-         if (ghostItem.method_7909() == ModItems.SCAPEGOAT_GHOST) {
+         if (ghostItem.getItem() == ModItems.SCAPEGOAT_GHOST) {
             int level = PlayerEvents.getGhostSlotLevel(player, i);
             return defaultRadius + level * 2;
          }
@@ -193,16 +189,14 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
    }
 
    private static void spawnDamageTransferParticles(PlayerEntity player) {
-      ServerWorld serverWorld = (ServerWorld)player.method_37908();
-      Vec3d pos = player.method_19538();
+      ServerWorld serverWorld = (ServerWorld)player.getWorld();
+      Vec3d pos = player.getPos();
 
       for (int i = 0; i < 20; i++) {
-         double offsetX = (player.method_6051().method_43058() - 0.5) * 2.0;
-         double offsetY = player.method_6051().method_43058() * 2.0;
-         double offsetZ = (player.method_6051().method_43058() - 0.5) * 2.0;
-         serverWorld.method_14199(
-            ParticleTypes.field_11209, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.0, 0.0, 0.1
-         );
+         double offsetX = (player.getRandom().nextDouble() - 0.5) * 2.0;
+         double offsetY = player.getRandom().nextDouble() * 2.0;
+         double offsetZ = (player.getRandom().nextDouble() - 0.5) * 2.0;
+         serverWorld.spawnParticles(ParticleTypes.DAMAGE_INDICATOR, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.0, 0.0, 0.1);
       }
    }
 
@@ -217,15 +211,15 @@ public class ScapegoatGhostItem extends BaseGhostEyeItem {
    private static int getScapegoatGhostLevel(PlayerEntity player) {
       for (int i = 0; i < 10; i++) {
          NbtCompound spiritData = PlayerEvents.getSpiritAttributes(player);
-         if (spiritData.method_10545("GhostSlots")) {
-            NbtCompound ghostSlots = spiritData.method_10562("GhostSlots");
+         if (spiritData.contains("GhostSlots")) {
+            NbtCompound ghostSlots = spiritData.getCompound("GhostSlots");
             String slotKey = "Slot" + i;
-            if (ghostSlots.method_10545(slotKey)) {
-               NbtCompound slotData = ghostSlots.method_10562(slotKey);
-               if (slotData.method_10577("occupied")) {
-                  ItemStack itemStack = ItemStack.method_7915(slotData.method_10562("item"));
-                  if (itemStack.method_7909() instanceof ScapegoatGhostItem) {
-                     return slotData.method_10550("level");
+            if (ghostSlots.contains(slotKey)) {
+               NbtCompound slotData = ghostSlots.getCompound(slotKey);
+               if (slotData.getBoolean("occupied")) {
+                  ItemStack itemStack = ItemStack.fromNbt(slotData.getCompound("item"));
+                  if (itemStack.getItem() instanceof ScapegoatGhostItem) {
+                     return slotData.getInt("level");
                   }
                }
             }

@@ -15,28 +15,28 @@ public class MusicBoxCurseSoundHandler {
 
    public static void init() {
       ClientTickEvents.END_CLIENT_TICK.register((EndTick)client -> {
-         if (client.field_1724 == null || !client.field_1724.method_5805()) {
+         if (client.player == null || !client.player.isAlive()) {
             stopAll();
          } else if (forceStopped) {
-            if (!client.field_1724.method_6059(ModEffects.MUSIC_BOX_CURSE)) {
+            if (!client.player.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE)) {
                forceStopped = false;
             }
          } else {
-            boolean hasCurse = client.field_1724.method_6059(ModEffects.MUSIC_BOX_CURSE);
+            boolean hasCurse = client.player.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE);
             boolean isPlaying = defaultSound != null || customPlayer != null;
             if (hasCurse && !isPlaying) {
-               client.method_1538().method_4859();
-               String mode = ClientModConfig.getInstance().getMusicBoxMode(client.field_1724.method_5667());
+               client.getMusicTracker().stop();
+               String mode = ClientModConfig.getInstance().getMusicBoxMode(client.player.getUuid());
                if ("custom".equals(mode)) {
                   customPlayer = new CustomMusicBoxPlayer();
                   if (!customPlayer.start()) {
                      customPlayer = null;
-                     defaultSound = new MusicBoxCurseSoundInstance(client.field_1724);
-                     client.method_1483().method_4873(defaultSound);
+                     defaultSound = new MusicBoxCurseSoundInstance(client.player);
+                     client.getSoundManager().play(defaultSound);
                   }
                } else {
-                  defaultSound = new MusicBoxCurseSoundInstance(client.field_1724);
-                  client.method_1483().method_4873(defaultSound);
+                  defaultSound = new MusicBoxCurseSoundInstance(client.player);
+                  client.getSoundManager().play(defaultSound);
                }
             } else if (!hasCurse && isPlaying) {
                stopAll();
@@ -47,7 +47,7 @@ public class MusicBoxCurseSoundHandler {
 
    public static void stopAll() {
       if (defaultSound != null) {
-         MinecraftClient.method_1551().method_1483().method_4870(defaultSound);
+         MinecraftClient.getInstance().getSoundManager().stop(defaultSound);
          defaultSound = null;
       }
 
@@ -59,7 +59,7 @@ public class MusicBoxCurseSoundHandler {
 
    public static void stopOnDeath() {
       forceStopped = true;
-      MinecraftClient.method_1551().method_1483().method_4881();
+      MinecraftClient.getInstance().getSoundManager().stopAll();
       defaultSound = null;
       if (customPlayer != null) {
          customPlayer.stop();

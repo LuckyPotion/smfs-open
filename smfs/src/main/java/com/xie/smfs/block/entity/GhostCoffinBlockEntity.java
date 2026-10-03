@@ -49,40 +49,40 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
       this.isGhostSuppressed = false;
       this.cachedGhost = null;
       this.markedGhostType = null;
-      this.method_5431();
+      this.markDirty();
    }
 
    public void storeGhost(GhostEntity ghost) {
-      if (ghost != null && !ghost.method_31481()) {
-         LOGGER.debug("存储鬼实体: {}", ghost.method_5667());
-         this.storedGhostUuid = ghost.method_5667();
+      if (ghost != null && !ghost.isRemoved()) {
+         LOGGER.debug("存储鬼实体: {}", ghost.getUuid());
+         this.storedGhostUuid = ghost.getUuid();
          this.cachedGhost = ghost;
          this.isGhostSuppressed = true;
-         this.markedGhostType = ghost.method_5864();
+         this.markedGhostType = ghost.getType();
          ghost.setSuppressed(true);
          ghost.setMovementDisabled(true);
-         BlockState state = this.method_11010();
-         boolean isOpen = state.method_28498(GhostCoffinBlock.OPEN) && (Boolean)state.method_11654(GhostCoffinBlock.OPEN);
+         BlockState state = this.getCachedState();
+         boolean isOpen = state.contains(GhostCoffinBlock.OPEN) && (Boolean)state.get(GhostCoffinBlock.OPEN);
          ghost.setInClosedCoffin(!isOpen);
          ghost.setVisible(isOpen);
-         ghost.method_20620(this.field_11867.method_10263() + 0.5, this.field_11867.method_10264() + 0.1, this.field_11867.method_10260() + 0.5);
-         if (state.method_28498(GhostCoffinBlock.FACING)) {
-            Direction facing = (Direction)state.method_11654(GhostCoffinBlock.FACING);
+         ghost.teleport(this.pos.getX() + 0.5, this.pos.getY() + 0.1, this.pos.getZ() + 0.5);
+         if (state.contains(GhostCoffinBlock.FACING)) {
+            Direction facing = (Direction)state.get(GhostCoffinBlock.FACING);
             float yaw = this.getYawFromDirection(facing);
-            ghost.method_36456(yaw);
-            ghost.method_5847(yaw);
-            ghost.method_5636(yaw);
+            ghost.setYaw(yaw);
+            ghost.setHeadYaw(yaw);
+            ghost.setBodyYaw(yaw);
          }
 
-         ghost.method_31472();
+         ghost.discard();
          LOGGER.debug("鬼实体已存储并discard: {}", this.storedGhostUuid);
-         if (this.field_11863 != null && !this.field_11863.field_9236) {
-            BlockState newState = (BlockState)((BlockState)state.method_11657(GhostCoffinBlock.OPEN, false)).method_11657(GhostCoffinBlock.OCCUPIED, true);
-            this.field_11863.method_8652(this.field_11867, newState, 3);
+         if (this.world != null && !this.world.isClient) {
+            BlockState newState = (BlockState)((BlockState)state.with(GhostCoffinBlock.OPEN, false)).with(GhostCoffinBlock.OCCUPIED, true);
+            this.world.setBlockState(this.pos, newState, 3);
             LOGGER.debug("棺材已自动关闭并设置为占用状态");
          }
 
-         this.method_5431();
+         this.markDirty();
       } else {
          LOGGER.warn("尝试存储无效的鬼实体");
       }
@@ -90,9 +90,9 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
 
    public void updateGhostCoffinState() {
       this.getStoredGhost().ifPresent(ghost -> {
-         BlockState state = this.method_11010();
-         if (state.method_28498(GhostCoffinBlock.OPEN)) {
-            boolean isOpen = (Boolean)state.method_11654(GhostCoffinBlock.OPEN);
+         BlockState state = this.getCachedState();
+         if (state.contains(GhostCoffinBlock.OPEN)) {
+            boolean isOpen = (Boolean)state.get(GhostCoffinBlock.OPEN);
             LOGGER.debug("更新鬼的状态: 棺材打开状态 = {}", isOpen);
             ghost.setInClosedCoffin(!isOpen);
             ghost.setVisible(isOpen);
@@ -107,42 +107,40 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
          return Optional.empty();
       }
 
-      World world = this.method_10997();
+      World world = this.getWorld();
       if (world == null) {
          return Optional.empty();
       }
 
       GhostEntity ghost = this.cachedGhost;
-      if (ghost == null || ghost.method_31481()) {
+      if (ghost == null || ghost.isRemoved()) {
          ghost = this.findGhostByUuid(world, this.storedGhostUuid);
       }
 
-      if ((ghost == null || ghost.method_31481()) && this.markedGhostType != null) {
+      if ((ghost == null || ghost.isRemoved()) && this.markedGhostType != null) {
          try {
-            Entity entity = this.markedGhostType.method_5883(world);
+            Entity entity = this.markedGhostType.create(world);
             if (entity instanceof GhostEntity) {
                ghost = (GhostEntity)entity;
-               ghost.method_5971();
-               ghost.method_5808(
-                  this.field_11867.method_10263() + 0.5, this.field_11867.method_10264() + 0.5, this.field_11867.method_10260() + 0.5, 0.0F, 0.0F
-               );
+               ghost.setPersistent();
+               ghost.refreshPositionAndAngles(this.pos.getX() + 0.5, this.pos.getY() + 0.5, this.pos.getZ() + 0.5, 0.0F, 0.0F);
                ghost.setSuppressed(true);
                ghost.setMovementDisabled(true);
                ghost.setInClosedCoffin(true);
                ghost.setVisible(false);
-               ghost.method_5826(this.storedGhostUuid);
-               world.method_8649(ghost);
+               ghost.setUuid(this.storedGhostUuid);
+               world.spawnEntity(ghost);
                this.cachedGhost = ghost;
                LOGGER.debug("从标记类型重新生成鬼实体: {}", this.storedGhostUuid);
             } else if (entity != null) {
-               entity.method_31472();
+               entity.discard();
             }
          } catch (Exception e) {
             LOGGER.error("重新生成鬼实体时出错", e);
          }
       }
 
-      return Optional.ofNullable(ghost).filter(g -> !g.method_31481());
+      return Optional.ofNullable(ghost).filter(g -> !g.isRemoved());
    }
 
    public Optional<GhostEntity> releaseGhost() {
@@ -150,50 +148,50 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
          return Optional.empty();
       }
 
-      World world = this.method_10997();
+      World world = this.getWorld();
       if (world == null) {
          return Optional.empty();
       }
 
       GhostEntity ghost = this.cachedGhost;
-      if (ghost == null || ghost.method_31481()) {
+      if (ghost == null || ghost.isRemoved()) {
          ghost = this.findGhostByUuid(world, this.storedGhostUuid);
       }
 
-      if ((ghost == null || ghost.method_31481()) && this.markedGhostType != null) {
+      if ((ghost == null || ghost.isRemoved()) && this.markedGhostType != null) {
          try {
-            Entity entity = this.markedGhostType.method_5883(world);
+            Entity entity = this.markedGhostType.create(world);
             if (entity instanceof GhostEntity) {
                ghost = (GhostEntity)entity;
-               ghost.method_5971();
-               ghost.method_5826(this.storedGhostUuid);
-               world.method_8649(ghost);
+               ghost.setPersistent();
+               ghost.setUuid(this.storedGhostUuid);
+               world.spawnEntity(ghost);
                LOGGER.debug("释放时从标记类型重新生成鬼实体: {}", this.storedGhostUuid);
             } else if (entity != null) {
-               entity.method_31472();
+               entity.discard();
             }
          } catch (Exception e) {
             LOGGER.error("释放鬼实体时重新生成出错", e);
          }
       }
 
-      if (ghost != null && !ghost.method_31481()) {
+      if (ghost != null && !ghost.isRemoved()) {
          ghost.setSuppressed(false);
          ghost.setMovementDisabled(false);
          ghost.setInClosedCoffin(false);
          ghost.setVisible(true);
-         if (this.method_11010().method_28498(GhostCoffinBlock.FACING)) {
-            Vec3i facingVector = ((Direction)this.method_11010().method_11654(GhostCoffinBlock.FACING)).method_10163();
-            Vec3d offset = new Vec3d(facingVector.method_10263() * 1.5, 0.5, facingVector.method_10260() * 1.5);
-            Vec3d spawnPos = Vec3d.method_24953(this.field_11867).method_1019(offset);
-            ghost.method_20620(spawnPos.field_1352, spawnPos.field_1351, spawnPos.field_1350);
+         if (this.getCachedState().contains(GhostCoffinBlock.FACING)) {
+            Vec3i facingVector = ((Direction)this.getCachedState().get(GhostCoffinBlock.FACING)).getVector();
+            Vec3d offset = new Vec3d(facingVector.getX() * 1.5, 0.5, facingVector.getZ() * 1.5);
+            Vec3d spawnPos = Vec3d.ofCenter(this.pos).add(offset);
+            ghost.teleport(spawnPos.x, spawnPos.y, spawnPos.z);
          }
 
          this.storedGhostUuid = null;
          this.cachedGhost = null;
          this.isGhostSuppressed = false;
          this.markedGhostType = null;
-         this.method_5431();
+         this.markDirty();
          return Optional.of(ghost);
       } else {
          this.cleanupInvalidReference();
@@ -207,8 +205,8 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
 
    private GhostEntity findGhostByUuid(World world, UUID uuid) {
       if (world != null && uuid != null) {
-         for (GhostEntity ghost : world.method_8390(GhostEntity.class, new Box(this.field_11867).method_1014(16.0), e -> true)) {
-            if (ghost.method_5667().equals(uuid) && !ghost.method_31481()) {
+         for (GhostEntity ghost : world.getEntitiesByClass(GhostEntity.class, new Box(this.pos).expand(16.0), e -> true)) {
+            if (ghost.getUuid().equals(uuid) && !ghost.isRemoved()) {
                return ghost;
             }
          }
@@ -228,32 +226,32 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
       this.cachedGhost = null;
       this.isGhostSuppressed = false;
       this.markedGhostType = null;
-      this.method_5431();
+      this.markDirty();
    }
 
    public UUID getStoredGhostUuid() {
       return this.storedGhostUuid;
    }
 
-   public void method_11007(NbtCompound nbt) {
-      super.method_11007(nbt);
+   public void writeNbt(NbtCompound nbt) {
+      super.writeNbt(nbt);
       if (this.storedGhostUuid != null) {
-         nbt.method_25927("StoredGhostUuid", this.storedGhostUuid);
-         nbt.method_10556("IsGhostSuppressed", this.isGhostSuppressed);
+         nbt.putUuid("StoredGhostUuid", this.storedGhostUuid);
+         nbt.putBoolean("IsGhostSuppressed", this.isGhostSuppressed);
       }
 
       if (this.markedGhostType != null) {
-         nbt.method_10582("MarkedGhostType", Registries.field_41177.method_10221(this.markedGhostType).toString());
+         nbt.putString("MarkedGhostType", Registries.ENTITY_TYPE.getId(this.markedGhostType).toString());
       }
 
-      nbt.method_10569("SuppressionQuota", this.suppressionQuota);
+      nbt.putInt("SuppressionQuota", this.suppressionQuota);
    }
 
-   public void method_11014(NbtCompound nbt) {
-      super.method_11014(nbt);
-      if (nbt.method_10545("StoredGhostUuid")) {
-         this.storedGhostUuid = nbt.method_25926("StoredGhostUuid");
-         this.isGhostSuppressed = nbt.method_10577("IsGhostSuppressed");
+   public void readNbt(NbtCompound nbt) {
+      super.readNbt(nbt);
+      if (nbt.contains("StoredGhostUuid")) {
+         this.storedGhostUuid = nbt.getUuid("StoredGhostUuid");
+         this.isGhostSuppressed = nbt.getBoolean("IsGhostSuppressed");
          this.cachedGhost = null;
          LOGGER.debug("读取到存储的鬼实体UUID: {}", this.storedGhostUuid);
       } else {
@@ -262,11 +260,11 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
          this.isGhostSuppressed = false;
       }
 
-      if (nbt.method_10545("MarkedGhostType")) {
-         String typeId = nbt.method_10558("MarkedGhostType");
+      if (nbt.contains("MarkedGhostType")) {
+         String typeId = nbt.getString("MarkedGhostType");
          this.markedGhostType = this.matchGhostTypeByString(typeId);
          if (this.markedGhostType != null) {
-            LOGGER.debug("通过字符串匹配标记鬼实体类型: {} -> {}", typeId, Registries.field_41177.method_10221(this.markedGhostType));
+            LOGGER.debug("通过字符串匹配标记鬼实体类型: {} -> {}", typeId, Registries.ENTITY_TYPE.getId(this.markedGhostType));
          } else {
             LOGGER.warn("无法通过字符串匹配找到对应的鬼实体类型: {}", typeId);
             this.markedGhostType = null;
@@ -275,8 +273,8 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
          this.markedGhostType = null;
       }
 
-      if (nbt.method_10545("SuppressionQuota")) {
-         this.suppressionQuota = nbt.method_10550("SuppressionQuota");
+      if (nbt.contains("SuppressionQuota")) {
+         this.suppressionQuota = nbt.getInt("SuppressionQuota");
       } else {
          this.suppressionQuota = 0;
       }
@@ -285,7 +283,7 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
    private EntityType<?> matchGhostTypeByString(String typeString) {
       if (typeString != null && !typeString.isEmpty()) {
          try {
-            EntityType<?> directType = (EntityType<?>)Registries.field_41177.method_10223(new Identifier(typeString));
+            EntityType<?> directType = (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier(typeString));
             if (directType != null && this.isGhostEntityType(directType)) {
                return directType;
             }
@@ -294,34 +292,34 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
 
          String lowerTypeString = typeString.toLowerCase();
          if (lowerTypeString.contains("fog") || lowerTypeString.contains("雾") || lowerTypeString.contains("鬼雾")) {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "fog_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "fog_ghost"));
          }
 
          if (lowerTypeString.contains("block") || lowerTypeString.contains("方块") || lowerTypeString.contains("方块鬼")) {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "block_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "block_ghost"));
          }
 
          if (lowerTypeString.contains("lost") || lowerTypeString.contains("遗忘") || lowerTypeString.contains("遗忘鬼")) {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "lost_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "lost_ghost"));
          }
 
          if (lowerTypeString.contains("look_up") || lowerTypeString.contains("抬头") || lowerTypeString.contains("抬头鬼")) {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "look_up_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "look_up_ghost"));
          }
 
          if (lowerTypeString.contains("look_down") || lowerTypeString.contains("低头") || lowerTypeString.contains("低头鬼")) {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "look_down_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "look_down_ghost"));
          }
 
          if (lowerTypeString.contains("door") || lowerTypeString.contains("门") || lowerTypeString.contains("敲门鬼")) {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "door_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "door_ghost"));
          }
 
          if (!lowerTypeString.contains("player") && !lowerTypeString.contains("玩家") && !lowerTypeString.contains("玩家鬼")) {
-            for (EntityType<?> entityType : Registries.field_41177) {
+            for (EntityType<?> entityType : Registries.ENTITY_TYPE) {
                if (this.isGhostEntityType(entityType)) {
-                  String translationKey = entityType.method_5882().toLowerCase();
-                  String entityId = Registries.field_41177.method_10221(entityType).toString().toLowerCase();
+                  String translationKey = entityType.getTranslationKey().toLowerCase();
+                  String entityId = Registries.ENTITY_TYPE.getId(entityType).toString().toLowerCase();
                   if (translationKey.contains(lowerTypeString) || entityId.contains(lowerTypeString)) {
                      return entityType;
                   }
@@ -330,7 +328,7 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
 
             return null;
          } else {
-            return (EntityType<?>)Registries.field_41177.method_10223(new Identifier("smfs", "player_ghost"));
+            return (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier("smfs", "player_ghost"));
          }
       } else {
          return null;
@@ -343,10 +341,10 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
 
    private float getYawFromDirection(Direction direction) {
       return switch (direction) {
-         case field_11043 -> 180.0F;
-         case field_11035 -> 0.0F;
-         case field_11039 -> 90.0F;
-         case field_11034 -> -90.0F;
+         case NORTH -> 180.0F;
+         case SOUTH -> 0.0F;
+         case WEST -> 90.0F;
+         case EAST -> -90.0F;
          default -> 0.0F;
       };
    }
@@ -357,12 +355,12 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
    }
 
    private PlayState handleAnimation(AnimationState<GhostCoffinBlockEntity> state) {
-      BlockState blockState = this.method_11010();
-      if (!blockState.method_28498(GhostCoffinBlock.OPEN)) {
+      BlockState blockState = this.getCachedState();
+      if (!blockState.contains(GhostCoffinBlock.OPEN)) {
          return PlayState.STOP;
       }
 
-      boolean isOpen = (Boolean)blockState.method_11654(GhostCoffinBlock.OPEN);
+      boolean isOpen = (Boolean)blockState.get(GhostCoffinBlock.OPEN);
       if (isOpen) {
          state.getController().setAnimation(RawAnimation.begin().thenPlay("animation.ghost_coffin.open"));
       } else {
@@ -378,12 +376,12 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
    }
 
    public Optional<GhostEntity> getStoredGhost() {
-      if (this.storedGhostUuid == null || this.field_11863 == null) {
+      if (this.storedGhostUuid == null || this.world == null) {
          return Optional.empty();
-      } else if (this.cachedGhost != null && !this.cachedGhost.method_31481()) {
+      } else if (this.cachedGhost != null && !this.cachedGhost.isRemoved()) {
          return Optional.of(this.cachedGhost);
       } else {
-         GhostEntity ghost = this.findGhostByUuid(this.field_11863, this.storedGhostUuid);
+         GhostEntity ghost = this.findGhostByUuid(this.world, this.storedGhostUuid);
          if (ghost != null) {
             this.cachedGhost = ghost;
             return Optional.of(ghost);
@@ -400,18 +398,18 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
    public void setGhostSuppressed(boolean suppressed) {
       this.isGhostSuppressed = suppressed;
       this.getStoredGhost().ifPresent(ghost -> ghost.setSuppressed(suppressed));
-      this.method_5431();
+      this.markDirty();
    }
 
    public void markGhostType(EntityType<?> ghostType) {
       this.markedGhostType = ghostType;
-      this.method_5431();
-      LOGGER.debug("标记鬼实体类型: {}", Registries.field_41177.method_10221(ghostType));
+      this.markDirty();
+      LOGGER.debug("标记鬼实体类型: {}", Registries.ENTITY_TYPE.getId(ghostType));
    }
 
    public void clearMarkedGhostType() {
       this.markedGhostType = null;
-      this.method_5431();
+      this.markDirty();
       LOGGER.debug("清除标记的鬼实体类型");
    }
 
@@ -424,21 +422,19 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
    }
 
    public Optional<GhostEntity> spawnFromMarkedType() {
-      if (this.markedGhostType != null && this.field_11863 != null) {
+      if (this.markedGhostType != null && this.world != null) {
          try {
-            Entity entity = this.markedGhostType.method_5883(this.field_11863);
+            Entity entity = this.markedGhostType.create(this.world);
             if (entity instanceof GhostEntity ghost) {
-               ghost.method_5808(
-                  this.field_11867.method_10263() + 0.5, this.field_11867.method_10264() + 0.5, this.field_11867.method_10260() + 0.5, 0.0F, 0.0F
-               );
-               ghost.method_5971();
-               this.field_11863.method_8649(ghost);
-               LOGGER.debug("从标记类型生成鬼实体: {}", Registries.field_41177.method_10221(this.markedGhostType));
+               ghost.refreshPositionAndAngles(this.pos.getX() + 0.5, this.pos.getY() + 0.5, this.pos.getZ() + 0.5, 0.0F, 0.0F);
+               ghost.setPersistent();
+               this.world.spawnEntity(ghost);
+               LOGGER.debug("从标记类型生成鬼实体: {}", Registries.ENTITY_TYPE.getId(this.markedGhostType));
                return Optional.of(ghost);
             }
 
             if (entity != null) {
-               entity.method_31472();
+               entity.discard();
             }
          } catch (Exception e) {
             LOGGER.error("从标记类型生成鬼实体时出错", e);
@@ -456,7 +452,7 @@ public class GhostCoffinBlockEntity extends BlockEntity implements GeoBlockEntit
 
    public void setSuppressionQuota(int suppressionQuota) {
       this.suppressionQuota = suppressionQuota;
-      this.method_5431();
+      this.markDirty();
       LOGGER.debug("设置压制名额: {}", suppressionQuota);
    }
 }

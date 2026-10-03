@@ -27,12 +27,12 @@ public class NewGhostDoorBlockEntity extends BlockEntity implements GeoBlockEnti
    }
 
    private PlayState handleAnimation(AnimationState<NewGhostDoorBlockEntity> state) {
-      BlockState blockState = this.method_11010();
-      if (!blockState.method_28498(NewGhostDoorBlock.OPEN)) {
+      BlockState blockState = this.getCachedState();
+      if (!blockState.contains(NewGhostDoorBlock.OPEN)) {
          return PlayState.STOP;
       }
 
-      boolean isOpen = (Boolean)blockState.method_11654(NewGhostDoorBlock.OPEN);
+      boolean isOpen = (Boolean)blockState.get(NewGhostDoorBlock.OPEN);
       if (isOpen) {
          state.getController().setAnimation(RawAnimation.begin().thenPlay("animation.new_ghost_door.open"));
       } else {

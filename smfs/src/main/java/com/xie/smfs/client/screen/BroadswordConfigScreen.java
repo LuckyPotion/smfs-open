@@ -18,72 +18,70 @@ public class BroadswordConfigScreen extends Screen {
    private static final int BUTTON_SPACING = 10;
 
    public BroadswordConfigScreen(ItemStack broadswordStack) {
-      super(Text.method_43470("大刀配置"));
+      super(Text.literal("大刀配置"));
       this.broadswordStack = broadswordStack;
       this.loadConfigFromStack();
    }
 
    private void loadConfigFromStack() {
-      NbtCompound nbt = this.broadswordStack.method_7969();
+      NbtCompound nbt = this.broadswordStack.getNbt();
       if (nbt == null) {
          nbt = new NbtCompound();
-         this.broadswordStack.method_7980(nbt);
+         this.broadswordStack.setNbt(nbt);
       }
 
-      this.crackFixed = nbt.method_10577("broadsword_crack_fixed");
-      if (!nbt.method_10545("broadsword_crack_fixed")) {
+      this.crackFixed = nbt.getBoolean("broadsword_crack_fixed");
+      if (!nbt.contains("broadsword_crack_fixed")) {
          this.crackFixed = false;
       }
    }
 
    private void saveConfigToStack() {
-      NbtCompound nbt = this.broadswordStack.method_7948();
-      nbt.method_10556("broadsword_crack_fixed", this.crackFixed);
-      this.broadswordStack.method_7980(nbt);
+      NbtCompound nbt = this.broadswordStack.getOrCreateNbt();
+      nbt.putBoolean("broadsword_crack_fixed", this.crackFixed);
+      this.broadswordStack.setNbt(nbt);
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
+   protected void init() {
+      super.init();
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
       int totalWidgets = 2;
       int totalHeight = 20 * totalWidgets + 10 * (totalWidgets - 1);
       int startY = centerY - totalHeight / 2;
-      this.method_37063(
-         CyclingButtonWidget.method_32606(value -> value ? Text.method_43470("§a固定不变") : Text.method_43470("§e攻击刷新"))
-            .method_32620(Arrays.asList(true, false))
-            .method_32619(this.crackFixed)
-            .method_32617(centerX - 80, startY, 160, 20, Text.method_43470("裂纹模式"), (button, value) -> {
+      this.addDrawableChild(
+         CyclingButtonWidget.builder(value -> value ? Text.literal("§a固定不变") : Text.literal("§e攻击刷新"))
+            .values(Arrays.asList(true, false))
+            .initially(this.crackFixed)
+            .build(centerX - 80, startY, 160, 20, Text.literal("裂纹模式"), (button, value) -> {
                this.crackFixed = value;
                this.saveConfigToStack();
             })
       );
       int currentY = startY + 20 + 10;
-      this.method_37063(
-         ButtonWidget.method_46430(Text.method_43470("§6立刻刷新"), button -> ScreenTearRenderer.forceRefresh())
-            .method_46434(centerX - 80, currentY, 160, 20)
-            .method_46431()
+      this.addDrawableChild(
+         ButtonWidget.builder(Text.literal("§6立刻刷新"), button -> ScreenTearRenderer.forceRefresh()).dimensions(centerX - 80, currentY, 160, 20).build()
       );
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
-      int centerX = this.field_22789 / 2;
-      context.method_25300(this.field_22793, "§c生锈的大刀配置", centerX, 30, 16777215);
-      context.method_25300(this.field_22793, "§7按 ESC 关闭", centerX, this.field_22790 - 20, 11184810);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
+      int centerX = this.width / 2;
+      context.drawCenteredTextWithShadow(this.textRenderer, "§c生锈的大刀配置", centerX, 30, 16777215);
+      context.drawCenteredTextWithShadow(this.textRenderer, "§7按 ESC 关闭", centerX, this.height - 20, 11184810);
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return true;
    }
 
-   public boolean method_25404(int keyCode, int scanCode, int modifiers) {
+   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
       if (keyCode == 256) {
-         this.method_25419();
+         this.close();
          return true;
       } else {
-         return super.method_25404(keyCode, scanCode, modifiers);
+         return super.keyPressed(keyCode, scanCode, modifiers);
       }
    }
 }

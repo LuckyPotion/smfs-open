@@ -19,21 +19,19 @@ public abstract class ClientPlayerEntityMixin {
       ClientPlayerEntity self = (ClientPlayerEntity)this;
       if (GhostShadowHeadCameraManager.isNControlActive()) {
          Entity boundEntity = GhostShadowHeadCameraManager.getBoundEntity();
-         if (boundEntity != null && !boundEntity.method_31481()) {
-            float forward = self.field_3913.field_3905;
-            float sideways = self.field_3913.field_3907;
-            boolean jumping = self.field_3913.field_3904;
-            boolean sneaking = self.field_3913.field_3903;
-            ClientGhostShadowHeadNSkillC2SPacket.sendToServer(
-               boundEntity.method_5628(), forward, sideways, jumping, sneaking, self.method_36454(), self.method_36455()
-            );
-            self.field_3913.field_3905 = 0.0F;
-            self.field_3913.field_3907 = 0.0F;
-            self.field_3913.field_3904 = false;
-            self.field_3913.field_3903 = false;
-            self.method_5728(false);
-            self.method_18800(0.0, self.method_18798().field_1351, 0.0);
-            self.method_5814(
+         if (boundEntity != null && !boundEntity.isRemoved()) {
+            float forward = self.input.movementForward;
+            float sideways = self.input.movementSideways;
+            boolean jumping = self.input.jumping;
+            boolean sneaking = self.input.sneaking;
+            ClientGhostShadowHeadNSkillC2SPacket.sendToServer(boundEntity.getId(), forward, sideways, jumping, sneaking, self.getYaw(), self.getPitch());
+            self.input.movementForward = 0.0F;
+            self.input.movementSideways = 0.0F;
+            self.input.jumping = false;
+            self.input.sneaking = false;
+            self.setSprinting(false);
+            self.setVelocity(0.0, self.getVelocity().y, 0.0);
+            self.setPosition(
                GhostShadowHeadCameraManager.getSavedPlayerX(), GhostShadowHeadCameraManager.getSavedPlayerY(), GhostShadowHeadCameraManager.getSavedPlayerZ()
             );
          }

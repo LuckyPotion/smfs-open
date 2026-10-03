@@ -40,26 +40,26 @@ public class LiLePingEntity extends GhostMasterEntity {
       this.shouldAttackPlayers = false;
       this.shouldProtectPlayers = true;
       this.shouldAttackGhostsNearPlayers = true;
-      this.method_5665(Text.method_43470("§6李乐平"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6李乐平"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.HEADQUARTERS;
    }
 
    public static Builder createLiLePingAttributes() {
-      return MobEntity.method_26828()
-         .method_26868(EntityAttributes.field_23716, 950.0)
-         .method_26868(EntityAttributes.field_23719, 0.3)
-         .method_26868(EntityAttributes.field_23721, 18.0)
-         .method_26868(EntityAttributes.field_23717, 16.0);
+      return MobEntity.createMobAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 950.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 18.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 16.0);
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -71,13 +71,13 @@ public class LiLePingEntity extends GhostMasterEntity {
    @Override
    protected void enableGhostDomain(PlayerEntity player, StatusEffect effect) {
       int domainLevel = this.getGhostDomainLevel() - 1;
-      player.method_6092(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN_TARGET, 20, domainLevel, false, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.GRAY_GHOST_DOMAIN_TARGET, 20, domainLevel, false, false, false));
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient()) {
          this.handleNightEnhancement();
          if (this.invisibleCooldown > 0) {
             this.invisibleCooldown--;
@@ -87,40 +87,40 @@ public class LiLePingEntity extends GhostMasterEntity {
             this.invisibleDuration--;
             if (this.invisibleDuration <= 0) {
                this.isInvisibleActive = false;
-               this.method_5648(false);
+               this.setInvisible(false);
                this.invisibleCooldown = 200;
             }
          }
 
          if (!this.isInvisibleActive && this.invisibleCooldown <= 0) {
-            float healthPercentage = this.method_6032() / this.method_6063();
-            if (healthPercentage <= 0.5F && this.method_6051().method_43057() < 0.3F) {
+            float healthPercentage = this.getHealth() / this.getMaxHealth();
+            if (healthPercentage <= 0.5F && this.getRandom().nextFloat() < 0.3F) {
                this.activateInvisibility();
             }
          }
 
-         if (this.method_5968() != null) {
+         if (this.getTarget() != null) {
          }
       }
    }
 
    private void handleNightEnhancement() {
-      boolean isNight = this.method_37908().method_23886();
+      boolean isNight = this.getWorld().isNight();
       int originalSpiritualDamage = 25;
       double originalMovementSpeed = 0.3;
       double originalAttackDamage = 18.0;
       if (isNight && !this.wasNightMode) {
          this.wasNightMode = true;
          this.setSpiritualDamage(originalSpiritualDamage * 2);
-         Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(originalMovementSpeed * 2.0);
-         Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(originalAttackDamage * 2.0);
+         Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(originalMovementSpeed * 2.0);
+         Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(originalAttackDamage * 2.0);
          this.shouldProtectPlayers = false;
          this.shouldAttackGhostsNearPlayers = false;
       } else if (!isNight && this.wasNightMode) {
          this.wasNightMode = false;
          this.setSpiritualDamage(originalSpiritualDamage);
-         Objects.requireNonNull(this.method_5996(EntityAttributes.field_23719)).method_6192(originalMovementSpeed);
-         Objects.requireNonNull(this.method_5996(EntityAttributes.field_23721)).method_6192(originalAttackDamage);
+         Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED)).setBaseValue(originalMovementSpeed);
+         Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE)).setBaseValue(originalAttackDamage);
          this.shouldProtectPlayers = true;
          this.shouldAttackGhostsNearPlayers = true;
       }
@@ -129,11 +129,11 @@ public class LiLePingEntity extends GhostMasterEntity {
    private void activateInvisibility() {
       this.isInvisibleActive = true;
       this.invisibleDuration = 60;
-      this.method_5648(true);
-      float currentHealth = this.method_6032();
-      float maxHealth = this.method_6063();
+      this.setInvisible(true);
+      float currentHealth = this.getHealth();
+      float maxHealth = this.getMaxHealth();
       float newHealth = Math.min(currentHealth + 10.0F, maxHealth);
-      this.method_6033(newHealth);
+      this.setHealth(newHealth);
    }
 
    @Override
@@ -146,10 +146,10 @@ public class LiLePingEntity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack ghostMoney3Input = new ItemStack(ModItems.GHOST_MONEY_3, 5);
-         ItemStack goldIngotOutput2 = new ItemStack(Items.field_8695, 42);
+         ItemStack goldIngotOutput2 = new ItemStack(Items.GOLD_INGOT, 42);
          this.tradeOffers.add(new TradeOffer(ghostMoney3Input, goldIngotOutput2, 12, 5, 0.05F));
          ItemStack ghostBowInput = new ItemStack(ModItems.GHOST_BOW, 1);
-         ItemStack goldIngotOutput3 = new ItemStack(Items.field_8494, 5);
+         ItemStack goldIngotOutput3 = new ItemStack(Items.GOLD_BLOCK, 5);
          this.tradeOffers.add(new TradeOffer(ghostBowInput, goldIngotOutput3, 6, 8, 0.08F));
          this.tradeOffersInitialized = true;
       }

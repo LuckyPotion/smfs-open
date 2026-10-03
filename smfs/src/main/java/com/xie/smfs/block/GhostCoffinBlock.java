@@ -60,111 +60,110 @@ import org.slf4j.LoggerFactory;
 
 public class GhostCoffinBlock extends BlockWithEntity {
    private static final Logger LOGGER = LoggerFactory.getLogger(GhostCoffinBlock.class);
-   public static final DirectionProperty FACING = Properties.field_12481;
-   public static final BooleanProperty OPEN = BooleanProperty.method_11825("open");
-   public static final BooleanProperty OCCUPIED = BooleanProperty.method_11825("occupied");
-   private static final VoxelShape SHAPE_NORTH_SOUTH = Block.method_9541(0.0, 0.0, -8.0, 16.0, 16.0, 24.0);
-   private static final VoxelShape SHAPE_EAST_WEST = Block.method_9541(-8.0, 0.0, 0.0, 24.0, 16.0, 16.0);
+   public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+   public static final BooleanProperty OPEN = BooleanProperty.of("open");
+   public static final BooleanProperty OCCUPIED = BooleanProperty.of("occupied");
+   private static final VoxelShape SHAPE_NORTH_SOUTH = Block.createCuboidShape(0.0, 0.0, -8.0, 16.0, 16.0, 24.0);
+   private static final VoxelShape SHAPE_EAST_WEST = Block.createCuboidShape(-8.0, 0.0, 0.0, 24.0, 16.0, 16.0);
    private static final WeakHashMap<PlayerEntity, Boolean> EXITING_PLAYERS = new WeakHashMap<>();
    private static final WeakHashMap<PlayerEntity, Boolean> LYING_PLAYERS = new WeakHashMap<>();
 
    public GhostCoffinBlock(Settings settings) {
-      super(settings.method_22488());
-      this.method_9590(
-         (BlockState)((BlockState)((BlockState)((BlockState)this.field_10647.method_11664()).method_11657(FACING, Direction.field_11043))
-               .method_11657(OPEN, false))
-            .method_11657(OCCUPIED, false)
+      super(settings.nonOpaque());
+      this.setDefaultState(
+         (BlockState)((BlockState)((BlockState)((BlockState)this.stateManager.getDefaultState()).with(FACING, Direction.NORTH)).with(OPEN, false))
+            .with(OCCUPIED, false)
       );
    }
 
-   protected void method_9515(Builder<Block, BlockState> builder) {
-      builder.method_11667(new Property[]{FACING, OPEN, OCCUPIED});
+   protected void appendProperties(Builder<Block, BlockState> builder) {
+      builder.add(new Property[]{FACING, OPEN, OCCUPIED});
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
       boolean isPlayerInCoffin = this.isPlayerInCoffin(world, pos, player);
       if (isPlayerInCoffin) {
-         LOGGER.debug("检测到玩家在棺材内部 - 玩家: {}, 位置: {}", player.method_5477().getString(), pos);
-         if (world.field_9236) {
+         LOGGER.debug("检测到玩家在棺材内部 - 玩家: {}, 位置: {}", player.getName().getString(), pos);
+         if (world.isClient) {
             LOGGER.debug("客户端内部操作 - 返回SUCCESS");
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
 
          if (this.isPlayerExiting(player)) {
             LOGGER.debug("玩家正在退出中，跳过操作");
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
 
-         if (player.method_5715() && hand == Hand.field_5808) {
+         if (player.isSneaking() && hand == Hand.MAIN_HAND) {
             this.setPlayerExiting(player, true);
             this.setLyingFlag(player, false);
             this.ejectPlayer(player, pos, state);
-            world.method_8652(pos, (BlockState)state.method_11657(OCCUPIED, false), 3);
+            world.setBlockState(pos, (BlockState)state.with(OCCUPIED, false), 3);
             this.setPlayerExiting(player, false);
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
 
-         if (!player.method_5715() && hand == Hand.field_5808) {
-            boolean isOpen = (Boolean)state.method_11654(OPEN);
-            BlockState newState = (BlockState)state.method_11657(OPEN, !isOpen);
-            world.method_8652(pos, newState, 3);
+         if (!player.isSneaking() && hand == Hand.MAIN_HAND) {
+            boolean isOpen = (Boolean)state.get(OPEN);
+            BlockState newState = (BlockState)state.with(OPEN, !isOpen);
+            world.setBlockState(pos, newState, 3);
             if (isOpen) {
-               player.method_7353(Text.method_43471("block.smfs.ghost_coffin.close"), true);
+               player.sendMessage(Text.translatable("block.smfs.ghost_coffin.close"), true);
             } else {
-               player.method_7353(Text.method_43471("block.smfs.ghost_coffin.open"), true);
+               player.sendMessage(Text.translatable("block.smfs.ghost_coffin.open"), true);
             }
 
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          } else {
             LOGGER.debug("内部操作条件未满足 - 返回SUCCESS");
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
       } else {
-         if (world.field_9236) {
-            return ActionResult.field_5812;
+         if (world.isClient) {
+            return ActionResult.SUCCESS;
          }
 
-         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.method_8321(pos);
+         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.getBlockEntity(pos);
          if (blockEntity == null) {
-            return ActionResult.field_5811;
+            return ActionResult.PASS;
          }
 
-         ItemStack heldItem = player.method_5998(hand);
-         if (heldItem.method_7909() instanceof SpawnEggItem) {
-            EntityType<?> entityType = this.getEntityTypeFromSpawnEgg((SpawnEggItem)heldItem.method_7909());
+         ItemStack heldItem = player.getStackInHand(hand);
+         if (heldItem.getItem() instanceof SpawnEggItem) {
+            EntityType<?> entityType = this.getEntityTypeFromSpawnEgg((SpawnEggItem)heldItem.getItem());
             if (entityType != null && this.isGhostEntityType(entityType, world)) {
-               if (!(Boolean)state.method_11654(OPEN)) {
-                  player.method_7353(Text.method_43471("block.smfs.ghost_coffin.must_be_open"), true);
-                  return ActionResult.field_5814;
+               if (!(Boolean)state.get(OPEN)) {
+                  player.sendMessage(Text.translatable("block.smfs.ghost_coffin.must_be_open"), true);
+                  return ActionResult.FAIL;
                }
 
                if (!blockEntity.hasStoredGhost()) {
                   GhostEntity ghost = this.createGhostEntity(entityType, world, pos);
                   if (ghost != null) {
-                     ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 0.5, pos.method_10260() + 0.5, 0.0F, 0.0F);
+                     ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.0F, 0.0F);
                      ghost.setSuppressed(true);
-                     ghost.method_5971();
+                     ghost.setPersistent();
                      ghost.setMovementDisabled(true);
                      blockEntity.storeGhost(ghost);
-                     world.method_39279(pos, this, 20);
+                     world.scheduleBlockTick(pos, this, 20);
                      blockEntity.onBlockStateChanged();
-                     if (!player.method_7337()) {
-                        heldItem.method_7934(1);
+                     if (!player.isCreative()) {
+                        heldItem.decrement(1);
                      }
 
-                     player.method_7353(Text.method_43471("block.smfs.ghost_coffin.ghost_stored"), true);
-                     return ActionResult.field_5812;
+                     player.sendMessage(Text.translatable("block.smfs.ghost_coffin.ghost_stored"), true);
+                     return ActionResult.SUCCESS;
                   }
                } else {
-                  player.method_7353(Text.method_43471("block.smfs.ghost_coffin.already_occupied"), true);
+                  player.sendMessage(Text.translatable("block.smfs.ghost_coffin.already_occupied"), true);
                }
             } else {
-               player.method_7353(Text.method_43471("block.smfs.ghost_coffin.not_ghost_egg"), true);
+               player.sendMessage(Text.translatable("block.smfs.ghost_coffin.not_ghost_egg"), true);
             }
          }
 
-         if (heldItem.method_7909() instanceof GoldenContainerItem) {
-            GoldenContainerItem containerItem = (GoldenContainerItem)heldItem.method_7909();
+         if (heldItem.getItem() instanceof GoldenContainerItem) {
+            GoldenContainerItem containerItem = (GoldenContainerItem)heldItem.getItem();
             boolean containerHasGhost = GoldenContainerItem.hasGhost(heldItem);
             boolean coffinHasGhost = blockEntity.hasStoredGhost() || blockEntity.hasMarkedGhostType();
             String coffinGhostId = "无";
@@ -172,60 +171,60 @@ public class GhostCoffinBlock extends BlockWithEntity {
                Optional<GhostEntity> ghostOptional = blockEntity.getGhost();
                if (ghostOptional.isPresent()) {
                   GhostEntity ghost = ghostOptional.get();
-                  coffinGhostId = ghost.method_5864().method_5882() + " (UUID: " + ghost.method_5667() + ")";
+                  coffinGhostId = ghost.getType().getTranslationKey() + " (UUID: " + ghost.getUuid() + ")";
                } else if (blockEntity.hasMarkedGhostType()) {
                   EntityType<?> markedType = blockEntity.getMarkedGhostType();
-                  coffinGhostId = markedType.method_5882() + " (存储UUID: " + blockEntity.getStoredGhostUuid() + ")";
+                  coffinGhostId = markedType.getTranslationKey() + " (存储UUID: " + blockEntity.getStoredGhostUuid() + ")";
                }
             } else if (blockEntity.hasMarkedGhostType()) {
                EntityType<?> markedType = blockEntity.getMarkedGhostType();
-               coffinGhostId = markedType.method_5882() + " (标记类型)";
+               coffinGhostId = markedType.getTranslationKey() + " (标记类型)";
             }
 
             if (containerHasGhost && !coffinHasGhost) {
-               NbtCompound ghostNbt = heldItem.method_7948().method_10562("ContainedGhost");
-               if (EntityType.method_17842(ghostNbt, world, loadedEntity -> loadedEntity instanceof GhostEntity ? loadedEntity : null) instanceof GhostEntity ghost
+               NbtCompound ghostNbt = heldItem.getOrCreateNbt().getCompound("ContainedGhost");
+               if (EntityType.loadEntityWithPassengers(ghostNbt, world, loadedEntity -> loadedEntity instanceof GhostEntity ? loadedEntity : null) instanceof GhostEntity ghost
                   )
                 {
-                  ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 0.5, pos.method_10260() + 0.5, 0.0F, 0.0F);
+                  ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.0F, 0.0F);
                   ghost.setSuppressed(true);
-                  ghost.method_5971();
+                  ghost.setPersistent();
                   ghost.setMovementDisabled(true);
                   blockEntity.storeGhost(ghost);
                   blockEntity.onBlockStateChanged();
-                  heldItem.method_7948().method_10551("ContainedGhost");
-                  heldItem.method_7948().method_10556("HasGhost", false);
-                  heldItem.method_7948().method_10551("IsHeavy");
-                  player.method_7353(Text.method_43471("block.smfs.ghost_coffin.ghost_transferred_from_container"), true);
-                  return ActionResult.field_5812;
+                  heldItem.getOrCreateNbt().remove("ContainedGhost");
+                  heldItem.getOrCreateNbt().putBoolean("HasGhost", false);
+                  heldItem.getOrCreateNbt().remove("IsHeavy");
+                  player.sendMessage(Text.translatable("block.smfs.ghost_coffin.ghost_transferred_from_container"), true);
+                  return ActionResult.SUCCESS;
                }
             } else {
                if (containerHasGhost || !coffinHasGhost) {
                   if (containerHasGhost && coffinHasGhost) {
-                     player.method_7353(Text.method_43471("block.smfs.ghost_coffin.both_containers_have_ghost"), true);
+                     player.sendMessage(Text.translatable("block.smfs.ghost_coffin.both_containers_have_ghost"), true);
                   } else {
-                     player.method_7353(Text.method_43471("block.smfs.ghost_coffin.both_containers_empty"), true);
+                     player.sendMessage(Text.translatable("block.smfs.ghost_coffin.both_containers_empty"), true);
                   }
 
-                  return ActionResult.field_5814;
+                  return ActionResult.FAIL;
                }
 
                WorldConfig config = WorldConfig.getInstance(world);
-               if (config.modDifficulty == 2 && !player.method_7337()) {
-                  player.method_7353(Text.method_43470("似乎需要先打开棺材？"), true);
-                  return ActionResult.field_5814;
+               if (config.modDifficulty == 2 && !player.isCreative()) {
+                  player.sendMessage(Text.literal("似乎需要先打开棺材？"), true);
+                  return ActionResult.FAIL;
                }
 
                Optional<GhostEntity> ghostOptional = blockEntity.hasStoredGhost() ? blockEntity.getGhost() : blockEntity.spawnFromMarkedType();
                if (ghostOptional.isPresent()) {
                   GhostEntity ghost = ghostOptional.get();
                   ItemStack containerStack = heldItem;
-                  if (containerStack.method_7960()) {
+                  if (containerStack.isEmpty()) {
                      containerStack = new ItemStack(ModItems.GOLDEN_CONTAINER);
                   }
 
                   ItemStack coffinNail = ghost.getCoffinNail();
-                  boolean hasNail = coffinNail != null && !coffinNail.method_7960();
+                  boolean hasNail = coffinNail != null && !coffinNail.isEmpty();
                   if (!hasNail) {
                      ghost.setSuppressed(false);
                      ghost.setMovementDisabled(false);
@@ -234,27 +233,27 @@ public class GhostCoffinBlock extends BlockWithEntity {
                   }
 
                   NbtCompound ghostNbt = new NbtCompound();
-                  ghost.method_5647(ghostNbt);
+                  ghost.writeNbt(ghostNbt);
                   if (!hasNail) {
-                     ghostNbt.method_10551("CoffinNail");
+                     ghostNbt.remove("CoffinNail");
                   } else {
-                     ghostNbt.method_10566("CoffinNail", coffinNail.method_7953(new NbtCompound()));
+                     ghostNbt.put("CoffinNail", coffinNail.writeNbt(new NbtCompound()));
                   }
 
-                  ghostNbt.method_10556("Deadlocked", ghost.isDeadlocked());
-                  ghostNbt.method_10551("UUID");
-                  ghostNbt.method_10551("UUIDMost");
-                  ghostNbt.method_10551("UUIDLeast");
-                  ghostNbt.method_10582("id", EntityType.method_5890(ghost.method_5864()).toString());
-                  ghostNbt.method_10549("OriginalX", ghost.method_23317());
-                  ghostNbt.method_10549("OriginalY", ghost.method_23318());
-                  ghostNbt.method_10549("OriginalZ", ghost.method_23321());
-                  ghostNbt.method_10582("OriginalWorld", world.method_27983().method_29177().toString());
-                  containerStack.method_7948().method_10566("ContainedGhost", ghostNbt);
-                  containerStack.method_7948().method_10556("HasGhost", true);
-                  containerStack.method_7948().method_10556("IsHeavy", true);
-                  if (heldItem.method_7960()) {
-                     player.method_6122(hand, containerStack);
+                  ghostNbt.putBoolean("Deadlocked", ghost.isDeadlocked());
+                  ghostNbt.remove("UUID");
+                  ghostNbt.remove("UUIDMost");
+                  ghostNbt.remove("UUIDLeast");
+                  ghostNbt.putString("id", EntityType.getId(ghost.getType()).toString());
+                  ghostNbt.putDouble("OriginalX", ghost.getX());
+                  ghostNbt.putDouble("OriginalY", ghost.getY());
+                  ghostNbt.putDouble("OriginalZ", ghost.getZ());
+                  ghostNbt.putString("OriginalWorld", world.getRegistryKey().getValue().toString());
+                  containerStack.getOrCreateNbt().put("ContainedGhost", ghostNbt);
+                  containerStack.getOrCreateNbt().putBoolean("HasGhost", true);
+                  containerStack.getOrCreateNbt().putBoolean("IsHeavy", true);
+                  if (heldItem.isEmpty()) {
+                     player.setStackInHand(hand, containerStack);
                   }
 
                   if (blockEntity.hasStoredGhost()) {
@@ -263,23 +262,23 @@ public class GhostCoffinBlock extends BlockWithEntity {
                      blockEntity.clearMarkedGhostType();
                   }
 
-                  ghost.method_31472();
-                  world.method_8652(pos, (BlockState)state.method_11657(OCCUPIED, false), 3);
-                  player.method_7353(Text.method_43471("block.smfs.ghost_coffin.ghost_transferred_to_container"), true);
-                  return ActionResult.field_5812;
+                  ghost.discard();
+                  world.setBlockState(pos, (BlockState)state.with(OCCUPIED, false), 3);
+                  player.sendMessage(Text.translatable("block.smfs.ghost_coffin.ghost_transferred_to_container"), true);
+                  return ActionResult.SUCCESS;
                }
             }
          }
 
          if (this.isPlayerExiting(player)) {
             LOGGER.debug("玩家正在退出中，跳过外部操作");
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
 
-         if (player.method_5715() && hand == Hand.field_5808) {
-            boolean isOpen = (Boolean)state.method_11654(OPEN);
-            BlockState newState = (BlockState)state.method_11657(OPEN, !isOpen);
-            world.method_8652(pos, newState, 3);
+         if (player.isSneaking() && hand == Hand.MAIN_HAND) {
+            boolean isOpen = (Boolean)state.get(OPEN);
+            BlockState newState = (BlockState)state.with(OPEN, !isOpen);
+            world.setBlockState(pos, newState, 3);
             blockEntity.onBlockStateChanged();
             if (!isOpen) {
                this.releaseStoredGhost(world, pos, blockEntity);
@@ -287,38 +286,38 @@ public class GhostCoffinBlock extends BlockWithEntity {
                   this.spawnMarkedGhost(world, pos, blockEntity);
                }
 
-               player.method_7353(Text.method_43471("block.smfs.ghost_coffin.open"), true);
+               player.sendMessage(Text.translatable("block.smfs.ghost_coffin.open"), true);
             } else {
-               player.method_7353(Text.method_43471("block.smfs.ghost_coffin.close"), true);
+               player.sendMessage(Text.translatable("block.smfs.ghost_coffin.close"), true);
             }
 
-            return ActionResult.field_5812;
-         } else if (player.method_5715() || hand != Hand.field_5808) {
-            return ActionResult.field_5811;
-         } else if (!(Boolean)state.method_11654(OPEN)) {
-            player.method_7353(Text.method_43471("block.smfs.red_coffin.closed"), true);
-            return ActionResult.field_5812;
-         } else if ((Boolean)state.method_11654(OCCUPIED)) {
-            player.method_7353(Text.method_43471("block.smfs.red_coffin.occupied"), true);
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
+         } else if (player.isSneaking() || hand != Hand.MAIN_HAND) {
+            return ActionResult.PASS;
+         } else if (!(Boolean)state.get(OPEN)) {
+            player.sendMessage(Text.translatable("block.smfs.red_coffin.closed"), true);
+            return ActionResult.SUCCESS;
+         } else if ((Boolean)state.get(OCCUPIED)) {
+            player.sendMessage(Text.translatable("block.smfs.red_coffin.occupied"), true);
+            return ActionResult.SUCCESS;
          } else {
             this.layPlayerInCoffin(player, pos, state);
-            world.method_8652(pos, (BlockState)state.method_11657(OCCUPIED, true), 3);
+            world.setBlockState(pos, (BlockState)state.with(OCCUPIED, true), 3);
             this.setLyingFlag(player, true);
             this.scheduleTick(world, pos);
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          }
       }
    }
 
    private EntityType<?> getEntityTypeFromSpawnEgg(SpawnEggItem spawnEgg) {
-      for (Item item : Registries.field_41178) {
+      for (Item item : Registries.ITEM) {
          if (item instanceof SpawnEggItem eggItem && eggItem == spawnEgg) {
-            Identifier itemId = Registries.field_41178.method_10221(item);
+            Identifier itemId = Registries.ITEM.getId(item);
             if (itemId != null) {
-               String entityIdStr = itemId.method_12832().replace("_spawn_egg", "");
-               Identifier entityId = new Identifier(itemId.method_12836(), entityIdStr);
-               return (EntityType<?>)Registries.field_41177.method_10223(entityId);
+               String entityIdStr = itemId.getPath().replace("_spawn_egg", "");
+               Identifier entityId = new Identifier(itemId.getNamespace(), entityIdStr);
+               return (EntityType<?>)Registries.ENTITY_TYPE.get(entityId);
             }
          }
       }
@@ -332,13 +331,13 @@ public class GhostCoffinBlock extends BlockWithEntity {
 
    private GhostEntity createGhostEntity(EntityType<?> entityType, World world, BlockPos pos) {
       try {
-         Entity entity = entityType.method_5883(world);
+         Entity entity = entityType.create(world);
          if (entity instanceof GhostEntity ghost) {
             return ghost;
          }
 
          if (entity != null) {
-            entity.method_31472();
+            entity.discard();
          }
       } catch (Exception e) {
          LOGGER.error("创建鬼实体时出错", e);
@@ -350,13 +349,13 @@ public class GhostCoffinBlock extends BlockWithEntity {
    private void releaseStoredGhost(World world, BlockPos pos, GhostCoffinBlockEntity blockEntity) {
       if (blockEntity.hasStoredGhost()) {
          Optional<GhostEntity> releasedGhost = blockEntity.releaseGhost();
-         world.method_8652(pos, (BlockState)world.method_8320(pos).method_11657(OCCUPIED, false), 3);
+         world.setBlockState(pos, (BlockState)world.getBlockState(pos).with(OCCUPIED, false), 3);
          if (releasedGhost.isPresent()) {
             GhostEntity ghost = releasedGhost.get();
             ghost.setSuppressed(false);
             ghost.setMovementDisabled(false);
-            ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 1.0, pos.method_10260() + 0.5, world.field_9229.method_43057() * 360.0F, 0.0F);
-            LOGGER.debug("从棺材中释放鬼: {}", ghost.method_5667());
+            ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, world.random.nextFloat() * 360.0F, 0.0F);
+            LOGGER.debug("从棺材中释放鬼: {}", ghost.getUuid());
          } else {
             LOGGER.debug("鬼实体释放失败，但已清除占用状态");
          }
@@ -366,9 +365,9 @@ public class GhostCoffinBlock extends BlockWithEntity {
    private void spawnMarkedGhost(World world, BlockPos pos, GhostCoffinBlockEntity blockEntity) {
       if (blockEntity.hasMarkedGhostType()) {
          blockEntity.spawnFromMarkedType().ifPresent(ghost -> {
-            ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 1.0, pos.method_10260() + 0.5, world.field_9229.method_43057() * 360.0F, 0.0F);
+            ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, world.random.nextFloat() * 360.0F, 0.0F);
             blockEntity.clearMarkedGhostType();
-            LOGGER.debug("从标记类型生成鬼: {}", Registries.field_41177.method_10221(blockEntity.getMarkedGhostType()));
+            LOGGER.debug("从标记类型生成鬼: {}", Registries.ENTITY_TYPE.getId(blockEntity.getMarkedGhostType()));
          });
       }
    }
@@ -391,71 +390,62 @@ public class GhostCoffinBlock extends BlockWithEntity {
 
    private boolean isPlayerInCoffin(World world, BlockPos pos, PlayerEntity player) {
       Box innerBox = this.getInnerBoundingBox(pos);
-      boolean inBox = innerBox.method_1006(player.method_19538());
-      boolean isSleeping = player.method_18376() == EntityPose.field_18078;
+      boolean inBox = innerBox.contains(player.getPos());
+      boolean isSleeping = player.getPose() == EntityPose.SLEEPING;
       boolean lyingFlagSet = this.isLyingFlagSet(player);
-      LOGGER.debug(
-         "检测玩家状态 - 玩家: {}, 位置: {}, 边界框内: {}, 躺卧姿势: {}, 躺下标志位: {}", player.method_5477().getString(), player.method_19538(), inBox, isSleeping, lyingFlagSet
-      );
+      LOGGER.debug("检测玩家状态 - 玩家: {}, 位置: {}, 边界框内: {}, 躺卧姿势: {}, 躺下标志位: {}", player.getName().getString(), player.getPos(), inBox, isSleeping, lyingFlagSet);
       return inBox && (isSleeping || lyingFlagSet) || lyingFlagSet;
    }
 
    private Box getInnerBoundingBox(BlockPos pos) {
-      return new Box(
-         pos.method_10263() + 0.05,
-         pos.method_10264() + 0.05,
-         pos.method_10260() + 0.05,
-         pos.method_10263() + 0.95,
-         pos.method_10264() + 0.95,
-         pos.method_10260() + 0.95
-      );
+      return new Box(pos.getX() + 0.05, pos.getY() + 0.05, pos.getZ() + 0.05, pos.getX() + 0.95, pos.getY() + 0.95, pos.getZ() + 0.95);
    }
 
    private void layPlayerInCoffin(PlayerEntity player, BlockPos pos, BlockState state) {
-      double x = pos.method_10263() + 0.5;
-      double y = pos.method_10264() + 0.1;
-      double z = pos.method_10260() + 0.5;
-      float yaw = this.getCorrectYawFromDirection((Direction)state.method_11654(FACING));
-      player.method_20620(x, y, z);
-      player.method_36456(yaw);
-      player.method_36457(0.0F);
-      player.method_18380(EntityPose.field_18078);
+      double x = pos.getX() + 0.5;
+      double y = pos.getY() + 0.1;
+      double z = pos.getZ() + 0.5;
+      float yaw = this.getCorrectYawFromDirection((Direction)state.get(FACING));
+      player.teleport(x, y, z);
+      player.setYaw(yaw);
+      player.setPitch(0.0F);
+      player.setPose(EntityPose.SLEEPING);
       this.setLyingFlag(player, true);
       if (player instanceof ServerPlayerEntity serverPlayer) {
-         serverPlayer.method_18380(EntityPose.field_18078);
-         serverPlayer.field_13987.method_14372();
+         serverPlayer.setPose(EntityPose.SLEEPING);
+         serverPlayer.networkHandler.syncWithPlayerPosition();
       }
 
       CoffinEffectManager.setPlayerInGhostCoffin(player, pos);
-      LOGGER.debug("玩家躺入棺材: {}, 位置: {}, 姿势: {}, 躺下标志位: {}", player.method_5477().getString(), pos, player.method_18376(), this.isLyingFlagSet(player));
+      LOGGER.debug("玩家躺入棺材: {}, 位置: {}, 姿势: {}, 躺下标志位: {}", player.getName().getString(), pos, player.getPose(), this.isLyingFlagSet(player));
    }
 
    private void ejectPlayer(PlayerEntity player, BlockPos pos, BlockState state) {
-      Direction facing = (Direction)state.method_11654(FACING);
-      double x = pos.method_10263() + 0.5 + facing.method_10148() * 1.5;
-      double y = pos.method_10264() + 0.5;
-      double z = pos.method_10260() + 0.5 + facing.method_10165() * 1.5;
-      player.method_20620(x, y, z);
-      player.method_18380(EntityPose.field_18076);
+      Direction facing = (Direction)state.get(FACING);
+      double x = pos.getX() + 0.5 + facing.getOffsetX() * 1.5;
+      double y = pos.getY() + 0.5;
+      double z = pos.getZ() + 0.5 + facing.getOffsetZ() * 1.5;
+      player.teleport(x, y, z);
+      player.setPose(EntityPose.STANDING);
       this.setLyingFlag(player, false);
       if (player instanceof ServerPlayerEntity serverPlayer) {
-         serverPlayer.method_18380(EntityPose.field_18076);
-         serverPlayer.field_13987.method_14372();
+         serverPlayer.setPose(EntityPose.STANDING);
+         serverPlayer.networkHandler.syncWithPlayerPosition();
       }
 
       CoffinEffectManager.removePlayerFromCoffin(player);
-      LOGGER.debug("弹出玩家: {}, 位置: {}, 姿势: {}, 躺下标志位: {}", player.method_5477().getString(), pos, player.method_18376(), this.isLyingFlagSet(player));
+      LOGGER.debug("弹出玩家: {}, 位置: {}, 姿势: {}, 躺下标志位: {}", player.getName().getString(), pos, player.getPose(), this.isLyingFlagSet(player));
    }
 
    private float getCorrectYawFromDirection(Direction direction) {
       switch (direction) {
-         case field_11043:
+         case NORTH:
             return 180.0F;
-         case field_11035:
+         case SOUTH:
             return 0.0F;
-         case field_11039:
+         case WEST:
             return 90.0F;
-         case field_11034:
+         case EAST:
             return -90.0F;
          default:
             return 0.0F;
@@ -463,39 +453,39 @@ public class GhostCoffinBlock extends BlockWithEntity {
    }
 
    private void scheduleTick(World world, BlockPos pos) {
-      world.method_39279(pos, this, 20);
+      world.scheduleBlockTick(pos, this, 20);
    }
 
-   public void method_9588(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-      super.method_9588(state, world, pos, random);
-      if ((Boolean)state.method_11654(OCCUPIED)) {
+   public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+      super.scheduledTick(state, world, pos, random);
+      if ((Boolean)state.get(OCCUPIED)) {
          Box searchBox = this.getInnerBoundingBox(pos);
-         List<PlayerEntity> players = world.method_8390(PlayerEntity.class, searchBox, p -> p.method_18376() == EntityPose.field_18078);
+         List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, searchBox, p -> p.getPose() == EntityPose.SLEEPING);
          if (players.isEmpty()) {
-            world.method_8652(pos, (BlockState)state.method_11657(OCCUPIED, false), 3);
+            world.setBlockState(pos, (BlockState)state.with(OCCUPIED, false), 3);
             LOGGER.debug("定期检测：玩家已离开棺材，更新占用状态");
          } else {
-            world.method_39279(pos, this, 20);
+            world.scheduleBlockTick(pos, this, 20);
          }
       }
    }
 
-   public void method_9548(BlockState state, World world, BlockPos pos, Entity entity) {
-      if ((Boolean)state.method_11654(OCCUPIED)
+   public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
+      if ((Boolean)state.get(OCCUPIED)
          && entity instanceof PlayerEntity player
-         && player.method_18376() == EntityPose.field_18078
+         && player.getPose() == EntityPose.SLEEPING
          && this.isPlayerInCoffin(world, pos, player)
-         && !this.getInnerBoundingBox(pos).method_1006(player.method_19538())) {
-         double x = pos.method_10263() + 0.5;
-         double y = pos.method_10264() + 0.1;
-         double z = pos.method_10260() + 0.5;
-         player.method_20620(x, y, z);
+         && !this.getInnerBoundingBox(pos).contains(player.getPos())) {
+         double x = pos.getX() + 0.5;
+         double y = pos.getY() + 0.1;
+         double z = pos.getZ() + 0.5;
+         player.teleport(x, y, z);
       }
    }
 
-   public void method_9536(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
-      if (!state.method_27852(newState.method_26204())) {
-         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.method_8321(pos);
+   public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
+      if (!state.isOf(newState.getBlock())) {
+         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.getBlockEntity(pos);
          if (blockEntity != null) {
             if (blockEntity.hasStoredGhost()) {
                LOGGER.debug("方块被破坏 - 释放储存的鬼");
@@ -504,8 +494,8 @@ public class GhostCoffinBlock extends BlockWithEntity {
                   GhostEntity ghost = releasedGhost.get();
                   ghost.setSuppressed(false);
                   ghost.setMovementDisabled(false);
-                  ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 0.5, pos.method_10260() + 0.5, 0.0F, 0.0F);
-                  LOGGER.debug("成功释放鬼实体: {}", ghost.method_5667());
+                  ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.0F, 0.0F);
+                  LOGGER.debug("成功释放鬼实体: {}", ghost.getUuid());
                } else {
                   LOGGER.debug("鬼实体引用无效，已自动清理");
                   if (blockEntity.hasMarkedGhostType()) {
@@ -513,9 +503,9 @@ public class GhostCoffinBlock extends BlockWithEntity {
                      Optional<GhostEntity> spawnedGhost = blockEntity.spawnFromMarkedType();
                      if (spawnedGhost.isPresent()) {
                         GhostEntity ghost = spawnedGhost.get();
-                        ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 0.5, pos.method_10260() + 0.5, 0.0F, 0.0F);
+                        ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.0F, 0.0F);
                         blockEntity.clearMarkedGhostType();
-                        LOGGER.debug("成功从标记类型生成鬼实体: {}", ghost.method_5667());
+                        LOGGER.debug("成功从标记类型生成鬼实体: {}", ghost.getUuid());
                      } else {
                         LOGGER.warn("从标记类型生成鬼实体失败");
                      }
@@ -526,19 +516,19 @@ public class GhostCoffinBlock extends BlockWithEntity {
                Optional<GhostEntity> spawnedGhost = blockEntity.spawnFromMarkedType();
                if (spawnedGhost.isPresent()) {
                   GhostEntity ghost = spawnedGhost.get();
-                  ghost.method_5808(pos.method_10263() + 0.5, pos.method_10264() + 0.5, pos.method_10260() + 0.5, 0.0F, 0.0F);
+                  ghost.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0.0F, 0.0F);
                   blockEntity.clearMarkedGhostType();
-                  LOGGER.debug("成功从标记类型生成鬼实体: {}", ghost.method_5667());
+                  LOGGER.debug("成功从标记类型生成鬼实体: {}", ghost.getUuid());
                } else {
                   LOGGER.warn("从标记类型生成鬼实体失败");
                }
             }
          }
 
-         if ((Boolean)state.method_11654(OCCUPIED)) {
+         if ((Boolean)state.get(OCCUPIED)) {
             LOGGER.debug("方块被破坏 - 弹出玩家");
             Box searchBox = this.getInnerBoundingBox(pos);
-            List<PlayerEntity> players = world.method_8390(PlayerEntity.class, searchBox, p -> p.method_18376() == EntityPose.field_18078);
+            List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, searchBox, p -> p.getPose() == EntityPose.SLEEPING);
             Iterator var16 = players.iterator();
             if (var16.hasNext()) {
                PlayerEntity player = (PlayerEntity)var16.next();
@@ -552,32 +542,32 @@ public class GhostCoffinBlock extends BlockWithEntity {
          }
       }
 
-      super.method_9536(state, world, pos, newState, moved);
+      super.onStateReplaced(state, world, pos, newState, moved);
    }
 
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      Direction direction = (Direction)state.method_11654(FACING);
-      return direction != Direction.field_11043 && direction != Direction.field_11035 ? SHAPE_EAST_WEST : SHAPE_NORTH_SOUTH;
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      Direction direction = (Direction)state.get(FACING);
+      return direction != Direction.NORTH && direction != Direction.SOUTH ? SHAPE_EAST_WEST : SHAPE_NORTH_SOUTH;
    }
 
-   public VoxelShape method_9571(BlockState state, BlockView world, BlockPos pos) {
-      return this.method_9530(state, world, pos, ShapeContext.method_16194());
+   public VoxelShape getCullingShape(BlockState state, BlockView world, BlockPos pos) {
+      return this.getOutlineShape(state, world, pos, ShapeContext.absent());
    }
 
-   public BlockRenderType method_9604(BlockState state) {
-      return BlockRenderType.field_11456;
+   public BlockRenderType getRenderType(BlockState state) {
+      return BlockRenderType.ENTITYBLOCK_ANIMATED;
    }
 
-   public List<ItemStack> method_9560(BlockState state, net.minecraft.loot.context.LootContextParameterSet.Builder builder) {
-      ItemStack tool = (ItemStack)builder.method_51876(LootContextParameters.field_1229);
+   public List<ItemStack> getDroppedStacks(BlockState state, net.minecraft.loot.context.LootContextParameterSet.Builder builder) {
+      ItemStack tool = (ItemStack)builder.getOptional(LootContextParameters.TOOL);
       return tool == null
-            || !(tool.method_7909() instanceof AxeItem)
-               && !tool.method_31574(Items.field_8475)
-               && !tool.method_31574(Items.field_8825)
-               && !tool.method_31574(Items.field_8556)
-               && !tool.method_31574(Items.field_22025)
-               && !tool.method_31574(Items.field_8406)
-               && !tool.method_31574(Items.field_8062)
+            || !(tool.getItem() instanceof AxeItem)
+               && !tool.isOf(Items.IRON_AXE)
+               && !tool.isOf(Items.GOLDEN_AXE)
+               && !tool.isOf(Items.DIAMOND_AXE)
+               && !tool.isOf(Items.NETHERITE_AXE)
+               && !tool.isOf(Items.WOODEN_AXE)
+               && !tool.isOf(Items.STONE_AXE)
          ? List.of()
          : List.of(new ItemStack(this));
    }
@@ -586,51 +576,51 @@ public class GhostCoffinBlock extends BlockWithEntity {
       return 3.0F;
    }
 
-   public float method_9594(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
-      ItemStack tool = player.method_6047();
-      if (tool.method_7909() instanceof AxeItem) {
-         float baseSpeed = super.method_9594(state, player, world, pos);
-         if (tool.method_31574(Items.field_22025)) {
+   public float calcBlockBreakingDelta(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
+      ItemStack tool = player.getMainHandStack();
+      if (tool.getItem() instanceof AxeItem) {
+         float baseSpeed = super.calcBlockBreakingDelta(state, player, world, pos);
+         if (tool.isOf(Items.NETHERITE_AXE)) {
             return baseSpeed * 3.0F;
          }
 
-         if (tool.method_31574(Items.field_8556)) {
+         if (tool.isOf(Items.DIAMOND_AXE)) {
             return baseSpeed * 2.5F;
          }
 
-         if (tool.method_31574(Items.field_8475)) {
+         if (tool.isOf(Items.IRON_AXE)) {
             return baseSpeed * 2.0F;
          }
 
-         if (tool.method_31574(Items.field_8825)) {
+         if (tool.isOf(Items.GOLDEN_AXE)) {
             return baseSpeed * 1.5F;
          }
 
-         if (tool.method_31574(Items.field_8062)) {
+         if (tool.isOf(Items.STONE_AXE)) {
             return baseSpeed * 1.2F;
          }
 
-         if (tool.method_31574(Items.field_8406)) {
+         if (tool.isOf(Items.WOODEN_AXE)) {
             return baseSpeed * 1.0F;
          }
       }
 
-      return super.method_9594(state, player, world, pos);
+      return super.calcBlockBreakingDelta(state, player, world, pos);
    }
 
    @Nullable
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
-      return ModBlockEntities.GHOST_COFFIN_BLOCK_ENTITY.method_11032(pos, state);
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+      return ModBlockEntities.GHOST_COFFIN_BLOCK_ENTITY.instantiate(pos, state);
    }
 
-   public void method_9567(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
-      super.method_9567(world, pos, state, placer, itemStack);
-      if (itemStack.method_7985() && itemStack.method_7969().method_10545("BlockEntityTag")) {
-         NbtCompound blockEntityTag = itemStack.method_7969().method_10562("BlockEntityTag");
-         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.method_8321(pos);
-         if (blockEntity != null && blockEntityTag.method_10545("MarkedGhostType")) {
-            String typeId = blockEntityTag.method_10558("MarkedGhostType");
-            EntityType<?> ghostType = (EntityType<?>)Registries.field_41177.method_10223(new Identifier(typeId));
+   public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+      super.onPlaced(world, pos, state, placer, itemStack);
+      if (itemStack.hasNbt() && itemStack.getNbt().contains("BlockEntityTag")) {
+         NbtCompound blockEntityTag = itemStack.getNbt().getCompound("BlockEntityTag");
+         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.getBlockEntity(pos);
+         if (blockEntity != null && blockEntityTag.contains("MarkedGhostType")) {
+            String typeId = blockEntityTag.getString("MarkedGhostType");
+            EntityType<?> ghostType = (EntityType<?>)Registries.ENTITY_TYPE.get(new Identifier(typeId));
             if (ghostType != null && this.isGhostEntityType(ghostType, world)) {
                blockEntity.markGhostType(ghostType);
             }
@@ -639,19 +629,19 @@ public class GhostCoffinBlock extends BlockWithEntity {
    }
 
    public static boolean enterCoffin(World world, BlockPos pos, GhostEntity ghost) {
-      if (world != null && pos != null && ghost != null && !ghost.method_31481()) {
-         BlockState state = world.method_8320(pos);
-         if (!(state.method_26204() instanceof GhostCoffinBlock)) {
+      if (world != null && pos != null && ghost != null && !ghost.isRemoved()) {
+         BlockState state = world.getBlockState(pos);
+         if (!(state.getBlock() instanceof GhostCoffinBlock)) {
             LOGGER.warn("目标位置不是鬼棺材方块");
             return false;
          }
 
-         if (!(Boolean)state.method_11654(OPEN)) {
-            LOGGER.warn("棺材状态不满足进入条件：打开={}", state.method_11654(OPEN));
+         if (!(Boolean)state.get(OPEN)) {
+            LOGGER.warn("棺材状态不满足进入条件：打开={}", state.get(OPEN));
             return false;
          }
 
-         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.method_8321(pos);
+         GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.getBlockEntity(pos);
          if (blockEntity == null) {
             LOGGER.warn("棺材方块实体不存在");
             return false;
@@ -659,20 +649,20 @@ public class GhostCoffinBlock extends BlockWithEntity {
 
          try {
             Box searchBox = getInnerBoundingBoxStatic(pos);
-            List<PlayerEntity> playersInCoffin = world.method_8390(PlayerEntity.class, searchBox, p -> isPlayerInCoffinStatic(world, pos, p));
+            List<PlayerEntity> playersInCoffin = world.getEntitiesByClass(PlayerEntity.class, searchBox, p -> isPlayerInCoffinStatic(world, pos, p));
             if (!playersInCoffin.isEmpty() && ghost instanceof GhostOfficerEntity) {
                PlayerEntity player = playersInCoffin.get(0);
-               LOGGER.debug("检测到玩家 {} 在棺材内，鬼差尝试进入，执行特殊逻辑", player.method_5477().getString());
-               BlockState newState = (BlockState)((BlockState)state.method_11657(OPEN, false)).method_11657(OCCUPIED, true);
-               world.method_8652(pos, newState, 3);
+               LOGGER.debug("检测到玩家 {} 在棺材内，鬼差尝试进入，执行特殊逻辑", player.getName().getString());
+               BlockState newState = (BlockState)((BlockState)state.with(OPEN, false)).with(OCCUPIED, true);
+               world.setBlockState(pos, newState, 3);
                giveGhostOfficerItemToPlayer(player);
                GhostDeathHandler.markLegitimateRemoval(ghost);
-               ghost.method_31472();
+               ghost.discard();
                LOGGER.debug("鬼差进入棺材特殊逻辑执行完成：关闭棺材，给予玩家鬼差驾驭物品，移除鬼差");
                return true;
             }
 
-            if ((Boolean)state.method_11654(OCCUPIED)) {
+            if ((Boolean)state.get(OCCUPIED)) {
                LOGGER.warn("棺材已被占用，无法进入");
                return false;
             }
@@ -685,7 +675,7 @@ public class GhostCoffinBlock extends BlockWithEntity {
 
             blockEntity.onBlockStateChanged();
             NbtCompound nbt = new NbtCompound();
-            blockEntity.method_11007(nbt);
+            blockEntity.writeNbt(nbt);
             LOGGER.debug("鬼实体进入鬼棺成功，棺材NBT信息: {}", nbt.toString());
             return true;
          } catch (Exception e) {
@@ -699,24 +689,15 @@ public class GhostCoffinBlock extends BlockWithEntity {
    }
 
    private static Box getInnerBoundingBoxStatic(BlockPos pos) {
-      return new Box(
-         pos.method_10263() + 0.05,
-         pos.method_10264() + 0.05,
-         pos.method_10260() + 0.05,
-         pos.method_10263() + 0.95,
-         pos.method_10264() + 0.95,
-         pos.method_10260() + 0.95
-      );
+      return new Box(pos.getX() + 0.05, pos.getY() + 0.05, pos.getZ() + 0.05, pos.getX() + 0.95, pos.getY() + 0.95, pos.getZ() + 0.95);
    }
 
    private static boolean isPlayerInCoffinStatic(World world, BlockPos pos, PlayerEntity player) {
       Box innerBox = getInnerBoundingBoxStatic(pos);
-      boolean inBox = innerBox.method_1006(player.method_19538());
-      boolean isSleeping = player.method_18376() == EntityPose.field_18078;
+      boolean inBox = innerBox.contains(player.getPos());
+      boolean isSleeping = player.getPose() == EntityPose.SLEEPING;
       boolean lyingFlagSet = isLyingFlagSetStatic(player);
-      LOGGER.debug(
-         "检测玩家状态 - 玩家: {}, 位置: {}, 边界框内: {}, 躺卧姿势: {}, 躺下标志位: {}", player.method_5477().getString(), player.method_19538(), inBox, isSleeping, lyingFlagSet
-      );
+      LOGGER.debug("检测玩家状态 - 玩家: {}, 位置: {}, 边界框内: {}, 躺卧姿势: {}, 躺下标志位: {}", player.getName().getString(), player.getPos(), inBox, isSleeping, lyingFlagSet);
       return inBox && (isSleeping || lyingFlagSet) || lyingFlagSet;
    }
 
@@ -725,22 +706,22 @@ public class GhostCoffinBlock extends BlockWithEntity {
    }
 
    private static void giveGhostOfficerItemToPlayer(PlayerEntity player) {
-      if (player != null && !player.method_37908().method_8608()) {
+      if (player != null && !player.getWorld().isClient()) {
          try {
             ItemStack ghostOfficerItem = GhostUtils.createTamedItem("ghost_officer");
-            if (ghostOfficerItem.method_7960()) {
+            if (ghostOfficerItem.isEmpty()) {
                LOGGER.warn("无法创建鬼差驾驭物品");
                return;
             }
 
-            if (!player.method_31548().method_7394(ghostOfficerItem)) {
-               player.method_7328(ghostOfficerItem, false);
-               LOGGER.debug("鬼差驾驭物品掉落在地上，玩家: {}", player.method_5477().getString());
+            if (!player.getInventory().insertStack(ghostOfficerItem)) {
+               player.dropItem(ghostOfficerItem, false);
+               LOGGER.debug("鬼差驾驭物品掉落在地上，玩家: {}", player.getName().getString());
             } else {
-               LOGGER.debug("成功给予玩家鬼差驾驭物品，玩家: {}", player.method_5477().getString());
+               LOGGER.debug("成功给予玩家鬼差驾驭物品，玩家: {}", player.getName().getString());
             }
 
-            player.method_7353(Text.method_43470("§a成功驾驭了鬼差！"), true);
+            player.sendMessage(Text.literal("§a成功驾驭了鬼差！"), true);
          } catch (Exception e) {
             LOGGER.error("给予玩家鬼差驾驭物品时发生错误", e);
          }

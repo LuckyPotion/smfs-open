@@ -21,7 +21,7 @@ public class GhostChildCultivationScreenHandler extends ScreenHandler {
 
    public GhostChildCultivationScreenHandler(int syncId, PlayerInventory inventory) {
       super(ModScreenHandlers.GHOST_CHILD_CULTIVATION_SCREEN_HANDLER, syncId);
-      this.player = inventory.field_7546;
+      this.player = inventory.player;
       this.ghostChildData = PlayerGhostChildManager.getGhostChildData(this.player);
    }
 
@@ -37,12 +37,12 @@ public class GhostChildCultivationScreenHandler extends ScreenHandler {
       return this.player;
    }
 
-   public boolean method_7597(PlayerEntity player) {
+   public boolean canUse(PlayerEntity player) {
       return true;
    }
 
-   public ItemStack method_7601(PlayerEntity player, int index) {
-      return ItemStack.field_8037;
+   public ItemStack quickMove(PlayerEntity player, int slot) {
+      return ItemStack.EMPTY;
    }
 
    public void performBreakthrough() {
@@ -75,7 +75,7 @@ public class GhostChildCultivationScreenHandler extends ScreenHandler {
       }
 
       public Text method_5476() {
-         return Text.method_43470("Ghost Child Cultivation");
+         return Text.literal("Ghost Child Cultivation");
       }
 
       public void writeScreenOpeningData(ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf) {

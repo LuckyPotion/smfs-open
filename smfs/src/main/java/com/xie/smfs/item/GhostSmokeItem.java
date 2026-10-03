@@ -12,40 +12,40 @@ import net.minecraft.world.World;
 
 public class GhostSmokeItem extends BaseGhostEyeItem {
    public GhostSmokeItem(Settings settings) {
-      super(settings.method_7889(1), 1200, 25, 80, 0, 0.15);
+      super(settings.maxCount(1), 1200, 25, 80, 0, 0.15);
    }
 
    @Override
-   public Text method_7864(ItemStack stack) {
-      return Text.method_43471("item.smfs.ghost_smoke");
+   public Text getName(ItemStack stack) {
+      return Text.translatable("item.smfs.ghost_smoke");
    }
 
    @Override
    protected Text getBindSuccessMessage(int slot) {
-      return Text.method_43471("item.smfs.ghost_smoke.bind_success").method_10852(Text.method_43470(" (槽位 " + (slot + 1) + ")"));
+      return Text.translatable("item.smfs.ghost_smoke.bind_success").append(Text.literal(" (槽位 " + (slot + 1) + ")"));
    }
 
    @Override
    protected void sendSlotsFullMessage(PlayerEntity player) {
-      player.method_7353(Text.method_43471("item.smfs.ghost_smoke.slots_full"), true);
+      player.sendMessage(Text.translatable("item.smfs.ghost_smoke.slots_full"), true);
    }
 
    @Override
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      return super.method_7836(world, user, hand);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      return super.use(world, user, hand);
    }
 
    @Override
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_smoke.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.description.type"));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.max_spirit", new Object[]{this.getMaxSpiritBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.spirit_resistance", new Object[]{this.getSpiritResistanceBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.spirit_damage", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.sanity", new Object[]{this.getSanityBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.ghost_eye.revival_factor", new Object[]{String.format("%.1f", this.getRevivalFactor() * 100.0)}));
-      tooltip.add(Text.method_43471("item.smfs.ghost_eye.usage"));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_smoke.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.max_spirit", new Object[]{this.getMaxSpiritBonus()}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.spirit_resistance", new Object[]{this.getSpiritResistanceBonus()}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.spirit_damage", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.sanity", new Object[]{this.getSanityBonus()}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.revival_factor", new Object[]{String.format("%.1f", this.getRevivalFactor() * 100.0)}));
+      tooltip.add(Text.translatable("item.smfs.ghost_eye.usage"));
    }
 
    @Override

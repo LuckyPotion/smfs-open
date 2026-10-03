@@ -30,22 +30,22 @@ class SellerQuestStrategy implements QuestDetectionStrategy {
    }
 
    private int countHeavyGoldenContainers(PlayerEntity player) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int count = 0;
 
-      for (int i = 0; i < inventory.method_5439(); i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && stack.method_7909() == ModItems.GOLDEN_CONTAINER && stack.method_7985() && stack.method_7969().method_10577("IsHeavy")) {
+      for (int i = 0; i < inventory.size(); i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && stack.getItem() == ModItems.GOLDEN_CONTAINER && stack.hasNbt() && stack.getNbt().getBoolean("IsHeavy")) {
             if (this.requiredGhostType != null && !this.requiredGhostType.isEmpty()) {
                String containedGhost = GoldenContainerItem.getContainedGhostType(stack);
                if (containedGhost != null) {
                   String containedGhostType = containedGhost.contains(":") ? containedGhost.split(":")[1] : containedGhost;
                   if (this.requiredGhostType.equals(containedGhostType)) {
-                     count += stack.method_7947();
+                     count += stack.getCount();
                   }
                }
             } else {
-               count += stack.method_7947();
+               count += stack.getCount();
             }
          }
       }
@@ -64,12 +64,12 @@ class SellerQuestStrategy implements QuestDetectionStrategy {
    }
 
    private void consumeHeavyGoldenContainers(PlayerEntity player, int amount) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int remaining = amount;
 
-      for (int i = 0; i < inventory.method_5439() && remaining > 0; i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && stack.method_7909() == ModItems.GOLDEN_CONTAINER && stack.method_7985() && stack.method_7969().method_10577("IsHeavy")) {
+      for (int i = 0; i < inventory.size() && remaining > 0; i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && stack.getItem() == ModItems.GOLDEN_CONTAINER && stack.hasNbt() && stack.getNbt().getBoolean("IsHeavy")) {
             if (this.requiredGhostType != null && !this.requiredGhostType.isEmpty()) {
                String containedGhost = GoldenContainerItem.getContainedGhostType(stack);
                if (containedGhost == null) {
@@ -82,8 +82,8 @@ class SellerQuestStrategy implements QuestDetectionStrategy {
                }
             }
 
-            int toRemove = Math.min(stack.method_7947(), remaining);
-            stack.method_7934(toRemove);
+            int toRemove = Math.min(stack.getCount(), remaining);
+            stack.decrement(toRemove);
             remaining -= toRemove;
             LOGGER.info("消耗沉重的黄金容器: {} 个", toRemove);
             this.returnEmptyGoldenContainers(player, toRemove);
@@ -94,11 +94,11 @@ class SellerQuestStrategy implements QuestDetectionStrategy {
    private void returnEmptyGoldenContainers(PlayerEntity player, int amount) {
       if (amount > 0) {
          ItemStack emptyContainer = new ItemStack(ModItems.GOLDEN_CONTAINER, amount);
-         if (player.method_7270(emptyContainer)) {
+         if (player.giveItemStack(emptyContainer)) {
             LOGGER.info("返还空的黄金容器: {} 个", amount);
          } else {
             LOGGER.warn("无法返还空的黄金容器给玩家，背包可能已满");
-            player.method_7328(emptyContainer, false);
+            player.dropItem(emptyContainer, false);
          }
       }
    }

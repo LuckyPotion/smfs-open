@@ -48,53 +48,53 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
    public QuestHandledScreen(QuestScreenHandler handler, PlayerInventory inventory, Text title) {
       super(handler, inventory, title);
-      this.field_2792 = 256;
-      this.field_2779 = 166;
-      this.field_25268 = 10000;
-      this.field_25270 = 10000;
+      this.backgroundWidth = 256;
+      this.backgroundHeight = 166;
+      this.titleY = 10000;
+      this.playerInventoryTitleY = 10000;
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      int tabX = this.field_2776 + 20;
-      int tabY = this.field_2800 + 8;
+   protected void init() {
+      super.init();
+      int tabX = this.x + 20;
+      int tabY = this.y + 8;
       int tabWidth = 60;
       int tabHeight = 18;
       int totalTabWidth = tabWidth * 3;
-      int availableSpace = this.field_2792 - 20;
+      int availableSpace = this.backgroundWidth - 20;
       int tabSpacing = Math.max(5, (availableSpace - totalTabWidth) / 4);
-      this.activeTabButton = ButtonWidget.method_46430(Text.method_43471("quest.tab.active"), button -> this.updateTabSelection(this.activeTabButton))
-         .method_46434(tabX, tabY, tabWidth, tabHeight)
-         .method_46431();
-      this.completedTabButton = ButtonWidget.method_46430(Text.method_43471("quest.tab.completed"), button -> this.updateTabSelection(this.completedTabButton))
-         .method_46434(tabX + tabWidth + tabSpacing, tabY, tabWidth, tabHeight)
-         .method_46431();
-      this.availableTabButton = ButtonWidget.method_46430(Text.method_43471("quest.tab.available"), button -> this.updateTabSelection(this.availableTabButton))
-         .method_46434(tabX + (tabWidth + tabSpacing) * 2, tabY, tabWidth, tabHeight)
-         .method_46431();
-      this.method_37063(this.activeTabButton);
-      this.method_37063(this.completedTabButton);
-      this.method_37063(this.availableTabButton);
-      int scrollButtonX = this.field_2776 + this.field_2792 - 5;
-      int scrollButtonY = this.field_2800 + 40;
+      this.activeTabButton = ButtonWidget.builder(Text.translatable("quest.tab.active"), button -> this.updateTabSelection(this.activeTabButton))
+         .dimensions(tabX, tabY, tabWidth, tabHeight)
+         .build();
+      this.completedTabButton = ButtonWidget.builder(Text.translatable("quest.tab.completed"), button -> this.updateTabSelection(this.completedTabButton))
+         .dimensions(tabX + tabWidth + tabSpacing, tabY, tabWidth, tabHeight)
+         .build();
+      this.availableTabButton = ButtonWidget.builder(Text.translatable("quest.tab.available"), button -> this.updateTabSelection(this.availableTabButton))
+         .dimensions(tabX + (tabWidth + tabSpacing) * 2, tabY, tabWidth, tabHeight)
+         .build();
+      this.addDrawableChild(this.activeTabButton);
+      this.addDrawableChild(this.completedTabButton);
+      this.addDrawableChild(this.availableTabButton);
+      int scrollButtonX = this.x + this.backgroundWidth - 5;
+      int scrollButtonY = this.y + 40;
       int scrollButtonSize = 16;
-      this.scrollUpButton = ButtonWidget.method_46430(Text.method_43470("↑"), button -> {
+      this.scrollUpButton = ButtonWidget.builder(Text.literal("↑"), button -> {
          if (this.scrollOffset > 0) {
             this.scrollOffset--;
          }
-      }).method_46434(scrollButtonX, scrollButtonY, scrollButtonSize, scrollButtonSize).method_46431();
-      this.scrollDownButton = ButtonWidget.method_46430(Text.method_43470("↓"), button -> {
+      }).dimensions(scrollButtonX, scrollButtonY, scrollButtonSize, scrollButtonSize).build();
+      this.scrollDownButton = ButtonWidget.builder(Text.literal("↓"), button -> {
          if (this.scrollOffset < this.maxScrollOffset) {
             this.scrollOffset++;
          }
-      }).method_46434(scrollButtonX, scrollButtonY + scrollButtonSize + 2, scrollButtonSize, scrollButtonSize).method_46431();
-      this.method_37063(this.scrollUpButton);
-      this.method_37063(this.scrollDownButton);
+      }).dimensions(scrollButtonX, scrollButtonY + scrollButtonSize + 2, scrollButtonSize, scrollButtonSize).build();
+      this.addDrawableChild(this.scrollUpButton);
+      this.addDrawableChild(this.scrollDownButton);
       this.updateTabSelection(this.activeTabButton);
    }
 
-   public void method_25419() {
-      super.method_25419();
+   public void close() {
+      super.close();
    }
 
    public void refreshUI() {
@@ -109,39 +109,39 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
    private void updateTabSelection(ButtonWidget selectedTab) {
       for (ButtonWidget element : this.dynamicElements) {
-         this.method_37066(element);
+         this.remove(element);
       }
 
       this.dynamicElements.clear();
-      this.activeTabButton.method_25355(Text.method_43471("quest.tab.active"));
-      this.completedTabButton.method_25355(Text.method_43471("quest.tab.completed"));
-      this.availableTabButton.method_25355(Text.method_43471("quest.tab.available"));
+      this.activeTabButton.setMessage(Text.translatable("quest.tab.active"));
+      this.completedTabButton.setMessage(Text.translatable("quest.tab.completed"));
+      this.availableTabButton.setMessage(Text.translatable("quest.tab.available"));
       this.scrollOffset = 0;
       if (selectedTab == this.activeTabButton) {
-         this.activeTabButton.method_25355(Text.method_43470("▶ ").method_10852(Text.method_43471("quest.tab.active")));
-         PlayerEntity player = this.field_22787.field_1724;
+         this.activeTabButton.setMessage(Text.literal("▶ ").append(Text.translatable("quest.tab.active")));
+         PlayerEntity player = this.client.player;
          if (player != null) {
             NbtCompound questData = QuestManager.getQuestData(player);
             if (questData == null) {
                return;
             }
 
-            NbtList activeQuests = questData.method_10554("activeQuests", 10);
-            int x = (this.field_22789 - this.field_2792) / 2;
-            int y = (this.field_22790 - this.field_2779) / 2;
+            NbtList activeQuests = questData.getList("activeQuests", 10);
+            int x = (this.width - this.backgroundWidth) / 2;
+            int y = (this.height - this.backgroundHeight) / 2;
             int startIndex = Math.min(this.scrollOffset, Math.max(0, activeQuests.size() - 3));
             int endIndex = Math.min(startIndex + 3, activeQuests.size());
             this.maxScrollOffset = Math.max(0, activeQuests.size() - 3);
 
             for (int r = startIndex; r < endIndex; r++) {
                int questY = y + 40 + (r - startIndex) * 35;
-               NbtCompound quest = activeQuests.method_10602(r);
-               if (quest != null && quest.method_10545("status")) {
-                  int status = quest.method_10550("status");
+               NbtCompound quest = activeQuests.getCompound(r);
+               if (quest != null && quest.contains("status")) {
+                  int status = quest.getInt("status");
                   if (status == 1) {
-                     ButtonWidget submitButton = ButtonWidget.method_46430(Text.method_43471("screen.smfs.quest.complete"), button -> {
-                        String questId = quest.method_10558("id");
-                        String questType = quest.method_10558("type");
+                     ButtonWidget submitButton = ButtonWidget.builder(Text.translatable("screen.smfs.quest.complete"), button -> {
+                        String questId = quest.getString("id");
+                        String questType = quest.getString("type");
                         if ("seller_basic_collection".equals(questId)) {
                            this.handleSellerQuestSubmission(player, quest, questId);
                         } else if ("newbie".equals(questType)) {
@@ -157,32 +157,32 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
                         }
 
                         this.updateTabSelection(this.activeTabButton);
-                     }).method_46434(x + 160, questY + 20, 40, 14).method_46431();
-                     this.method_37063(submitButton);
+                     }).dimensions(x + 160, questY + 20, 40, 14).build();
+                     this.addDrawableChild(submitButton);
                      this.dynamicElements.add(submitButton);
                   }
                }
             }
          }
       } else if (selectedTab == this.completedTabButton) {
-         this.completedTabButton.method_25355(Text.method_43470("▶ ").method_10852(Text.method_43471("quest.tab.completed")));
-         PlayerEntity player = this.field_22787.field_1724;
+         this.completedTabButton.setMessage(Text.literal("▶ ").append(Text.translatable("quest.tab.completed")));
+         PlayerEntity player = this.client.player;
          if (player != null) {
             NbtCompound questData = QuestManager.getQuestData(player);
             if (questData == null) {
                return;
             }
 
-            NbtList completedQuests = questData.method_10554("completedQuests", 10);
+            NbtList completedQuests = questData.getList("completedQuests", 10);
             this.maxScrollOffset = Math.max(0, completedQuests.size() - 3);
          }
       } else if (selectedTab == this.availableTabButton) {
-         this.availableTabButton.method_25355(Text.method_43470("▶ ").method_10852(Text.method_43471("quest.tab.available")));
-         PlayerEntity player = this.field_22787.field_1724;
+         this.availableTabButton.setMessage(Text.literal("▶ ").append(Text.translatable("quest.tab.available")));
+         PlayerEntity player = this.client.player;
          if (player != null) {
             List<String[]> availableQuests = this.getAvailableQuests(player);
-            int x = (this.field_22789 - this.field_2792) / 2;
-            int y = (this.field_22790 - this.field_2779) / 2;
+            int x = (this.width - this.backgroundWidth) / 2;
+            int y = (this.height - this.backgroundHeight) / 2;
             int startIndex = Math.min(this.scrollOffset, Math.max(0, availableQuests.size() - 3));
             int endIndex = Math.min(startIndex + 3, availableQuests.size());
             this.maxScrollOffset = Math.max(0, availableQuests.size() - 3);
@@ -191,7 +191,7 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
                int questY = y + 40 + (k - startIndex) * 35;
                String[] questInfo = availableQuests.get(k);
                if (questInfo != null && questInfo.length >= 2) {
-                  ButtonWidget acceptButton = ButtonWidget.method_46430(Text.method_43471("screen.smfs.quest.accept"), button -> {
+                  ButtonWidget acceptButton = ButtonWidget.builder(Text.translatable("screen.smfs.quest.accept"), button -> {
                      String taskId = questInfo[1];
                      String taskType = questInfo[2];
                      String questTypeParam;
@@ -207,8 +207,8 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
                      ClientModNetwork.sendToServer(packet);
                      this.selectedTab = 0;
                      this.updateTabSelection(this.activeTabButton);
-                  }).method_46434(x + 160, questY + 20, 40, 14).method_46431();
-                  this.method_37063(acceptButton);
+                  }).dimensions(x + 160, questY + 20, 40, 14).build();
+                  this.addDrawableChild(acceptButton);
                   this.dynamicElements.add(acceptButton);
                }
             }
@@ -218,7 +218,7 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
    public void refreshQuestData() {
       this.dynamicElements.clear();
-      this.method_25426();
+      this.init();
    }
 
    private List<String[]> getAvailableQuests(PlayerEntity player) {
@@ -226,21 +226,21 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
       NbtCompound questData = QuestManager.getQuestData(player);
       List<String> completedQuestIds = new ArrayList<>();
       if (questData != null) {
-         NbtList completedQuests = questData.method_10554("completedQuests", 10);
+         NbtList completedQuests = questData.getList("completedQuests", 10);
 
          for (int m = 0; m < completedQuests.size(); m++) {
-            NbtCompound quest = completedQuests.method_10602(m);
-            completedQuestIds.add(quest.method_10558("id"));
+            NbtCompound quest = completedQuests.getCompound(m);
+            completedQuestIds.add(quest.getString("id"));
          }
       }
 
       List<String> activeQuestIds = new ArrayList<>();
       if (questData != null) {
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
+         NbtList activeQuests = questData.getList("activeQuests", 10);
 
          for (int n = 0; n < activeQuests.size(); n++) {
-            NbtCompound quest = activeQuests.method_10602(n);
-            activeQuestIds.add(quest.method_10558("id"));
+            NbtCompound quest = activeQuests.getCompound(n);
+            activeQuestIds.add(quest.getString("id"));
          }
       }
 
@@ -270,12 +270,12 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
       }
 
       if (DailyQuestManager.hasUnlockedDailyQuests(player)) {
-         NbtList availableQuestsList = questData.method_10554("availableQuests", 10);
+         NbtList availableQuestsList = questData.getList("availableQuests", 10);
 
          for (int i = 0; i < availableQuestsList.size(); i++) {
-            NbtCompound quest = availableQuestsList.method_10602(i);
-            String questId = quest.method_10558("id");
-            String questType = quest.method_10558("type");
+            NbtCompound quest = availableQuestsList.getCompound(i);
+            String questId = quest.getString("id");
+            String questType = quest.getString("type");
             if ("daily".equals(questType) && !completedQuestIds.contains(questId)) {
                QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
                if (template != null) {
@@ -286,12 +286,12 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
       }
 
       if (DailyQuestManager.hasUnlockedEventQuests(player)) {
-         NbtList availableQuestsList = questData.method_10554("availableQuests", 10);
+         NbtList availableQuestsList = questData.getList("availableQuests", 10);
 
          for (int i = 0; i < availableQuestsList.size(); i++) {
-            NbtCompound quest = availableQuestsList.method_10602(i);
-            String questId = quest.method_10558("id");
-            String questType = quest.method_10558("type");
+            NbtCompound quest = availableQuestsList.getCompound(i);
+            String questId = quest.getString("id");
+            String questType = quest.getString("type");
             if ("side".equals(questType) && !completedQuestIds.contains(questId)) {
                QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
                if (template != null) {
@@ -317,31 +317,31 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
    private void acceptDailyQuest(PlayerEntity player, String questId) {
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList availableQuests = questData.method_10554("availableQuests", 10);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList availableQuests = questData.getList("availableQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       NbtCompound acceptedQuest = null;
 
       for (int i = 0; i < availableQuests.size(); i++) {
-         NbtCompound quest = availableQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
+         NbtCompound quest = availableQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
             acceptedQuest = quest;
-            availableQuests.method_10536(i);
+            availableQuests.remove(i);
             break;
          }
       }
 
       if (acceptedQuest != null) {
-         acceptedQuest.method_10569("status", 1);
-         long startTime = this.field_22787.field_1687 != null ? this.field_22787.field_1687.method_8510() : 0L;
-         acceptedQuest.method_10544("startTime", startTime);
+         acceptedQuest.putInt("status", 1);
+         long startTime = this.client.world != null ? this.client.world.getTime() : 0L;
+         acceptedQuest.putLong("startTime", startTime);
          activeQuests.add(acceptedQuest);
-         questData.method_10566("availableQuests", availableQuests);
-         questData.method_10566("activeQuests", activeQuests);
+         questData.put("availableQuests", availableQuests);
+         questData.put("activeQuests", activeQuests);
          QuestManager.saveQuestData(player, questData);
          if (player instanceof ServerPlayerEntity serverPlayer) {
             QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
             if (template != null) {
-               serverPlayer.method_7353(Text.method_43470("§a日常任务开始: " + template.title), false);
+               serverPlayer.sendMessage(Text.literal("§a日常任务开始: " + template.title), false);
             }
          }
       }
@@ -349,31 +349,31 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
    private void acceptEventQuest(PlayerEntity player, String questId) {
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList availableQuests = questData.method_10554("availableQuests", 10);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
+      NbtList availableQuests = questData.getList("availableQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
       NbtCompound acceptedQuest = null;
 
       for (int i = 0; i < availableQuests.size(); i++) {
-         NbtCompound quest = availableQuests.method_10602(i);
-         if (quest.method_10558("id").equals(questId)) {
+         NbtCompound quest = availableQuests.getCompound(i);
+         if (quest.getString("id").equals(questId)) {
             acceptedQuest = quest;
-            availableQuests.method_10536(i);
+            availableQuests.remove(i);
             break;
          }
       }
 
       if (acceptedQuest != null) {
-         acceptedQuest.method_10569("status", 1);
-         long startTime = this.field_22787.field_1687 != null ? this.field_22787.field_1687.method_8510() : 0L;
-         acceptedQuest.method_10544("startTime", startTime);
+         acceptedQuest.putInt("status", 1);
+         long startTime = this.client.world != null ? this.client.world.getTime() : 0L;
+         acceptedQuest.putLong("startTime", startTime);
          activeQuests.add(acceptedQuest);
-         questData.method_10566("availableQuests", availableQuests);
-         questData.method_10566("activeQuests", activeQuests);
+         questData.put("availableQuests", availableQuests);
+         questData.put("activeQuests", activeQuests);
          QuestManager.saveQuestData(player, questData);
          if (player instanceof ServerPlayerEntity serverPlayer) {
             QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
             if (template != null) {
-               serverPlayer.method_7353(Text.method_43470("§a事件任务开始: " + template.title), false);
+               serverPlayer.sendMessage(Text.literal("§a事件任务开始: " + template.title), false);
             }
          }
       }
@@ -431,13 +431,11 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
    }
 
    private boolean hasGoldContainer(PlayerEntity player) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
 
-      for (int p = 0; p < inventory.method_5439(); p++) {
-         ItemStack stack = inventory.method_5438(p);
-         if (!stack.method_7960() && stack.method_7909() == ModItems.GOLDEN_CONTAINER && (!stack.method_7985() || !stack.method_7969().method_10577("IsHeavy"))
-            )
-          {
+      for (int p = 0; p < inventory.size(); p++) {
+         ItemStack stack = inventory.getStack(p);
+         if (!stack.isEmpty() && stack.getItem() == ModItems.GOLDEN_CONTAINER && (!stack.hasNbt() || !stack.getNbt().getBoolean("IsHeavy"))) {
             return true;
          }
       }
@@ -446,7 +444,7 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
    }
 
    private void handleItemSubmission(PlayerEntity player, NbtCompound quest, String itemId, int amount, boolean consume) {
-      String questId = quest.method_10558("id");
+      String questId = quest.getString("id");
       if ("newbie_world_days".equals(questId)) {
          this.handleQuestCompletion(player, quest, questId);
       } else {
@@ -457,7 +455,7 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
    }
 
    public void handleAcceptResult(String questId, boolean success, NbtCompound updatedQuestData) {
-      PlayerEntity player = this.field_22787.field_1724;
+      PlayerEntity player = this.client.player;
       if (player != null) {
          if (success) {
             if (updatedQuestData != null) {
@@ -466,39 +464,39 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
             this.selectedTab = 0;
             this.refreshUI();
-            if (this.field_22787.field_1724 != null) {
-               this.field_22787.field_1724.method_17356(ModSounds.QUEST_SUCCESS, SoundCategory.field_15250, 1.0F, 1.0F);
+            if (this.client.player != null) {
+               this.client.player.playSound(ModSounds.QUEST_SUCCESS, SoundCategory.MASTER, 1.0F, 1.0F);
             }
-         } else if (this.field_22787.field_1724 != null) {
-            this.field_22787.field_1724.method_17356(ModSounds.QUEST_FAILURE, SoundCategory.field_15250, 1.0F, 1.0F);
+         } else if (this.client.player != null) {
+            this.client.player.playSound(ModSounds.QUEST_FAILURE, SoundCategory.MASTER, 1.0F, 1.0F);
          }
       }
    }
 
    public void handleDetectionResult(String questId, String objectiveId, boolean success) {
-      PlayerEntity player = this.field_22787.field_1724;
+      PlayerEntity player = this.client.player;
       if (player != null) {
          NbtCompound questData = QuestManager.getQuestData(player);
          if (questData != null) {
-            NbtList activeQuests = questData.method_10554("activeQuests", 10);
+            NbtList activeQuests = questData.getList("activeQuests", 10);
             NbtCompound targetQuest = null;
 
             for (int i = 0; i < activeQuests.size(); i++) {
-               NbtCompound quest = activeQuests.method_10602(i);
-               if (quest.method_10558("id").equals(questId)) {
+               NbtCompound quest = activeQuests.getCompound(i);
+               if (quest.getString("id").equals(questId)) {
                   targetQuest = quest;
                   break;
                }
             }
 
             if (targetQuest == null) {
-               NbtList completedQuests = questData.method_10554("completedQuests", 10);
+               NbtList completedQuests = questData.getList("completedQuests", 10);
 
                for (int i = 0; i < completedQuests.size(); i++) {
-                  NbtCompound quest = completedQuests.method_10602(i);
-                  if (quest.method_10558("id").equals(questId)) {
-                     if (this.field_22787 != null) {
-                        this.field_22787.execute(() -> this.updateTabSelection(this.activeTabButton));
+                  NbtCompound quest = completedQuests.getCompound(i);
+                  if (quest.getString("id").equals(questId)) {
+                     if (this.client != null) {
+                        this.client.execute(() -> this.updateTabSelection(this.activeTabButton));
                      }
 
                      return;
@@ -507,22 +505,22 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
             } else {
                if (success) {
                   this.handleQuestCompletion(player, targetQuest, questId);
-                  if (this.field_22787 != null) {
-                     this.field_22787.execute(() -> {
-                        if (this.field_22787.field_1724 != null) {
-                           this.field_22787.field_1724.method_17356(ModSounds.QUEST_SUCCESS, SoundCategory.field_15250, 1.0F, 1.0F);
+                  if (this.client != null) {
+                     this.client.execute(() -> {
+                        if (this.client.player != null) {
+                           this.client.player.playSound(ModSounds.QUEST_SUCCESS, SoundCategory.MASTER, 1.0F, 1.0F);
                         }
                      });
                   }
-               } else if (this.field_22787 != null) {
-                  this.field_22787.execute(() -> {
-                     this.field_22787.method_1507(null);
+               } else if (this.client != null) {
+                  this.client.execute(() -> {
+                     this.client.setScreen(null);
                      if (player instanceof ServerPlayerEntity serverPlayer) {
-                        serverPlayer.method_7353(Text.method_43470("§c任务条件未满足，无法提交任务！"), false);
+                        serverPlayer.sendMessage(Text.literal("§c任务条件未满足，无法提交任务！"), false);
                      }
 
-                     if (this.field_22787.field_1724 != null) {
-                        this.field_22787.field_1724.method_17356(ModSounds.QUEST_FAILURE, SoundCategory.field_15250, 1.0F, 1.0F);
+                     if (this.client.player != null) {
+                        this.client.player.playSound(ModSounds.QUEST_FAILURE, SoundCategory.MASTER, 1.0F, 1.0F);
                      }
                   });
                }
@@ -533,23 +531,23 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
    public void handleQuestCompletion(PlayerEntity player, NbtCompound quest, String questId) {
       LOGGER.info("处理任务完成逻辑，questId: {}", questId);
-      quest.method_10569("status", 2);
-      quest.method_10544("completeTime", System.currentTimeMillis());
+      quest.putInt("status", 2);
+      quest.putLong("completeTime", System.currentTimeMillis());
       NbtCompound questData = QuestManager.getQuestData(player);
-      NbtList activeQuests = questData.method_10554("activeQuests", 10);
-      NbtList completedQuests = questData.method_10554("completedQuests", 10);
+      NbtList activeQuests = questData.getList("activeQuests", 10);
+      NbtList completedQuests = questData.getList("completedQuests", 10);
 
       for (int q = 0; q < activeQuests.size(); q++) {
-         NbtCompound activeQuest = activeQuests.method_10602(q);
-         if (activeQuest.method_10558("id").equals(questId)) {
-            activeQuests.method_10536(q);
+         NbtCompound activeQuest = activeQuests.getCompound(q);
+         if (activeQuest.getString("id").equals(questId)) {
+            activeQuests.remove(q);
             break;
          }
       }
 
       completedQuests.add(quest);
-      questData.method_10566("activeQuests", activeQuests);
-      questData.method_10566("completedQuests", completedQuests);
+      questData.put("activeQuests", activeQuests);
+      questData.put("completedQuests", completedQuests);
       QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questId);
 
       for (QuestManager.QuestTemplate nextTemplate : QuestManager.QUEST_TEMPLATES.values()) {
@@ -562,7 +560,7 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
       QuestManager.giveQuestRewards(player, questId);
       boolean hasUnlockedNextQuest = false;
       if (player instanceof ServerPlayerEntity serverPlayer) {
-         serverPlayer.method_7353(Text.method_43470("§a成功提交物品！任务已完成！奖励已发放！"), false);
+         serverPlayer.sendMessage(Text.literal("§a成功提交物品！任务已完成！奖励已发放！"), false);
 
          for (QuestManager.QuestTemplate nextTemplate : QuestManager.QUEST_TEMPLATES.values()) {
             if (nextTemplate.prerequisites.contains(questId)) {
@@ -572,47 +570,47 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
          }
 
          if (hasUnlockedNextQuest) {
-            serverPlayer.method_7353(Text.method_43470("§b已解锁后续任务！"), false);
+            serverPlayer.sendMessage(Text.literal("§b已解锁后续任务！"), false);
          }
 
          if ("newbie_craft_gold_container".equals(questId)) {
             LOGGER.info("玩家完成黄金容器任务，立即分配日常任务");
             DailyQuestManager.assignNewDailyQuests(player);
-            serverPlayer.method_7353(Text.method_43470("§a日常任务系统已解锁！"), false);
+            serverPlayer.sendMessage(Text.literal("§a日常任务系统已解锁！"), false);
             LOGGER.info("黄金容器任务完成后已强制分配日常任务");
          }
       }
 
-      if (this.field_22787 != null) {
-         this.field_22787.execute(() -> this.updateTabSelection(this.activeTabButton));
+      if (this.client != null) {
+         this.client.execute(() -> this.updateTabSelection(this.activeTabButton));
       }
    }
 
-   protected void method_2389(DrawContext context, float delta, int mouseX, int mouseY) {
-      RenderSystem.setShader(GameRenderer::method_34542);
+   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+      RenderSystem.setShader(GameRenderer::getPositionTexProgram);
       RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
       RenderSystem.setShaderTexture(0, TEXTURE);
-      int x = (this.field_22789 - this.field_2792) / 2;
-      int y = (this.field_22790 - this.field_2779) / 2;
-      context.method_25302(TEXTURE, x, y, 0, 0, this.field_2792, this.field_2779);
-      this.scrollUpButton.field_22764 = this.maxScrollOffset > 0;
-      this.scrollDownButton.field_22764 = this.maxScrollOffset > 0;
+      int x = (this.width - this.backgroundWidth) / 2;
+      int y = (this.height - this.backgroundHeight) / 2;
+      context.drawTexture(TEXTURE, x, y, 0, 0, this.backgroundWidth, this.backgroundHeight);
+      this.scrollUpButton.visible = this.maxScrollOffset > 0;
+      this.scrollDownButton.visible = this.maxScrollOffset > 0;
       int separatorY = y + 32;
-      context.method_25294(x + 10, separatorY, x + this.field_2792 - 10, separatorY + 1, -12566464);
-      PlayerEntity player = this.field_22787.field_1724;
+      context.fill(x + 10, separatorY, x + this.backgroundWidth - 10, separatorY + 1, -12566464);
+      PlayerEntity player = this.client.player;
       if (player != null) {
          NbtCompound questData = QuestManager.getQuestData(player);
          if (questData == null) {
             return;
          }
 
-         NbtList activeQuests = questData.method_10554("activeQuests", 10);
-         NbtList completedQuests = questData.method_10554("completedQuests", 10);
-         if (this.activeTabButton.method_25369().getString().startsWith("▶")) {
+         NbtList activeQuests = questData.getList("activeQuests", 10);
+         NbtList completedQuests = questData.getList("completedQuests", 10);
+         if (this.activeTabButton.getMessage().getString().startsWith("▶")) {
             if (activeQuests.size() == 0) {
-               int noQuestX = x + (this.field_2792 - this.field_22793.method_27525(Text.method_43471("screen.smfs.quest.no_quests"))) / 2;
-               int noQuestY = y + this.field_2779 / 2;
-               context.method_51439(this.field_22793, Text.method_43471("screen.smfs.quest.no_quests"), noQuestX, noQuestY, 8421504, false);
+               int noQuestX = x + (this.backgroundWidth - this.textRenderer.getWidth(Text.translatable("screen.smfs.quest.no_quests"))) / 2;
+               int noQuestY = y + this.backgroundHeight / 2;
+               context.drawText(this.textRenderer, Text.translatable("screen.smfs.quest.no_quests"), noQuestX, noQuestY, 8421504, false);
             } else {
                int startIndex = Math.min(this.scrollOffset, Math.max(0, activeQuests.size() - 3));
                int endIndex = Math.min(startIndex + 3, activeQuests.size());
@@ -620,29 +618,29 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
                for (int m = startIndex; m < endIndex; m++) {
                   int questY = y + 40 + (m - startIndex) * 35;
-                  NbtCompound quest = activeQuests.method_10602(m);
-                  if (quest != null && quest.method_10545("title") && quest.method_10545("status")) {
-                     String title = quest.method_10558("title");
-                     int status = quest.method_10550("status");
+                  NbtCompound quest = activeQuests.getCompound(m);
+                  if (quest != null && quest.contains("title") && quest.contains("status")) {
+                     String title = quest.getString("title");
+                     int status = quest.getInt("status");
                      RenderSystem.setShaderTexture(0, CARD_TEXTURE);
                      int cardType = status == 1 ? 0 : 1;
-                     int cardX = x + (this.field_2792 - 205) / 2;
-                     context.method_25290(CARD_TEXTURE, cardX, questY - 2, cardType * 205, 0.0F, 205, 40, 256, 256);
+                     int cardX = x + (this.backgroundWidth - 205) / 2;
+                     context.drawTexture(CARD_TEXTURE, cardX, questY - 2, cardType * 205, 0.0F, 205, 40, 256, 256);
                      int textX = cardX + 5;
-                     context.method_51439(this.field_22793, Text.method_43470(title), textX, questY + 10, 16777215, false);
-                     if (quest.method_10545("description")) {
-                        String description = quest.method_10558("description");
+                     context.drawText(this.textRenderer, Text.literal(title), textX, questY + 10, 16777215, false);
+                     if (quest.contains("description")) {
+                        String description = quest.getString("description");
                         if (description.length() > 20) {
                            description = description.substring(0, 17) + "...";
                         }
 
-                        context.method_51439(this.field_22793, Text.method_43470(description), textX, questY + 20, 11184810, false);
+                        context.drawText(this.textRenderer, Text.literal(description), textX, questY + 20, 11184810, false);
                      }
 
                      String questTypeText = "";
-                     if (quest.method_10545("type")) {
-                        String questType = quest.method_10558("type");
-                        if ("main".equals(questType) && quest.method_10545("isNewbieQuest") && quest.method_10577("isNewbieQuest")) {
+                     if (quest.contains("type")) {
+                        String questType = quest.getString("type");
+                        if ("main".equals(questType) && quest.contains("isNewbieQuest") && quest.getBoolean("isNewbieQuest")) {
                            questTypeText = "新手任务";
                         } else {
                            switch (questType) {
@@ -665,15 +663,15 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
                      }
 
                      int typeX = x + 160;
-                     context.method_51439(this.field_22793, Text.method_43470(questTypeText), typeX, questY + 10, 16776960, false);
+                     context.drawText(this.textRenderer, Text.literal(questTypeText), typeX, questY + 10, 16776960, false);
                   }
                }
             }
-         } else if (this.completedTabButton.method_25369().getString().startsWith("▶")) {
+         } else if (this.completedTabButton.getMessage().getString().startsWith("▶")) {
             if (completedQuests.size() == 0) {
-               int noQuestX = x + (this.field_2792 - this.field_22793.method_27525(Text.method_43471("screen.smfs.quest.no_completed"))) / 2;
-               int noQuestY = y + this.field_2779 / 2;
-               context.method_51439(this.field_22793, Text.method_43471("screen.smfs.quest.no_completed"), noQuestX, noQuestY, 8421504, false);
+               int noQuestX = x + (this.backgroundWidth - this.textRenderer.getWidth(Text.translatable("screen.smfs.quest.no_completed"))) / 2;
+               int noQuestY = y + this.backgroundHeight / 2;
+               context.drawText(this.textRenderer, Text.translatable("screen.smfs.quest.no_completed"), noQuestX, noQuestY, 8421504, false);
             } else {
                int startIndex = Math.min(this.scrollOffset, Math.max(0, completedQuests.size() - 3));
                int endIndex = Math.min(startIndex + 3, completedQuests.size());
@@ -681,35 +679,35 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
 
                for (int n = startIndex; n < endIndex; n++) {
                   int questY = y + 40 + (n - startIndex) * 35;
-                  NbtCompound quest = completedQuests.method_10602(n);
-                  if (quest != null && quest.method_10545("title") && quest.method_10545("completeTime")) {
-                     String title = quest.method_10558("title");
-                     long completeTime = quest.method_10537("completeTime");
+                  NbtCompound quest = completedQuests.getCompound(n);
+                  if (quest != null && quest.contains("title") && quest.contains("completeTime")) {
+                     String title = quest.getString("title");
+                     long completeTime = quest.getLong("completeTime");
                      RenderSystem.setShaderTexture(0, CARD_TEXTURE);
-                     int cardX = x + (this.field_2792 - 205) / 2;
-                     context.method_25290(CARD_TEXTURE, cardX, questY - 2, 0.0F, 82.0F, 205, 40, 256, 256);
+                     int cardX = x + (this.backgroundWidth - 205) / 2;
+                     context.drawTexture(CARD_TEXTURE, cardX, questY - 2, 0.0F, 82.0F, 205, 40, 256, 256);
                      int textX = cardX + 5;
-                     context.method_51439(this.field_22793, Text.method_43470(title), textX, questY + 10, 16777215, false);
-                     if (quest.method_10545("description")) {
-                        String description = quest.method_10558("description");
+                     context.drawText(this.textRenderer, Text.literal(title), textX, questY + 10, 16777215, false);
+                     if (quest.contains("description")) {
+                        String description = quest.getString("description");
                         if (description.length() > 20) {
                            description = description.substring(0, 17) + "...";
                         }
 
-                        context.method_51439(this.field_22793, Text.method_43470(description), textX, questY + 20, 11184810, false);
+                        context.drawText(this.textRenderer, Text.literal(description), textX, questY + 20, 11184810, false);
                      }
 
                      String timeText = "已完成";
-                     context.method_51439(this.field_22793, Text.method_43470(timeText), x + 165, questY + 20, 65280, false);
+                     context.drawText(this.textRenderer, Text.literal(timeText), x + 165, questY + 20, 65280, false);
                   }
                }
             }
-         } else if (this.availableTabButton.method_25369().getString().startsWith("▶") && player != null) {
+         } else if (this.availableTabButton.getMessage().getString().startsWith("▶") && player != null) {
             List<String[]> availableQuests = this.getAvailableQuests(player);
             if (availableQuests.size() == 0) {
-               int noQuestX = x + (this.field_2792 - this.field_22793.method_27525(Text.method_43471("screen.smfs.quest.no_available"))) / 2;
-               int noQuestY = y + this.field_2779 / 2;
-               context.method_51439(this.field_22793, Text.method_43471("screen.smfs.quest.no_available"), noQuestX, noQuestY, 8421504, false);
+               int noQuestX = x + (this.backgroundWidth - this.textRenderer.getWidth(Text.translatable("screen.smfs.quest.no_available"))) / 2;
+               int noQuestY = y + this.backgroundHeight / 2;
+               context.drawText(this.textRenderer, Text.translatable("screen.smfs.quest.no_available"), noQuestX, noQuestY, 8421504, false);
             } else {
                int startIndex = Math.min(this.scrollOffset, Math.max(0, availableQuests.size() - 3));
                int endIndex = Math.min(startIndex + 3, availableQuests.size());
@@ -720,24 +718,24 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
                   String[] questInfo = availableQuests.get(p);
                   if (questInfo != null && questInfo.length >= 3) {
                      RenderSystem.setShaderTexture(0, CARD_TEXTURE);
-                     int cardX = x + (this.field_2792 - 205) / 2;
-                     context.method_25290(CARD_TEXTURE, cardX, questY - 2, 0.0F, 41.0F, 205, 40, 256, 256);
+                     int cardX = x + (this.backgroundWidth - 205) / 2;
+                     context.drawTexture(CARD_TEXTURE, cardX, questY - 2, 0.0F, 41.0F, 205, 40, 256, 256);
                      QuestManager.QuestTemplate template = QuestManager.QUEST_TEMPLATES.get(questInfo[1]);
                      int textX = cardX + 5;
                      if (template != null) {
-                        context.method_51439(this.field_22793, Text.method_43470(template.getTitle()), textX, questY + 10, 16777215, false);
+                        context.drawText(this.textRenderer, Text.literal(template.getTitle()), textX, questY + 10, 16777215, false);
                         String description = template.getDescription();
                         if (description.length() > 20) {
                            description = description.substring(0, 17) + "...";
                         }
 
-                        context.method_51439(this.field_22793, Text.method_43470(description), textX, questY + 20, 11184810, false);
+                        context.drawText(this.textRenderer, Text.literal(description), textX, questY + 20, 11184810, false);
                      } else {
-                        context.method_51439(this.field_22793, Text.method_43470(questInfo[0]), textX, questY + 10, 16777215, false);
+                        context.drawText(this.textRenderer, Text.literal(questInfo[0]), textX, questY + 10, 16777215, false);
                      }
 
                      int typeX = x + 160;
-                     context.method_51439(this.field_22793, Text.method_43470(questInfo[2]), typeX, questY + 10, 16776960, false);
+                     context.drawText(this.textRenderer, Text.literal(questInfo[2]), typeX, questY + 10, 16776960, false);
                   }
                }
             }
@@ -745,19 +743,19 @@ public class QuestHandledScreen extends HandledScreen<QuestScreenHandler> {
       }
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
-      this.method_2380(context, mouseX, mouseY);
-      if (this.activeTabButton.method_25405(mouseX, mouseY)) {
-         context.method_51438(this.field_22793, Text.method_43471("quest.tab.active.tooltip"), mouseX, mouseY);
-      } else if (this.completedTabButton.method_25405(mouseX, mouseY)) {
-         context.method_51438(this.field_22793, Text.method_43471("quest.tab.completed.tooltip"), mouseX, mouseY);
-      } else if (this.availableTabButton.method_25405(mouseX, mouseY)) {
-         context.method_51438(this.field_22793, Text.method_43471("quest.tab.available.tooltip"), mouseX, mouseY);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
+      this.drawMouseoverTooltip(context, mouseX, mouseY);
+      if (this.activeTabButton.isMouseOver(mouseX, mouseY)) {
+         context.drawTooltip(this.textRenderer, Text.translatable("quest.tab.active.tooltip"), mouseX, mouseY);
+      } else if (this.completedTabButton.isMouseOver(mouseX, mouseY)) {
+         context.drawTooltip(this.textRenderer, Text.translatable("quest.tab.completed.tooltip"), mouseX, mouseY);
+      } else if (this.availableTabButton.isMouseOver(mouseX, mouseY)) {
+         context.drawTooltip(this.textRenderer, Text.translatable("quest.tab.available.tooltip"), mouseX, mouseY);
       }
    }
 
-   protected void method_2388(DrawContext context, int mouseX, int mouseY) {
+   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
    }
 }

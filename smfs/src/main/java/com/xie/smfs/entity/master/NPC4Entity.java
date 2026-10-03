@@ -24,26 +24,26 @@ public class NPC4Entity extends GhostMasterEntity {
       this.setSpiritualDamage(20);
       this.setSpiritualResistance(20);
       this.setRecoveryFactor(0.04F);
-      this.method_5665(Text.method_43470("§6驭鬼者"));
-      this.method_5880(true);
+      this.setCustomName(Text.literal("§6驭鬼者"));
+      this.setCustomNameVisible(true);
       this.faction = PlayerFaction.FOLK_GHOST_MASTER;
    }
 
    public static Builder createNPC4Attributes() {
-      return MobEntity.method_26828()
-         .method_26868(EntityAttributes.field_23716, 500.0)
-         .method_26868(EntityAttributes.field_23719, 0.3)
-         .method_26868(EntityAttributes.field_23721, 10.0)
-         .method_26868(EntityAttributes.field_23717, 16.0);
+      return MobEntity.createMobAttributes()
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 500.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10.0)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 16.0);
    }
 
    @Override
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
    @Override
-   public boolean method_5810() {
+   public boolean isPushable() {
       return false;
    }
 
@@ -53,9 +53,9 @@ public class NPC4Entity extends GhostMasterEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608() && this.method_5968() != null) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient() && this.getTarget() != null) {
       }
    }
 
@@ -64,7 +64,7 @@ public class NPC4Entity extends GhostMasterEntity {
       if (!this.tradeOffersInitialized) {
          this.tradeOffers = new TradeOfferList();
          ItemStack filthyFruitInput = new ItemStack(ModItems.FILTHY_FRUIT, 1);
-         ItemStack goldIngotOutput = new ItemStack(Items.field_8695, 1);
+         ItemStack goldIngotOutput = new ItemStack(Items.GOLD_INGOT, 1);
          this.tradeOffers.add(new TradeOffer(filthyFruitInput, goldIngotOutput, 12, 3, 0.05F));
          this.tradeOffersInitialized = true;
       }

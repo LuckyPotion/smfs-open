@@ -26,30 +26,30 @@ public class FoodGhostEntity extends GhostEntity {
 
    @Override
    public boolean shouldAttackPlayer(PlayerEntity player) {
-      return player.method_6115() && player.method_6030().method_19267();
+      return player.isUsingItem() && player.getActiveItem().isFood();
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (this.isHasGhostDomain() && this.isGhostDomainEnabled() && this.field_6012 % 20 == 0) {
+   public void tick() {
+      super.tick();
+      if (this.isHasGhostDomain() && this.isGhostDomainEnabled() && this.age % 20 == 0) {
          List<PlayerEntity> players = new ArrayList<>();
-         MinecraftServer server = this.method_37908().method_8503();
+         MinecraftServer server = this.getWorld().getServer();
          if (server != null) {
-            PlayerManager playerManager = server.method_3760();
+            PlayerManager playerManager = server.getPlayerManager();
 
-            for (PlayerEntity player : playerManager.method_14571()) {
-               double distanceSquared = (player.method_23317() - this.method_23317()) * (player.method_23317() - this.method_23317())
-                  + (player.method_23318() - this.method_23318()) * (player.method_23318() - this.method_23318())
-                  + (player.method_23321() - this.method_23321()) * (player.method_23321() - this.method_23321());
-               if (distanceSquared <= 4096.0 && player.method_5805()) {
+            for (PlayerEntity player : playerManager.getPlayerList()) {
+               double distanceSquared = (player.getX() - this.getX()) * (player.getX() - this.getX())
+                  + (player.getY() - this.getY()) * (player.getY() - this.getY())
+                  + (player.getZ() - this.getZ()) * (player.getZ() - this.getZ());
+               if (distanceSquared <= 4096.0 && player.isAlive()) {
                   players.add(player);
                }
             }
          }
 
          for (PlayerEntity player : players) {
-            player.method_37222(new StatusEffectInstance(StatusEffects.field_5903, 100, 0), this);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 100, 0), this);
          }
       }
    }

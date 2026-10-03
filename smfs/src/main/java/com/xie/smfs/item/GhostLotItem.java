@@ -35,7 +35,7 @@ public class GhostLotItem extends Item {
    }
 
    public static void tickPendingResults(ServerWorld world) {
-      long currentTime = world.method_8510();
+      long currentTime = world.getTime();
       pendingResults.entrySet().removeIf(entry -> {
          GhostLotItem.PendingResult result = entry.getValue();
          if (currentTime >= result.applyTime) {
@@ -47,77 +47,63 @@ public class GhostLotItem extends Item {
       });
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (!world.field_9236 && user instanceof ServerPlayerEntity serverPlayer) {
-         if (user.method_7357().method_7904(this)) {
-            return TypedActionResult.method_22430(stack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+         if (user.getItemCooldownManager().isCoolingDown(this)) {
+            return TypedActionResult.pass(stack);
          } else if (this.hasUsedToday(stack, world)) {
-            serverPlayer.method_7353(Text.method_43471("item.smfs.ghost_lot.already_used"), false);
-            return TypedActionResult.method_22430(stack);
+            serverPlayer.sendMessage(Text.translatable("item.smfs.ghost_lot.already_used"), false);
+            return TypedActionResult.pass(stack);
          } else {
-            boolean isLifeLot = world.method_8409().method_43056();
+            boolean isLifeLot = world.getRandom().nextBoolean();
             GhostLotFlipS2CPacket.send(serverPlayer, isLifeLot);
-            world.method_43128(
+            world.playSound(
                null,
-               serverPlayer.method_23317(),
-               serverPlayer.method_23318(),
-               serverPlayer.method_23321(),
-               SoundEvents.field_17484,
-               SoundCategory.field_15248,
+               serverPlayer.getX(),
+               serverPlayer.getY(),
+               serverPlayer.getZ(),
+               SoundEvents.UI_CARTOGRAPHY_TABLE_TAKE_RESULT,
+               SoundCategory.PLAYERS,
                1.0F,
                0.8F
             );
-            serverPlayer.method_7353(Text.method_43471("item.smfs.ghost_lot.drawing"), false);
+            serverPlayer.sendMessage(Text.translatable("item.smfs.ghost_lot.drawing"), false);
             this.markUsedToday(stack, world);
-            user.method_7357().method_7906(this, 20);
+            user.getItemCooldownManager().set(this, 20);
             ServerWorld serverWorld = (ServerWorld)world;
-            long applyTime = serverWorld.method_8510() + 40L;
-            pendingResults.put(serverPlayer.method_5667(), new GhostLotItem.PendingResult(serverPlayer, isLifeLot, applyTime));
-            return TypedActionResult.method_22427(stack);
+            long applyTime = serverWorld.getTime() + 40L;
+            pendingResults.put(serverPlayer.getUuid(), new GhostLotItem.PendingResult(serverPlayer, isLifeLot, applyTime));
+            return TypedActionResult.success(stack);
          }
       } else {
-         return TypedActionResult.method_22430(stack);
+         return TypedActionResult.pass(stack);
       }
    }
 
    private static void applyLotResult(ServerPlayerEntity serverPlayer, boolean isLifeLot, World world) {
-      if (serverPlayer.method_5805()) {
+      if (serverPlayer.isAlive()) {
          if (isLifeLot) {
-            serverPlayer.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_IMMUNITY, 3600, 0, false, true, true));
-            serverPlayer.method_7353(Text.method_43471("item.smfs.ghost_lot.life_sign"), false);
-            world.method_43128(
-               null,
-               serverPlayer.method_23317(),
-               serverPlayer.method_23318(),
-               serverPlayer.method_23321(),
-               SoundEvents.field_15119,
-               SoundCategory.field_15248,
-               1.0F,
-               1.5F
+            serverPlayer.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_IMMUNITY, 3600, 0, false, true, true));
+            serverPlayer.sendMessage(Text.translatable("item.smfs.ghost_lot.life_sign"), false);
+            world.playSound(
+               null, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(), SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.PLAYERS, 1.0F, 1.5F
             );
          } else {
-            serverPlayer.method_5643(ModDamageSources.ghost(world), 5500.0F);
-            serverPlayer.method_7353(Text.method_43471("item.smfs.ghost_lot.death_sign"), false);
-            world.method_43128(
-               null,
-               serverPlayer.method_23317(),
-               serverPlayer.method_23318(),
-               serverPlayer.method_23321(),
-               SoundEvents.field_14792,
-               SoundCategory.field_15248,
-               0.5F,
-               1.0F
+            serverPlayer.damage(ModDamageSources.ghost(world), 5500.0F);
+            serverPlayer.sendMessage(Text.translatable("item.smfs.ghost_lot.death_sign"), false);
+            world.playSound(
+               null, serverPlayer.getX(), serverPlayer.getY(), serverPlayer.getZ(), SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.PLAYERS, 0.5F, 1.0F
             );
          }
       }
    }
 
    private boolean hasUsedToday(ItemStack stack, World world) {
-      NbtCompound nbt = stack.method_7948();
-      if (nbt.method_10545("LastUsedDay")) {
-         long lastUsedDay = nbt.method_10537("LastUsedDay");
-         long currentDay = world.method_8532() / 24000L;
+      NbtCompound nbt = stack.getOrCreateNbt();
+      if (nbt.contains("LastUsedDay")) {
+         long lastUsedDay = nbt.getLong("LastUsedDay");
+         long currentDay = world.getTimeOfDay() / 24000L;
          return lastUsedDay == currentDay;
       } else {
          return false;
@@ -125,21 +111,21 @@ public class GhostLotItem extends Item {
    }
 
    private void markUsedToday(ItemStack stack, World world) {
-      NbtCompound nbt = stack.method_7948();
-      long currentDay = world.method_8532() / 24000L;
-      nbt.method_10544("LastUsedDay", currentDay);
+      NbtCompound nbt = stack.getOrCreateNbt();
+      long currentDay = world.getTimeOfDay() / 24000L;
+      nbt.putLong("LastUsedDay", currentDay);
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_lot.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_lot.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_lot.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_lot.effect.life_sign"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_lot.effect.death_sign"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_lot.effect.daily"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_lot.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_lot.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_lot.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_lot.effect.life_sign"));
+      tooltip.add(Text.translatable("item.smfs.ghost_lot.effect.death_sign"));
+      tooltip.add(Text.translatable("item.smfs.ghost_lot.effect.daily"));
       if (world != null && this.hasUsedToday(stack, world)) {
-         tooltip.add(Text.method_43471("item.smfs.ghost_lot.used_today"));
+         tooltip.add(Text.translatable("item.smfs.ghost_lot.used_today"));
       }
    }
 

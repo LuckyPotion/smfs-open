@@ -15,7 +15,7 @@ public abstract class WorldMixin {
    @Inject(method = "getRainGradient", at = @At("HEAD"), cancellable = true)
    private void smfs$forceGhostDreamRainGradient(float delta, CallbackInfoReturnable<Float> cir) {
       World world = (World)this;
-      if (world.method_27983() == Smfs.GHOST_DREAM_DIMENSION) {
+      if (world.getRegistryKey() == Smfs.GHOST_DREAM_DIMENSION) {
          cir.setReturnValue(1.0F);
       }
    }

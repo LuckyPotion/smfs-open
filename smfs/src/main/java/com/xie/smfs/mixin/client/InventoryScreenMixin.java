@@ -33,20 +33,20 @@ public abstract class InventoryScreenMixin extends HandledScreen<PlayerScreenHan
 
    @Inject(method = "init", at = @At("TAIL"))
    private void addGhostControlButton(CallbackInfo ci) {
-      int ghostButtonX = this.field_2776 + 140;
-      int ghostButtonY = this.field_2800 + 60;
-      ButtonWidget ghostControlButton = ButtonWidget.method_46430(Text.method_43471("button.smfs.ghost_control"), button -> {
-         if (this.field_22787 != null && this.field_22787.field_1724 != null) {
+      int ghostButtonX = this.x + 140;
+      int ghostButtonY = this.y + 60;
+      ButtonWidget ghostControlButton = ButtonWidget.builder(Text.translatable("button.smfs.ghost_control"), button -> {
+         if (this.client != null && this.client.player != null) {
             try {
                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-               this.field_22787.field_1724.field_3944.method_2883(new CustomPayloadC2SPacket(OPEN_GHOST_SCREEN_PACKET, buf));
+               this.client.player.networkHandler.sendPacket(new CustomPayloadC2SPacket(OPEN_GHOST_SCREEN_PACKET, buf));
             } catch (Exception e) {
                LOGGER.error("发送数据包时发生异常: ", e);
             }
          } else {
             LOGGER.warn("客户端或玩家对象为空，无法发送数据包");
          }
-      }).method_46433(ghostButtonX, ghostButtonY).method_46437(25, 18).method_46431();
-      this.method_37063(ghostControlButton);
+      }).position(ghostButtonX, ghostButtonY).size(25, 18).build();
+      this.addDrawableChild(ghostControlButton);
    }
 }

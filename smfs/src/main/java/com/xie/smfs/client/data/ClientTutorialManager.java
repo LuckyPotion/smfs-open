@@ -34,10 +34,10 @@ public class ClientTutorialManager extends TutorialManager {
 
    @Override
    public int calculateCurrentDay() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      World world = client.field_1687;
+      MinecraftClient client = MinecraftClient.getInstance();
+      World world = client.world;
       if (world != null) {
-         long totalTime = world.method_8510();
+         long totalTime = world.getTime();
          int day = (int)(totalTime / 24000L) + 1;
          return Math.max(day, 1);
       } else {
@@ -51,9 +51,9 @@ public class ClientTutorialManager extends TutorialManager {
       this.tutorials.clear();
 
       try {
-         ResourceManager resourceManager = MinecraftClient.method_1551().method_1478();
+         ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
          Identifier tutorialResource = new Identifier("smfs", "tutorials/tutorials.json");
-         if (resourceManager.method_14486(tutorialResource).isPresent()) {
+         if (resourceManager.getResource(tutorialResource).isPresent()) {
             InputStreamReader reader = new InputStreamReader(resourceManager.open(tutorialResource), StandardCharsets.UTF_8);
             Type tutorialListType = (new TypeToken<List<TutorialManager.TutorialEntry>>() {}).getType();
             List<TutorialManager.TutorialEntry> loadedTutorials = new Gson().fromJson(reader, tutorialListType);
@@ -74,9 +74,9 @@ public class ClientTutorialManager extends TutorialManager {
       this.eventStories.clear();
 
       try {
-         ResourceManager resourceManager = MinecraftClient.method_1551().method_1478();
+         ResourceManager resourceManager = MinecraftClient.getInstance().getResourceManager();
          Identifier eventResource = new Identifier("smfs", "tutorials/event_stories.json");
-         if (resourceManager.method_14486(eventResource).isPresent()) {
+         if (resourceManager.getResource(eventResource).isPresent()) {
             InputStreamReader reader = new InputStreamReader(resourceManager.open(eventResource), StandardCharsets.UTF_8);
             Type eventListType = (new TypeToken<List<EventStoryEntry>>() {}).getType();
             List<EventStoryEntry> loadedEvents = new Gson().fromJson(reader, eventListType);
@@ -94,9 +94,9 @@ public class ClientTutorialManager extends TutorialManager {
 
    @Override
    protected String getPlayerName() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      PlayerEntity player = client.field_1724;
-      return player != null ? player.method_5477().getString() : "Player";
+      MinecraftClient client = MinecraftClient.getInstance();
+      PlayerEntity player = client.player;
+      return player != null ? player.getName().getString() : "Player";
    }
 
    @Override
@@ -131,9 +131,9 @@ public class ClientTutorialManager extends TutorialManager {
 
    @Override
    protected EventStoryEntry getValidEventStory() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null && !this.eventStories.isEmpty()) {
-         PlayerEntity player = client.field_1724;
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null && !this.eventStories.isEmpty()) {
+         PlayerEntity player = client.player;
          List<String> shownEvents = this.getShownEvents();
 
          for (EventStoryEntry event : this.eventStories) {

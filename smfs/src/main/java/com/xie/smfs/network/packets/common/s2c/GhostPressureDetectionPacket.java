@@ -29,13 +29,13 @@ public class GhostPressureDetectionPacket {
    private static void handleServerPacket(
       MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender
    ) {
-      UUID entityId = buf.method_10790();
+      UUID entityId = buf.readUuid();
       server.execute(() -> {
-         if (player.method_37908() instanceof ServerWorld serverWorld) {
-            LivingEntity entity = (LivingEntity)serverWorld.method_14190(entityId);
+         if (player.getWorld() instanceof ServerWorld serverWorld) {
+            LivingEntity entity = (LivingEntity)serverWorld.getEntity(entityId);
             if (entity != null) {
                GhostPressureDetectionHandler.forceCheckAndSend(player, entity);
-               LOGGER.debug("收到客户端请求检测实体 {} 的鬼压人buff状态", entity.method_5477().getString());
+               LOGGER.debug("收到客户端请求检测实体 {} 的鬼压人buff状态", entity.getName().getString());
             }
          }
       });
@@ -47,10 +47,10 @@ public class GhostPressureDetectionPacket {
    }
 
    public static void sendToAllNearby(LivingEntity entity, boolean hasGhostPressure) {
-      if (entity.method_37908() instanceof ServerWorld serverWorld) {
-         PacketByteBuf var6 = createDetectionResultPacket(entity.method_5667(), hasGhostPressure);
+      if (entity.getWorld() instanceof ServerWorld serverWorld) {
+         PacketByteBuf var6 = createDetectionResultPacket(entity.getUuid(), hasGhostPressure);
 
-         for (ServerPlayerEntity player : serverWorld.method_18456()) {
+         for (ServerPlayerEntity player : serverWorld.getPlayers()) {
             ServerPlayNetworking.send(player, PACKET_ID, var6);
          }
       }
@@ -58,14 +58,14 @@ public class GhostPressureDetectionPacket {
 
    private static PacketByteBuf createDetectionResultPacket(UUID entityId, boolean hasGhostPressure) {
       PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-      buf.method_10797(entityId);
+      buf.writeUuid(entityId);
       buf.writeBoolean(hasGhostPressure);
       return buf;
    }
 
    public static PacketByteBuf createClientRequestPacket(UUID entityId) {
       PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-      buf.method_10797(entityId);
+      buf.writeUuid(entityId);
       return buf;
    }
 }

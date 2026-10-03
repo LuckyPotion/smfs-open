@@ -41,42 +41,42 @@ public class GraveMoundBlock extends BlockWithEntity implements BlockEntityProvi
          : true;
    }
 
-   public void method_9615(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
-      super.method_9615(state, world, pos, oldState, notify);
-      if (!world.method_8608()) {
-         world.method_8396(null, pos, SoundEvents.field_14609, SoundCategory.field_15251, 1.0F, 0.8F);
-         Box searchBox = new Box(pos).method_1014(1.0);
+   public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
+      super.onBlockAdded(state, world, pos, oldState, notify);
+      if (!world.isClient()) {
+         world.playSound(null, pos, SoundEvents.BLOCK_GRAVEL_PLACE, SoundCategory.HOSTILE, 1.0F, 0.8F);
+         Box searchBox = new Box(pos).expand(1.0);
 
-         for (LivingEntity entity : world.method_18467(LivingEntity.class, searchBox)) {
+         for (LivingEntity entity : world.getNonSpectatingEntities(LivingEntity.class, searchBox)) {
             if (!isImmuneToGraveMound(entity)) {
-               entity.method_20620(pos.method_10263() + 0.5, pos.method_10264() + 0.1, pos.method_10260() + 0.5);
-               entity.method_18800(0.0, 0.0, 0.0);
-               entity.field_6037 = true;
-               if (!entity.method_6059(ModEffects.SILENCE)) {
-                  entity.method_6092(new StatusEffectInstance(ModEffects.SILENCE, 40, 0, false, false, false));
+               entity.teleport(pos.getX() + 0.5, pos.getY() + 0.1, pos.getZ() + 0.5);
+               entity.setVelocity(0.0, 0.0, 0.0);
+               entity.velocityModified = true;
+               if (!entity.hasStatusEffect(ModEffects.SILENCE)) {
+                  entity.addStatusEffect(new StatusEffectInstance(ModEffects.SILENCE, 40, 0, false, false, false));
                }
             }
          }
 
-         world.method_39279(pos, this, 1);
+         world.scheduleBlockTick(pos, this, 1);
       }
    }
 
-   public void method_9588(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-      Box box = new Box(pos.method_10263(), pos.method_10264(), pos.method_10260(), pos.method_10263() + 1, pos.method_10264() + 1.5, pos.method_10260() + 1);
+   public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+      Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1.5, pos.getZ() + 1);
 
-      for (LivingEntity entity : world.method_18467(LivingEntity.class, box)) {
+      for (LivingEntity entity : world.getNonSpectatingEntities(LivingEntity.class, box)) {
          if (!isImmuneToGraveMound(entity)) {
-            if (!entity.method_6059(ModEffects.SILENCE)) {
-               entity.method_6092(new StatusEffectInstance(ModEffects.SILENCE, 40, 0, false, false, false));
+            if (!entity.hasStatusEffect(ModEffects.SILENCE)) {
+               entity.addStatusEffect(new StatusEffectInstance(ModEffects.SILENCE, 40, 0, false, false, false));
             }
 
-            double dx = pos.method_10263() + 0.5 - entity.method_23317();
-            double dz = pos.method_10260() + 0.5 - entity.method_23321();
+            double dx = pos.getX() + 0.5 - entity.getX();
+            double dz = pos.getZ() + 0.5 - entity.getZ();
             if (Math.abs(dx) > 0.3 || Math.abs(dz) > 0.3) {
-               entity.method_20620(pos.method_10263() + 0.5, entity.method_23318(), pos.method_10260() + 0.5);
-               entity.method_18800(0.0, entity.method_18798().field_1351, 0.0);
-               entity.field_6037 = true;
+               entity.teleport(pos.getX() + 0.5, entity.getY(), pos.getZ() + 0.5);
+               entity.setVelocity(0.0, entity.getVelocity().y, 0.0);
+               entity.velocityModified = true;
             }
          }
       }
@@ -87,12 +87,12 @@ public class GraveMoundBlock extends BlockWithEntity implements BlockEntityProvi
          this.checkBuriedEntityAndRestore(world, pos);
       }
 
-      world.method_39279(pos, this, 1);
+      world.scheduleBlockTick(pos, this, 1);
    }
 
    private void checkBuriedEntityAndRestore(ServerWorld world, BlockPos pos) {
-      Box entityBox = new Box(pos.method_10069(-2, -2, -2), pos.method_10069(2, 2, 2));
-      List<Entity> entities = world.method_8390(Entity.class, entityBox, e -> e instanceof MobEntity || e instanceof PlayerEntity);
+      Box entityBox = new Box(pos.add(-2, -2, -2), pos.add(2, 2, 2));
+      List<Entity> entities = world.getEntitiesByClass(Entity.class, entityBox, e -> e instanceof MobEntity || e instanceof PlayerEntity);
       if (!entities.isEmpty()) {
          LuoQianGhostEntity luoQian = this.findNearbyLuoQian(world, pos);
          if (luoQian != null) {
@@ -102,13 +102,13 @@ public class GraveMoundBlock extends BlockWithEntity implements BlockEntityProvi
    }
 
    private LuoQianGhostEntity findNearbyLuoQian(ServerWorld world, BlockPos pos) {
-      Box searchBox = new Box(pos.method_10069(-50, -20, -50), pos.method_10069(50, 20, 50));
-      List<LuoQianGhostEntity> luoQians = world.method_8390(LuoQianGhostEntity.class, searchBox, e -> true);
+      Box searchBox = new Box(pos.add(-50, -20, -50), pos.add(50, 20, 50));
+      List<LuoQianGhostEntity> luoQians = world.getEntitiesByClass(LuoQianGhostEntity.class, searchBox, e -> true);
       LuoQianGhostEntity nearest = null;
       double nearestDistance = Double.MAX_VALUE;
 
       for (LuoQianGhostEntity luoQian : luoQians) {
-         double distance = pos.method_19770(luoQian.method_19538());
+         double distance = pos.getSquaredDistance(luoQian.getPos());
          if (distance < nearestDistance) {
             nearestDistance = distance;
             nearest = luoQian;
@@ -119,11 +119,11 @@ public class GraveMoundBlock extends BlockWithEntity implements BlockEntityProvi
    }
 
    @Nullable
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new StaticAnimatable(ModBlockEntities.GRAVE_MOUND_BLOCK_ENTITY, pos, state);
    }
 
-   public BlockRenderType method_9604(BlockState state) {
-      return BlockRenderType.field_11456;
+   public BlockRenderType getRenderType(BlockState state) {
+      return BlockRenderType.ENTITYBLOCK_ANIMATED;
    }
 }

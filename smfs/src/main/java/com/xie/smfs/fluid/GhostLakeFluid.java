@@ -10,43 +10,43 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
 
 public abstract class GhostLakeFluid extends TutorialFluid {
-   public Fluid method_15751() {
+   public Fluid getStill() {
       return ModFluids.GHOST_LAKE_STILL;
    }
 
-   public Fluid method_15750() {
+   public Fluid getFlowing() {
       return ModFluids.GHOST_LAKE_FLOWING;
    }
 
-   public Item method_15774() {
+   public Item getBucketItem() {
       return ModFluids.GHOST_LAKE_BUCKET;
    }
 
-   protected BlockState method_15790(FluidState fluidState) {
-      return (BlockState)ModFluids.GHOST_LAKE_BLOCK.method_9564().method_11657(Properties.field_12538, method_15741(fluidState));
+   protected BlockState toBlockState(FluidState state) {
+      return (BlockState)ModFluids.GHOST_LAKE_BLOCK.getDefaultState().with(Properties.LEVEL_15, getBlockStateLevel(state));
    }
 
    public static class Flowing extends GhostLakeFluid {
-      protected void method_15775(Builder<Fluid, FluidState> builder) {
-         super.method_15775(builder);
-         builder.method_11667(new Property[]{field_15900});
+      protected void appendProperties(Builder<Fluid, FluidState> builder) {
+         super.appendProperties(builder);
+         builder.add(new Property[]{LEVEL});
       }
 
-      public int method_15779(FluidState fluidState) {
-         return (Integer)fluidState.method_11654(field_15900);
+      public int getLevel(FluidState state) {
+         return (Integer)state.get(LEVEL);
       }
 
-      public boolean method_15793(FluidState fluidState) {
+      public boolean isStill(FluidState state) {
          return false;
       }
    }
 
    public static class Still extends GhostLakeFluid {
-      public int method_15779(FluidState fluidState) {
+      public int getLevel(FluidState state) {
          return 8;
       }
 
-      public boolean method_15793(FluidState fluidState) {
+      public boolean isStill(FluidState state) {
          return true;
       }
    }

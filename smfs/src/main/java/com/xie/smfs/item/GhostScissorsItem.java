@@ -24,18 +24,18 @@ public class GhostScissorsItem extends Item {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      if (!world.field_9236 && user instanceof ServerPlayerEntity serverPlayer) {
-         if (user.method_7357().method_7904(this)) {
-            return TypedActionResult.method_22430(user.method_5998(hand));
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+         if (user.getItemCooldownManager().isCoolingDown(this)) {
+            return TypedActionResult.pass(user.getStackInHand(hand));
          }
 
-         ItemStack mainHand = serverPlayer.method_6047();
-         ItemStack offHand = serverPlayer.method_6079();
-         ItemStack photoStack = ItemStack.field_8037;
-         if (PhotoItem.isNamedPhoto(mainHand) && hand == Hand.field_5808) {
+         ItemStack mainHand = serverPlayer.getMainHandStack();
+         ItemStack offHand = serverPlayer.getOffHandStack();
+         ItemStack photoStack = ItemStack.EMPTY;
+         if (PhotoItem.isNamedPhoto(mainHand) && hand == Hand.MAIN_HAND) {
             photoStack = mainHand;
-         } else if (PhotoItem.isNamedPhoto(offHand) && hand == Hand.field_5810) {
+         } else if (PhotoItem.isNamedPhoto(offHand) && hand == Hand.OFF_HAND) {
             photoStack = offHand;
          } else if (PhotoItem.isNamedPhoto(offHand)) {
             photoStack = offHand;
@@ -43,91 +43,87 @@ public class GhostScissorsItem extends Item {
             photoStack = mainHand;
          }
 
-         if (!photoStack.method_7960()) {
-            String targetName = photoStack.method_7964().getString();
-            ServerPlayerEntity targetPlayer = world.method_8503().method_3760().method_14566(targetName);
-            if (targetPlayer != null && !targetPlayer.method_29504()) {
-               targetPlayer.method_5643(ModDamageSources.ghost(world), 5500.0F);
-               targetPlayer.method_7353(Text.method_43471("message.smfs.photo_killed"), true);
-               serverPlayer.method_7353(Text.method_43471("message.smfs.photo_kill_success"), true);
-               world.method_43128(
+         if (!photoStack.isEmpty()) {
+            String targetName = photoStack.getName().getString();
+            ServerPlayerEntity targetPlayer = world.getServer().getPlayerManager().getPlayer(targetName);
+            if (targetPlayer != null && !targetPlayer.isDead()) {
+               targetPlayer.damage(ModDamageSources.ghost(world), 5500.0F);
+               targetPlayer.sendMessage(Text.translatable("message.smfs.photo_killed"), true);
+               serverPlayer.sendMessage(Text.translatable("message.smfs.photo_kill_success"), true);
+               world.playSound(
                   null,
-                  serverPlayer.method_23317(),
-                  serverPlayer.method_23318(),
-                  serverPlayer.method_23321(),
-                  SoundEvents.field_14545,
-                  SoundCategory.field_15248,
+                  serverPlayer.getX(),
+                  serverPlayer.getY(),
+                  serverPlayer.getZ(),
+                  SoundEvents.ENTITY_ILLUSIONER_CAST_SPELL,
+                  SoundCategory.PLAYERS,
                   1.0F,
                   1.0F
                );
-               photoStack.method_7934(1);
-               user.method_7357().method_7906(this, 600);
-               return TypedActionResult.method_22427(user.method_5998(hand));
+               photoStack.decrement(1);
+               user.getItemCooldownManager().set(this, 600);
+               return TypedActionResult.success(user.getStackInHand(hand));
             }
 
-            serverPlayer.method_7353(Text.method_43471("message.smfs.photo_target_not_found"), true);
+            serverPlayer.sendMessage(Text.translatable("message.smfs.photo_target_not_found"), true);
          } else {
             boolean foundChasingGhost = false;
 
-            for (GhostEntity ghost : world.method_8390(
-               GhostEntity.class, serverPlayer.method_5829().method_1014(48.0), ghostx -> ghostx.isChasing() && ghostx.getChaseTarget() == serverPlayer
+            for (GhostEntity ghost : world.getEntitiesByClass(
+               GhostEntity.class, serverPlayer.getBoundingBox().expand(48.0), ghostx -> ghostx.isChasing() && ghostx.getChaseTarget() == serverPlayer
             )) {
                ghost.setChasing(false);
                ghost.setChaseTarget(null);
                ghost.setChaseTimer(0);
-               ghost.method_5980(null);
+               ghost.setTarget(null);
                foundChasingGhost = true;
-               world.method_43128(
-                  null, ghost.method_23317(), ghost.method_23318(), ghost.method_23321(), SoundEvents.field_14941, SoundCategory.field_15251, 1.0F, 1.0F
-               );
+               world.playSound(null, ghost.getX(), ghost.getY(), ghost.getZ(), SoundEvents.ENTITY_ILLUSIONER_MIRROR_MOVE, SoundCategory.HOSTILE, 1.0F, 1.0F);
             }
 
             boolean foundBeckoningBride = false;
 
-            for (GanshiBrideGhostEntity bride : world.method_8390(
+            for (GanshiBrideGhostEntity bride : world.getEntitiesByClass(
                GanshiBrideGhostEntity.class,
-               serverPlayer.method_5829().method_1014(48.0),
+               serverPlayer.getBoundingBox().expand(48.0),
                bridex -> bridex.isInBeckoningPhase() && bridex.getCurrentTarget() == serverPlayer
             )) {
                bride.cancelBeckoningPhase();
                foundBeckoningBride = true;
-               world.method_43128(
-                  null, bride.method_23317(), bride.method_23318(), bride.method_23321(), SoundEvents.field_14941, SoundCategory.field_15251, 1.0F, 1.0F
-               );
+               world.playSound(null, bride.getX(), bride.getY(), bride.getZ(), SoundEvents.ENTITY_ILLUSIONER_MIRROR_MOVE, SoundCategory.HOSTILE, 1.0F, 1.0F);
             }
 
             if (foundChasingGhost || foundBeckoningBride) {
-               serverPlayer.method_7353(Text.method_43471("message.smfs.ghost_scissors.chasing_cleared"), true);
-               world.method_43128(
+               serverPlayer.sendMessage(Text.translatable("message.smfs.ghost_scissors.chasing_cleared"), true);
+               world.playSound(
                   null,
-                  serverPlayer.method_23317(),
-                  serverPlayer.method_23318(),
-                  serverPlayer.method_23321(),
-                  SoundEvents.field_14545,
-                  SoundCategory.field_15248,
+                  serverPlayer.getX(),
+                  serverPlayer.getY(),
+                  serverPlayer.getZ(),
+                  SoundEvents.ENTITY_ILLUSIONER_CAST_SPELL,
+                  SoundCategory.PLAYERS,
                   1.0F,
                   1.0F
                );
-               user.method_7357().method_7906(this, 300);
-               return TypedActionResult.method_22427(user.method_5998(hand));
+               user.getItemCooldownManager().set(this, 300);
+               return TypedActionResult.success(user.getStackInHand(hand));
             }
 
-            serverPlayer.method_7353(Text.method_43471("message.smfs.photo_required"), true);
+            serverPlayer.sendMessage(Text.translatable("message.smfs.photo_required"), true);
          }
       }
 
-      return TypedActionResult.method_22430(user.method_5998(hand));
+      return TypedActionResult.pass(user.getStackInHand(hand));
    }
 
-   public void method_7851(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_scissors.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_scissors.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_scissors.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_scissors.effect.remote_attack"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_scissors.effect.clear_chase"));
-      tooltip.add(Text.method_43473());
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{5500.0F}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{0.0F}));
+   public void appendTooltip(ItemStack stack, World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_scissors.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_scissors.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_scissors.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_scissors.effect.remote_attack"));
+      tooltip.add(Text.translatable("item.smfs.ghost_scissors.effect.clear_chase"));
+      tooltip.add(Text.empty());
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{5500.0F}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{0.0F}));
    }
 }

@@ -37,7 +37,7 @@ public class ClientGhostBloodSkillC2SPacket {
             try {
                GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "ghost_blood", ModItems.GHOST_BLOOD, -1);
                if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-                  player.method_7353(Text.method_43470("§c您没有驾驭鬼血，无法使用此技能"), true);
+                  player.sendMessage(Text.literal("§c您没有驾驭鬼血，无法使用此技能"), true);
                   return;
                }
 
@@ -52,16 +52,16 @@ public class ClientGhostBloodSkillC2SPacket {
 
    private static void handleGhostBloodSkill(ServerPlayerEntity player) {
       int radius = 8;
-      List<LivingEntity> entitiesInRange = player.method_37908()
-         .method_8390(LivingEntity.class, player.method_5829().method_1014(radius), entityx -> entityx != player && entityx instanceof LivingEntity);
+      List<LivingEntity> entitiesInRange = player.getWorld()
+         .getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius), entityx -> entityx != player && entityx instanceof LivingEntity);
       if (entitiesInRange.isEmpty()) {
-         player.method_7353(Text.method_43470("§c范围内没有可攻击的生物"), true);
+         player.sendMessage(Text.literal("§c范围内没有可攻击的生物"), true);
       } else {
          LivingEntity nearestEntity = null;
          double minDistance = Double.MAX_VALUE;
 
          for (LivingEntity entity : entitiesInRange) {
-            double distance = player.method_5739(entity);
+            double distance = player.distanceTo(entity);
             if (distance < minDistance) {
                minDistance = distance;
                nearestEntity = entity;
@@ -69,10 +69,10 @@ public class ClientGhostBloodSkillC2SPacket {
          }
 
          if (nearestEntity != null) {
-            nearestEntity.method_6092(new StatusEffectInstance(ModEffects.SILENCE, 600, 0));
-            player.method_7353(Text.method_43470("§a成功压制 " + nearestEntity.method_5477().getString()), true);
+            nearestEntity.addStatusEffect(new StatusEffectInstance(ModEffects.SILENCE, 600, 0));
+            player.sendMessage(Text.literal("§a成功压制 " + nearestEntity.getName().getString()), true);
             if (nearestEntity instanceof PlayerEntity targetPlayer) {
-               targetPlayer.method_7353(Text.method_43470("§c被一股强大的力量压制！"), true);
+               targetPlayer.sendMessage(Text.literal("§c被一股强大的力量压制！"), true);
             }
          }
 
@@ -81,14 +81,14 @@ public class ClientGhostBloodSkillC2SPacket {
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 15; i++) {
-         world.method_8406(
-            ParticleTypes.field_11223,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 3.0,
-            player.method_23318() + world.field_9229.method_43058() * 2.5,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 3.0,
+         world.addParticle(
+            ParticleTypes.DRIPPING_LAVA,
+            player.getX() + (world.random.nextDouble() - 0.5) * 3.0,
+            player.getY() + world.random.nextDouble() * 2.5,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 3.0,
             0.0,
             0.05,
             0.0

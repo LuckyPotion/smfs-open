@@ -117,11 +117,11 @@ public class GhostOfficerEntity extends GhostEntity {
    }
 
    private int getCombinedGhostSlots(PlayerEntity player) {
-      Box searchBox = Box.method_30048(player.method_19538(), 6.0, 6.0, 6.0);
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_18456()
+      Box searchBox = Box.of(player.getPos(), 6.0, 6.0, 6.0);
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getPlayers()
          .stream()
-         .filter(pl -> pl.method_5805() && pl.method_5858(player) <= 9.0)
+         .filter(pl -> pl.isAlive() && pl.squaredDistanceTo(player) <= 9.0)
          .collect(Collectors.toList());
       int totalSlots = 0;
 
@@ -142,14 +142,14 @@ public class GhostOfficerEntity extends GhostEntity {
          return false;
       } else {
          double ghostDomainRadius = this.getGhostDomainRadius();
-         List<GhostEntity> ghostsInDomain = this.method_37908()
-            .method_8390(
+         List<GhostEntity> ghostsInDomain = this.getWorld()
+            .getEntitiesByClass(
                GhostEntity.class,
-               this.method_5829().method_1014(ghostDomainRadius),
-               ghost -> ghost != this && !ghost.isDeadlocked() && !ghost.isSuppressed() && ghost.method_5805()
+               this.getBoundingBox().expand(ghostDomainRadius),
+               ghost -> ghost != this && !ghost.isDeadlocked() && !ghost.isSuppressed() && ghost.isAlive()
             );
          if (!ghostsInDomain.isEmpty()) {
-            LOGGER.debug("鬼差 {} 发现鬼域内有其他鬼，优先攻击鬼而不是玩家", this.method_5845());
+            LOGGER.debug("鬼差 {} 发现鬼域内有其他鬼，优先攻击鬼而不是玩家", this.getUuidAsString());
             return false;
          } else {
             int combinedSlots = this.getCombinedGhostSlots(player);
@@ -160,22 +160,22 @@ public class GhostOfficerEntity extends GhostEntity {
 
    @Override
    protected void executeAttack(PlayerEntity player) {
-      if (!this.isDeadlocked() && !this.isSuppressed() && player != null && player.method_5805()) {
+      if (!this.isDeadlocked() && !this.isSuppressed() && player != null && player.isAlive()) {
          if (this.attackCooldown <= 0) {
             this.attackCooldown = 200;
-            player.method_6092(new StatusEffectInstance(ModEffects.SILENCE, 60, 0, false, false, true));
-            this.attackTimers.put(player.method_5667(), 60);
+            player.addStatusEffect(new StatusEffectInstance(ModEffects.SILENCE, 60, 0, false, false, true));
+            this.attackTimers.put(player.getUuid(), 60);
          }
       }
    }
 
    private void performActualAttack(PlayerEntity player) {
-      if (player != null && player.method_5805()) {
-         if (player.method_6059(ModEffects.SILENCE)) {
+      if (player != null && player.isAlive()) {
+         if (player.hasStatusEffect(ModEffects.SILENCE)) {
             int baseDamage = this.getSpiritualDamage();
             int actualDamage = baseDamage * this.suppressionQuota;
-            PlayerEvents.handleSpiritDamage(player, actualDamage, actualDamage, ModDamageSources.ghost(this.method_37908()));
-            if (!player.method_5805()) {
+            PlayerEvents.handleSpiritDamage(player, actualDamage, actualDamage, ModDamageSources.ghost(this.getWorld()));
+            if (!player.isAlive()) {
                this.increaseSuppressionQuota();
             }
          }
@@ -183,9 +183,9 @@ public class GhostOfficerEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().field_9236) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient) {
          if (this.musicCooldown > 0) {
             this.musicCooldown--;
          } else if (this.hasPlayedMusic) {
@@ -223,9 +223,9 @@ public class GhostOfficerEntity extends GhostEntity {
 
          this.attackOtherGhostsInDomain();
          if (this.attackCooldown <= 0) {
-            for (PlayerEntity player : this.method_37908().method_18456().stream().filter(x$0 -> this.isInGhostDomain(x$0)).collect(Collectors.toList())) {
+            for (PlayerEntity player : this.getWorld().getPlayers().stream().filter(x$0 -> this.isInGhostDomain(x$0)).collect(Collectors.toList())) {
                if (this.shouldAttackPlayer(player)) {
-                  UUID playerUUID = player.method_5667();
+                  UUID playerUUID = player.getUuid();
                   if (!this.attackCountdowns.containsKey(playerUUID)) {
                      this.attackCountdowns.put(playerUUID, 60);
                   }
@@ -237,7 +237,7 @@ public class GhostOfficerEntity extends GhostEntity {
                      this.attackCountdowns.remove(playerUUID);
                   }
                } else {
-                  UUID playerUUID = player.method_5667();
+                  UUID playerUUID = player.getUuid();
                   if (this.attackCountdowns.containsKey(playerUUID)) {
                      this.attackCountdowns.remove(playerUUID);
                   }
@@ -253,8 +253,8 @@ public class GhostOfficerEntity extends GhostEntity {
                UUID playerUUID = entry.getKey();
                int timer = entry.getValue();
                if (--timer <= 0) {
-                  PlayerEntity player = this.method_37908().method_18470(playerUUID);
-                  if (player != null && player.method_5805()) {
+                  PlayerEntity player = this.getWorld().getPlayerByUuid(playerUUID);
+                  if (player != null && player.isAlive()) {
                      this.performActualAttack(player);
                   }
 
@@ -273,19 +273,19 @@ public class GhostOfficerEntity extends GhostEntity {
       if (!this.isSuppressed() && !this.isDeadlocked() && this.attackCooldown <= 0) {
          double ghostDomainRadius = this.getGhostDomainRadius();
 
-         for (GhostEntity ghost : this.method_37908()
-            .method_8390(
+         for (GhostEntity ghost : this.getWorld()
+            .getEntitiesByClass(
                GhostEntity.class,
-               this.method_5829().method_1014(ghostDomainRadius),
-               ghostx -> ghostx != this && !ghostx.isDeadlocked() && !ghostx.isSuppressed() && ghostx.method_5805()
+               this.getBoundingBox().expand(ghostDomainRadius),
+               ghostx -> ghostx != this && !ghostx.isDeadlocked() && !ghostx.isSuppressed() && ghostx.isAlive()
             )) {
             if (!(ghost instanceof GiantMaleCorpseGhostEntity) && !(ghost instanceof LuoQianGhostEntity)) {
                this.attackCooldown = 400;
                this.increaseSuppressionQuota();
-               this.spawnBlackParticles(ghost.method_23317(), ghost.method_23318(), ghost.method_23321());
+               this.spawnBlackParticles(ghost.getX(), ghost.getY(), ghost.getZ());
                this.notifyPlayersInDomain();
                GhostDeathHandler.markLegitimateRemoval(ghost);
-               ghost.method_31472();
+               ghost.discard();
                break;
             }
          }
@@ -316,20 +316,20 @@ public class GhostOfficerEntity extends GhostEntity {
    }
 
    private void searchForCoffins() {
-      BlockPos currentPos = this.method_24515();
-      World world = this.method_37908();
+      BlockPos currentPos = this.getBlockPos();
+      World world = this.getWorld();
 
       for (int x = -6; x <= 6; x++) {
          for (int y = -3; y <= 3; y++) {
             for (int z = -6; z <= 6; z++) {
-               BlockPos checkPos = currentPos.method_10069(x, y, z);
-               BlockState blockState = world.method_8320(checkPos);
-               if (blockState.method_26204() instanceof GhostCoffinBlock
-                  && blockState.method_28498(GhostCoffinBlock.OPEN)
-                  && (Boolean)blockState.method_11654(GhostCoffinBlock.OPEN)
-                  && blockState.method_28498(GhostCoffinBlock.OCCUPIED)
-                  && !(Boolean)blockState.method_11654(GhostCoffinBlock.OCCUPIED)) {
-                  GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.method_8321(checkPos);
+               BlockPos checkPos = currentPos.add(x, y, z);
+               BlockState blockState = world.getBlockState(checkPos);
+               if (blockState.getBlock() instanceof GhostCoffinBlock
+                  && blockState.contains(GhostCoffinBlock.OPEN)
+                  && (Boolean)blockState.get(GhostCoffinBlock.OPEN)
+                  && blockState.contains(GhostCoffinBlock.OCCUPIED)
+                  && !(Boolean)blockState.get(GhostCoffinBlock.OCCUPIED)) {
+                  GhostCoffinBlockEntity blockEntity = (GhostCoffinBlockEntity)world.getBlockEntity(checkPos);
                   if (blockEntity != null && !blockEntity.hasStoredGhost()) {
                      this.targetCoffinPos = checkPos;
                      LOGGER.debug("鬼差发现打开的棺材，位置: {}", checkPos);
@@ -346,14 +346,14 @@ public class GhostOfficerEntity extends GhostEntity {
          return false;
       }
 
-      Vec3d targetPos = Vec3d.method_24953(this.targetCoffinPos);
-      double distance = this.method_5707(targetPos);
+      Vec3d targetPos = Vec3d.ofCenter(this.targetCoffinPos);
+      double distance = this.squaredDistanceTo(targetPos);
       if (distance < 2.0) {
          return true;
       }
 
-      this.method_5942().method_6337(targetPos.field_1352, targetPos.field_1351, targetPos.field_1350, 1.0);
-      if (this.method_37908().method_8608()) {
+      this.getNavigation().startMovingTo(targetPos.x, targetPos.y, targetPos.z, 1.0);
+      if (this.getWorld().isClient()) {
          this.spawnMovementParticles();
       }
 
@@ -361,19 +361,19 @@ public class GhostOfficerEntity extends GhostEntity {
    }
 
    private boolean enterCoffin(BlockPos coffinPos) {
-      if (this.method_37908() != null && !this.method_31481()) {
+      if (this.getWorld() != null && !this.isRemoved()) {
          try {
-            boolean success = GhostCoffinBlock.enterCoffin(this.method_37908(), coffinPos, this);
+            boolean success = GhostCoffinBlock.enterCoffin(this.getWorld(), coffinPos, this);
             if (success) {
-               LOGGER.debug("鬼差成功进入棺材: {}，位置: {}", this.method_5667(), coffinPos);
+               LOGGER.debug("鬼差成功进入棺材: {}，位置: {}", this.getUuid(), coffinPos);
                this.coffinEnterCooldown = 600;
                this.targetCoffinPos = null;
                this.coffinSearchCooldown = 0;
                GhostDeathHandler.markLegitimateRemoval(this);
-               this.method_31472();
+               this.discard();
                return true;
             } else {
-               LOGGER.warn("鬼差进入棺材失败: {}，位置: {}", this.method_5667(), coffinPos);
+               LOGGER.warn("鬼差进入棺材失败: {}，位置: {}", this.getUuid(), coffinPos);
                this.coffinSearchCooldown = 100;
                return false;
             }
@@ -388,27 +388,27 @@ public class GhostOfficerEntity extends GhostEntity {
    }
 
    private void spawnMovementParticles() {
-      World world = this.method_37908();
-      Vec3d pos = this.method_19538();
+      World world = this.getWorld();
+      Vec3d pos = this.getPos();
 
       for (int i = 0; i < 5; i++) {
          double offsetX = (this.getGhostRandom().nextDouble() - 0.5) * 0.5;
          double offsetY = this.getGhostRandom().nextDouble() * 0.5;
          double offsetZ = (this.getGhostRandom().nextDouble() - 0.5) * 0.5;
-         world.method_8406(ParticleTypes.field_11251, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 0.0, 0.0, 0.0);
+         world.addParticle(ParticleTypes.SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 0.0, 0.0, 0.0);
       }
    }
 
    private void spawnEnterCoffinParticles() {
       if (this.targetCoffinPos != null) {
-         World world = this.method_37908();
-         Vec3d pos = Vec3d.method_24953(this.targetCoffinPos);
-         if (world.method_8608()) {
+         World world = this.getWorld();
+         Vec3d pos = Vec3d.ofCenter(this.targetCoffinPos);
+         if (world.isClient()) {
             for (int i = 0; i < 20; i++) {
                double offsetX = (this.getGhostRandom().nextDouble() - 0.5) * 2.0;
                double offsetY = this.getGhostRandom().nextDouble() * 1.0;
                double offsetZ = (this.getGhostRandom().nextDouble() - 0.5) * 2.0;
-               world.method_8406(ParticleTypes.field_11237, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 0.0, 0.1, 0.0);
+               world.addParticle(ParticleTypes.LARGE_SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 0.0, 0.1, 0.0);
             }
          } else {
             ServerWorld serverWorld = (ServerWorld)world;
@@ -417,62 +417,59 @@ public class GhostOfficerEntity extends GhostEntity {
                double offsetX = (this.getGhostRandom().nextDouble() - 0.5) * 2.0;
                double offsetY = this.getGhostRandom().nextDouble() * 1.0;
                double offsetZ = (this.getGhostRandom().nextDouble() - 0.5) * 2.0;
-               serverWorld.method_14199(
-                  ParticleTypes.field_11237, pos.field_1352 + offsetX, pos.field_1351 + offsetY, pos.field_1350 + offsetZ, 1, 0.0, 0.1, 0.0, 0.0
-               );
+               serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ, 1, 0.0, 0.1, 0.0, 0.0);
             }
          }
       }
    }
 
    private void notifyPlayersInDomain() {
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          double radius = this.getGhostDomainRadius();
 
-         for (PlayerEntity player : this.method_37908().method_18456().stream().filter(playerx -> {
-            double dx = playerx.method_23317() - this.method_23317();
-            double dy = playerx.method_23318() - this.method_23318();
-            double dz = playerx.method_23321() - this.method_23321();
+         for (PlayerEntity player : this.getWorld().getPlayers().stream().filter(playerx -> {
+            double dx = playerx.getX() - this.getX();
+            double dy = playerx.getY() - this.getY();
+            double dz = playerx.getZ() - this.getZ();
             double distanceSq = dx * dx + dy * dy + dz * dz;
             return distanceSq <= radius * radius;
          }).collect(Collectors.toList())) {
-            player.method_7353(Text.method_43470("§c周围的鬼蜮变得更强大了..."), true);
+            player.sendMessage(Text.literal("§c周围的鬼蜮变得更强大了..."), true);
          }
       }
    }
 
    public void restartGhost() {
-      this.spawnBlackParticles(this.method_23317(), this.method_23318(), this.method_23321());
+      this.spawnBlackParticles(this.getX(), this.getY(), this.getZ());
       if (this.hasCoffinNail()) {
-         this.method_37908()
-            .method_8649(new ItemEntity(this.method_37908(), this.method_23317(), this.method_23318(), this.method_23321(), this.getCoffinNail().method_7972()));
+         this.getWorld().spawnEntity(new ItemEntity(this.getWorld(), this.getX(), this.getY(), this.getZ(), this.getCoffinNail().copy()));
       }
 
-      double newX = this.method_23317() + (this.getGhostRandom().nextDouble() - 0.5) * 50.0;
-      double newY = this.method_23318();
-      double newZ = this.method_23321() + (this.getGhostRandom().nextDouble() - 0.5) * 50.0;
-      GhostOfficerEntity newGhost = new GhostOfficerEntity(this.method_5864(), this.method_37908());
-      newGhost.method_5814(newX, newY, newZ);
+      double newX = this.getX() + (this.getGhostRandom().nextDouble() - 0.5) * 50.0;
+      double newY = this.getY();
+      double newZ = this.getZ() + (this.getGhostRandom().nextDouble() - 0.5) * 50.0;
+      GhostOfficerEntity newGhost = new GhostOfficerEntity(this.getType(), this.getWorld());
+      newGhost.setPosition(newX, newY, newZ);
       newGhost.setSuppressionQuota(this.suppressionQuota);
-      this.method_37908().method_8649(newGhost);
+      this.getWorld().spawnEntity(newGhost);
       this.spawnBlackParticles(newX, newY, newZ);
       GhostDeathHandler.markLegitimateRemoval(this);
-      this.method_31472();
+      this.discard();
    }
 
    private void playGhostOfficerEntrance() {
-      if (!this.method_37908().field_9236) {
-         ServerWorld world = (ServerWorld)this.method_37908();
-         BlockPos pos = this.method_24515();
-         world.method_8396(null, pos, ModSounds.GHOST_OFFICER_ENTRANCE, SoundCategory.field_15256, 0.7F, 1.0F);
+      if (!this.getWorld().isClient) {
+         ServerWorld world = (ServerWorld)this.getWorld();
+         BlockPos pos = this.getBlockPos();
+         world.playSound(null, pos, ModSounds.GHOST_OFFICER_ENTRANCE, SoundCategory.AMBIENT, 0.7F, 1.0F);
          this.hasPlayedMusic = true;
          this.musicCooldown = 6000;
       }
    }
 
    private void spawnBlackParticles(double x, double y, double z) {
-      if (this.method_37908().method_8608()) {
-         World world = this.method_37908();
+      if (this.getWorld().isClient()) {
+         World world = this.getWorld();
 
          for (int i = 0; i < 50; i++) {
             double offsetX = (this.getGhostRandom().nextDouble() - 0.5) * 4.0;
@@ -481,11 +478,11 @@ public class GhostOfficerEntity extends GhostEntity {
             double velocityX = (this.getGhostRandom().nextDouble() - 0.5) * 0.2;
             double velocityY = (this.getGhostRandom().nextDouble() - 0.5) * 0.2;
             double velocityZ = (this.getGhostRandom().nextDouble() - 0.5) * 0.2;
-            world.method_8406(ParticleTypes.field_11251, x + offsetX, y + offsetY, z + offsetZ, velocityX, velocityY, velocityZ);
-            world.method_8406(ParticleTypes.field_11237, x + offsetX, y + offsetY, z + offsetZ, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5);
+            world.addParticle(ParticleTypes.SMOKE, x + offsetX, y + offsetY, z + offsetZ, velocityX, velocityY, velocityZ);
+            world.addParticle(ParticleTypes.LARGE_SMOKE, x + offsetX, y + offsetY, z + offsetZ, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5);
          }
       } else {
-         ServerWorld serverWorld = (ServerWorld)this.method_37908();
+         ServerWorld serverWorld = (ServerWorld)this.getWorld();
 
          for (int i = 0; i < 50; i++) {
             double offsetX = (this.getGhostRandom().nextDouble() - 0.5) * 4.0;
@@ -494,35 +491,35 @@ public class GhostOfficerEntity extends GhostEntity {
             double velocityX = (this.getGhostRandom().nextDouble() - 0.5) * 0.2;
             double velocityY = (this.getGhostRandom().nextDouble() - 0.5) * 0.2;
             double velocityZ = (this.getGhostRandom().nextDouble() - 0.5) * 0.2;
-            serverWorld.method_14199(ParticleTypes.field_11251, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX, velocityY, velocityZ, 0.0);
-            serverWorld.method_14199(
-               ParticleTypes.field_11237, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5, 0.0
+            serverWorld.spawnParticles(ParticleTypes.SMOKE, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX, velocityY, velocityZ, 0.0);
+            serverWorld.spawnParticles(
+               ParticleTypes.LARGE_SMOKE, x + offsetX, y + offsetY, z + offsetZ, 1, velocityX * 0.5, velocityY * 0.5, velocityZ * 0.5, 0.0
             );
          }
       }
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10569("MusicCooldown", this.musicCooldown);
-      nbt.method_10556("HasPlayedMusic", this.hasPlayedMusic);
-      nbt.method_10569("SuppressionQuota", this.suppressionQuota);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putInt("MusicCooldown", this.musicCooldown);
+      nbt.putBoolean("HasPlayedMusic", this.hasPlayedMusic);
+      nbt.putInt("SuppressionQuota", this.suppressionQuota);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("MusicCooldown")) {
-         this.musicCooldown = nbt.method_10550("MusicCooldown");
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("MusicCooldown")) {
+         this.musicCooldown = nbt.getInt("MusicCooldown");
       }
 
-      if (nbt.method_10545("HasPlayedMusic")) {
-         this.hasPlayedMusic = nbt.method_10577("HasPlayedMusic");
+      if (nbt.contains("HasPlayedMusic")) {
+         this.hasPlayedMusic = nbt.getBoolean("HasPlayedMusic");
       }
 
-      if (nbt.method_10545("SuppressionQuota")) {
-         this.suppressionQuota = nbt.method_10550("SuppressionQuota");
+      if (nbt.contains("SuppressionQuota")) {
+         this.suppressionQuota = nbt.getInt("SuppressionQuota");
       }
    }
 }

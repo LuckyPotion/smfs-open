@@ -17,7 +17,7 @@ public class GoodsSellerKillC2SPacket {
 
    public static void register() {
       ServerPlayNetworking.registerGlobalReceiver(ID, (server, player, handler, buf, responseSender) -> server.execute(() -> {
-         if (player.method_5805()) {
+         if (player.isAlive()) {
             InstantKillUtil.executePlayerInstantKill(player);
          }
       }));

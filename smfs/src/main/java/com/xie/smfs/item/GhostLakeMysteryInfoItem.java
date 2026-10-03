@@ -5,6 +5,6 @@ import net.minecraft.world.World;
 
 public class GhostLakeMysteryInfoItem extends StructureMysteryInfoItem {
    public GhostLakeMysteryInfoItem() {
-      super(new FabricItemSettings().maxCount(16), "ghost_lake", World.field_25179);
+      super(new FabricItemSettings().maxCount(16), "ghost_lake", World.OVERWORLD);
    }
 }

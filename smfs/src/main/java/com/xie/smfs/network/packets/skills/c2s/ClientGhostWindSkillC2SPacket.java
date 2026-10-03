@@ -35,7 +35,7 @@ public class ClientGhostWindSkillC2SPacket {
             try {
                GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "ghost_wind", ModItems.GHOST_WIND, -1);
                if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-                  player.method_7353(Text.method_43470("§c您没有驾驭鬼风，无法使用此技能"), true);
+                  player.sendMessage(Text.literal("§c您没有驾驭鬼风，无法使用此技能"), true);
                   return;
                }
 
@@ -52,10 +52,10 @@ public class ClientGhostWindSkillC2SPacket {
       int mainSlot = MainGhostManager.getMainGhostSlot(player);
       int level = PlayerEvents.getGhostSlotLevel(player, mainSlot);
       int radius = GhostDomainManager.getDomainRadius(player, level);
-      List<LivingEntity> entitiesInRange = player.method_37908()
-         .method_8390(LivingEntity.class, player.method_5829().method_1014(radius), e -> e != player && !e.method_24828());
+      List<LivingEntity> entitiesInRange = player.getWorld()
+         .getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius), e -> e != player && !e.isOnGround());
       if (entitiesInRange.isEmpty()) {
-         player.method_7353(Text.method_43470("§c鬼蜮范围内没有离开地面的生物"), true);
+         player.sendMessage(Text.literal("§c鬼蜮范围内没有离开地面的生物"), true);
       } else {
          for (LivingEntity targetEntity : entitiesInRange) {
             GhostDomainManager.executeSkillSpiritAttack(player, targetEntity);
@@ -66,14 +66,14 @@ public class ClientGhostWindSkillC2SPacket {
    }
 
    private static void spawnSkillParticles(ServerPlayerEntity player) {
-      World world = player.method_37908();
+      World world = player.getWorld();
 
       for (int i = 0; i < 10; i++) {
-         world.method_8406(
-            ParticleTypes.field_11204,
-            player.method_23317() + (world.field_9229.method_43058() - 0.5) * 2.0,
-            player.method_23318() + world.field_9229.method_43058() * 2.0,
-            player.method_23321() + (world.field_9229.method_43058() - 0.5) * 2.0,
+         world.addParticle(
+            ParticleTypes.CLOUD,
+            player.getX() + (world.random.nextDouble() - 0.5) * 2.0,
+            player.getY() + world.random.nextDouble() * 2.0,
+            player.getZ() + (world.random.nextDouble() - 0.5) * 2.0,
             0.0,
             0.1,
             0.0

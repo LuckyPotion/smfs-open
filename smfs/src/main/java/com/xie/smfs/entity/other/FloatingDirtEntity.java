@@ -42,9 +42,9 @@ public class FloatingDirtEntity extends Entity {
 
    public FloatingDirtEntity(EntityType<? extends FloatingDirtEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5875(true);
-      this.method_5684(true);
-      this.method_5803(true);
+      this.setNoGravity(true);
+      this.setInvulnerable(true);
+      this.setSilent(true);
    }
 
    public void startReturning() {
@@ -66,28 +66,28 @@ public class FloatingDirtEntity extends Entity {
    }
 
    private void explode() {
-      this.method_37908().method_8396(null, this.method_24515(), SoundEvents.field_15152, SoundCategory.field_15251, 1.5F, 0.8F);
+      this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.HOSTILE, 1.5F, 0.8F);
       this.createExplosionParticles();
-      Box damageBox = new Box(this.method_19538().method_1031(-3.0, -3.0, -3.0), this.method_19538().method_1031(3.0, 3.0, 3.0));
+      Box damageBox = new Box(this.getPos().add(-3.0, -3.0, -3.0), this.getPos().add(3.0, 3.0, 3.0));
 
-      for (PlayerEntity player : this.method_37908().method_8390(PlayerEntity.class, damageBox, p -> !p.method_7325() && !p.method_7337())) {
+      for (PlayerEntity player : this.getWorld().getEntitiesByClass(PlayerEntity.class, damageBox, p -> !p.isSpectator() && !p.isCreative())) {
          float damage = this.explosionDamage;
-         PlayerEvents.handleSpiritDamage(player, damage, damage, ModDamageSources.ghost(this.method_37908()));
-         Vec3d knockback = player.method_19538().method_1020(this.method_19538()).method_1029().method_18805(1.5, 1.0, 1.5);
-         player.method_5762(knockback.field_1352, knockback.field_1351, knockback.field_1350);
-         player.field_6037 = true;
+         PlayerEvents.handleSpiritDamage(player, damage, damage, ModDamageSources.ghost(this.getWorld()));
+         Vec3d knockback = player.getPos().subtract(this.getPos()).normalize().multiply(1.5, 1.0, 1.5);
+         player.addVelocity(knockback.x, knockback.y, knockback.z);
+         player.velocityModified = true;
       }
 
-      this.method_31472();
+      this.discard();
    }
 
    private void createExplosionParticles() {
-      World world = this.method_37908();
-      double x = this.method_23317();
-      double y = this.method_23318();
-      double z = this.method_23321();
+      World world = this.getWorld();
+      double x = this.getX();
+      double y = this.getY();
+      double z = this.getZ();
       if (world instanceof ServerWorld serverWorld) {
-         serverWorld.method_14199(ParticleTypes.field_11236, x, y + 1.0, z, 10, 0.5, 0.5, 0.5, 0.2);
+         serverWorld.spawnParticles(ParticleTypes.EXPLOSION, x, y + 1.0, z, 10, 0.5, 0.5, 0.5, 0.2);
       }
    }
 
@@ -97,60 +97,60 @@ public class FloatingDirtEntity extends Entity {
       double dx = spawnX - targetX;
       double dz = spawnZ - targetZ;
       this.orbitRadius = (float)Math.sqrt(dx * dx + dz * dz);
-      this.orbitSpeed = 0.004F + this.method_37908().field_9229.method_43057() * 0.008F;
+      this.orbitSpeed = 0.004F + this.getWorld().random.nextFloat() * 0.008F;
       this.orbitPhase = (float)Math.atan2(dz, dx);
-      this.method_5808(spawnX, targetY, spawnZ, 0.0F, 0.0F);
+      this.refreshPositionAndAngles(spawnX, targetY, spawnZ, 0.0F, 0.0F);
       this.initialY = targetY;
-      this.amplitude = 0.3F + this.method_37908().field_9229.method_43057() * 0.5F;
-      this.period = 12.0F + this.method_37908().field_9229.method_43057() * 15.0F;
-      this.direction = this.method_37908().field_9229.method_43057() * (float) Math.PI * 2.0F;
-      this.riseSpeed = 0.03F + this.method_37908().field_9229.method_43057() * 0.04F;
-      this.targetHeight = 4.0F + this.method_37908().field_9229.method_43057() * 4.0F;
-      this.phase = this.method_37908().field_9229.method_43057() * (float) Math.PI * 2.0F;
+      this.amplitude = 0.3F + this.getWorld().random.nextFloat() * 0.5F;
+      this.period = 12.0F + this.getWorld().random.nextFloat() * 15.0F;
+      this.direction = this.getWorld().random.nextFloat() * (float) Math.PI * 2.0F;
+      this.riseSpeed = 0.03F + this.getWorld().random.nextFloat() * 0.04F;
+      this.targetHeight = 4.0F + this.getWorld().random.nextFloat() * 4.0F;
+      this.phase = this.getWorld().random.nextFloat() * (float) Math.PI * 2.0F;
       this.reachedTarget = false;
    }
 
-   protected void method_5693() {
+   protected void initDataTracker() {
    }
 
-   protected void method_5749(NbtCompound nbt) {
-      this.phase = nbt.method_10583("Phase");
-      this.amplitude = nbt.method_10583("Amplitude");
-      this.period = nbt.method_10583("Period");
-      this.direction = nbt.method_10583("Direction");
-      this.riseSpeed = nbt.method_10583("RiseSpeed");
-      this.reachedTarget = nbt.method_10577("ReachedTarget");
-      this.targetHeight = nbt.method_10583("TargetHeight");
-      this.initialY = nbt.method_10574("InitialY");
-      this.centerX = nbt.method_10574("CenterX");
-      this.centerZ = nbt.method_10574("CenterZ");
-      this.orbitRadius = nbt.method_10583("OrbitRadius");
-      this.orbitSpeed = nbt.method_10583("OrbitSpeed");
-      this.orbitPhase = nbt.method_10583("OrbitPhase");
+   protected void readCustomDataFromNbt(NbtCompound nbt) {
+      this.phase = nbt.getFloat("Phase");
+      this.amplitude = nbt.getFloat("Amplitude");
+      this.period = nbt.getFloat("Period");
+      this.direction = nbt.getFloat("Direction");
+      this.riseSpeed = nbt.getFloat("RiseSpeed");
+      this.reachedTarget = nbt.getBoolean("ReachedTarget");
+      this.targetHeight = nbt.getFloat("TargetHeight");
+      this.initialY = nbt.getDouble("InitialY");
+      this.centerX = nbt.getDouble("CenterX");
+      this.centerZ = nbt.getDouble("CenterZ");
+      this.orbitRadius = nbt.getFloat("OrbitRadius");
+      this.orbitSpeed = nbt.getFloat("OrbitSpeed");
+      this.orbitPhase = nbt.getFloat("OrbitPhase");
    }
 
-   protected void method_5652(NbtCompound nbt) {
-      nbt.method_10548("Phase", this.phase);
-      nbt.method_10548("Amplitude", this.amplitude);
-      nbt.method_10548("Period", this.period);
-      nbt.method_10548("Direction", this.direction);
-      nbt.method_10548("RiseSpeed", this.riseSpeed);
-      nbt.method_10556("ReachedTarget", this.reachedTarget);
-      nbt.method_10548("TargetHeight", this.targetHeight);
-      nbt.method_10549("InitialY", this.initialY);
-      nbt.method_10549("CenterX", this.centerX);
-      nbt.method_10549("CenterZ", this.centerZ);
-      nbt.method_10548("OrbitRadius", this.orbitRadius);
-      nbt.method_10548("OrbitSpeed", this.orbitSpeed);
-      nbt.method_10548("OrbitPhase", this.orbitPhase);
+   protected void writeCustomDataToNbt(NbtCompound nbt) {
+      nbt.putFloat("Phase", this.phase);
+      nbt.putFloat("Amplitude", this.amplitude);
+      nbt.putFloat("Period", this.period);
+      nbt.putFloat("Direction", this.direction);
+      nbt.putFloat("RiseSpeed", this.riseSpeed);
+      nbt.putBoolean("ReachedTarget", this.reachedTarget);
+      nbt.putFloat("TargetHeight", this.targetHeight);
+      nbt.putDouble("InitialY", this.initialY);
+      nbt.putDouble("CenterX", this.centerX);
+      nbt.putDouble("CenterZ", this.centerZ);
+      nbt.putFloat("OrbitRadius", this.orbitRadius);
+      nbt.putFloat("OrbitSpeed", this.orbitSpeed);
+      nbt.putFloat("OrbitPhase", this.orbitPhase);
    }
 
-   public void method_5773() {
-      super.method_5773();
-      if (!this.method_37908().method_8608()) {
+   public void tick() {
+      super.tick();
+      if (!this.getWorld().isClient()) {
          if (this.isReturning) {
-            double dx = this.centerX - this.method_23317();
-            double dz = this.centerZ - this.method_23321();
+            double dx = this.centerX - this.getX();
+            double dz = this.centerZ - this.getZ();
             double distance = Math.sqrt(dx * dx + dz * dz);
             this.returnSpeed += 0.008F;
             if (this.returnSpeed > 0.8F) {
@@ -160,18 +160,18 @@ public class FloatingDirtEntity extends Entity {
             double moveX = dx / distance * this.returnSpeed;
             double moveZ = dz / distance * this.returnSpeed;
             double moveY = this.centerX > 0.0 ? -0.05F : 0.05F;
-            double newX = this.method_23317() + moveX;
-            double newY = this.method_23318() + moveY;
-            double newZ = this.method_23321() + moveZ;
-            this.method_5808(newX, newY, newZ, 0.0F, 0.0F);
-            this.method_36456(this.method_36454() + 5.0F);
+            double newX = this.getX() + moveX;
+            double newY = this.getY() + moveY;
+            double newZ = this.getZ() + moveZ;
+            this.refreshPositionAndAngles(newX, newY, newZ, 0.0F, 0.0F);
+            this.setYaw(this.getYaw() + 5.0F);
             if (distance < 2.0) {
-               this.method_31472();
+               this.discard();
             }
          } else if (this.isTracking) {
-            double dx = this.targetX - this.method_23317();
-            double dz = this.targetZ - this.method_23321();
-            double dy = this.targetY - this.method_23318();
+            double dx = this.targetX - this.getX();
+            double dz = this.targetZ - this.getZ();
+            double dy = this.targetY - this.getY();
             double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
             this.trackingSpeed += 0.02F;
             if (this.trackingSpeed > 1.5F) {
@@ -181,18 +181,18 @@ public class FloatingDirtEntity extends Entity {
             double moveX = dx / distance * this.trackingSpeed;
             double moveY = dy / distance * this.trackingSpeed;
             double moveZ = dz / distance * this.trackingSpeed;
-            double newX = this.method_23317() + moveX;
-            double newY = this.method_23318() + moveY;
-            double newZ = this.method_23321() + moveZ;
-            this.method_5808(newX, newY, newZ, 0.0F, 0.0F);
-            this.method_36456(this.method_36454() + 8.0F);
-            if (newY <= this.method_37908().method_8624(Type.field_13202, (int)newX, (int)newZ) + 1) {
+            double newX = this.getX() + moveX;
+            double newY = this.getY() + moveY;
+            double newZ = this.getZ() + moveZ;
+            this.refreshPositionAndAngles(newX, newY, newZ, 0.0F, 0.0F);
+            this.setYaw(this.getYaw() + 8.0F);
+            if (newY <= this.getWorld().getTopY(Type.WORLD_SURFACE, (int)newX, (int)newZ) + 1) {
                this.explode();
             } else if (distance < 2.0) {
                this.explode();
             }
          } else {
-            double currentY = this.method_23318();
+            double currentY = this.getY();
             double targetY = this.initialY + this.targetHeight;
             if (!this.reachedTarget) {
                double newY = currentY + this.riseSpeed;
@@ -205,7 +205,7 @@ public class FloatingDirtEntity extends Entity {
                double orbitAngle = this.orbitPhase;
                double x = this.centerX + Math.cos(orbitAngle) * this.orbitRadius;
                double z = this.centerZ + Math.sin(orbitAngle) * this.orbitRadius;
-               this.method_5808(x, newY, z, 0.0F, 0.0F);
+               this.refreshPositionAndAngles(x, newY, z, 0.0F, 0.0F);
             } else {
                this.orbitPhase = this.orbitPhase + this.orbitSpeed;
                double orbitAngle = this.orbitPhase;
@@ -218,40 +218,40 @@ public class FloatingDirtEntity extends Entity {
                double newX = baseX + swingX * 0.03F;
                double newY = targetY + swingY * 0.03F;
                double newZ = baseZ + swingZ * 0.03F;
-               this.method_5808(newX, newY, newZ, 0.0F, 0.0F);
+               this.refreshPositionAndAngles(newX, newY, newZ, 0.0F, 0.0F);
             }
 
-            this.method_36456(this.method_36454() + 0.8F);
-            if (this.field_6012 > 1000) {
-               this.method_31472();
+            this.setYaw(this.getYaw() + 0.8F);
+            if (this.age > 1000) {
+               this.discard();
             }
          }
       }
    }
 
-   public boolean method_5640(double distance) {
+   public boolean shouldRender(double distance) {
       return distance < 10000.0;
    }
 
-   public boolean method_5767() {
+   public boolean isInvisible() {
       return false;
    }
 
-   public boolean method_5655() {
+   public boolean isInvulnerable() {
       return true;
    }
 
-   public boolean method_5643(DamageSource source, float amount) {
+   public boolean damage(DamageSource source, float amount) {
       return false;
    }
 
-   public boolean method_5679(DamageSource damageSource) {
+   public boolean isInvulnerableTo(DamageSource damageSource) {
       return true;
    }
 
-   public void method_5711(byte status) {
+   public void handleStatus(byte status) {
       if (status != 35 && status != 36) {
-         super.method_5711(status);
+         super.handleStatus(status);
       }
    }
 }

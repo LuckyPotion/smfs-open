@@ -37,11 +37,11 @@ public class GhostLotFlipOverlay {
    public static void register() {
       HudRenderCallback.EVENT.register((HudRenderCallback)(context, tickDelta) -> {
          if (isActive) {
-            MinecraftClient client = MinecraftClient.method_1551();
-            if (client.field_1724 != null) {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player != null) {
                long elapsed = System.currentTimeMillis() - startTime;
                float totalDuration = duration + holdDuration;
-               float progress = MathHelper.method_15363((float)elapsed / (duration * 1000.0F), 0.0F, 1.0F);
+               float progress = MathHelper.clamp((float)elapsed / (duration * 1000.0F), 0.0F, 1.0F);
                if ((float)elapsed >= totalDuration * 1000.0F) {
                   isActive = false;
                } else {
@@ -53,12 +53,12 @@ public class GhostLotFlipOverlay {
    }
 
    private static void renderFlipAnimation(DrawContext context, float progress, MinecraftClient client) {
-      int screenWidth = context.method_51421();
-      int screenHeight = context.method_51443();
+      int screenWidth = context.getScaledWindowWidth();
+      int screenHeight = context.getScaledWindowHeight();
       int centerX = screenWidth / 2;
       int centerY = screenHeight / 2;
-      MatrixStack matrices = context.method_51448();
-      matrices.method_22903();
+      MatrixStack matrices = context.getMatrices();
+      matrices.push();
       float alpha;
       float horizontalScale;
       boolean showFront;
@@ -86,10 +86,10 @@ public class GhostLotFlipOverlay {
 
       RenderSystem.enableBlend();
       RenderSystem.defaultBlendFunc();
-      RenderSystem.setShader(GameRenderer::method_34542);
+      RenderSystem.setShader(GameRenderer::getPositionTexProgram);
       RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
-      matrices.method_46416(centerX, centerY, 0.0F);
-      matrices.method_22905(horizontalScale, 1.0F, 1.0F);
+      matrices.translate(centerX, centerY, 0.0F);
+      matrices.scale(horizontalScale, 1.0F, 1.0F);
       Identifier texture;
       if (showFront) {
          texture = isLifeLot ? CARD_LIFE : CARD_DEATH;
@@ -100,16 +100,16 @@ public class GhostLotFlipOverlay {
       RenderSystem.setShaderTexture(0, texture);
       int x = -60;
       int y = -90;
-      Matrix4f positionMatrix = matrices.method_23760().method_23761();
-      BufferBuilder bufferBuilder = Tessellator.method_1348().method_1349();
-      bufferBuilder.method_1328(DrawMode.field_27382, VertexFormats.field_1585);
-      bufferBuilder.method_22918(positionMatrix, x, y + 180, 0.0F).method_22913(0.0F, 1.0F).method_1344();
-      bufferBuilder.method_22918(positionMatrix, x + 120, y + 180, 0.0F).method_22913(1.0F, 1.0F).method_1344();
-      bufferBuilder.method_22918(positionMatrix, x + 120, y, 0.0F).method_22913(1.0F, 0.0F).method_1344();
-      bufferBuilder.method_22918(positionMatrix, x, y, 0.0F).method_22913(0.0F, 0.0F).method_1344();
-      BufferRenderer.method_43433(bufferBuilder.method_1326());
+      Matrix4f positionMatrix = matrices.peek().getPositionMatrix();
+      BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+      bufferBuilder.begin(DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+      bufferBuilder.vertex(positionMatrix, x, y + 180, 0.0F).texture(0.0F, 1.0F).next();
+      bufferBuilder.vertex(positionMatrix, x + 120, y + 180, 0.0F).texture(1.0F, 1.0F).next();
+      bufferBuilder.vertex(positionMatrix, x + 120, y, 0.0F).texture(1.0F, 0.0F).next();
+      bufferBuilder.vertex(positionMatrix, x, y, 0.0F).texture(0.0F, 0.0F).next();
+      BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
       RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
       RenderSystem.disableBlend();
-      matrices.method_22909();
+      matrices.pop();
    }
 }

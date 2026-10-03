@@ -13,7 +13,7 @@ public abstract class LivingEntityHealMixin {
    @Inject(method = "heal", at = @At("HEAD"), cancellable = true)
    private void onHeal(float amount, CallbackInfo ci) {
       LivingEntity entity = (LivingEntity)this;
-      StatusEffectInstance traumaEffect = entity.method_6112(ModEffects.TRAUMA_CURSE);
+      StatusEffectInstance traumaEffect = entity.getStatusEffect(ModEffects.TRAUMA_CURSE);
       if (traumaEffect != null) {
          ci.cancel();
       }

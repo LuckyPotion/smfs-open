@@ -21,41 +21,39 @@ import org.jetbrains.annotations.Nullable;
 
 public class GhostCandyItem extends Item {
    public GhostCandyItem(Settings settings) {
-      super(settings.method_19265(new Builder().method_19238(2).method_19237(0.1F).method_19240().method_19242()));
+      super(settings.food(new Builder().hunger(2).saturationModifier(0.1F).alwaysEdible().build()));
    }
 
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (!world.field_9236 && user instanceof PlayerEntity player) {
-         EntityAttributeInstance healthAttribute = player.method_5996(EntityAttributes.field_23716);
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (!world.isClient && user instanceof PlayerEntity player) {
+         EntityAttributeInstance healthAttribute = player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
          if (healthAttribute != null) {
-            double currentMaxHealth = healthAttribute.method_6201();
-            healthAttribute.method_6192(Math.max(1.0, currentMaxHealth - 3.0));
-            if (player.method_6032() > healthAttribute.method_6201()) {
-               player.method_6033((float)healthAttribute.method_6201());
+            double currentMaxHealth = healthAttribute.getBaseValue();
+            healthAttribute.setBaseValue(Math.max(1.0, currentMaxHealth - 3.0));
+            if (player.getHealth() > healthAttribute.getBaseValue()) {
+               player.setHealth((float)healthAttribute.getBaseValue());
             }
          }
 
-         player.method_6092(new StatusEffectInstance(ModEffects.SPIRIT_SURGE, 1200, 0, false, false));
-         if (world.field_9229.method_43057() < 0.02F && !this.hasCandyGhost(player)) {
+         player.addStatusEffect(new StatusEffectInstance(ModEffects.SPIRIT_SURGE, 1200, 0, false, false));
+         if (world.random.nextFloat() < 0.02F && !this.hasCandyGhost(player)) {
             ItemStack candyGhostStack = new ItemStack(ModItems.CANDY_GHOST, 1);
-            if (!player.method_7270(candyGhostStack)) {
-               ItemEntity candyGhostEntity = new ItemEntity(
-                  player.method_37908(), player.method_23317(), player.method_23318(), player.method_23321(), candyGhostStack
-               );
-               player.method_37908().method_8649(candyGhostEntity);
+            if (!player.giveItemStack(candyGhostStack)) {
+               ItemEntity candyGhostEntity = new ItemEntity(player.getWorld(), player.getX(), player.getY(), player.getZ(), candyGhostStack);
+               player.getWorld().spawnEntity(candyGhostEntity);
             }
 
-            player.method_7353(Text.method_43471("item.smfs.candy_ghost.obtained").method_27692(Formatting.field_1065), false);
+            player.sendMessage(Text.translatable("item.smfs.candy_ghost.obtained").formatted(Formatting.GOLD), false);
          }
       }
 
-      return super.method_7861(stack, world, user);
+      return super.finishUsing(stack, world, user);
    }
 
    private boolean hasCandyGhost(PlayerEntity player) {
-      for (int i = 0; i < player.method_31548().method_5439(); i++) {
-         ItemStack stack = player.method_31548().method_5438(i);
-         if (stack.method_7909() instanceof CandyGhostItem) {
+      for (int i = 0; i < player.getInventory().size(); i++) {
+         ItemStack stack = player.getInventory().getStack(i);
+         if (stack.getItem() instanceof CandyGhostItem) {
             return true;
          }
       }
@@ -63,10 +61,10 @@ public class GhostCandyItem extends Item {
       return false;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_candy.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_candy.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_candy.description.type"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_candy.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_candy.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_candy.description.type"));
    }
 }

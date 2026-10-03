@@ -40,25 +40,25 @@ public class ScreenPresetRenderer implements HudRenderCallback {
    public static void nextPreset() {
       int next = (currentPreset.ordinal() + 1) % VALUES.length;
       currentPreset = VALUES[next];
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
-         client.field_1724.method_7353(Text.method_43470("§e[预设] §f" + currentPreset.displayName + " §7强度: " + (int)(intensity * 100.0F) + "%"), true);
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
+         client.player.sendMessage(Text.literal("§e[预设] §f" + currentPreset.displayName + " §7强度: " + (int)(intensity * 100.0F) + "%"), true);
       }
    }
 
    public static void setPreset(ScreenPresetRenderer.PresetType preset) {
       currentPreset = preset;
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
-         client.field_1724.method_7353(Text.method_43470("§e[预设] §f" + currentPreset.displayName + " §7强度: " + (int)(intensity * 100.0F) + "%"), true);
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
+         client.player.sendMessage(Text.literal("§e[预设] §f" + currentPreset.displayName + " §7强度: " + (int)(intensity * 100.0F) + "%"), true);
       }
    }
 
    public static void setIntensity(float i) {
-      intensity = MathHelper.method_15363(i, 0.0F, 1.0F);
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
-         client.field_1724.method_7353(Text.method_43470("§e[强度] §f" + (int)(intensity * 100.0F) + "%"), true);
+      intensity = MathHelper.clamp(i, 0.0F, 1.0F);
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
+         client.player.sendMessage(Text.literal("§e[强度] §f" + (int)(intensity * 100.0F) + "%"), true);
       }
    }
 
@@ -97,11 +97,11 @@ public class ScreenPresetRenderer implements HudRenderCallback {
       }
 
       if (currentPreset != ScreenPresetRenderer.PresetType.NONE && !(intensity <= 0.005F)) {
-         MinecraftClient client = MinecraftClient.method_1551();
-         if (client.field_1724 != null) {
-            int width = client.method_22683().method_4486();
-            int height = client.method_22683().method_4502();
-            MatrixStack matrices = context.method_51448();
+         MinecraftClient client = MinecraftClient.getInstance();
+         if (client.player != null) {
+            int width = client.getWindow().getScaledWidth();
+            int height = client.getWindow().getScaledHeight();
+            MatrixStack matrices = context.getMatrices();
             switch (currentPreset) {
                case GLITCH:
                   this.renderGlitch(context, width, height, matrices);
@@ -153,10 +153,10 @@ public class ScreenPresetRenderer implements HudRenderCallback {
          int g = (int)(this.glitchRGB[i * 3 + 1] * 255.0F);
          int b = (int)(this.glitchRGB[i * 3 + 2] * 255.0F);
          int mainColor = argb((int)(alphaBase * 255.0F), r, g, b);
-         context.method_25294(ox, y, width + ox, y + h, mainColor);
+         context.fill(ox, y, width + ox, y + h, mainColor);
          int edgeColor = argb((int)(alphaEdge * 255.0F), Math.min(255, r + 60), Math.min(255, g + 60), Math.min(255, b + 60));
-         context.method_25294(ox, y, ox + 2, y + h, edgeColor);
-         context.method_25294(width + ox - 2, y, width + ox, y + h, edgeColor);
+         context.fill(ox, y, ox + 2, y + h, edgeColor);
+         context.fill(width + ox - 2, y, width + ox, y + h, edgeColor);
       }
 
       float cellW = width / 80.0F;
@@ -172,7 +172,7 @@ public class ScreenPresetRenderer implements HudRenderCallback {
                int sy = (int)(y * cellH);
                int ex = (int)((x + 1) * cellW) + 1;
                int ey = (int)((y + 1) * cellH) + 1;
-               context.method_25294(sx, sy, ex, ey, RANDOM.nextBoolean() ? nWhite : nBlack);
+               context.fill(sx, sy, ex, ey, RANDOM.nextBoolean() ? nWhite : nBlack);
             }
          }
       }
@@ -181,7 +181,7 @@ public class ScreenPresetRenderer implements HudRenderCallback {
       int scanColor = argb(scanAlpha, 0, 0, 0);
 
       for (int ly = 0; ly < height; ly += 3) {
-         context.method_25294(0, ly, width, ly + 1, scanColor);
+         context.fill(0, ly, width, ly + 1, scanColor);
       }
 
       RenderSystem.enableDepthTest();
@@ -201,7 +201,7 @@ public class ScreenPresetRenderer implements HudRenderCallback {
       RenderSystem.defaultBlendFunc();
       RenderSystem.disableDepthTest();
       int darkBg = argb((int)(intensity * 0.08F * 255.0F), 0, 0, 0);
-      context.method_25294(0, 0, width, height, darkBg);
+      context.fill(0, 0, width, height, darkBg);
 
       for (int i = 0; i < 8; i++) {
          this.textLife[i] = this.textLife[i] - 0.05F;
@@ -222,16 +222,16 @@ public class ScreenPresetRenderer implements HudRenderCallback {
             String msg = HALLUCINATION_TEXTS[this.textIndex[i]];
             int red = argb((int)(fade * 255.0F), 200, 10, 10);
             int glow = argb((int)(fade * 0.3F * 255.0F), 255, 50, 50);
-            matrices.method_22903();
-            matrices.method_46416(this.textX[i], this.textY[i], 0.0F);
-            matrices.method_22905(this.textScale[i], this.textScale[i], 1.0F);
+            matrices.push();
+            matrices.translate(this.textX[i], this.textY[i], 0.0F);
+            matrices.scale(this.textScale[i], this.textScale[i], 1.0F);
             float shakeX = (RANDOM.nextFloat() - 0.5F) * 3.0F * intensity;
             float shakeY = (RANDOM.nextFloat() - 0.5F) * 3.0F * intensity;
-            matrices.method_46416(shakeX, shakeY, 0.0F);
-            int textWidth = MinecraftClient.method_1551().field_1772.method_1727(msg);
-            context.method_25294(-textWidth / 2 - 4, -6, textWidth / 2 + 4, 6, glow);
-            context.method_51433(MinecraftClient.method_1551().field_1772, msg, -textWidth / 2, -5, red, false);
-            matrices.method_22909();
+            matrices.translate(shakeX, shakeY, 0.0F);
+            int textWidth = MinecraftClient.getInstance().textRenderer.getWidth(msg);
+            context.fill(-textWidth / 2 - 4, -6, textWidth / 2 + 4, 6, glow);
+            context.drawText(MinecraftClient.getInstance().textRenderer, msg, -textWidth / 2, -5, red, false);
+            matrices.pop();
          }
       }
 

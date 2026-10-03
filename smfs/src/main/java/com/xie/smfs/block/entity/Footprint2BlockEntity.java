@@ -28,7 +28,7 @@ public class Footprint2BlockEntity extends BlockEntity implements GeoBlockEntity
 
    public void setEntityUUID(String entityUUID) {
       this.entityUUID = entityUUID;
-      this.method_5431();
+      this.markDirty();
    }
 
    public boolean hasValidEntityInfo() {
@@ -41,17 +41,17 @@ public class Footprint2BlockEntity extends BlockEntity implements GeoBlockEntity
       }
 
       try {
-         return (LivingEntity)world.method_8390(
+         return (LivingEntity)world.getEntitiesByClass(
                LivingEntity.class,
                new Box(
-                  this.field_11867.method_10263() - 1000,
-                  this.field_11867.method_10264() - 1000,
-                  this.field_11867.method_10260() - 1000,
-                  this.field_11867.method_10263() + 1000,
-                  this.field_11867.method_10264() + 1000,
-                  this.field_11867.method_10260() + 1000
+                  this.pos.getX() - 1000,
+                  this.pos.getY() - 1000,
+                  this.pos.getZ() - 1000,
+                  this.pos.getX() + 1000,
+                  this.pos.getY() + 1000,
+                  this.pos.getZ() + 1000
                ),
-               entity -> entity.method_5845().equals(this.entityUUID)
+               entity -> entity.getUuidAsString().equals(this.entityUUID)
             )
             .stream()
             .findFirst()
@@ -61,16 +61,16 @@ public class Footprint2BlockEntity extends BlockEntity implements GeoBlockEntity
       }
    }
 
-   public void method_11014(NbtCompound nbt) {
-      super.method_11014(nbt);
-      if (nbt.method_10545("EntityUUID")) {
-         this.entityUUID = nbt.method_10558("EntityUUID");
+   public void readNbt(NbtCompound nbt) {
+      super.readNbt(nbt);
+      if (nbt.contains("EntityUUID")) {
+         this.entityUUID = nbt.getString("EntityUUID");
       }
    }
 
-   protected void method_11007(NbtCompound nbt) {
-      super.method_11007(nbt);
-      nbt.method_10582("EntityUUID", this.entityUUID);
+   protected void writeNbt(NbtCompound nbt) {
+      super.writeNbt(nbt);
+      nbt.putString("EntityUUID", this.entityUUID);
    }
 
    @Override

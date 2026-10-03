@@ -14,7 +14,7 @@ class EventQuestStrategy implements QuestDetectionStrategy {
 
    @Override
    public int getCurrentProgress(PlayerEntity player, String objectiveId) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int count = 0;
       String ghostType = this.getGhostTypeForEvent(objectiveId);
       if (ghostType == null) {
@@ -22,13 +22,13 @@ class EventQuestStrategy implements QuestDetectionStrategy {
          return 0;
       }
 
-      for (int i = 0; i < inventory.method_5439(); i++) {
-         ItemStack stack = inventory.method_5438(i);
-         if (!stack.method_7960() && stack.method_7909() == ModItems.GOLDEN_CONTAINER && GoldenContainerItem.hasGhost(stack)) {
+      for (int i = 0; i < inventory.size(); i++) {
+         ItemStack stack = inventory.getStack(i);
+         if (!stack.isEmpty() && stack.getItem() == ModItems.GOLDEN_CONTAINER && GoldenContainerItem.hasGhost(stack)) {
             String containedGhostType = this.getContainedGhostType(stack);
             if (ghostType.equals(containedGhostType) || containedGhostType.endsWith(":" + ghostType) || containedGhostType.equals("smfs:" + ghostType)) {
                count++;
-               LOGGER.info("玩家 {} 的黄金容器包含对应鬼类型: {} (任务: {})", player.method_5477().getString(), ghostType, objectiveId);
+               LOGGER.info("玩家 {} 的黄金容器包含对应鬼类型: {} (任务: {})", player.getName().getString(), ghostType, objectiveId);
             }
          }
       }
@@ -38,18 +38,18 @@ class EventQuestStrategy implements QuestDetectionStrategy {
 
    @Override
    public void consumeItems(PlayerEntity player, String objectiveId, int amount) {
-      PlayerInventory inventory = player.method_31548();
+      PlayerInventory inventory = player.getInventory();
       int remaining = amount;
       String ghostType = this.getGhostTypeForEvent(objectiveId);
       if (ghostType == null) {
          LOGGER.warn("未知的事件任务目标，无法消耗物品: {}", objectiveId);
       } else {
-         for (int i = 0; i < inventory.method_5439() && remaining > 0; i++) {
-            ItemStack stack = inventory.method_5438(i);
-            if (!stack.method_7960() && stack.method_7909() == ModItems.GOLDEN_CONTAINER && GoldenContainerItem.hasGhost(stack)) {
+         for (int i = 0; i < inventory.size() && remaining > 0; i++) {
+            ItemStack stack = inventory.getStack(i);
+            if (!stack.isEmpty() && stack.getItem() == ModItems.GOLDEN_CONTAINER && GoldenContainerItem.hasGhost(stack)) {
                String containedGhostType = this.getContainedGhostType(stack);
                if (ghostType.equals(containedGhostType) || containedGhostType.endsWith(":" + ghostType) || containedGhostType.equals("smfs:" + ghostType)) {
-                  stack.method_7934(1);
+                  stack.decrement(1);
                   remaining--;
                   LOGGER.info("消耗包含鬼 {} 的黄金容器，任务: {}", ghostType, objectiveId);
                }

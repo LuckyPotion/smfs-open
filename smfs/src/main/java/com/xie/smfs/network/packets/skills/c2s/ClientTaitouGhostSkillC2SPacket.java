@@ -29,7 +29,7 @@ public class ClientTaitouGhostSkillC2SPacket {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "taitou_ghost", ModItems.TAITOU_GHOST, -1);
             if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-               player.method_7353(Text.method_43470("§c您没有驾驭抬头鬼，无法使用此技能"), true);
+               player.sendMessage(Text.literal("§c您没有驾驭抬头鬼，无法使用此技能"), true);
             } else {
                GhostDomainManager.handleTaitouGhostSkill(player);
                PlayerEvents.balanceRevivalDegree(player);

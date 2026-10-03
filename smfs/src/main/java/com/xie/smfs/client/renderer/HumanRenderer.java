@@ -13,7 +13,7 @@ import net.minecraft.util.Identifier;
 
 public class HumanRenderer extends BipedEntityRenderer<MobEntity, PlayerEntityModel<MobEntity>> {
    public HumanRenderer(Context context) {
-      super(context, new PlayerEntityModel(context.method_32167(EntityModelLayers.field_27577), false), 0.5F);
+      super(context, new PlayerEntityModel(context.getPart(EntityModelLayers.PLAYER), false), 0.5F);
    }
 
    public Identifier getTexture(MobEntity entity) {
@@ -52,12 +52,12 @@ public class HumanRenderer extends BipedEntityRenderer<MobEntity, PlayerEntityMo
       };
    }
 
-   public void method_4072(MobEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-      matrices.method_22903();
-      matrices.method_22905(1.0F, 1.0F, 1.0F);
+   public void render(MobEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+      matrices.push();
+      matrices.scale(1.0F, 1.0F, 1.0F);
       Identifier texture = this.getTexture(entity);
-      VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.method_23580(texture));
-      super.method_4072(entity, yaw, tickDelta, matrices, vertexConsumers, light);
-      matrices.method_22909();
+      VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(texture));
+      super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+      matrices.pop();
    }
 }

@@ -13,7 +13,7 @@ public class OpenHumanSkinPaperEndingS2CPacket {
    public static final Identifier ID = new Identifier("smfs", "open_human_skin_paper_ending");
 
    public static void handle(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-      client.execute(() -> client.method_1507(new HumanSkinPaperEndingOverlay()));
+      client.execute(() -> client.setScreen(new HumanSkinPaperEndingOverlay()));
    }
 
    public static void register() {

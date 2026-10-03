@@ -26,29 +26,29 @@ public class ChestLootProcessor extends StructureProcessor {
    }
 
    @Nullable
-   public StructureBlockInfo method_15110(
+   public StructureBlockInfo process(
       WorldView world, BlockPos pos, BlockPos pivot, StructureBlockInfo originalBlockInfo, StructureBlockInfo currentBlockInfo, StructurePlacementData data
    ) {
-      BlockState state = currentBlockInfo.comp_1342();
-      if (state.method_27852(Blocks.field_10034) || state.method_27852(Blocks.field_10380)) {
+      BlockState state = currentBlockInfo.state();
+      if (state.isOf(Blocks.CHEST) || state.isOf(Blocks.TRAPPED_CHEST)) {
          chestCount++;
          if (chestCount % 100 == 0) {
             Smfs.LOGGER.debug("[ChestLootProcessor] 已处理 {} 个箱子（战利品表: {}）", chestCount, this.lootTable);
          }
 
-         NbtCompound nbt = currentBlockInfo.comp_1343() != null ? currentBlockInfo.comp_1343().method_10553() : new NbtCompound();
+         NbtCompound nbt = currentBlockInfo.nbt() != null ? currentBlockInfo.nbt().copy() : new NbtCompound();
          if (this.lootTable != null && !this.lootTable.isEmpty()) {
-            nbt.method_10582("LootTable", this.lootTable);
-            nbt.method_10544("LootTableSeed", currentBlockInfo.comp_1341().method_10063());
-            nbt.method_10582("id", "minecraft:chest");
-            return new StructureBlockInfo(currentBlockInfo.comp_1341(), currentBlockInfo.comp_1342(), nbt);
+            nbt.putString("LootTable", this.lootTable);
+            nbt.putLong("LootTableSeed", currentBlockInfo.pos().asLong());
+            nbt.putString("id", "minecraft:chest");
+            return new StructureBlockInfo(currentBlockInfo.pos(), currentBlockInfo.state(), nbt);
          }
       }
 
       return currentBlockInfo;
    }
 
-   protected StructureProcessorType<?> method_16772() {
+   protected StructureProcessorType<?> getType() {
       return ModStructureProcessors.CHEST_LOOT_PROCESSOR;
    }
 }

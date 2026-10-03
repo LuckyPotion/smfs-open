@@ -63,7 +63,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
    ) {
       PlayerEntity player = this.getCurrentPlayer();
       if (player != null) {
-         ClientWorld world = MinecraftClient.method_1551().field_1687;
+         ClientWorld world = MinecraftClient.getInstance().world;
          if (world != null) {
             this.renderAllGhostPressureTargets(matrices, animatable, vertexConsumers, light, partialTick, packedOverlay, world, player);
             this.renderGiantShadowGhost(matrices, vertexConsumers, world, player);
@@ -73,18 +73,18 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
 
    private void renderGiantShadowGhost(MatrixStack matrices, VertexConsumerProvider vertexConsumers, ClientWorld world, PlayerEntity player) {
       if (hasGiantShadowGhost(player)) {
-         float tickDelta = MinecraftClient.method_1551().method_1488();
-         Vec3d targetPos = player.method_30950(tickDelta);
-         float targetYaw = player.method_5705(tickDelta);
+         float tickDelta = MinecraftClient.getInstance().getTickDelta();
+         Vec3d targetPos = player.getLerpedPos(tickDelta);
+         float targetYaw = player.getYaw(tickDelta);
          if (Double.isNaN(smoothedPullX)) {
-            smoothedPullX = targetPos.field_1352;
-            smoothedPullY = targetPos.field_1351;
-            smoothedPullZ = targetPos.field_1350;
+            smoothedPullX = targetPos.x;
+            smoothedPullY = targetPos.y;
+            smoothedPullZ = targetPos.z;
             smoothedPullYaw = targetYaw;
          } else {
-            smoothedPullX = smoothedPullX + (targetPos.field_1352 - smoothedPullX) * 0.08F;
-            smoothedPullY = smoothedPullY + (targetPos.field_1351 - smoothedPullY) * 0.08F;
-            smoothedPullZ = smoothedPullZ + (targetPos.field_1350 - smoothedPullZ) * 0.08F;
+            smoothedPullX = smoothedPullX + (targetPos.x - smoothedPullX) * 0.08F;
+            smoothedPullY = smoothedPullY + (targetPos.y - smoothedPullY) * 0.08F;
+            smoothedPullZ = smoothedPullZ + (targetPos.z - smoothedPullZ) * 0.08F;
             float yawDiff = targetYaw - smoothedPullYaw;
 
             while (yawDiff > 180.0F) {
@@ -98,9 +98,9 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
             smoothedPullYaw += yawDiff * 0.08F;
          }
 
-         if (!player.method_5715()) {
-            Camera camera = MinecraftClient.method_1551().field_1773.method_19418();
-            Vec3d cameraPos = camera.method_19326();
+         if (!player.isSneaking()) {
+            Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+            Vec3d cameraPos = camera.getPos();
             int mainSlot = MainGhostManager.getMainGhostSlot(player);
             String ghostType = PlayerEvents.getGhostTypeInSlot(player, mainSlot);
             boolean isCompleteShadowGhost = "complete_shadow_ghost".equals(ghostType);
@@ -108,7 +108,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
                new GhostPullRenderer.GiantShadowGhostGeoModel(isCompleteShadowGhost)
             );
             GhostPullRenderer.GiantShadowGhostAnimatable giantShadowGhostAnimatable = new GhostPullRenderer.GiantShadowGhostAnimatable();
-            matrices.method_22903();
+            matrices.push();
             double backOffsetX = Math.sin(Math.toRadians(smoothedPullYaw)) * 0.5;
             double backOffsetZ = -Math.cos(Math.toRadians(smoothedPullYaw)) * 0.5;
             double rightOffsetX = Math.cos(Math.toRadians(smoothedPullYaw)) * 0.4;
@@ -117,15 +117,15 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
             double worldX = smoothedPullX + backOffsetX + rightOffsetX;
             double worldY = smoothedPullY + offsetY;
             double worldZ = smoothedPullZ + backOffsetZ + rightOffsetZ;
-            matrices.method_22904(worldX - cameraPos.field_1352, worldY - cameraPos.field_1351, worldZ - cameraPos.field_1350);
-            matrices.method_22907(RotationAxis.field_40716.rotationDegrees(180.0F - smoothedPullYaw));
-            matrices.method_22905(0.85F, 0.85F, 0.85F);
+            matrices.translate(worldX - cameraPos.x, worldY - cameraPos.y, worldZ - cameraPos.z);
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - smoothedPullYaw));
+            matrices.scale(0.85F, 0.85F, 0.85F);
             Identifier textureId = isCompleteShadowGhost
                ? new Identifier("smfs", "textures/entity/complete_shadow_ghost.png")
                : new Identifier("smfs", "textures/entity/giant_shadow_ghost.png");
-            RenderLayer giantShadowGhostLayer = RenderLayer.method_23580(textureId);
+            RenderLayer giantShadowGhostLayer = RenderLayer.getEntityTranslucent(textureId);
             renderer.render(matrices, giantShadowGhostAnimatable, vertexConsumers, giantShadowGhostLayer, vertexConsumers.getBuffer(giantShadowGhostLayer), 0);
-            matrices.method_22909();
+            matrices.pop();
          }
       }
    }
@@ -140,9 +140,9 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
       ClientWorld world,
       PlayerEntity currentPlayer
    ) {
-      Camera camera = MinecraftClient.method_1551().field_1773.method_19418();
-      Vec3d cameraPos = camera.method_19326();
-      Collection<LivingEntity> allEntities = world.method_8390(LivingEntity.class, currentPlayer.method_5829().method_1014(64.0), e -> true);
+      Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+      Vec3d cameraPos = camera.getPos();
+      Collection<LivingEntity> allEntities = world.getEntitiesByClass(LivingEntity.class, currentPlayer.getBoundingBox().expand(64.0), e -> true);
       boolean playerHasGhostPressure = hasGhostPressureItem(currentPlayer);
       boolean playerNotOnCooldown = !isGhostPressureSkillOnCooldown(currentPlayer);
       if (playerHasGhostPressure && playerNotOnCooldown) {
@@ -160,7 +160,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
    }
 
    private boolean checkGhostPressureEffect(LivingEntity entity) {
-      UUID entityId = entity.method_5667();
+      UUID entityId = entity.getUuid();
       if (serverDetectionCache.containsKey(entityId)) {
          boolean result = serverDetectionCache.get(entityId);
          if (result) {
@@ -173,7 +173,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
    }
 
    private void requestServerDetection(LivingEntity entity) {
-      UUID entityId = entity.method_5667();
+      UUID entityId = entity.getUuid();
       long currentTime = System.currentTimeMillis();
       if (lastRequestTime.containsKey(entityId)) {
          long lastTime = lastRequestTime.get(entityId);
@@ -182,7 +182,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
          }
       }
 
-      if (MinecraftClient.method_1551().method_1562() != null) {
+      if (MinecraftClient.getInstance().getNetworkHandler() != null) {
          PacketByteBuf buf = GhostPressureDetectionPacket.createClientRequestPacket(entityId);
          ClientPlayNetworking.send(GhostPressureDetectionPacket.PACKET_ID, buf);
          lastRequestTime.put(entityId, currentTime);
@@ -215,10 +215,10 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
       Vec3d cameraPos,
       boolean isTarget
    ) {
-      matrices.method_22903();
-      float tickDelta = MinecraftClient.method_1551().method_1488();
-      Vec3d targetPos = entity.method_30950(tickDelta);
-      float targetYaw = entity.method_5705(tickDelta);
+      matrices.push();
+      float tickDelta = MinecraftClient.getInstance().getTickDelta();
+      Vec3d targetPos = entity.getLerpedPos(tickDelta);
+      float targetYaw = entity.getYaw(tickDelta);
       double rightOffsetX = Math.cos(Math.toRadians(targetYaw)) * 0.3;
       double rightOffsetZ = Math.sin(Math.toRadians(targetYaw)) * 0.3;
       double backOffsetX = Math.sin(Math.toRadians(targetYaw)) * 0.4;
@@ -226,20 +226,18 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
       double offsetX = rightOffsetX + backOffsetX;
       double offsetY = -0.8;
       double offsetZ = rightOffsetZ + backOffsetZ;
-      double worldX = targetPos.field_1352 + offsetX;
-      double worldY = targetPos.field_1351 + offsetY;
-      double worldZ = targetPos.field_1350 + offsetZ;
-      matrices.method_22904(worldX - cameraPos.field_1352, worldY - cameraPos.field_1351, worldZ - cameraPos.field_1350);
-      matrices.method_22907(RotationAxis.field_40716.rotationDegrees(180.0F - targetYaw));
-      matrices.method_22905(0.5F, 0.5F, 0.5F);
+      double worldX = targetPos.x + offsetX;
+      double worldY = targetPos.y + offsetY;
+      double worldZ = targetPos.z + offsetZ;
+      matrices.translate(worldX - cameraPos.x, worldY - cameraPos.y, worldZ - cameraPos.z);
+      matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - targetYaw));
+      matrices.scale(0.5F, 0.5F, 0.5F);
       super.render(matrices, animatable, vertexConsumers, light, partialTick, packedOverlay);
-      matrices.method_22909();
+      matrices.pop();
    }
 
    private PlayerEntity getCurrentPlayer() {
-      return MinecraftClient.method_1551().field_1687 != null && MinecraftClient.method_1551().field_1724 != null
-         ? MinecraftClient.method_1551().field_1724
-         : null;
+      return MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().player != null ? MinecraftClient.getInstance().player : null;
    }
 
    private static boolean hasGhostPressureItem(PlayerEntity player) {
@@ -249,7 +247,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
 
       int mainSlot = MainGhostManager.getMainGhostSlot(player);
       ItemStack ghostItem = PlayerEvents.getGhostSlotItem(player, mainSlot);
-      return !ghostItem.method_7960() && ghostItem.method_7909() == ModItems.GHOST_PRESSURE;
+      return !ghostItem.isEmpty() && ghostItem.getItem() == ModItems.GHOST_PRESSURE;
    }
 
    private static boolean isGhostPressureSkillOnCooldown(PlayerEntity player) {
@@ -263,7 +261,7 @@ public class GhostPullRenderer extends GeoObjectRenderer<GhostPullRenderer.Ghost
 
       int mainSlot = MainGhostManager.getMainGhostSlot(player);
       ItemStack ghostItem = PlayerEvents.getGhostSlotItem(player, mainSlot);
-      return !ghostItem.method_7960() && (ghostItem.method_7909() == ModItems.GIANT_SHADOW_GHOST || ghostItem.method_7909() == ModItems.COMPLETE_SHADOW_GHOST);
+      return !ghostItem.isEmpty() && (ghostItem.getItem() == ModItems.GIANT_SHADOW_GHOST || ghostItem.getItem() == ModItems.COMPLETE_SHADOW_GHOST);
    }
 
    public static class GhostPullAnimatable implements GeoAnimatable {

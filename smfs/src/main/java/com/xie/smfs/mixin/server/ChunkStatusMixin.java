@@ -48,17 +48,17 @@ public class ChunkStatusMixin {
 
    @Inject(method = "<clinit>", at = @At("TAIL"))
    private static void smfs$expandStructureStartDistance(CallbackInfo ci) {
-      field_12791 = ImmutableList.builder().addAll(field_12791).add(ChunkStatus.field_16423).build();
+      field_12791 = ImmutableList.builder().addAll(field_12791).add(ChunkStatus.STRUCTURE_STARTS).build();
       field_12788 = smfs$buildStatusToDistance();
    }
 
    private static IntList smfs$buildStatusToDistance() {
-      List<ChunkStatus> orderedStatuses = ChunkStatus.method_16558();
+      List<ChunkStatus> orderedStatuses = ChunkStatus.createOrderedList();
       IntArrayList distanceByStatus = new IntArrayList(orderedStatuses.size());
       int distance = 0;
 
       for (int statusIndex = orderedStatuses.size() - 1; statusIndex >= 0; statusIndex--) {
-         while (distance + 1 < field_12791.size() && statusIndex <= field_12791.get(distance + 1).method_16559()) {
+         while (distance + 1 < field_12791.size() && statusIndex <= field_12791.get(distance + 1).getIndex()) {
             distance++;
          }
 

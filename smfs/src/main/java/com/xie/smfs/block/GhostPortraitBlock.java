@@ -14,36 +14,36 @@ import net.minecraft.world.BlockView;
 import org.jetbrains.annotations.Nullable;
 
 public class GhostPortraitBlock extends GhostFurnitureBlock {
-   private static final VoxelShape SHAPE_NORTH = Block.method_9541(1.0, 0.0, 12.0, 15.0, 16.0, 16.0);
-   private static final VoxelShape SHAPE_SOUTH = Block.method_9541(1.0, 0.0, 0.0, 15.0, 16.0, 4.0);
-   private static final VoxelShape SHAPE_EAST = Block.method_9541(0.0, 0.0, 1.0, 4.0, 16.0, 15.0);
-   private static final VoxelShape SHAPE_WEST = Block.method_9541(12.0, 0.0, 1.0, 16.0, 16.0, 15.0);
+   private static final VoxelShape SHAPE_NORTH = Block.createCuboidShape(1.0, 0.0, 12.0, 15.0, 16.0, 16.0);
+   private static final VoxelShape SHAPE_SOUTH = Block.createCuboidShape(1.0, 0.0, 0.0, 15.0, 16.0, 4.0);
+   private static final VoxelShape SHAPE_EAST = Block.createCuboidShape(0.0, 0.0, 1.0, 4.0, 16.0, 15.0);
+   private static final VoxelShape SHAPE_WEST = Block.createCuboidShape(12.0, 0.0, 1.0, 16.0, 16.0, 15.0);
 
    public GhostPortraitBlock(Settings settings) {
       super(settings);
    }
 
    @Override
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return this.getShapeForDirection((Direction)state.method_11654(FACING));
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return this.getShapeForDirection((Direction)state.get(FACING));
    }
 
-   public VoxelShape method_9549(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return this.getShapeForDirection((Direction)state.method_11654(FACING));
+   public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return this.getShapeForDirection((Direction)state.get(FACING));
    }
 
    @Nullable
    @Override
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new StaticAnimatable(ModBlockEntities.GHOST_PORTRAIT_BLOCK_ENTITY, pos, state);
    }
 
    private VoxelShape getShapeForDirection(Direction direction) {
       return switch (direction) {
-         case field_11043 -> SHAPE_NORTH;
-         case field_11035 -> SHAPE_SOUTH;
-         case field_11034 -> SHAPE_EAST;
-         case field_11039 -> SHAPE_WEST;
+         case NORTH -> SHAPE_NORTH;
+         case SOUTH -> SHAPE_SOUTH;
+         case EAST -> SHAPE_EAST;
+         case WEST -> SHAPE_WEST;
          default -> SHAPE_NORTH;
       };
    }

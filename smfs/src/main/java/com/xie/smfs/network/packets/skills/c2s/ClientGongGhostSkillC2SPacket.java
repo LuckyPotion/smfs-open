@@ -32,16 +32,16 @@ public class ClientGongGhostSkillC2SPacket {
          if (GhostDomainManager.checkAndSetJSkillCooldown(player, "j_key_skill", 20, "J键技能")) {
             GhostDomainManager.SkillCheckResult result = GhostDomainManager.canUseGhostSkill(player, "gong_ghost", ModItems.GONG_GHOST, -1);
             if (result == GhostDomainManager.SkillCheckResult.NO_GHOST) {
-               player.method_7353(Text.method_43470("§c您没有驾驭敲锣鬼，无法使用此技能"), true);
+               player.sendMessage(Text.literal("§c您没有驾驭敲锣鬼，无法使用此技能"), true);
             } else {
                PlayerEvents.balanceRevivalDegree(player);
-               ServerWorld world = player.method_51469();
-               Box searchBox = new Box(player.method_24515()).method_1014(10.0);
+               ServerWorld world = player.getServerWorld();
+               Box searchBox = new Box(player.getBlockPos()).expand(10.0);
                LivingEntity nearestTarget = null;
                double nearestDistance = Double.MAX_VALUE;
 
-               for (LivingEntity entity : world.method_8390(LivingEntity.class, searchBox, e -> e != player && e.method_5805())) {
-                  double distance = entity.method_5858(player);
+               for (LivingEntity entity : world.getEntitiesByClass(LivingEntity.class, searchBox, e -> e != player && e.isAlive())) {
+                  double distance = entity.squaredDistanceTo(player);
                   if (distance < nearestDistance) {
                      nearestDistance = distance;
                      nearestTarget = entity;
@@ -49,11 +49,11 @@ public class ClientGongGhostSkillC2SPacket {
                }
 
                if (nearestTarget != null) {
-                  LOGGER.info("敲锣鬼技能：玩家 {} 袭击目标 {}", player.method_5477().getString(), nearestTarget.method_5477().getString());
+                  LOGGER.info("敲锣鬼技能：玩家 {} 袭击目标 {}", player.getName().getString(), nearestTarget.getName().getString());
                   GhostDomainManager.executeSkillSpiritAttack(player, nearestTarget);
                } else {
-                  LOGGER.info("敲锣鬼技能：玩家 {} 未找到袭击目标", player.method_5477().getString());
-                  player.method_7353(Text.method_43470("§c未找到袭击目标"), true);
+                  LOGGER.info("敲锣鬼技能：玩家 {} 未找到袭击目标", player.getName().getString());
+                  player.sendMessage(Text.literal("§c未找到袭击目标"), true);
                }
             }
          }

@@ -31,15 +31,15 @@ public class GhostShroudItemRenderer extends GeoItemRenderer<GhostShroudArmorIte
    ) {
       super.preRender(matrices, animatable, model, vertexConsumers, buffer, isReRender, tickDelta, light, overlay, red, green, blue, alpha);
       if (!isReRender) {
-         if (this.renderPerspective == ModelTransformationMode.field_4317) {
-            matrices.method_22904(0.0, -0.65, 0.0);
-            matrices.method_22905(0.58F, 0.58F, 0.58F);
-         } else if (this.renderPerspective == ModelTransformationMode.field_4320
-            || this.renderPerspective == ModelTransformationMode.field_4323
-            || this.renderPerspective == ModelTransformationMode.field_4322
-            || this.renderPerspective == ModelTransformationMode.field_4321) {
-            matrices.method_22904(0.0, -0.25, 0.0);
-            matrices.method_22905(0.5F, 0.5F, 0.5F);
+         if (this.renderPerspective == ModelTransformationMode.GUI) {
+            matrices.translate(0.0, -0.65, 0.0);
+            matrices.scale(0.58F, 0.58F, 0.58F);
+         } else if (this.renderPerspective == ModelTransformationMode.THIRD_PERSON_RIGHT_HAND
+            || this.renderPerspective == ModelTransformationMode.THIRD_PERSON_LEFT_HAND
+            || this.renderPerspective == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND
+            || this.renderPerspective == ModelTransformationMode.FIRST_PERSON_LEFT_HAND) {
+            matrices.translate(0.0, -0.25, 0.0);
+            matrices.scale(0.5F, 0.5F, 0.5F);
          }
       }
    }

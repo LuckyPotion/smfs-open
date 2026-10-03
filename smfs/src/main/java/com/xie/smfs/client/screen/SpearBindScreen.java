@@ -21,13 +21,13 @@ public class SpearBindScreen extends Screen {
       this.stackProvider = provider;
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
       String titleText = this.isSettingOwner ? "请设置手持位置" : "请选择手持位置";
-      context.method_25300(this.field_22793, titleText, centerX, 40, 16777215);
+      context.drawCenteredTextWithShadow(this.textRenderer, titleText, centerX, 40, 16777215);
       int totalWidth = 320;
       int startX = centerX - totalWidth / 2;
       this.drawCard(context, startX, centerY - 60, 0, mouseX, mouseY);
@@ -45,39 +45,39 @@ public class SpearBindScreen extends Screen {
 
       int bgColor = isHovered ? -1438366584 : -1440603580;
       int borderColor = isHovered ? -10066177 : -12303224;
-      context.method_25294(x + 2, y + 2, x + 80 - 2, y + 120 - 2, bgColor);
-      context.method_49601(x, y, 80, 120, borderColor);
+      context.fill(x + 2, y + 2, x + 80 - 2, y + 120 - 2, bgColor);
+      context.drawBorder(x, y, 80, 120, borderColor);
       String[] labels = new String[]{"上部", "中部", "下部"};
       String label = labels[index];
-      int textWidth = this.field_22793.method_1727(label);
+      int textWidth = this.textRenderer.getWidth(label);
       int textX = x + (80 - textWidth) / 2;
       int textY = y + (120 - 9) / 2;
-      context.method_27535(this.field_22793, Text.method_43470(label).method_27692(Formatting.field_1065), textX, textY, 16777215);
+      context.drawTextWithShadow(this.textRenderer, Text.literal(label).formatted(Formatting.GOLD), textX, textY, 16777215);
    }
 
-   public boolean method_25402(double mouseX, double mouseY, int button) {
-      int centerX = this.field_22789 / 2;
-      int centerY = this.field_22790 / 2;
+   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+      int centerX = this.width / 2;
+      int centerY = this.height / 2;
       int totalWidth = 320;
       int startX = centerX - totalWidth / 2;
       if (mouseX >= startX && mouseX <= startX + 80 && mouseY >= centerY - 60 && mouseY <= centerY + 60) {
          this.stackProvider.onSelect("upper");
-         this.method_25419();
+         this.close();
          return true;
       } else if (mouseX >= startX + 80 + 40 && mouseX <= startX + 160 + 40 && mouseY >= centerY - 60 && mouseY <= centerY + 60) {
          this.stackProvider.onSelect("middle");
-         this.method_25419();
+         this.close();
          return true;
       } else if (mouseX >= startX + 160 + 80 && mouseX <= startX + 240 + 80 && mouseY >= centerY - 60 && mouseY <= centerY + 60) {
          this.stackProvider.onSelect("lower");
-         this.method_25419();
+         this.close();
          return true;
       } else {
-         return super.method_25402(mouseX, mouseY, button);
+         return super.mouseClicked(mouseX, mouseY, button);
       }
    }
 
-   public boolean method_25422() {
+   public boolean shouldCloseOnEsc() {
       return false;
    }
 

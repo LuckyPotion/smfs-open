@@ -32,16 +32,16 @@ public class GhostDeadlockSelectC2SPacket {
          if (slotIndex >= 0 && slotIndex < 10) {
             NbtCompound ghostSlots = PlayerEvents.getGhostSlots(player);
             String slotKey = "Slot" + slotIndex;
-            if (ghostSlots.method_10545(slotKey)) {
-               NbtCompound slotData = ghostSlots.method_10562(slotKey);
-               if (slotData.method_10577("occupied") && !slotData.method_10577("slotDeadlocked")) {
+            if (ghostSlots.contains(slotKey)) {
+               NbtCompound slotData = ghostSlots.getCompound(slotKey);
+               if (slotData.getBoolean("occupied") && !slotData.getBoolean("slotDeadlocked")) {
                   PlayerEvents.setSlotDeadlocked(player, slotIndex, true);
-                  player.method_7353(Text.method_43469("effect.smfs.ghost_deadlock.success", new Object[]{slotIndex}), true);
+                  player.sendMessage(Text.translatable("effect.smfs.ghost_deadlock.success", new Object[]{slotIndex}), true);
                   return;
                }
             }
 
-            player.method_7353(Text.method_43471("effect.smfs.ghost_deadlock.no_ghost"), true);
+            player.sendMessage(Text.translatable("effect.smfs.ghost_deadlock.no_ghost"), true);
          } else {
             applyDeadlockRandom(player);
          }
@@ -54,21 +54,21 @@ public class GhostDeadlockSelectC2SPacket {
 
       for (int i = 0; i < 10; i++) {
          String slotKey = "Slot" + i;
-         if (ghostSlots.method_10545(slotKey)) {
-            NbtCompound slotData = ghostSlots.method_10562(slotKey);
-            if (slotData.method_10577("occupied") && !slotData.method_10577("slotDeadlocked")) {
+         if (ghostSlots.contains(slotKey)) {
+            NbtCompound slotData = ghostSlots.getCompound(slotKey);
+            if (slotData.getBoolean("occupied") && !slotData.getBoolean("slotDeadlocked")) {
                availableSlots.add(i);
             }
          }
       }
 
       if (availableSlots.isEmpty()) {
-         player.method_7353(Text.method_43471("effect.smfs.ghost_deadlock.no_ghost"), true);
+         player.sendMessage(Text.translatable("effect.smfs.ghost_deadlock.no_ghost"), true);
       } else {
          Random random = new Random();
          int targetSlot = availableSlots.get(random.nextInt(availableSlots.size()));
          PlayerEvents.setSlotDeadlocked(player, targetSlot, true);
-         player.method_7353(Text.method_43469("effect.smfs.ghost_deadlock.success", new Object[]{targetSlot}), true);
+         player.sendMessage(Text.translatable("effect.smfs.ghost_deadlock.success", new Object[]{targetSlot}), true);
       }
    }
 }

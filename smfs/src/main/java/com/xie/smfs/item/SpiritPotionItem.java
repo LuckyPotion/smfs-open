@@ -23,7 +23,7 @@ public abstract class SpiritPotionItem extends Item {
    protected final int potionColor;
 
    public SpiritPotionItem(Settings settings, StatusEffect effect, int duration, int amplifier) {
-      this(settings, effect, duration, amplifier, effect.method_5556());
+      this(settings, effect, duration, amplifier, effect.getColor());
    }
 
    public SpiritPotionItem(Settings settings, StatusEffect effect, int duration, int amplifier, int potionColor) {
@@ -34,37 +34,37 @@ public abstract class SpiritPotionItem extends Item {
       this.potionColor = potionColor;
    }
 
-   public UseAction method_7853(ItemStack stack) {
-      return UseAction.field_8946;
+   public UseAction getUseAction(ItemStack stack) {
+      return UseAction.DRINK;
    }
 
-   public int method_7881(ItemStack stack) {
+   public int getMaxUseTime(ItemStack stack) {
       return 32;
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack stack = user.method_5998(hand);
-      if (user.method_7332(true)) {
-         user.method_6019(hand);
-         return TypedActionResult.method_22428(stack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack stack = user.getStackInHand(hand);
+      if (user.canConsume(true)) {
+         user.setCurrentHand(hand);
+         return TypedActionResult.consume(stack);
       } else {
-         return TypedActionResult.method_22431(stack);
+         return TypedActionResult.fail(stack);
       }
    }
 
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (!world.field_9236 && user instanceof PlayerEntity player) {
-         player.method_6092(new StatusEffectInstance(this.effect, this.duration, this.amplifier, false, true));
-         if (!player.method_31549().field_7477) {
-            stack.method_7934(1);
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (!world.isClient && user instanceof PlayerEntity player) {
+         player.addStatusEffect(new StatusEffectInstance(this.effect, this.duration, this.amplifier, false, true));
+         if (!player.getAbilities().creativeMode) {
+            stack.decrement(1);
          }
       }
 
       return stack;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
    }
 
    public int getPotionColor() {

@@ -9,7 +9,7 @@ public class OpenGhostDeadlockSelectS2CPacket {
 
    public static void register() {
       ClientPlayNetworking.registerGlobalReceiver(
-         ID, (client, handler, buf, responseSender) -> client.execute(() -> client.method_1507(new GhostDeadlockSelectScreen()))
+         ID, (client, handler, buf, responseSender) -> client.execute(() -> client.setScreen(new GhostDeadlockSelectScreen()))
       );
    }
 }

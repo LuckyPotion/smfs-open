@@ -22,24 +22,24 @@ public class MusicBoxCurseEffect extends StatusEffect implements ICurseEffect {
    private static final Set<UUID> SAFE_REMOVAL_PLAYERS = new HashSet<>();
 
    public MusicBoxCurseEffect() {
-      super(StatusEffectCategory.field_18272, 14423100);
+      super(StatusEffectCategory.HARMFUL, 14423100);
    }
 
-   public boolean method_5552(int duration, int amplifier) {
+   public boolean canApplyUpdateEffect(int duration, int amplifier) {
       return false;
    }
 
-   public void method_5572(LivingEntity entity, int amplifier) {
+   public void applyUpdateEffect(LivingEntity entity, int amplifier) {
    }
 
-   public void method_5555(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      super.method_5555(entity, attributes, amplifier);
+   public void onApplied(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      super.onApplied(entity, attributes, amplifier);
    }
 
-   public void method_5562(LivingEntity entity, AttributeContainer attributes, int amplifier) {
-      if (entity instanceof ServerPlayerEntity player && !entity.method_37908().method_8608()) {
-         if (SAFE_REMOVAL_PLAYERS.contains(player.method_5667())) {
-            SAFE_REMOVAL_PLAYERS.remove(player.method_5667());
+   public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+      if (entity instanceof ServerPlayerEntity player && !entity.getWorld().isClient()) {
+         if (SAFE_REMOVAL_PLAYERS.contains(player.getUuid())) {
+            SAFE_REMOVAL_PLAYERS.remove(player.getUuid());
             this.closeMusicBox(player);
          } else {
             this.closeMusicBox(player);
@@ -47,25 +47,25 @@ public class MusicBoxCurseEffect extends StatusEffect implements ICurseEffect {
          }
       }
 
-      super.method_5562(entity, attributes, amplifier);
+      super.onRemoved(entity, attributes, amplifier);
    }
 
    private void closeMusicBox(PlayerEntity player) {
       boolean foundMusicBox = false;
-      ItemStack mainHandStack = player.method_6047();
-      ItemStack offHandStack = player.method_6079();
-      if (mainHandStack.method_7909() instanceof EerieMusicBoxItem musicBox) {
+      ItemStack mainHandStack = player.getMainHandStack();
+      ItemStack offHandStack = player.getOffHandStack();
+      if (mainHandStack.getItem() instanceof EerieMusicBoxItem musicBox) {
          musicBox.setMusicBoxOpen(mainHandStack, false);
          foundMusicBox = true;
-      } else if (offHandStack.method_7909() instanceof EerieMusicBoxItem musicBox) {
+      } else if (offHandStack.getItem() instanceof EerieMusicBoxItem musicBox) {
          musicBox.setMusicBoxOpen(offHandStack, false);
          foundMusicBox = true;
       }
 
       if (!foundMusicBox) {
-         for (int i = 0; i < player.method_31548().method_5439(); i++) {
-            ItemStack stack = player.method_31548().method_5438(i);
-            if (stack.method_7909() instanceof EerieMusicBoxItem musicBox) {
+         for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.getItem() instanceof EerieMusicBoxItem musicBox) {
                musicBox.setMusicBoxOpen(stack, false);
                foundMusicBox = true;
                break;
@@ -73,32 +73,23 @@ public class MusicBoxCurseEffect extends StatusEffect implements ICurseEffect {
          }
       }
 
-      player.method_37908()
-         .method_43128(
-            null,
-            player.method_23317(),
-            player.method_23318(),
-            player.method_23321(),
-            (SoundEvent)SoundEvents.field_14793.comp_349(),
-            SoundCategory.field_15248,
-            1.0F,
-            0.5F
-         );
-      player.method_7353(Text.method_43471("item.smfs.eerie_music_box.closed"), true);
+      player.getWorld()
+         .playSound(null, player.getX(), player.getY(), player.getZ(), (SoundEvent)SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0F, 0.5F);
+      player.sendMessage(Text.translatable("item.smfs.eerie_music_box.closed"), true);
    }
 
-   public boolean method_5561() {
+   public boolean isInstant() {
       return false;
    }
 
-   public String method_5567() {
+   public String getTranslationKey() {
       return "effect.smfs.music_box_curse";
    }
 
    public static void safelyRemoveEffect(PlayerEntity player) {
-      if (player != null && !player.method_37908().method_8608() && player.method_6059(ModEffects.MUSIC_BOX_CURSE)) {
-         SAFE_REMOVAL_PLAYERS.add(player.method_5667());
-         player.method_6016(ModEffects.MUSIC_BOX_CURSE);
+      if (player != null && !player.getWorld().isClient() && player.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE)) {
+         SAFE_REMOVAL_PLAYERS.add(player.getUuid());
+         player.removeStatusEffect(ModEffects.MUSIC_BOX_CURSE);
       }
    }
 }

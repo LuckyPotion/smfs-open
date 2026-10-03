@@ -87,9 +87,9 @@ public class PopupAPIImpl implements PopupAPI {
    @Override
    public void closeCurrentPopup() {
       this.executeOnClient(() -> {
-         MinecraftClient client = MinecraftClient.method_1551();
-         if (client != null && client.field_1755 instanceof GhostAbilityPopupScreen) {
-            client.field_1755.method_25419();
+         MinecraftClient client = MinecraftClient.getInstance();
+         if (client != null && client.currentScreen instanceof GhostAbilityPopupScreen) {
+            client.currentScreen.close();
             this.notifyCloseListeners();
          }
       });
@@ -97,8 +97,8 @@ public class PopupAPIImpl implements PopupAPI {
 
    @Override
    public boolean isPopupOpen() {
-      MinecraftClient client = MinecraftClient.method_1551();
-      return client != null && client.field_1755 instanceof GhostAbilityPopupScreen;
+      MinecraftClient client = MinecraftClient.getInstance();
+      return client != null && client.currentScreen instanceof GhostAbilityPopupScreen;
    }
 
    @Override
@@ -118,7 +118,7 @@ public class PopupAPIImpl implements PopupAPI {
    }
 
    private void executeOnClient(Runnable task) {
-      MinecraftClient client = MinecraftClient.method_1551();
+      MinecraftClient client = MinecraftClient.getInstance();
       if (client != null) {
          client.execute(task);
       }

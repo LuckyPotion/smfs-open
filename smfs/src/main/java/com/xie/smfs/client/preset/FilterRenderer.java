@@ -20,7 +20,7 @@ public class FilterRenderer {
             float alpha = (float)Math.sin(progress * Math.PI / 2.0) * preset.maxAlpha * fadeProgress;
             if (!(alpha <= 0.005F)) {
                int color = (int)(alpha * 255.0F) << 24 | preset.red << 16 | preset.green << 8 | preset.blue;
-               context.method_25294(0, y, width, y + 1, color);
+               context.fill(0, y, width, y + 1, color);
             }
          }
 
@@ -29,7 +29,7 @@ public class FilterRenderer {
             float alpha = (float)Math.sin(progress * Math.PI / 2.0) * preset.maxAlpha * fadeProgress;
             if (!(alpha <= 0.005F)) {
                int color = (int)(alpha * 255.0F) << 24 | preset.red << 16 | preset.green << 8 | preset.blue;
-               context.method_25294(0, y, width, y + 1, color);
+               context.fill(0, y, width, y + 1, color);
             }
          }
 
@@ -38,7 +38,7 @@ public class FilterRenderer {
             float alpha = (float)Math.sin(progress * Math.PI / 2.0) * preset.maxAlpha * fadeProgress;
             if (!(alpha <= 0.005F)) {
                int color = (int)(alpha * 255.0F) << 24 | preset.red << 16 | preset.green << 8 | preset.blue;
-               context.method_25294(x, 0, x + 1, height, color);
+               context.fill(x, 0, x + 1, height, color);
             }
          }
 
@@ -47,7 +47,7 @@ public class FilterRenderer {
             float alpha = (float)Math.sin(progress * Math.PI / 2.0) * preset.maxAlpha * fadeProgress;
             if (!(alpha <= 0.005F)) {
                int color = (int)(alpha * 255.0F) << 24 | preset.red << 16 | preset.green << 8 | preset.blue;
-               context.method_25294(x, 0, x + 1, height, color);
+               context.fill(x, 0, x + 1, height, color);
             }
          }
 

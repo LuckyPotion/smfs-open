@@ -39,9 +39,7 @@ public class GanshiBrideGhostEntity extends GhostEntity {
    private static final int BECKONING_PHASE_DURATION = 200;
    private static final double ATTACK_DISTANCE = 12.0;
    private PlayerEntity currentTarget = null;
-   private static final TrackedData<Boolean> IS_IN_BECKONING_PHASE = DataTracker.method_12791(
-      GanshiBrideGhostEntity.class, TrackedDataHandlerRegistry.field_13323
-   );
+   private static final TrackedData<Boolean> IS_IN_BECKONING_PHASE = DataTracker.registerData(GanshiBrideGhostEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
    private int attackingAnimationTime = 0;
    private static final int ATTACK_ANIMATION_DURATION = 20;
 
@@ -54,58 +52,58 @@ public class GanshiBrideGhostEntity extends GhostEntity {
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
-      this.field_6011.method_12784(IS_IN_BECKONING_PHASE, false);
+   protected void initDataTracker() {
+      super.initDataTracker();
+      this.dataTracker.startTracking(IS_IN_BECKONING_PHASE, false);
    }
 
    public boolean isInBeckoningPhase() {
-      return (Boolean)this.field_6011.method_12789(IS_IN_BECKONING_PHASE);
+      return (Boolean)this.dataTracker.get(IS_IN_BECKONING_PHASE);
    }
 
    public void setInBeckoningPhase(boolean inBeckoningPhase) {
-      this.field_6011.method_12778(IS_IN_BECKONING_PHASE, inBeckoningPhase);
+      this.dataTracker.set(IS_IN_BECKONING_PHASE, inBeckoningPhase);
    }
 
    private void initGanshiBrideAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.25);
+         speedAttribute.setBaseValue(0.25);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(15.0);
+         attackDamageAttribute.setBaseValue(15.0);
       }
 
-      EntityAttributeInstance attackKnockbackAttribute = this.method_5996(EntityAttributes.field_23722);
+      EntityAttributeInstance attackKnockbackAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
       if (attackKnockbackAttribute != null) {
-         attackKnockbackAttribute.method_6192(0.3);
+         attackKnockbackAttribute.setBaseValue(0.3);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(24.0);
+         followRangeAttribute.setBaseValue(24.0);
       }
    }
 
    public static Builder createAttributes() {
       return GhostEntity.createGhostAttributes()
-         .method_26868(EntityAttributes.field_23716, 100000.0)
-         .method_26868(EntityAttributes.field_23719, 0.25)
-         .method_26868(EntityAttributes.field_23721, 15.0)
-         .method_26868(EntityAttributes.field_23722, 0.3)
-         .method_26868(EntityAttributes.field_23717, 24.0);
+         .add(EntityAttributes.GENERIC_MAX_HEALTH, 100000.0)
+         .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
+         .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0)
+         .add(EntityAttributes.GENERIC_ATTACK_KNOCKBACK, 0.3)
+         .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 24.0);
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.isInBeckoningPhase()) {
          this.setMovementDisabled(true);
       } else {
@@ -113,15 +111,15 @@ public class GanshiBrideGhostEntity extends GhostEntity {
       }
 
       if (this.isInBeckoningPhase()) {
-         this.field_6252 = true;
+         this.handSwinging = true;
       } else {
-         this.field_6252 = false;
+         this.handSwinging = false;
       }
 
-      if (!this.method_37908().field_9236) {
-         if (this.field_6012 == 1) {
-            this.method_5783(ModSounds.GHOST_BRIDE_ENTRANCE, 1.0F, 1.0F);
-            LOGGER.info("鬼新娘实体生成，播放出场音效: entity.ghost_bride.entrance, 位置: ({}, {}, {})", this.method_23317(), this.method_23318(), this.method_23321());
+      if (!this.getWorld().isClient) {
+         if (this.age == 1) {
+            this.playSound(ModSounds.GHOST_BRIDE_ENTRANCE, 1.0F, 1.0F);
+            LOGGER.info("鬼新娘实体生成，播放出场音效: entity.ghost_bride.entrance, 位置: ({}, {}, {})", this.getX(), this.getY(), this.getZ());
          }
 
          if (this.attackCooldown > 0 && !this.isInBeckoningPhase()) {
@@ -153,17 +151,17 @@ public class GanshiBrideGhostEntity extends GhostEntity {
    @Override
    protected void applyDefaultEffects(PlayerEntity player) {
       int amplifier = Math.max(0, this.getGhostDomainLevel() - 1);
-      player.method_6092(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 40, amplifier, false, false, false));
+      player.addStatusEffect(new StatusEffectInstance(ModEffects.BLACK_GHOST_DOMAIN_TARGET, 40, amplifier, false, false, false));
    }
 
    private PlayerEntity findTargetPlayer() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_18456()
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getPlayers()
          .stream()
          .filter(player -> {
-            double dx = player.method_23317() - this.method_23317();
-            double dy = player.method_23318() - this.method_23318();
-            double dz = player.method_23321() - this.method_23321();
+            double dx = player.getX() - this.getX();
+            double dy = player.getY() - this.getY();
+            double dz = player.getZ() - this.getZ();
             double distanceSq = dx * dx + dy * dy + dz * dz;
             return distanceSq <= this.getGhostDomainRadius() * this.getGhostDomainRadius();
          })
@@ -194,9 +192,9 @@ public class GanshiBrideGhostEntity extends GhostEntity {
       this.beckoningPhaseTicks = 200;
       this.currentTarget = target;
       this.faceTargetPlayer();
-      this.method_5966();
+      this.playAmbientSound();
       if (target instanceof ServerPlayerEntity serverPlayer) {
-         serverPlayer.method_7353(Text.method_43470("§c体内的鬼在悸动"), true);
+         serverPlayer.sendMessage(Text.literal("§c体内的鬼在悸动"), true);
       }
    }
 
@@ -210,16 +208,16 @@ public class GanshiBrideGhostEntity extends GhostEntity {
 
    private void faceTargetPlayer() {
       if (this.currentTarget != null) {
-         double dx = this.currentTarget.method_23317() - this.method_23317();
-         double dz = this.currentTarget.method_23321() - this.method_23321();
-         this.method_36456((float)(Math.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F);
-         this.method_5636(this.method_36454());
-         this.method_5847(this.method_36454());
+         double dx = this.currentTarget.getX() - this.getX();
+         double dz = this.currentTarget.getZ() - this.getZ();
+         this.setYaw((float)(Math.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F);
+         this.setBodyYaw(this.getYaw());
+         this.setHeadYaw(this.getYaw());
       }
    }
 
    private void executeActualAttack() {
-      if (this.currentTarget != null && !this.currentTarget.method_31481()) {
+      if (this.currentTarget != null && !this.currentTarget.isRemoved()) {
          boolean hasGhost = PlayerEvents.hasOccupiedGhostSlot(this.currentTarget);
          if (hasGhost) {
             this.executeGhostStripping();
@@ -227,32 +225,32 @@ public class GanshiBrideGhostEntity extends GhostEntity {
             this.executeDirectKill();
          }
 
-         this.method_5966();
-         LOGGER.info("干尸新娘执行攻击，目标玩家: {}", this.currentTarget.method_5477().getString());
+         this.playAmbientSound();
+         LOGGER.info("干尸新娘执行攻击，目标玩家: {}", this.currentTarget.getName().getString());
       }
 
       this.resetAttackState();
    }
 
    private void executeDirectKill() {
-      if (this.currentTarget != null && !this.currentTarget.method_31481()) {
-         DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+      if (this.currentTarget != null && !this.currentTarget.isRemoved()) {
+         DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
          float lethalDamage = this.getSpiritualDamage() * 5.0F;
          PlayerEvents.handleSpiritDamage(this.currentTarget, lethalDamage, lethalDamage, damageSource);
-         LOGGER.info("干尸新娘直接秒杀玩家: {}，造成 {} 点灵异伤害（基于自身灵异伤害 {} 的5倍）", this.currentTarget.method_5477().getString(), lethalDamage, this.getSpiritualDamage());
+         LOGGER.info("干尸新娘直接秒杀玩家: {}，造成 {} 点灵异伤害（基于自身灵异伤害 {} 的5倍）", this.currentTarget.getName().getString(), lethalDamage, this.getSpiritualDamage());
       }
    }
 
    private void executeGhostStripping() {
-      if (this.currentTarget != null && !this.currentTarget.method_31481()) {
+      if (this.currentTarget != null && !this.currentTarget.isRemoved()) {
          int occupiedSlot = this.findOccupiedGhostSlot(this.currentTarget);
          if (occupiedSlot >= 0) {
             String ghostType = this.stripGhostFromSlot(this.currentTarget, occupiedSlot);
             if (ghostType != null) {
                this.spawnCorrespondingGhost(ghostType);
-               this.currentTarget.method_5643(ModDamageSources.ghost(this.method_37908()), 6.0F);
+               this.currentTarget.damage(ModDamageSources.ghost(this.getWorld()), 6.0F);
                GhostDomainManager.disableGhostDomain(this.currentTarget);
-               LOGGER.info("干尸新娘剥离玩家 {} 的槽位 {} 的鬼: {}，并造成6点伤害，同时清除玩家鬼蜮", this.currentTarget.method_5477().getString(), occupiedSlot, ghostType);
+               LOGGER.info("干尸新娘剥离玩家 {} 的槽位 {} 的鬼: {}，并造成6点伤害，同时清除玩家鬼蜮", this.currentTarget.getName().getString(), occupiedSlot, ghostType);
             }
          } else {
             this.executeDirectKill();
@@ -281,20 +279,18 @@ public class GanshiBrideGhostEntity extends GhostEntity {
    }
 
    private void spawnCorrespondingGhost(String ghostType) {
-      GhostEntity spawnedGhost = GhostUtils.createGhostEntityByType(ghostType, this.method_37908());
+      GhostEntity spawnedGhost = GhostUtils.createGhostEntityByType(ghostType, this.getWorld());
       if (spawnedGhost != null) {
-         double offsetX = this.method_6051().method_43059() * 2.0;
-         double offsetZ = this.method_6051().method_43059() * 2.0;
-         spawnedGhost.method_5808(
-            this.method_23317() + offsetX, this.method_23318(), this.method_23321() + offsetZ, this.method_6051().method_43057() * 360.0F, 0.0F
-         );
-         this.method_37908().method_8649(spawnedGhost);
+         double offsetX = this.getRandom().nextGaussian() * 2.0;
+         double offsetZ = this.getRandom().nextGaussian() * 2.0;
+         spawnedGhost.refreshPositionAndAngles(this.getX() + offsetX, this.getY(), this.getZ() + offsetZ, this.getRandom().nextFloat() * 360.0F, 0.0F);
+         this.getWorld().spawnEntity(spawnedGhost);
          LOGGER.info("干尸新娘生成相应的鬼实体: {}", ghostType);
       } else {
          ItemStack ghostItem = GhostUtils.createTamedItem(ghostType);
-         if (ghostItem != null && !ghostItem.method_7960()) {
-            ItemEntity itemEntity = new ItemEntity(this.method_37908(), this.method_23317(), this.method_23318(), this.method_23321(), ghostItem);
-            this.method_37908().method_8649(itemEntity);
+         if (ghostItem != null && !ghostItem.isEmpty()) {
+            ItemEntity itemEntity = new ItemEntity(this.getWorld(), this.getX(), this.getY(), this.getZ(), ghostItem);
+            this.getWorld().spawnEntity(itemEntity);
             LOGGER.info("干尸新娘没有对应鬼实体，掉落驾驭物品: {}", ghostType);
          }
       }
@@ -339,31 +335,31 @@ public class GanshiBrideGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10556("IsInBeckoningPhase", this.isInBeckoningPhase());
-      nbt.method_10569("BeckoningPhaseTicks", this.beckoningPhaseTicks);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putBoolean("IsInBeckoningPhase", this.isInBeckoningPhase());
+      nbt.putInt("BeckoningPhaseTicks", this.beckoningPhaseTicks);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("IsInBeckoningPhase")) {
-         this.setInBeckoningPhase(nbt.method_10577("IsInBeckoningPhase"));
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("IsInBeckoningPhase")) {
+         this.setInBeckoningPhase(nbt.getBoolean("IsInBeckoningPhase"));
       }
 
-      if (nbt.method_10545("BeckoningPhaseTicks")) {
-         this.beckoningPhaseTicks = nbt.method_10550("BeckoningPhaseTicks");
+      if (nbt.contains("BeckoningPhaseTicks")) {
+         this.beckoningPhaseTicks = nbt.getInt("BeckoningPhaseTicks");
       }
    }
 
    @Override
-   public boolean method_5643(DamageSource source, float amount) {
+   public boolean damage(DamageSource source, float amount) {
       if (this.isInBeckoningPhase()) {
-         LOGGER.info("干尸新娘在招手阶段免疫伤害，伤害源: {}, 伤害值: {}", source.method_5525(), amount);
+         LOGGER.info("干尸新娘在招手阶段免疫伤害，伤害源: {}, 伤害值: {}", source.getName(), amount);
          return false;
       } else {
-         return super.method_5643(source, amount);
+         return super.damage(source, amount);
       }
    }
 }

@@ -20,12 +20,12 @@ public class ShowCustomDeathScreenPacket {
    }
 
    public ShowCustomDeathScreenPacket(PacketByteBuf buf) {
-      this.deathMessage = buf.method_10808();
+      this.deathMessage = buf.readText();
       this.isSilentGhostReinvade = buf.readBoolean();
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10805(this.deathMessage);
+      buf.writeText(this.deathMessage);
       buf.writeBoolean(this.isSilentGhostReinvade);
    }
 

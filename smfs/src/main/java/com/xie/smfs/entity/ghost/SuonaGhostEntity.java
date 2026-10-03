@@ -30,7 +30,7 @@ public class SuonaGhostEntity extends GhostEntity {
    private int performanceDamageTickCounter = 0;
    private int performanceDamageLevel = 0;
    private PlayerEntity currentTarget = null;
-   private static final TrackedData<Boolean> IS_IN_PERFORMANCE_PHASE = DataTracker.method_12791(SuonaGhostEntity.class, TrackedDataHandlerRegistry.field_13323);
+   private static final TrackedData<Boolean> IS_IN_PERFORMANCE_PHASE = DataTracker.registerData(SuonaGhostEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
    private int attackingAnimationTime = 0;
    private static final int ATTACK_ANIMATION_DURATION = 20;
 
@@ -43,44 +43,44 @@ public class SuonaGhostEntity extends GhostEntity {
    }
 
    @Override
-   protected void method_5693() {
-      super.method_5693();
-      this.field_6011.method_12784(IS_IN_PERFORMANCE_PHASE, false);
+   protected void initDataTracker() {
+      super.initDataTracker();
+      this.dataTracker.startTracking(IS_IN_PERFORMANCE_PHASE, false);
    }
 
    public boolean isInPerformancePhase() {
-      return (Boolean)this.field_6011.method_12789(IS_IN_PERFORMANCE_PHASE);
+      return (Boolean)this.dataTracker.get(IS_IN_PERFORMANCE_PHASE);
    }
 
    public void setInPerformancePhase(boolean inPerformancePhase) {
-      this.field_6011.method_12778(IS_IN_PERFORMANCE_PHASE, inPerformancePhase);
+      this.dataTracker.set(IS_IN_PERFORMANCE_PHASE, inPerformancePhase);
    }
 
    private void initSuonaGhostAttributes() {
-      EntityAttributeInstance healthAttribute = this.method_5996(EntityAttributes.field_23716);
+      EntityAttributeInstance healthAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
       if (healthAttribute != null) {
-         healthAttribute.method_6192(100000.0);
+         healthAttribute.setBaseValue(100000.0);
       }
 
-      EntityAttributeInstance speedAttribute = this.method_5996(EntityAttributes.field_23719);
+      EntityAttributeInstance speedAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
       if (speedAttribute != null) {
-         speedAttribute.method_6192(0.25);
+         speedAttribute.setBaseValue(0.25);
       }
 
-      EntityAttributeInstance attackDamageAttribute = this.method_5996(EntityAttributes.field_23721);
+      EntityAttributeInstance attackDamageAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
       if (attackDamageAttribute != null) {
-         attackDamageAttribute.method_6192(12.0);
+         attackDamageAttribute.setBaseValue(12.0);
       }
 
-      EntityAttributeInstance followRangeAttribute = this.method_5996(EntityAttributes.field_23717);
+      EntityAttributeInstance followRangeAttribute = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
       if (followRangeAttribute != null) {
-         followRangeAttribute.method_6192(36.0);
+         followRangeAttribute.setBaseValue(36.0);
       }
    }
 
    @Override
-   public void method_5773() {
-      super.method_5773();
+   public void tick() {
+      super.tick();
       if (this.isInPerformancePhase()) {
          this.setMovementDisabled(true);
       } else {
@@ -88,12 +88,12 @@ public class SuonaGhostEntity extends GhostEntity {
       }
 
       if (this.isInPerformancePhase()) {
-         this.field_6252 = true;
+         this.handSwinging = true;
       } else {
-         this.field_6252 = false;
+         this.handSwinging = false;
       }
 
-      if (!this.method_37908().field_9236) {
+      if (!this.getWorld().isClient) {
          if (this.attackCooldown > 0 && !this.isInPerformancePhase()) {
             this.attackCooldown--;
          }
@@ -128,8 +128,8 @@ public class SuonaGhostEntity extends GhostEntity {
    }
 
    private PlayerEntity findTargetPlayer() {
-      List<PlayerEntity> nearbyPlayers = this.method_37908()
-         .method_8390(PlayerEntity.class, this.method_5829().method_1014(36.0), player -> player.method_5805() && !player.method_7325());
+      List<PlayerEntity> nearbyPlayers = this.getWorld()
+         .getEntitiesByClass(PlayerEntity.class, this.getBoundingBox().expand(36.0), player -> player.isAlive() && !player.isSpectator());
       return !nearbyPlayers.isEmpty() ? nearbyPlayers.get(0) : null;
    }
 
@@ -150,24 +150,23 @@ public class SuonaGhostEntity extends GhostEntity {
       this.performanceDamageLevel = 0;
       this.currentTarget = target;
       this.faceTargetPlayer();
-      LOGGER.info("唢呐鬼开始演奏阶段，目标玩家: {}", target.method_5477().getString());
+      LOGGER.info("唢呐鬼开始演奏阶段，目标玩家: {}", target.getName().getString());
    }
 
    private void applyPerformanceDamageToAllPlayers() {
-      List<PlayerEntity> playersInRange = this.method_37908()
-         .method_8390(
+      List<PlayerEntity> playersInRange = this.getWorld()
+         .getEntitiesByClass(
             PlayerEntity.class,
-            this.method_5829().method_1014(36.0),
-            playerx -> playerx.method_5805() && playerx.method_6032() > 0.0F && !playerx.method_6059(ModEffects.DEAFNESS)
+            this.getBoundingBox().expand(36.0),
+            playerx -> playerx.isAlive() && playerx.getHealth() > 0.0F && !playerx.hasStatusEffect(ModEffects.DEAFNESS)
          );
       float damage = 10.0F + 2.0F * this.performanceDamageLevel;
-      DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+      DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
 
       for (PlayerEntity player : playersInRange) {
-         if (player.method_5805() && player.method_6032() > 0.0F) {
+         if (player.isAlive() && player.getHealth() > 0.0F) {
             PlayerEvents.handleSpiritDamage(player, damage, damage, damageSource);
-            this.method_37908()
-               .method_43128(null, player.method_23317(), player.method_23318(), player.method_23321(), SoundEvents.field_15115, this.method_5634(), 1.0F, 1.0F);
+            this.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_PLAYER_HURT, this.getSoundCategory(), 1.0F, 1.0F);
          }
       }
    }
@@ -183,29 +182,29 @@ public class SuonaGhostEntity extends GhostEntity {
 
    private void faceTargetPlayer() {
       if (this.currentTarget != null) {
-         double dx = this.currentTarget.method_23317() - this.method_23317();
-         double dz = this.currentTarget.method_23321() - this.method_23321();
-         this.method_36456((float)(Math.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F);
-         this.method_5636(this.method_36454());
-         this.method_5847(this.method_36454());
+         double dx = this.currentTarget.getX() - this.getX();
+         double dz = this.currentTarget.getZ() - this.getZ();
+         this.setYaw((float)(Math.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F);
+         this.setBodyYaw(this.getYaw());
+         this.setHeadYaw(this.getYaw());
       }
    }
 
    private void executeActualAttack() {
-      if (this.currentTarget != null && !this.currentTarget.method_31481()) {
+      if (this.currentTarget != null && !this.currentTarget.isRemoved()) {
          this.executeDirectKill();
-         LOGGER.info("唢呐鬼执行攻击，目标玩家: {}", this.currentTarget.method_5477().getString());
+         LOGGER.info("唢呐鬼执行攻击，目标玩家: {}", this.currentTarget.getName().getString());
       }
 
       this.resetAttackState();
    }
 
    private void executeDirectKill() {
-      if (this.currentTarget != null && !this.currentTarget.method_31481() && !this.currentTarget.method_6059(ModEffects.DEAFNESS)) {
-         DamageSource damageSource = ModDamageSources.ghost(this.method_37908());
+      if (this.currentTarget != null && !this.currentTarget.isRemoved() && !this.currentTarget.hasStatusEffect(ModEffects.DEAFNESS)) {
+         DamageSource damageSource = ModDamageSources.ghost(this.getWorld());
          float lethalDamage = this.getSpiritualDamage() * 5.0F;
          PlayerEvents.handleSpiritDamage(this.currentTarget, lethalDamage, lethalDamage, damageSource);
-         LOGGER.info("唢呐鬼直接秒杀玩家: {}，造成 {} 点灵异伤害（基于自身灵异伤害 {} 的5倍）", this.currentTarget.method_5477().getString(), lethalDamage, this.getSpiritualDamage());
+         LOGGER.info("唢呐鬼直接秒杀玩家: {}，造成 {} 点灵异伤害（基于自身灵异伤害 {} 的5倍）", this.currentTarget.getName().getString(), lethalDamage, this.getSpiritualDamage());
       }
    }
 
@@ -220,31 +219,31 @@ public class SuonaGhostEntity extends GhostEntity {
    }
 
    @Override
-   public void method_5652(NbtCompound nbt) {
-      super.method_5652(nbt);
-      nbt.method_10556("IsInPerformancePhase", this.isInPerformancePhase());
-      nbt.method_10569("PerformancePhaseTicks", this.performancePhaseTicks);
-      nbt.method_10569("PerformanceDamageLevel", this.performanceDamageLevel);
-      nbt.method_10569("PerformanceDamageTickCounter", this.performanceDamageTickCounter);
+   public void writeCustomDataToNbt(NbtCompound nbt) {
+      super.writeCustomDataToNbt(nbt);
+      nbt.putBoolean("IsInPerformancePhase", this.isInPerformancePhase());
+      nbt.putInt("PerformancePhaseTicks", this.performancePhaseTicks);
+      nbt.putInt("PerformanceDamageLevel", this.performanceDamageLevel);
+      nbt.putInt("PerformanceDamageTickCounter", this.performanceDamageTickCounter);
    }
 
    @Override
-   public void method_5749(NbtCompound nbt) {
-      super.method_5749(nbt);
-      if (nbt.method_10545("IsInPerformancePhase")) {
-         this.setInPerformancePhase(nbt.method_10577("IsInPerformancePhase"));
+   public void readCustomDataFromNbt(NbtCompound nbt) {
+      super.readCustomDataFromNbt(nbt);
+      if (nbt.contains("IsInPerformancePhase")) {
+         this.setInPerformancePhase(nbt.getBoolean("IsInPerformancePhase"));
       }
 
-      if (nbt.method_10545("PerformancePhaseTicks")) {
-         this.performancePhaseTicks = nbt.method_10550("PerformancePhaseTicks");
+      if (nbt.contains("PerformancePhaseTicks")) {
+         this.performancePhaseTicks = nbt.getInt("PerformancePhaseTicks");
       }
 
-      if (nbt.method_10545("PerformanceDamageLevel")) {
-         this.performanceDamageLevel = nbt.method_10550("PerformanceDamageLevel");
+      if (nbt.contains("PerformanceDamageLevel")) {
+         this.performanceDamageLevel = nbt.getInt("PerformanceDamageLevel");
       }
 
-      if (nbt.method_10545("PerformanceDamageTickCounter")) {
-         this.performanceDamageTickCounter = nbt.method_10550("PerformanceDamageTickCounter");
+      if (nbt.contains("PerformanceDamageTickCounter")) {
+         this.performanceDamageTickCounter = nbt.getInt("PerformanceDamageTickCounter");
       }
    }
 

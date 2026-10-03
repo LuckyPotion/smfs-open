@@ -23,114 +23,114 @@ import net.minecraft.world.World;
 
 public class GhostInteractionHandler implements UseEntityCallback {
    public ActionResult interact(PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) {
-      if (world.field_9236) {
-         return ActionResult.field_5811;
+      if (world.isClient) {
+         return ActionResult.PASS;
       }
 
-      if (entity instanceof GhostEntity ghost && ghost.hasCoffinNail() && player.method_5998(hand).method_7960()) {
+      if (entity instanceof GhostEntity ghost && ghost.hasCoffinNail() && player.getStackInHand(hand).isEmpty()) {
          ItemStack coffinNail = ghost.getCoffinNail();
          ghost.setCoffinNail(null);
          ghost.setSuppressed(false);
          ghost.enableGhostDomain();
          ghost.enableKillingRules();
-         if (player.method_31549().field_7477) {
-            player.method_7270(new ItemStack(coffinNail.method_7909(), 1));
-         } else if (!player.method_31548().method_7394(coffinNail)) {
-            entity.method_5699(coffinNail, 0.5F);
+         if (player.getAbilities().creativeMode) {
+            player.giveItemStack(new ItemStack(coffinNail.getItem(), 1));
+         } else if (!player.getInventory().insertStack(coffinNail)) {
+            entity.dropStack(coffinNail, 0.5F);
          }
 
-         player.method_5783(SoundEvent.method_47908(Identifier.method_43902("minecraft", "entity.item.pickup")), 1.0F, 1.0F);
-         return ActionResult.field_5812;
+         player.playSound(SoundEvent.of(Identifier.of("minecraft", "entity.item.pickup")), 1.0F, 1.0F);
+         return ActionResult.SUCCESS;
       } else if (entity instanceof PlayerGhostEntity playerGhost
          && playerGhost.hasCoffinNail()
-         && player.method_5998(hand).method_7960()
+         && player.getStackInHand(hand).isEmpty()
          && playerGhost.retrieveCoffinNail()) {
-         player.method_5783(SoundEvent.method_47908(Identifier.method_43902("minecraft", "entity.item.pickup")), 1.0F, 1.0F);
-         return ActionResult.field_5812;
+         player.playSound(SoundEvent.of(Identifier.of("minecraft", "entity.item.pickup")), 1.0F, 1.0F);
+         return ActionResult.SUCCESS;
       } else if (entity instanceof GhostMasterEntity ghostMaster
          && ghostMaster.hasCoffinNail()
-         && player.method_5998(hand).method_7960()
+         && player.getStackInHand(hand).isEmpty()
          && ghostMaster.retrieveCoffinNail()) {
-         player.method_5783(SoundEvent.method_47908(Identifier.method_43902("minecraft", "entity.item.pickup")), 1.0F, 1.0F);
-         return ActionResult.field_5812;
+         player.playSound(SoundEvent.of(Identifier.of("minecraft", "entity.item.pickup")), 1.0F, 1.0F);
+         return ActionResult.SUCCESS;
       } else {
          if (entity instanceof GhostEntity || entity instanceof PlayerGhostEntity) {
-            ItemStack mainHand = player.method_6047();
-            ItemStack offHand = player.method_6079();
-            if (mainHand.method_7909() == Items.field_8469 || offHand.method_7909() == Items.field_8469) {
+            ItemStack mainHand = player.getMainHandStack();
+            ItemStack offHand = player.getOffHandStack();
+            if (mainHand.getItem() == Items.GLASS_BOTTLE || offHand.getItem() == Items.GLASS_BOTTLE) {
                ItemStack corpseOil = new ItemStack(ModItems.CORPSE_OIL);
-               if (!player.method_31548().method_7394(corpseOil)) {
-                  player.method_7328(corpseOil, false);
+               if (!player.getInventory().insertStack(corpseOil)) {
+                  player.dropItem(corpseOil, false);
                }
 
-               if (mainHand.method_7909() == Items.field_8469) {
-                  mainHand.method_7934(1);
+               if (mainHand.getItem() == Items.GLASS_BOTTLE) {
+                  mainHand.decrement(1);
                } else {
-                  offHand.method_7934(1);
+                  offHand.decrement(1);
                }
 
-               return ActionResult.field_5812;
+               return ActionResult.SUCCESS;
             }
 
-            if (mainHand.method_7909() instanceof SwordItem && mainHand.method_7985() && mainHand.method_7969().method_10545("corpse_oil_layers")) {
+            if (mainHand.getItem() instanceof SwordItem && mainHand.hasNbt() && mainHand.getNbt().contains("corpse_oil_layers")) {
                ItemStack corpsePiece = new ItemStack(ModItems.CORPSE_PIECE);
-               if (!player.method_31548().method_7394(corpsePiece)) {
-                  player.method_7328(corpsePiece, false);
+               if (!player.getInventory().insertStack(corpsePiece)) {
+                  player.dropItem(corpsePiece, false);
                }
 
-               ItemStack glassBottle = new ItemStack(Items.field_8469);
-               if (!player.method_31548().method_7394(glassBottle)) {
-                  player.method_7328(glassBottle, false);
+               ItemStack glassBottle = new ItemStack(Items.GLASS_BOTTLE);
+               if (!player.getInventory().insertStack(glassBottle)) {
+                  player.dropItem(glassBottle, false);
                }
 
-               int layers = mainHand.method_7969().method_10550("corpse_oil_layers");
+               int layers = mainHand.getNbt().getInt("corpse_oil_layers");
                if (layers > 0) {
-                  mainHand.method_7969().method_10569("corpse_oil_layers", --layers);
+                  mainHand.getNbt().putInt("corpse_oil_layers", --layers);
                   if (layers == 0) {
-                     mainHand.method_7969().method_10551("corpse_oil_layers");
+                     mainHand.getNbt().remove("corpse_oil_layers");
                   }
                }
 
-               return ActionResult.field_5812;
+               return ActionResult.SUCCESS;
             }
          }
 
          if (entity instanceof QiaomenGhostEntity qiaomenGhost) {
-            if (!player.method_5998(hand).method_7960() && player.method_5998(hand).method_7909() == ModItems.COFFIN_NAIL) {
-               return ActionResult.field_5811;
+            if (!player.getStackInHand(hand).isEmpty() && player.getStackInHand(hand).getItem() == ModItems.COFFIN_NAIL) {
+               return ActionResult.PASS;
             } else {
-               return !player.method_5998(hand).method_7960() && player.method_5998(hand).method_7909() == ModItems.GOLDEN_CONTAINER
-                  ? ActionResult.field_5811
+               return !player.getStackInHand(hand).isEmpty() && player.getStackInHand(hand).getItem() == ModItems.GOLDEN_CONTAINER
+                  ? ActionResult.PASS
                   : this.handleQiaomenGhostInteraction(player, hand, qiaomenGhost);
             }
          } else {
-            return ActionResult.field_5811;
+            return ActionResult.PASS;
          }
       }
    }
 
    private ActionResult handleQiaomenGhostInteraction(PlayerEntity player, Hand hand, QiaomenGhostEntity qiaomenGhost) {
-      if (qiaomenGhost.hasItem() && qiaomenGhost.method_37908().method_8409().method_43057() < 0.2F) {
+      if (qiaomenGhost.hasItem() && qiaomenGhost.getWorld().getRandom().nextFloat() < 0.2F) {
          qiaomenGhost.setHasItem(false);
          this.giveGhostPostOfficeMysteryInfo(player);
       }
 
       this.giveSpiritErosionEffect(player);
-      return ActionResult.field_5812;
+      return ActionResult.SUCCESS;
    }
 
    private void giveGhostPostOfficeMysteryInfo(PlayerEntity player) {
       ItemStack itemStack = new ItemStack(ModItems.GHOST_POST_OFFICE_MYSTERY_INFO);
-      boolean addedToInventory = player.method_31548().method_7394(itemStack);
+      boolean addedToInventory = player.getInventory().insertStack(itemStack);
       if (!addedToInventory) {
-         player.method_7328(itemStack, false);
+         player.dropItem(itemStack, false);
       }
 
-      player.method_5783(SoundEvents.field_15197, 1.0F, 1.0F);
+      player.playSound(SoundEvents.ENTITY_ITEM_PICKUP, 1.0F, 1.0F);
    }
 
    private void giveSpiritErosionEffect(PlayerEntity player) {
       StatusEffectInstance spiritErosionEffect = new StatusEffectInstance(ModEffects.SPIRIT_EROSION, 1200, 9, false, true, true);
-      player.method_6092(spiritErosionEffect);
+      player.addStatusEffect(spiritErosionEffect);
    }
 }

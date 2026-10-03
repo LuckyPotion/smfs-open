@@ -18,7 +18,7 @@ public class GhostShadowHeadCameraManager {
    private static final Logger LOGGER = LoggerFactory.getLogger("smfs/GhostShadowHeadCameraManager");
    private static boolean isCameraBound = false;
    private static Entity boundEntity = null;
-   private static Perspective savedPerspective = Perspective.field_26664;
+   private static Perspective savedPerspective = Perspective.FIRST_PERSON;
    private static boolean isNControlActive = false;
    private static double savedPlayerX = 0.0;
    private static double savedPlayerY = 0.0;
@@ -37,28 +37,28 @@ public class GhostShadowHeadCameraManager {
    }
 
    private static void bindCamera(PlayerEntity player) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      if (client.field_1724 != null) {
+      MinecraftClient client = MinecraftClient.getInstance();
+      if (client.player != null) {
          Entity target = getTargetEntity(player);
          if (target == null) {
-            player.method_7353(Text.method_43470("§c未找到目标实体，请对准一个实体"), true);
+            player.sendMessage(Text.literal("§c未找到目标实体，请对准一个实体"), true);
          } else if (target == player) {
-            player.method_7353(Text.method_43470("§c不能入侵到自己身上"), true);
+            player.sendMessage(Text.literal("§c不能入侵到自己身上"), true);
          } else {
-            savedPerspective = client.field_1690.method_31044();
-            client.field_1690.method_31043(Perspective.field_26665);
+            savedPerspective = client.options.getPerspective();
+            client.options.setPerspective(Perspective.THIRD_PERSON_BACK);
             isCameraBound = true;
             boundEntity = target;
-            LOGGER.debug("玩家 {} 已将摄像机绑定到实体 {}", player.method_5477().getString(), target.method_5628());
-            player.method_7353(Text.method_43470("§a意识已入侵"), true);
+            LOGGER.debug("玩家 {} 已将摄像机绑定到实体 {}", player.getName().getString(), target.getId());
+            player.sendMessage(Text.literal("§a意识已入侵"), true);
          }
       }
    }
 
    private static void unbindCamera(PlayerEntity player) {
-      MinecraftClient client = MinecraftClient.method_1551();
-      client.field_1690.method_31043(savedPerspective);
-      int unboundEntityId = boundEntity != null ? boundEntity.method_5628() : -1;
+      MinecraftClient client = MinecraftClient.getInstance();
+      client.options.setPerspective(savedPerspective);
+      int unboundEntityId = boundEntity != null ? boundEntity.getId() : -1;
       isCameraBound = false;
       boundEntity = null;
       isNControlActive = false;
@@ -69,8 +69,8 @@ public class GhostShadowHeadCameraManager {
          ClientGhostShadowHeadUnbindControlC2SPacket.sendToServer(unboundEntityId);
       }
 
-      LOGGER.debug("玩家 {} 已将摄像机返回自身视角", player.method_5477().getString());
-      player.method_7353(Text.method_43470("§a意识已回归"), true);
+      LOGGER.debug("玩家 {} 已将摄像机返回自身视角", player.getName().getString());
+      player.sendMessage(Text.literal("§a意识已回归"), true);
    }
 
    private static Entity getTargetEntity(PlayerEntity player) {
@@ -83,8 +83,8 @@ public class GhostShadowHeadCameraManager {
 
    public static void resetBinding() {
       if (isCameraBound) {
-         MinecraftClient client = MinecraftClient.method_1551();
-         client.field_1690.method_31043(savedPerspective);
+         MinecraftClient client = MinecraftClient.getInstance();
+         client.options.setPerspective(savedPerspective);
          isCameraBound = false;
          boundEntity = null;
          LOGGER.debug("重置鬼影头摄像机绑定状态");
@@ -101,55 +101,55 @@ public class GhostShadowHeadCameraManager {
 
    public static void renderFilter(DrawContext context) {
       if (isCameraBound) {
-         MinecraftClient client = MinecraftClient.method_1551();
-         if (client.method_22683() != null) {
-            int width = client.method_22683().method_4486();
-            int height = client.method_22683().method_4502();
+         MinecraftClient client = MinecraftClient.getInstance();
+         if (client.getWindow() != null) {
+            int width = client.getWindow().getScaledWidth();
+            int height = client.getWindow().getScaledHeight();
             FilterRenderer.renderEdgeGradient(context, width, height, FilterRenderer.FilterPreset.BLACK_CURSE);
          }
       }
    }
 
    public static void performVSkillAttack(PlayerEntity player) {
-      if (isCameraBound && boundEntity != null && !boundEntity.method_31481()) {
-         int targetId = boundEntity.method_5628();
+      if (isCameraBound && boundEntity != null && !boundEntity.isRemoved()) {
+         int targetId = boundEntity.getId();
          ClientGhostShadowHeadVSkillC2SPacket.sendToServer(targetId);
-         LOGGER.debug("鬼影头V技能：对实体 {} (ID: {}) 发动灵异袭击", boundEntity.method_5477().getString(), targetId);
+         LOGGER.debug("鬼影头V技能：对实体 {} (ID: {}) 发动灵异袭击", boundEntity.getName().getString(), targetId);
          unbindCamera(player);
       } else {
-         player.method_7353(Text.method_43470("§c没有入侵目标，无法发动灵异袭击"), true);
+         player.sendMessage(Text.literal("§c没有入侵目标，无法发动灵异袭击"), true);
       }
    }
 
    public static void performGSkill(PlayerEntity player) {
-      if (isCameraBound && boundEntity != null && !boundEntity.method_31481()) {
-         int targetId = boundEntity.method_5628();
+      if (isCameraBound && boundEntity != null && !boundEntity.isRemoved()) {
+         int targetId = boundEntity.getId();
          ClientGhostShadowHeadGSkillC2SPacket.sendToServer(targetId);
-         LOGGER.debug("鬼影头G技能：对实体 {} (ID: {}) 施加缓慢3和虚弱3", boundEntity.method_5477().getString(), targetId);
+         LOGGER.debug("鬼影头G技能：对实体 {} (ID: {}) 施加缓慢3和虚弱3", boundEntity.getName().getString(), targetId);
       } else {
-         player.method_7353(Text.method_43470("§c没有入侵目标，无法施加效果"), true);
+         player.sendMessage(Text.literal("§c没有入侵目标，无法施加效果"), true);
       }
    }
 
    public static void performNSkill(PlayerEntity player) {
-      if (isCameraBound && boundEntity != null && !boundEntity.method_31481()) {
+      if (isCameraBound && boundEntity != null && !boundEntity.isRemoved()) {
          isNControlActive = !isNControlActive;
          if (isNControlActive) {
-            savedPlayerX = player.method_23317();
-            savedPlayerY = player.method_23318();
-            savedPlayerZ = player.method_23321();
-            player.method_7353(Text.method_43470("§a控制权已移交至 " + boundEntity.method_5477().getString()), true);
+            savedPlayerX = player.getX();
+            savedPlayerY = player.getY();
+            savedPlayerZ = player.getZ();
+            player.sendMessage(Text.literal("§a控制权已移交至 " + boundEntity.getName().getString()), true);
          } else {
-            ClientGhostShadowHeadUnbindControlC2SPacket.sendToServer(boundEntity.method_5628());
-            player.method_7353(Text.method_43470("§a控制权已回归"), true);
+            ClientGhostShadowHeadUnbindControlC2SPacket.sendToServer(boundEntity.getId());
+            player.sendMessage(Text.literal("§a控制权已回归"), true);
          }
       } else {
-         player.method_7353(Text.method_43470("§c没有入侵目标，无法移交控制"), true);
+         player.sendMessage(Text.literal("§c没有入侵目标，无法移交控制"), true);
       }
    }
 
    public static boolean isNControlActive() {
-      return isNControlActive && isCameraBound && boundEntity != null && !boundEntity.method_31481();
+      return isNControlActive && isCameraBound && boundEntity != null && !boundEntity.isRemoved();
    }
 
    public static double getSavedPlayerX() {

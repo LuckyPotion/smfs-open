@@ -36,9 +36,9 @@ public class CaoYanHuaEntity extends VillagerEntity implements Merchant {
 
    public CaoYanHuaEntity(EntityType<? extends VillagerEntity> entityType, World world) {
       super(entityType, world);
-      this.method_5665(Text.method_43470("§6曹延华"));
-      this.method_5880(true);
-      this.method_5803(true);
+      this.setCustomName(Text.literal("§6曹延华"));
+      this.setCustomNameVisible(true);
+      this.setSilent(true);
       this.initTradeOffers();
    }
 
@@ -49,51 +49,51 @@ public class CaoYanHuaEntity extends VillagerEntity implements Merchant {
    }
 
    public static Builder createCaoYanHuaAttributes() {
-      return VillagerEntity.method_26955().method_26868(EntityAttributes.field_23716, 100.0);
+      return VillagerEntity.createVillagerAttributes().add(EntityAttributes.GENERIC_MAX_HEALTH, 100.0);
    }
 
    public String[] getGreetingDialogues() {
       return DIALOGUES;
    }
 
-   protected void method_5959() {
-      super.method_5959();
+   protected void initGoals() {
+      super.initGoals();
    }
 
-   public boolean method_7239() {
+   public boolean canBreed() {
       return false;
    }
 
-   public VillagerData method_7231() {
-      return new VillagerData(VillagerType.field_17073, VillagerProfession.field_17051, 1);
+   public VillagerData getVillagerData() {
+      return new VillagerData(VillagerType.PLAINS, VillagerProfession.NONE, 1);
    }
 
-   public void method_7195(VillagerData villagerData) {
+   public void setVillagerData(VillagerData villagerData) {
    }
 
-   public void method_8259(PlayerEntity customer) {
+   public void setCustomer(PlayerEntity customer) {
       this.customer = customer;
    }
 
-   public PlayerEntity method_8257() {
+   public PlayerEntity getCustomer() {
       return this.customer;
    }
 
-   public TradeOfferList method_8264() {
+   public TradeOfferList getOffers() {
       return this.offers;
    }
 
-   public void method_8261(TradeOfferList offers) {
+   public void setOffersFromServer(TradeOfferList offers) {
       this.offers = offers;
    }
 
-   public void method_8262(TradeOffer offer) {
+   public void trade(TradeOffer offer) {
    }
 
-   public void method_8258(ItemStack stack) {
+   public void onSellingItem(ItemStack stack) {
    }
 
-   public int method_19269() {
+   public int getExperience() {
       return 0;
    }
 
@@ -101,57 +101,58 @@ public class CaoYanHuaEntity extends VillagerEntity implements Merchant {
       return this.faction;
    }
 
-   public void method_19271(int experience) {
+   public void setExperienceFromServer(int experience) {
    }
 
-   public boolean method_19270() {
+   public boolean isLeveledMerchant() {
       return false;
    }
 
-   public SoundEvent method_18010() {
+   public SoundEvent getYesSound() {
       return null;
    }
 
-   public boolean method_20708() {
+   public boolean canRefreshTrades() {
       return false;
    }
 
-   public ActionResult method_5992(PlayerEntity player, Hand hand) {
-      if (this.method_37908().field_9236) {
-         return ActionResult.field_5812;
+   public ActionResult interactMob(PlayerEntity player, Hand hand) {
+      if (this.getWorld().isClient) {
+         return ActionResult.SUCCESS;
       }
 
-      if (player.method_5715()) {
-         return super.method_5992(player, hand);
+      if (player.isSneaking()) {
+         return super.interactMob(player, hand);
       }
 
-      if (this.method_8257() != player) {
+      if (this.getCustomer() != player) {
          this.openTradeScreen((ServerPlayerEntity)player);
       }
 
-      return ActionResult.field_21466;
+      return ActionResult.CONSUME;
    }
 
    public void openTradeScreen(ServerPlayerEntity player) {
-      this.method_8259(player);
-      player.method_17355(new NamedScreenHandlerFactory() {
+      this.setCustomer(player);
+      player.openHandledScreen(new NamedScreenHandlerFactory() {
          public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity playerx) {
             return new MerchantScreenHandler(syncId, inventory, CaoYanHuaEntity.this);
          }
 
-         public Text method_5476() {
-            return CaoYanHuaEntity.this.method_5476();
+         public Text getDisplayName() {
+            return CaoYanHuaEntity.this.getDisplayName();
          }
       });
-      int syncId = player.field_7512 != null ? player.field_7512.field_7763 : 0;
-      player.field_13987.method_14364(new SetTradeOffersS2CPacket(syncId, this.offers, 0, this.method_19269(), this.method_19270(), this.method_20708()));
+      int syncId = player.currentScreenHandler != null ? player.currentScreenHandler.syncId : 0;
+      player.networkHandler
+         .sendPacket(new SetTradeOffersS2CPacket(syncId, this.offers, 0, this.getExperience(), this.isLeveledMerchant(), this.canRefreshTrades()));
    }
 
-   public Text method_5476() {
-      return Text.method_43470("§6曹延华");
+   public Text getDisplayName() {
+      return Text.literal("§6曹延华");
    }
 
-   public boolean method_5679(DamageSource damageSource) {
-      return damageSource.method_5529() instanceof ZombieEntity ? true : super.method_5679(damageSource);
+   public boolean isInvulnerableTo(DamageSource damageSource) {
+      return damageSource.getAttacker() instanceof ZombieEntity ? true : super.isInvulnerableTo(damageSource);
    }
 }

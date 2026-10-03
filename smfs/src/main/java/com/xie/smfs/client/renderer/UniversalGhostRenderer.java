@@ -159,26 +159,26 @@ public class UniversalGhostRenderer extends GeoEntityRenderer<GhostEntity> {
       if (entity instanceof CustomGhostModelProvider provider) {
          float scale = provider.getScale();
          if (scale != 1.0F) {
-            poseStack.method_22903();
-            poseStack.method_22905(scale, scale, scale);
+            poseStack.push();
+            poseStack.scale(scale, scale, scale);
          }
       }
 
       if (entity instanceof GhostPressureEntity) {
-         poseStack.method_22903();
-         poseStack.method_22905(0.45F, 0.45F, 0.45F);
+         poseStack.push();
+         poseStack.scale(0.45F, 0.45F, 0.45F);
          super.method_3936(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-         poseStack.method_22909();
+         poseStack.pop();
       } else if (entity instanceof LuoQianGhostEntity) {
-         poseStack.method_22903();
-         poseStack.method_22905(1.5F, 1.5F, 1.5F);
+         poseStack.push();
+         poseStack.scale(1.5F, 1.5F, 1.5F);
          super.method_3936(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-         poseStack.method_22909();
+         poseStack.pop();
       } else if (entity instanceof GhostShadowHeadEntity) {
-         poseStack.method_22903();
-         poseStack.method_22905(2.0F, 2.0F, 2.0F);
+         poseStack.push();
+         poseStack.scale(2.0F, 2.0F, 2.0F);
          super.method_3936(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-         poseStack.method_22909();
+         poseStack.pop();
       } else {
          super.method_3936(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
       }
@@ -186,7 +186,7 @@ public class UniversalGhostRenderer extends GeoEntityRenderer<GhostEntity> {
       if (entity instanceof CustomGhostModelProvider provider) {
          float scale = provider.getScale();
          if (scale != 1.0F) {
-            poseStack.method_22909();
+            poseStack.pop();
          }
       }
    }

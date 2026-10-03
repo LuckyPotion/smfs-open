@@ -15,8 +15,8 @@ public class InstantKillUtil {
    private static final long KILL_MARK_EXPIRE_TIME = 5000L;
 
    public static void markForInstantKill(LivingEntity entity) {
-      if (entity != null && entity.method_5805()) {
-         FORCED_KILL_QUEUE.put(entity.method_5667(), System.currentTimeMillis());
+      if (entity != null && entity.isAlive()) {
+         FORCED_KILL_QUEUE.put(entity.getUuid(), System.currentTimeMillis());
       }
    }
 
@@ -25,13 +25,13 @@ public class InstantKillUtil {
          return false;
       }
 
-      Long timestamp = FORCED_KILL_QUEUE.get(entity.method_5667());
+      Long timestamp = FORCED_KILL_QUEUE.get(entity.getUuid());
       if (timestamp != null) {
          if (System.currentTimeMillis() - timestamp < 5000L) {
             return true;
          }
 
-         FORCED_KILL_QUEUE.remove(entity.method_5667());
+         FORCED_KILL_QUEUE.remove(entity.getUuid());
       }
 
       return false;
@@ -39,12 +39,12 @@ public class InstantKillUtil {
 
    public static void clearKillMark(LivingEntity entity) {
       if (entity != null) {
-         FORCED_KILL_QUEUE.remove(entity.method_5667());
+         FORCED_KILL_QUEUE.remove(entity.getUuid());
       }
    }
 
    public static boolean executeMultiLevelInstantKill(LivingEntity entity, DamageSource source) {
-      if (entity == null || !entity.method_5805()) {
+      if (entity == null || !entity.isAlive()) {
          return false;
       } else if (tryLevel1Kill(entity, source)) {
          return true;
@@ -55,14 +55,14 @@ public class InstantKillUtil {
 
    private static boolean tryLevel1Kill(LivingEntity entity, DamageSource source) {
       try {
-         float lethalDamage = entity.method_6032() * 2.0F + 100.0F;
+         float lethalDamage = entity.getHealth() * 2.0F + 100.0F;
          if (source != null) {
-            entity.method_5643(source, lethalDamage);
+            entity.damage(source, lethalDamage);
          } else {
-            entity.method_5643(entity.method_48923().method_48830(), lethalDamage);
+            entity.damage(entity.getDamageSources().generic(), lethalDamage);
          }
 
-         if (!entity.method_5805()) {
+         if (!entity.isAlive()) {
             return true;
          }
       } catch (Exception var3) {
@@ -73,8 +73,8 @@ public class InstantKillUtil {
 
    private static boolean tryLevel2Kill(LivingEntity entity) {
       try {
-         entity.method_6033(0.0F);
-         if (!entity.method_5805()) {
+         entity.setHealth(0.0F);
+         if (!entity.isAlive()) {
             return true;
          }
       } catch (Exception var2) {
@@ -87,9 +87,9 @@ public class InstantKillUtil {
       try {
          markForInstantKill(entity);
          if (source != null) {
-            entity.method_5643(source, 1.0F);
+            entity.damage(source, 1.0F);
          } else {
-            entity.method_5643(entity.method_48923().method_48831(), 1.0F);
+            entity.damage(entity.getDamageSources().magic(), 1.0F);
          }
 
          try {
@@ -97,7 +97,7 @@ public class InstantKillUtil {
          } catch (InterruptedException var3) {
          }
 
-         if (!entity.method_5805()) {
+         if (!entity.isAlive()) {
             clearKillMark(entity);
             return true;
          }
@@ -113,32 +113,32 @@ public class InstantKillUtil {
    }
 
    public static boolean executePlayerInstantKill(ServerPlayerEntity player, DamageSource source) {
-      if (player != null && player.method_5805()) {
-         DamageSource scapegoatSource = source != null ? source : ModDamageSources.ghost(player.method_37908());
-         if (ScapegoatGhostItem.handleScapegoatPassiveSkill(player, scapegoatSource, player.method_6032())) {
+      if (player != null && player.isAlive()) {
+         DamageSource scapegoatSource = source != null ? source : ModDamageSources.ghost(player.getWorld());
+         if (ScapegoatGhostItem.handleScapegoatPassiveSkill(player, scapegoatSource, player.getHealth())) {
             return false;
          }
 
          markForInstantKill(player);
-         player.method_6033(0.0F);
+         player.setHealth(0.0F);
 
          try {
             if (source != null) {
-               player.method_6078(source);
+               player.onDeath(source);
             } else {
-               player.method_6078(player.method_48923().method_48831());
+               player.onDeath(player.getDamageSources().magic());
             }
          } catch (Exception var4) {
          }
 
          if (source != null) {
-            player.method_5643(source, Float.MAX_VALUE);
+            player.damage(source, Float.MAX_VALUE);
          } else {
-            player.method_5643(player.method_48923().method_48829(), Float.MAX_VALUE);
+            player.damage(player.getDamageSources().outOfWorld(), Float.MAX_VALUE);
          }
 
          clearKillMark(player);
-         return !player.method_5805();
+         return !player.isAlive();
       } else {
          return false;
       }
@@ -157,22 +157,22 @@ public class InstantKillUtil {
    }
 
    public static boolean executePlayerSelfKill(ServerPlayerEntity player, DamageSource source, boolean skipCreative, boolean skipSpectator) {
-      if (player == null || !player.method_5805()) {
+      if (player == null || !player.isAlive()) {
          return false;
       } else if (hasMusicBoxCurse(player)) {
          return false;
       } else {
-         GameMode gameMode = player.field_13974.method_14257();
-         if (skipCreative && gameMode == GameMode.field_9220) {
+         GameMode gameMode = player.interactionManager.getGameMode();
+         if (skipCreative && gameMode == GameMode.CREATIVE) {
             return false;
          } else {
-            return skipSpectator && gameMode == GameMode.field_9219 ? false : executePlayerInstantKill(player, source);
+            return skipSpectator && gameMode == GameMode.SPECTATOR ? false : executePlayerInstantKill(player, source);
          }
       }
    }
 
    private static boolean hasMusicBoxCurse(ServerPlayerEntity player) {
-      return player.method_6059(ModEffects.MUSIC_BOX_CURSE);
+      return player.hasStatusEffect(ModEffects.MUSIC_BOX_CURSE);
    }
 
    public static boolean executeInstantKillIgnoreMusicBox(ServerPlayerEntity player) {
@@ -180,9 +180,9 @@ public class InstantKillUtil {
    }
 
    public static boolean executeInstantKillIgnoreMusicBox(ServerPlayerEntity player, DamageSource source) {
-      if (player != null && player.method_5805()) {
-         GameMode gameMode = player.field_13974.method_14257();
-         return gameMode == GameMode.field_9219 ? false : executePlayerInstantKill(player, source);
+      if (player != null && player.isAlive()) {
+         GameMode gameMode = player.interactionManager.getGameMode();
+         return gameMode == GameMode.SPECTATOR ? false : executePlayerInstantKill(player, source);
       } else {
          return false;
       }

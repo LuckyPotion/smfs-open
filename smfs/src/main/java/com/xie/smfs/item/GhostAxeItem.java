@@ -16,16 +16,16 @@ import org.jetbrains.annotations.Nullable;
 
 public class GhostAxeItem extends AxeItem implements SpiritWeapon {
    public GhostAxeItem(Settings settings) {
-      super(ToolMaterials.field_8923, 6.0F, -3.0F, settings);
+      super(ToolMaterials.IRON, 6.0F, -3.0F, settings);
    }
 
    @Override
    public void onSpiritWeaponAttack(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-      float damage = this.method_26366();
-      target.method_5643(ModDamageSources.ghost(attacker.method_37908()), damage);
-      if (!attacker.method_37908().method_8608() && attacker.method_5805()) {
-         attacker.method_6092(new StatusEffectInstance(StatusEffects.field_5911, 40, 0));
-         attacker.method_6092(new StatusEffectInstance(StatusEffects.field_5909, 40, 0));
+      float damage = this.getAttackDamage();
+      target.damage(ModDamageSources.ghost(attacker.getWorld()), damage);
+      if (!attacker.getWorld().isClient() && attacker.isAlive()) {
+         attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 40, 0));
+         attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 0));
       }
    }
 
@@ -39,14 +39,14 @@ public class GhostAxeItem extends AxeItem implements SpiritWeapon {
       return 0.35F;
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_axe.description.source"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_axe.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_axe.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_axe.effect.weakness"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_axe.effect.slowness"));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
-      tooltip.add(Text.method_43469("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_axe.description.source"));
+      tooltip.add(Text.translatable("item.smfs.ghost_axe.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_axe.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_axe.effect.weakness"));
+      tooltip.add(Text.translatable("item.smfs.ghost_axe.effect.slowness"));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_bonus", new Object[]{this.getSpiritDamageBonus()}));
+      tooltip.add(Text.translatable("item.smfs.spirit_weapon.damage_multiplier", new Object[]{this.getSpiritDamageMultiplier() * 100.0F}));
    }
 }

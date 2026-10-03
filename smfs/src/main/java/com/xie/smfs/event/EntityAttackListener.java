@@ -20,37 +20,37 @@ public class EntityAttackListener {
       AttackEntityCallback.EVENT
          .register(
             (AttackEntityCallback)(player, world, hand, entity, hitResult) -> {
-               if (!world.field_9236 && player instanceof ServerPlayerEntity) {
+               if (!world.isClient && player instanceof ServerPlayerEntity) {
                   if (entity instanceof VillagerEntity) {
                      VillagerGhostEntity.recordVillagerAttack(player);
                   }
 
                   if (entity instanceof LivingEntity target
-                     && SpiritWeapon.isSpiritWeapon(player.method_6047())
-                     && world.method_27983() != Smfs.GHOST_DREAM_DIMENSION) {
-                     SpiritWeapon weapon = (SpiritWeapon)player.method_6047().method_7909();
-                     ModEvents.preSpiritWeaponAttackHealth.put(target.method_5667(), target.method_6032());
-                     weapon.onSpiritWeaponAttack(player.method_6047(), target, player);
+                     && SpiritWeapon.isSpiritWeapon(player.getMainHandStack())
+                     && world.getRegistryKey() != Smfs.GHOST_DREAM_DIMENSION) {
+                     SpiritWeapon weapon = (SpiritWeapon)player.getMainHandStack().getItem();
+                     ModEvents.preSpiritWeaponAttackHealth.put(target.getUuid(), target.getHealth());
+                     weapon.onSpiritWeaponAttack(player.getMainHandStack(), target, player);
                   }
 
                   if (entity instanceof LivingEntity target) {
                      handleCorpseOilSwordAttack((ServerPlayerEntity)player, target, world);
                   }
 
-                  if (entity instanceof LivingEntity target && world.method_27983() != Smfs.GHOST_DREAM_DIMENSION) {
+                  if (entity instanceof LivingEntity target && world.getRegistryKey() != Smfs.GHOST_DREAM_DIMENSION) {
                      GhostSkillManager.onPlayerAttack(player, target);
                   }
                }
 
-               return ActionResult.field_5811;
+               return ActionResult.PASS;
             }
          );
    }
 
    private static void handleCorpseOilSwordAttack(ServerPlayerEntity player, LivingEntity target, World world) {
-      ItemStack mainHand = player.method_6047();
-      if (world.method_27983() != Smfs.GHOST_DREAM_DIMENSION) {
-         if (mainHand.method_7909() instanceof SwordItem && WeaponOilHandler.getCorpseOilLayers(mainHand) > 0) {
+      ItemStack mainHand = player.getMainHandStack();
+      if (world.getRegistryKey() != Smfs.GHOST_DREAM_DIMENSION) {
+         if (mainHand.getItem() instanceof SwordItem && WeaponOilHandler.getCorpseOilLayers(mainHand) > 0) {
             if (target instanceof GhostEntity) {
                return;
             }

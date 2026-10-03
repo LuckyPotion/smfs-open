@@ -27,24 +27,24 @@ public class QuestDetectionResultPacket {
    }
 
    public QuestDetectionResultPacket(PacketByteBuf buf) {
-      this.questId = buf.method_19772();
-      this.objectiveId = buf.method_19772();
+      this.questId = buf.readString();
+      this.objectiveId = buf.readString();
       this.success = buf.readBoolean();
-      this.updatedQuestData = buf.method_10798();
+      this.updatedQuestData = buf.readNbt();
    }
 
    public void write(PacketByteBuf buf) {
-      buf.method_10814(this.questId);
-      buf.method_10814(this.objectiveId);
+      buf.writeString(this.questId);
+      buf.writeString(this.objectiveId);
       buf.writeBoolean(this.success);
-      buf.method_10794(this.updatedQuestData);
+      buf.writeNbt(this.updatedQuestData);
    }
 
    public static void handle(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-      String questId = buf.method_19772();
-      String objectiveId = buf.method_19772();
+      String questId = buf.readString();
+      String objectiveId = buf.readString();
       boolean success = buf.readBoolean();
-      NbtCompound updatedQuestData = buf.method_10798();
+      NbtCompound updatedQuestData = buf.readNbt();
       client.execute(() -> {
          try {
             LOGGER.debug("客户端接收到任务检测结果: questId={}, objectiveId={}, success={}", questId, objectiveId, success);
@@ -53,7 +53,7 @@ public class QuestDetectionResultPacket {
                LOGGER.debug("已更新客户端任务数据");
             }
 
-            if (client.field_1755 instanceof QuestHandledScreen questScreen) {
+            if (client.currentScreen instanceof QuestHandledScreen questScreen) {
                questScreen.handleDetectionResult(questId, objectiveId, success);
             } else {
                LOGGER.warn("当前未打开任务界面，无法处理检测结果");

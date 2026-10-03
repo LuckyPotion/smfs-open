@@ -14,6 +14,6 @@ public interface SpiritWeapon {
    }
 
    static boolean isSpiritWeapon(ItemStack stack) {
-      return stack.method_7909() instanceof SpiritWeapon;
+      return stack.getItem() instanceof SpiritWeapon;
    }
 }

@@ -31,22 +31,22 @@ public class GhostSoupItem extends Item {
       super(settings);
    }
 
-   public TypedActionResult<ItemStack> method_7836(World world, PlayerEntity user, Hand hand) {
-      ItemStack itemStack = user.method_5998(hand);
-      if (user.method_7332(true)) {
-         user.method_6019(hand);
-         return TypedActionResult.method_22428(itemStack);
+   public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+      ItemStack itemStack = user.getStackInHand(hand);
+      if (user.canConsume(true)) {
+         user.setCurrentHand(hand);
+         return TypedActionResult.consume(itemStack);
       } else {
-         return TypedActionResult.method_22431(itemStack);
+         return TypedActionResult.fail(itemStack);
       }
    }
 
-   public ItemStack method_7861(ItemStack stack, World world, LivingEntity user) {
-      if (user instanceof PlayerEntity player && !world.field_9236) {
+   public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+      if (user instanceof PlayerEntity player && !world.isClient) {
          this.stripGhostFromBody(player);
       }
 
-      return super.method_7861(stack, world, user);
+      return super.finishUsing(stack, world, user);
    }
 
    private void stripGhostFromBody(PlayerEntity player) {
@@ -85,46 +85,42 @@ public class GhostSoupItem extends Item {
             PlayerEvents.clearGhostSlot(player, slotToStrip);
             GhostDomainManager.disableGhostDomain(player);
             if (willRevive) {
-               player.method_7353(Text.method_43471("item.smfs.ghost_soup.effect.revival"), true);
-               GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, player.method_37908());
+               player.sendMessage(Text.translatable("item.smfs.ghost_soup.effect.revival"), true);
+               GhostEntity ghostEntity = GhostUtils.createGhostEntityByType(ghostType, player.getWorld());
                if (ghostEntity != null) {
-                  ghostEntity.method_5808(
-                     player.method_23317() + random.nextGaussian() * 2.0,
-                     player.method_23318(),
-                     player.method_23321() + random.nextGaussian() * 2.0,
-                     random.nextFloat() * 360.0F,
-                     0.0F
+                  ghostEntity.refreshPositionAndAngles(
+                     player.getX() + random.nextGaussian() * 2.0, player.getY(), player.getZ() + random.nextGaussian() * 2.0, random.nextFloat() * 360.0F, 0.0F
                   );
-                  ghostEntity.method_5980(player);
-                  player.method_37908().method_8649(ghostEntity);
+                  ghostEntity.setTarget(player);
+                  player.getWorld().spawnEntity(ghostEntity);
                } else {
                   this.spawnCorrespondingTamedItem(ghostType, player, strippedLevel, strippedRevivalDegree);
                }
 
                if (isLastGhost) {
-                  InstantKillUtil.executePlayerSelfKill(serverPlayer, ModDamageSources.ghost(player.method_37908()));
+                  InstantKillUtil.executePlayerSelfKill(serverPlayer, ModDamageSources.ghost(player.getWorld()));
                }
             } else {
                this.spawnCorrespondingTamedItem(ghostType, player, strippedLevel, strippedRevivalDegree);
                this.verifyAndEnsureCleanup(player, slotToStrip);
-               player.method_7353(Text.method_43469("item.smfs.ghost_soup.effect.success", new Object[]{slotToStrip + 1}), true);
+               player.sendMessage(Text.translatable("item.smfs.ghost_soup.effect.success", new Object[]{slotToStrip + 1}), true);
             }
 
-            player.method_6092(new StatusEffectInstance(StatusEffects.field_5903, 200, 1, false, true));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 200, 1, false, true));
          } else {
-            player.method_7353(Text.method_43471("item.smfs.ghost_soup.effect.no_ghost"), true);
+            player.sendMessage(Text.translatable("item.smfs.ghost_soup.effect.no_ghost"), true);
          }
       }
    }
 
    private void spawnCorrespondingTamedItem(String ghostType, PlayerEntity player, int level, int revivalDegree) {
       ItemStack tamedItem = GhostUtils.createTamedItem(ghostType);
-      if (!tamedItem.method_7960()) {
-         NbtCompound nbt = tamedItem.method_7948();
-         nbt.method_10569("StoredLevel", level);
-         nbt.method_10569("StoredRevivalDegree", revivalDegree);
-         if (!player.method_31548().method_7394(tamedItem)) {
-            player.method_7328(tamedItem, false);
+      if (!tamedItem.isEmpty()) {
+         NbtCompound nbt = tamedItem.getOrCreateNbt();
+         nbt.putInt("StoredLevel", level);
+         nbt.putInt("StoredRevivalDegree", revivalDegree);
+         if (!player.getInventory().insertStack(tamedItem)) {
+            player.dropItem(tamedItem, false);
          }
       }
    }
@@ -145,11 +141,11 @@ public class GhostSoupItem extends Item {
       }
    }
 
-   public void method_7851(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-      super.method_7851(stack, world, tooltip, context);
-      tooltip.add(Text.method_43471("item.smfs.ghost_soup.description.desc"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_soup.description.type"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_soup.description.side_effect"));
-      tooltip.add(Text.method_43471("item.smfs.ghost_soup.description.side_effect_last"));
+   public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+      super.appendTooltip(stack, world, tooltip, context);
+      tooltip.add(Text.translatable("item.smfs.ghost_soup.description.desc"));
+      tooltip.add(Text.translatable("item.smfs.ghost_soup.description.type"));
+      tooltip.add(Text.translatable("item.smfs.ghost_soup.description.side_effect"));
+      tooltip.add(Text.translatable("item.smfs.ghost_soup.description.side_effect_last"));
    }
 }

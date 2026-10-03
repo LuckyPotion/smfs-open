@@ -54,50 +54,50 @@ public class GhostTamingScreen extends HandledScreen<GhostTamingScreenHandler> {
 
    public GhostTamingScreen(GhostTamingScreenHandler handler, PlayerInventory inventory, Text title) {
       super(handler, inventory, title);
-      this.field_2792 = 176;
-      this.field_2779 = 166;
-      this.field_25270 = this.field_2779 - 94;
+      this.backgroundWidth = 176;
+      this.backgroundHeight = 166;
+      this.playerInventoryTitleY = this.backgroundHeight - 94;
       if (handler instanceof GhostTamingScreenHandler) {
          String ghostType = handler.getGhostType();
          this.setGhostDifficulty(ghostType);
       }
    }
 
-   protected void method_25426() {
-      super.method_25426();
-      if (this.field_2797 instanceof GhostTamingScreenHandler) {
-         String ghostType = ((GhostTamingScreenHandler)this.field_2797).getGhostType();
+   protected void init() {
+      super.init();
+      if (this.handler instanceof GhostTamingScreenHandler) {
+         String ghostType = ((GhostTamingScreenHandler)this.handler).getGhostType();
          this.setGhostDifficulty(ghostType);
       }
 
-      this.tameButton = ButtonWidget.method_46430(Text.method_43471("screen.smfs.ghost_taming.tame"), button -> this.onTameButtonClicked())
-         .method_46434(this.field_2776 + 70 + 3, this.field_2800 + 50 + 5, 40, 16)
-         .method_46431();
-      this.method_37063(this.tameButton);
+      this.tameButton = ButtonWidget.builder(Text.translatable("screen.smfs.ghost_taming.tame"), button -> this.onTameButtonClicked())
+         .dimensions(this.x + 70 + 3, this.y + 50 + 5, 40, 16)
+         .build();
+      this.addDrawableChild(this.tameButton);
       this.updateButtonState();
    }
 
-   public void method_25394(DrawContext context, int mouseX, int mouseY, float delta) {
-      this.method_25420(context);
-      super.method_25394(context, mouseX, mouseY, delta);
+   public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+      this.renderBackground(context);
+      super.render(context, mouseX, mouseY, delta);
       this.drawProgressBar(context);
       this.drawSuccessRatedebug(context);
-      this.method_2380(context, mouseX, mouseY);
+      this.drawMouseoverTooltip(context, mouseX, mouseY);
    }
 
-   protected void method_2389(DrawContext context, float delta, int mouseX, int mouseY) {
-      context.method_25302(BACKGROUND_TEXTURE, this.field_2776, this.field_2800, 0, 0, this.field_2792, this.field_2779);
+   protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+      context.drawTexture(BACKGROUND_TEXTURE, this.x, this.y, 0, 0, this.backgroundWidth, this.backgroundHeight);
    }
 
-   protected void method_37432() {
-      super.method_37432();
+   protected void handledScreenTick() {
+      super.handledScreenTick();
       this.updateButtonState();
       this.updateTamingProgress();
    }
 
    private void updateButtonState() {
-      if (this.tameButton != null && this.field_2797 != null) {
-         this.tameButton.field_22763 = true;
+      if (this.tameButton != null && this.handler != null) {
+         this.tameButton.active = true;
       }
    }
 
@@ -128,26 +128,26 @@ public class GhostTamingScreen extends HandledScreen<GhostTamingScreenHandler> {
          }
       }
 
-      if (this.totalProgress > 0.0F && this.field_22787 != null && this.field_22787.field_1724 != null && this.field_2797 != null) {
+      if (this.totalProgress > 0.0F && this.client != null && this.client.player != null && this.handler != null) {
          PacketByteBuf buf = PacketByteBufs.create();
          buf.writeFloat(this.totalProgress);
-         buf.writeInt(((GhostTamingScreenHandler)this.field_2797).field_7763);
+         buf.writeInt(((GhostTamingScreenHandler)this.handler).syncId);
          ClientPlayNetworking.send(GhostTamingProgressPacket.ID, buf);
       }
    }
 
    private boolean validateTamingConditionsClient() {
-      if (this.field_2797 != null && this.field_22787 != null && this.field_22787.field_1724 != null) {
-         ItemStack containerStack = ((GhostTamingScreenHandler)this.field_2797).method_7611(0).method_7677();
-         if (!containerStack.method_7960() && containerStack.method_7909() instanceof GoldenContainerItem) {
-            NbtCompound nbt = containerStack.method_7948();
-            boolean hasGhost = nbt.method_10577("HasGhost");
+      if (this.handler != null && this.client != null && this.client.player != null) {
+         ItemStack containerStack = ((GhostTamingScreenHandler)this.handler).getSlot(0).getStack();
+         if (!containerStack.isEmpty() && containerStack.getItem() instanceof GoldenContainerItem) {
+            NbtCompound nbt = containerStack.getOrCreateNbt();
+            boolean hasGhost = nbt.getBoolean("HasGhost");
             if (!hasGhost) {
                LOGGER.debug("客户端检查失败：黄金容器中没有鬼");
                return false;
             } else {
-               NbtCompound contained = nbt.method_10562("ContainedGhost");
-               String ghostType = contained.method_10558("id");
+               NbtCompound contained = nbt.getCompound("ContainedGhost");
+               String ghostType = contained.getString("id");
                if (ghostType.isEmpty()) {
                   LOGGER.debug("客户端检查失败：无法识别鬼的类型");
                   return false;
@@ -168,8 +168,8 @@ public class GhostTamingScreen extends HandledScreen<GhostTamingScreenHandler> {
       LOGGER.debug("客户端驾驭按钮被点击");
       if (!this.validateTamingConditionsClient()) {
          LOGGER.debug("客户端检查失败，点击无效");
-         if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-            this.field_22787.field_1724.method_7353(Text.method_43470("§c缺少装有厉鬼的黄金容器"), false);
+         if (this.client != null && this.client.player != null) {
+            this.client.player.sendMessage(Text.literal("§c缺少装有厉鬼的黄金容器"), false);
          }
       } else {
          long currentTime = System.currentTimeMillis();
@@ -189,31 +189,31 @@ public class GhostTamingScreen extends HandledScreen<GhostTamingScreenHandler> {
 
    private void executeTaming() {
       LOGGER.debug("strate成功！总进度已达到100%");
-      if (this.field_22787 != null && this.field_2797 != null) {
+      if (this.client != null && this.handler != null) {
          PacketByteBuf buf = PacketByteBufs.create();
          buf.writeInt(1);
-         buf.writeInt(((GhostTamingScreenHandler)this.field_2797).field_7763);
+         buf.writeInt(((GhostTamingScreenHandler)this.handler).syncId);
          ClientPlayNetworking.send(GhostTamingScreenHandler.BUTTON_CLICK_PACKET_ID, buf);
          LOGGER.debug("已发送strate成功请求到服务器");
       }
    }
 
-   protected void method_2388(DrawContext context, int mouseX, int mouseY) {
-      context.method_51439(this.field_22793, this.field_29347, this.field_25269, this.field_25270, 4210752, false);
+   protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
+      context.drawText(this.textRenderer, this.playerInventoryTitle, this.playerInventoryTitleX, this.playerInventoryTitleY, 4210752, false);
    }
 
    private void drawProgressBar(DrawContext context) {
-      int barX = this.field_2776 + 50;
-      int barY = this.field_2800 + 45;
-      context.method_25294(barX, barY, barX + 80, barY + 4, -11184811);
+      int barX = this.x + 50;
+      int barY = this.y + 45;
+      context.fill(barX, barY, barX + 80, barY + 4, -11184811);
       int totalProgressWidth = (int)(this.totalProgress * 80.0F);
-      context.method_25294(barX, barY, barX + totalProgressWidth, barY + 4, -16711936);
+      context.fill(barX, barY, barX + totalProgressWidth, barY + 4, -16711936);
       int targetStartX = barX + (int)(this.targetZoneStart * 80.0F);
       int targetEndX = barX + (int)(this.targetZoneEnd * 80.0F);
-      context.method_25294(targetStartX, barY, targetEndX, barY + 4, -23296);
+      context.fill(targetStartX, barY, targetEndX, barY + 4, -23296);
       int sliderX = barX + (int)(this.sliderPosition * 77.0F);
       int sliderY = barY - 2;
-      context.method_25294(sliderX, sliderY, sliderX + 3, sliderY + 4 + 4, -1);
+      context.fill(sliderX, sliderY, sliderX + 3, sliderY + 4 + 4, -1);
    }
 
    public void setGhostDifficulty(String ghostType) {
@@ -255,21 +255,21 @@ public class GhostTamingScreen extends HandledScreen<GhostTamingScreenHandler> {
          textColor = 16753920;
       }
 
-      int textX = this.field_2776 + 70 + 6;
-      int textY = this.field_2800 + 70 + 5;
-      context.method_51448().method_22903();
-      context.method_51448().method_22905(0.8F, 0.8F, 1.0F);
-      context.method_51439(this.field_22793, Text.method_43470(successRateText), (int)(textX / 0.8F), (int)(textY / 0.8F), textColor, false);
-      context.method_51448().method_22909();
+      int textX = this.x + 70 + 6;
+      int textY = this.y + 70 + 5;
+      context.getMatrices().push();
+      context.getMatrices().scale(0.8F, 0.8F, 1.0F);
+      context.drawText(this.textRenderer, Text.literal(successRateText), (int)(textX / 0.8F), (int)(textY / 0.8F), textColor, false);
+      context.getMatrices().pop();
    }
 
    private boolean checkPlayerHasControlSlot() {
-      if (this.field_22787 != null && this.field_22787.field_1724 != null) {
-         PlayerEntity player = this.field_22787.field_1724;
+      if (this.client != null && this.client.player != null) {
+         PlayerEntity player = this.client.player;
 
-         for (int i = 0; i < player.method_31548().method_5439(); i++) {
-            ItemStack stack = player.method_31548().method_5438(i);
-            if (!stack.method_7960() && stack.method_7909().method_7876().contains("control_slot")) {
+         for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (!stack.isEmpty() && stack.getItem().getTranslationKey().contains("control_slot")) {
                return true;
             }
          }

@@ -38,61 +38,59 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class NewGhostDoorBlock extends GhostFurnitureBlock {
-   public static final BooleanProperty OPEN = BooleanProperty.method_11825("open");
-   private static final VoxelShape SHAPE_NORTH = Block.method_9541(0.0, 0.0, 6.5, 16.0, 32.0, 9.5);
-   private static final VoxelShape SHAPE_SOUTH = Block.method_9541(0.0, 0.0, 6.5, 16.0, 32.0, 9.5);
-   private static final VoxelShape SHAPE_EAST = Block.method_9541(6.5, 0.0, 0.0, 9.5, 32.0, 16.0);
-   private static final VoxelShape SHAPE_WEST = Block.method_9541(6.5, 0.0, 0.0, 9.5, 32.0, 16.0);
+   public static final BooleanProperty OPEN = BooleanProperty.of("open");
+   private static final VoxelShape SHAPE_NORTH = Block.createCuboidShape(0.0, 0.0, 6.5, 16.0, 32.0, 9.5);
+   private static final VoxelShape SHAPE_SOUTH = Block.createCuboidShape(0.0, 0.0, 6.5, 16.0, 32.0, 9.5);
+   private static final VoxelShape SHAPE_EAST = Block.createCuboidShape(6.5, 0.0, 0.0, 9.5, 32.0, 16.0);
+   private static final VoxelShape SHAPE_WEST = Block.createCuboidShape(6.5, 0.0, 0.0, 9.5, 32.0, 16.0);
 
    public NewGhostDoorBlock(Settings settings) {
       super(settings);
-      this.method_9590(
-         (BlockState)((BlockState)((BlockState)this.field_10647.method_11664()).method_11657(FACING, Direction.field_11043)).method_11657(OPEN, false)
-      );
+      this.setDefaultState((BlockState)((BlockState)((BlockState)this.stateManager.getDefaultState()).with(FACING, Direction.NORTH)).with(OPEN, false));
    }
 
    @Override
-   protected void method_9515(Builder<Block, BlockState> builder) {
-      builder.method_11667(new Property[]{FACING, OPEN});
+   protected void appendProperties(Builder<Block, BlockState> builder) {
+      builder.add(new Property[]{FACING, OPEN});
    }
 
-   public ActionResult method_9534(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-      if (player.method_5715() && hand == Hand.field_5808) {
-         boolean isOpen = (Boolean)state.method_11654(OPEN);
-         BlockState newState = (BlockState)state.method_11657(OPEN, !isOpen);
-         world.method_8652(pos, newState, 3);
-         BlockEntity blockEntity = world.method_8321(pos);
+   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+      if (player.isSneaking() && hand == Hand.MAIN_HAND) {
+         boolean isOpen = (Boolean)state.get(OPEN);
+         BlockState newState = (BlockState)state.with(OPEN, !isOpen);
+         world.setBlockState(pos, newState, 3);
+         BlockEntity blockEntity = world.getBlockEntity(pos);
          if (blockEntity != null) {
-            blockEntity.method_5431();
+            blockEntity.markDirty();
          }
 
-         if (!world.field_9236) {
+         if (!world.isClient) {
             if (isOpen) {
-               player.method_7353(Text.method_43471("block.smfs.new_ghost_door.close"), true);
+               player.sendMessage(Text.translatable("block.smfs.new_ghost_door.close"), true);
             } else {
-               player.method_7353(Text.method_43471("block.smfs.new_ghost_door.open"), true);
+               player.sendMessage(Text.translatable("block.smfs.new_ghost_door.open"), true);
             }
          }
 
-         return ActionResult.field_5812;
-      } else if (!player.method_5715() && hand == Hand.field_5808 && (Boolean)state.method_11654(OPEN)) {
-         ItemStack mainHandStack = player.method_6047();
-         ItemStack offHandStack = player.method_6079();
-         if (!(mainHandStack.method_7909() instanceof GoldenContainerItem) && !(offHandStack.method_7909() instanceof GoldenContainerItem)) {
-            if (!world.field_9236 && player instanceof ServerPlayerEntity serverPlayer) {
-               if (world.method_27983() == World.field_25179) {
-                  ServerWorld targetWorld = serverPlayer.method_5682().method_3847(Smfs.SPIRIT_REALM_DIMENSION);
+         return ActionResult.SUCCESS;
+      } else if (!player.isSneaking() && hand == Hand.MAIN_HAND && (Boolean)state.get(OPEN)) {
+         ItemStack mainHandStack = player.getMainHandStack();
+         ItemStack offHandStack = player.getOffHandStack();
+         if (!(mainHandStack.getItem() instanceof GoldenContainerItem) && !(offHandStack.getItem() instanceof GoldenContainerItem)) {
+            if (!world.isClient && player instanceof ServerPlayerEntity serverPlayer) {
+               if (world.getRegistryKey() == World.OVERWORLD) {
+                  ServerWorld targetWorld = serverPlayer.getServer().getWorld(Smfs.SPIRIT_REALM_DIMENSION);
                   if (targetWorld != null) {
-                     BlockPos targetBlockPos = new BlockPos(pos.method_10263(), pos.method_10264(), pos.method_10260());
-                     BlockState existingState = targetWorld.method_8320(targetBlockPos);
-                     boolean hasGhostDoor = existingState.method_26204() instanceof NewGhostDoorBlock || existingState.method_26204() instanceof GhostDoorBlock;
+                     BlockPos targetBlockPos = new BlockPos(pos.getX(), pos.getY(), pos.getZ());
+                     BlockState existingState = targetWorld.getBlockState(targetBlockPos);
+                     boolean hasGhostDoor = existingState.getBlock() instanceof NewGhostDoorBlock || existingState.getBlock() instanceof GhostDoorBlock;
                      if (!hasGhostDoor) {
                         for (int x = -6; x <= 6; x++) {
                            for (int y = -6; y <= 6; y++) {
                               for (int z = -6; z <= 6; z++) {
-                                 BlockPos checkPos = targetBlockPos.method_10069(x, y, z);
-                                 BlockState checkState = targetWorld.method_8320(checkPos);
-                                 if (checkState.method_26204() instanceof NewGhostDoorBlock || checkState.method_26204() instanceof GhostDoorBlock) {
+                                 BlockPos checkPos = targetBlockPos.add(x, y, z);
+                                 BlockState checkState = targetWorld.getBlockState(checkPos);
+                                 if (checkState.getBlock() instanceof NewGhostDoorBlock || checkState.getBlock() instanceof GhostDoorBlock) {
                                     hasGhostDoor = true;
                                     targetBlockPos = checkPos;
                                     break;
@@ -110,21 +108,21 @@ public class NewGhostDoorBlock extends GhostFurnitureBlock {
                         }
                      }
 
-                     BlockPos platformPos = hasGhostDoor ? targetBlockPos.method_10074() : targetBlockPos;
+                     BlockPos platformPos = hasGhostDoor ? targetBlockPos.down() : targetBlockPos;
 
                      for (int x = -1; x <= 1; x++) {
                         for (int z = -1; z <= 1; z++) {
-                           BlockPos currentPos = platformPos.method_10069(x, 0, z);
-                           targetWorld.method_8501(currentPos, Blocks.field_10540.method_9564());
+                           BlockPos currentPos = platformPos.add(x, 0, z);
+                           targetWorld.setBlockState(currentPos, Blocks.OBSIDIAN.getDefaultState());
                         }
                      }
 
                      for (int y = 1; y <= 2; y++) {
                         for (int x = -1; x <= 1; x++) {
                            for (int z = -1; z <= 1; z++) {
-                              BlockPos airPos = platformPos.method_10069(x, y, z);
+                              BlockPos airPos = platformPos.add(x, y, z);
                               if (!airPos.equals(targetBlockPos) || !hasGhostDoor) {
-                                 targetWorld.method_8501(airPos, Blocks.field_10124.method_9564());
+                                 targetWorld.setBlockState(airPos, Blocks.AIR.getDefaultState());
                               }
                            }
                         }
@@ -132,29 +130,27 @@ public class NewGhostDoorBlock extends GhostFurnitureBlock {
 
                      Vec3d targetPos;
                      if (hasGhostDoor) {
-                        targetPos = new Vec3d(targetBlockPos.method_10263() + 0.5, targetBlockPos.method_10264() + 0.5, targetBlockPos.method_10260() + 0.5);
+                        targetPos = new Vec3d(targetBlockPos.getX() + 0.5, targetBlockPos.getY() + 0.5, targetBlockPos.getZ() + 0.5);
                      } else {
-                        targetPos = new Vec3d(platformPos.method_10263() + 0.5, platformPos.method_10264() + 1, platformPos.method_10260() + 0.5);
+                        targetPos = new Vec3d(platformPos.getX() + 0.5, platformPos.getY() + 1, platformPos.getZ() + 0.5);
                      }
 
-                     serverPlayer.method_14251(
-                        targetWorld, targetPos.field_1352, targetPos.field_1351, targetPos.field_1350, player.method_36454(), player.method_36455()
-                     );
-                     player.method_7353(Text.method_43470("§a你进入了灵异之地"), true);
+                     serverPlayer.teleport(targetWorld, targetPos.x, targetPos.y, targetPos.z, player.getYaw(), player.getPitch());
+                     player.sendMessage(Text.literal("§a你进入了灵异之地"), true);
                   }
-               } else if (world.method_27983() == Smfs.SPIRIT_REALM_DIMENSION) {
-                  ServerWorld targetWorld = serverPlayer.method_5682().method_3847(World.field_25179);
+               } else if (world.getRegistryKey() == Smfs.SPIRIT_REALM_DIMENSION) {
+                  ServerWorld targetWorld = serverPlayer.getServer().getWorld(World.OVERWORLD);
                   if (targetWorld != null) {
-                     BlockPos targetBlockPos = new BlockPos(pos.method_10263(), pos.method_10264(), pos.method_10260());
-                     BlockState existingState = targetWorld.method_8320(targetBlockPos);
-                     boolean hasGhostDoor = existingState.method_26204() instanceof NewGhostDoorBlock || existingState.method_26204() instanceof GhostDoorBlock;
+                     BlockPos targetBlockPos = new BlockPos(pos.getX(), pos.getY(), pos.getZ());
+                     BlockState existingState = targetWorld.getBlockState(targetBlockPos);
+                     boolean hasGhostDoor = existingState.getBlock() instanceof NewGhostDoorBlock || existingState.getBlock() instanceof GhostDoorBlock;
                      if (!hasGhostDoor) {
                         for (int x = -6; x <= 6; x++) {
                            for (int y = -6; y <= 6; y++) {
                               for (int z = -6; z <= 6; z++) {
-                                 BlockPos checkPos = targetBlockPos.method_10069(x, y, z);
-                                 BlockState checkState = targetWorld.method_8320(checkPos);
-                                 if (checkState.method_26204() instanceof NewGhostDoorBlock || checkState.method_26204() instanceof GhostDoorBlock) {
+                                 BlockPos checkPos = targetBlockPos.add(x, y, z);
+                                 BlockState checkState = targetWorld.getBlockState(checkPos);
+                                 if (checkState.getBlock() instanceof NewGhostDoorBlock || checkState.getBlock() instanceof GhostDoorBlock) {
                                     hasGhostDoor = true;
                                     targetBlockPos = checkPos;
                                     break;
@@ -172,21 +168,21 @@ public class NewGhostDoorBlock extends GhostFurnitureBlock {
                         }
                      }
 
-                     BlockPos platformPos = hasGhostDoor ? targetBlockPos.method_10074() : targetBlockPos;
+                     BlockPos platformPos = hasGhostDoor ? targetBlockPos.down() : targetBlockPos;
 
                      for (int x = -1; x <= 1; x++) {
                         for (int z = -1; z <= 1; z++) {
-                           BlockPos currentPos = platformPos.method_10069(x, 0, z);
-                           targetWorld.method_8501(currentPos, Blocks.field_10540.method_9564());
+                           BlockPos currentPos = platformPos.add(x, 0, z);
+                           targetWorld.setBlockState(currentPos, Blocks.OBSIDIAN.getDefaultState());
                         }
                      }
 
                      for (int y = 1; y <= 2; y++) {
                         for (int x = -1; x <= 1; x++) {
                            for (int z = -1; z <= 1; z++) {
-                              BlockPos airPos = platformPos.method_10069(x, y, z);
+                              BlockPos airPos = platformPos.add(x, y, z);
                               if (!airPos.equals(targetBlockPos) || !hasGhostDoor) {
-                                 targetWorld.method_8501(airPos, Blocks.field_10124.method_9564());
+                                 targetWorld.setBlockState(airPos, Blocks.AIR.getDefaultState());
                               }
                            }
                         }
@@ -194,81 +190,79 @@ public class NewGhostDoorBlock extends GhostFurnitureBlock {
 
                      Vec3d targetPos;
                      if (hasGhostDoor) {
-                        targetPos = new Vec3d(targetBlockPos.method_10263() + 0.5, targetBlockPos.method_10264() + 0.5, targetBlockPos.method_10260() + 0.5);
+                        targetPos = new Vec3d(targetBlockPos.getX() + 0.5, targetBlockPos.getY() + 0.5, targetBlockPos.getZ() + 0.5);
                      } else {
-                        targetPos = new Vec3d(platformPos.method_10263() + 0.5, platformPos.method_10264() + 1, platformPos.method_10260() + 0.5);
+                        targetPos = new Vec3d(platformPos.getX() + 0.5, platformPos.getY() + 1, platformPos.getZ() + 0.5);
                      }
 
-                     serverPlayer.method_14251(
-                        targetWorld, targetPos.field_1352, targetPos.field_1351, targetPos.field_1350, player.method_36454(), player.method_36455()
-                     );
-                     player.method_7353(Text.method_43470("§a你回到了现实世界"), true);
+                     serverPlayer.teleport(targetWorld, targetPos.x, targetPos.y, targetPos.z, player.getYaw(), player.getPitch());
+                     player.sendMessage(Text.literal("§a你回到了现实世界"), true);
                   }
                }
             }
 
-            return ActionResult.field_5812;
+            return ActionResult.SUCCESS;
          } else {
-            return ActionResult.field_5811;
+            return ActionResult.PASS;
          }
       } else {
-         return ActionResult.field_5811;
+         return ActionResult.PASS;
       }
    }
 
    @Override
-   public VoxelShape method_9530(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return this.getShapeForDirection((Direction)state.method_11654(FACING));
+   public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return this.getShapeForDirection((Direction)state.get(FACING));
    }
 
    @Nullable
    @Override
-   public BlockEntity method_10123(BlockPos pos, BlockState state) {
+   public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
       return new NewGhostDoorBlockEntity(pos, state);
    }
 
-   public VoxelShape method_9549(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-      return this.getShapeForDirection((Direction)state.method_11654(FACING));
+   public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+      return this.getShapeForDirection((Direction)state.get(FACING));
    }
 
-   public void method_9567(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
-      super.method_9567(world, pos, state, placer, itemStack);
-      if ((Boolean)state.method_11654(OPEN)) {
-         world.method_39279(pos, this, 1200);
+   public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+      super.onPlaced(world, pos, state, placer, itemStack);
+      if ((Boolean)state.get(OPEN)) {
+         world.scheduleBlockTick(pos, this, 1200);
       }
    }
 
-   public void method_9588(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-      if ((Boolean)state.method_11654(OPEN)) {
+   public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+      if ((Boolean)state.get(OPEN)) {
          if (this.hasPlayerNearby(world, pos)) {
             this.spawnRandomGhost(world, pos);
          }
 
-         world.method_39279(pos, this, 1200);
+         world.scheduleBlockTick(pos, this, 1200);
       }
    }
 
-   public void method_9536(BlockState oldState, World world, BlockPos pos, BlockState newState, boolean moved) {
-      super.method_9536(oldState, world, pos, newState, moved);
-      if (oldState.method_28498(OPEN) && newState.method_28498(OPEN) && !(Boolean)oldState.method_11654(OPEN) && (Boolean)newState.method_11654(OPEN)) {
-         world.method_39279(pos, this, 1200);
+   public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
+      super.onStateReplaced(state, world, pos, newState, moved);
+      if (state.contains(OPEN) && newState.contains(OPEN) && !(Boolean)state.get(OPEN) && (Boolean)newState.get(OPEN)) {
+         world.scheduleBlockTick(pos, this, 1200);
       }
    }
 
    private boolean hasPlayerNearby(ServerWorld world, BlockPos pos) {
-      Box box = new Box(pos).method_1014(10.0);
-      List<PlayerEntity> players = world.method_8390(PlayerEntity.class, box, player -> player.method_5805());
+      Box box = new Box(pos).expand(10.0);
+      List<PlayerEntity> players = world.getEntitiesByClass(PlayerEntity.class, box, player -> player.isAlive());
       return !players.isEmpty();
    }
 
    private void spawnRandomGhost(ServerWorld world, BlockPos pos) {
-      if (world.method_27983().equals(World.field_25179)) {
+      if (world.getRegistryKey().equals(World.OVERWORLD)) {
          EntityType<?> ghostType = null;
          Set<EntityType<?>> lockedGhostTypes = GhostSpawnManager.getLockedGhostTypes();
          if (!lockedGhostTypes.isEmpty()) {
-            Random random = world.method_8409();
+            Random random = world.getRandom();
             EntityType<?>[] lockedTypesArray = lockedGhostTypes.toArray(new EntityType[0]);
-            ghostType = lockedTypesArray[random.method_43048(lockedTypesArray.length)];
+            ghostType = lockedTypesArray[random.nextInt(lockedTypesArray.length)];
             GhostSpawnManager.unlockGhostType(world, ghostType);
             Smfs.LOGGER.debug("{}从灵异之地逃出来了", ghostType);
          } else {
@@ -294,31 +288,31 @@ public class NewGhostDoorBlock extends GhostFurnitureBlock {
                return;
             }
 
-            Random random = world.method_8409();
-            ghostType = ghostTypes[random.method_43048(ghostTypes.length)];
+            Random random = world.getRandom();
+            ghostType = ghostTypes[random.nextInt(ghostTypes.length)];
          }
 
-         Random random = world.method_8409();
-         double x = pos.method_10263() + random.method_43058() * 6.0 - 3.0;
-         double y = pos.method_10264() + 1;
-         double z = pos.method_10260() + random.method_43058() * 6.0 - 3.0;
+         Random random = world.getRandom();
+         double x = pos.getX() + random.nextDouble() * 6.0 - 3.0;
+         double y = pos.getY() + 1;
+         double z = pos.getZ() + random.nextDouble() * 6.0 - 3.0;
          BlockPos spawnPos = new BlockPos((int)x, (int)y, (int)z);
-         ghostType.method_5899(world, null, null, spawnPos, SpawnReason.field_16469, true, false);
+         ghostType.spawn(world, null, null, spawnPos, SpawnReason.SPAWNER, true, false);
          Smfs.LOGGER.debug("鬼门刷新出厉鬼: {} 在位置: {}", ghostType, spawnPos);
-         Box box = new Box(pos).method_1014(10.0);
+         Box box = new Box(pos).expand(10.0);
 
-         for (PlayerEntity player : world.method_8390(PlayerEntity.class, box, playerx -> playerx.method_5805())) {
-            player.method_7353(Text.method_43470("§c有东西从门内跑出来了..."), true);
+         for (PlayerEntity player : world.getEntitiesByClass(PlayerEntity.class, box, playerx -> playerx.isAlive())) {
+            player.sendMessage(Text.literal("§c有东西从门内跑出来了..."), true);
          }
       }
    }
 
    private VoxelShape getShapeForDirection(Direction direction) {
       return switch (direction) {
-         case field_11043 -> SHAPE_NORTH;
-         case field_11035 -> SHAPE_SOUTH;
-         case field_11034 -> SHAPE_EAST;
-         case field_11039 -> SHAPE_WEST;
+         case NORTH -> SHAPE_NORTH;
+         case SOUTH -> SHAPE_SOUTH;
+         case EAST -> SHAPE_EAST;
+         case WEST -> SHAPE_WEST;
          default -> SHAPE_NORTH;
       };
    }

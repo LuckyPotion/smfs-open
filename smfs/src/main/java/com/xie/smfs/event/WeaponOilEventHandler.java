@@ -16,14 +16,14 @@ public class WeaponOilEventHandler {
    }
 
    private static TypedActionResult<ItemStack> onItemUse(PlayerEntity player, World world, Hand hand) {
-      if (!world.field_9236 && hand == Hand.field_5808) {
-         ItemStack mainHand = player.method_5998(Hand.field_5808);
-         ItemStack offHand = player.method_5998(Hand.field_5810);
-         if (offHand.method_7909() == ModItems.CORPSE_OIL && mainHand.method_7909() instanceof SwordItem && WeaponOilHandler.applyCorpseOil(player)) {
-            return TypedActionResult.method_22427(mainHand);
+      if (!world.isClient && hand == Hand.MAIN_HAND) {
+         ItemStack mainHand = player.getStackInHand(Hand.MAIN_HAND);
+         ItemStack offHand = player.getStackInHand(Hand.OFF_HAND);
+         if (offHand.getItem() == ModItems.CORPSE_OIL && mainHand.getItem() instanceof SwordItem && WeaponOilHandler.applyCorpseOil(player)) {
+            return TypedActionResult.success(mainHand);
          }
       }
 
-      return TypedActionResult.method_22430(ItemStack.field_8037);
+      return TypedActionResult.pass(ItemStack.EMPTY);
    }
 }
