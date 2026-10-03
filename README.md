@@ -4,7 +4,7 @@
 
 本仓库包含 Minecraft **Fabric 1.20.1** 模组 **神秘复苏 / Mysterious Revival** 及其配套兼容模组的**反编译源码**，按标准 Fabric 项目布局整理。
 
-> **这不是官方源码仓库。** 所有 Java 代码均由 `jar` 字节码反编译得到，作者未发布过源代码。资源文件（贴图、模型、音效、语言文件、数据包）则与原始 jar **逐字节一致**，未做任何修改。
+> **这不是官方源码仓库。** 所有 Java 代码均由 `jar` 字节码反编译得到，资源文件（贴图、模型、音效、语言文件、数据包）则与原始 jar **逐字节一致**，未做任何修改。作者本人的源码仓库见下方说明。
 
 ---
 
@@ -16,6 +16,24 @@
 | [`smfs-mca-compatibility/`](smfs-mca-compatibility/) | `smfs_mca_compatibility` | 1.0.0 | 兼容补丁：跳过《凡家物语》(MCA) 开局命运选择界面 | 3 个 `.java` + 6 个资源文件 |
 
 两个模组的关系：`smfs_mca_compatibility` 是一个独立的小型 Mixin 补丁，让本体模组与 **MCA (Mine and Colonize / 凡家物语)** 共存时不再弹出命运选择 GUI，而是直接用默认设置生成玩家。
+
+---
+
+## 📌 关于本仓库的由来
+
+先把事实摆清楚：**这个模组本身并没有做任何加密，作者也已经公开了源码仓库**——
+
+> **作者官方源码仓库**：<https://gitee.com/xiaoxieY/mysterious-revival>
+
+也就是说，下面的内容不是"破解"或"泄露"出来的，作者本来就打算公开。**建议优先访问上面的官方仓库获取最新代码**，那里的版本比本快照新得多（本仓库对应 1.5.0，官方 master 已到 `26.9.21`）。
+
+之所以仍然建立这个镜像，只有一个原因：**官方仓库托管在 Gitee，GitHub 上没有对应仓库**。对于习惯用 GitHub 检索、收藏或参与协作的人来说，这份代码此前基本检索不到。这里只是把它换了个地方放一份，方便查阅，内容本身没有增删（资源文件与原 jar 逐字节一致）。
+
+### 关于获取渠道
+
+需要说明一点：作者在 B 站等平台发布视频时，简介中提供的网盘链接通常是**带有推广收益的链接**。如果你只是想正常游玩这个模组，通过作者的官方渠道获取会更直接，也能确保拿到的是未经二次修改的版本。
+
+以上仅为渠道说明，不针对作者本人作任何评价。对模组的署名、授权与致谢请见下方[关于授权](#关于授权)与[致谢](#致谢)两节。
 
 ---
 
@@ -258,7 +276,11 @@ maven { url "https://maven.aliyun.com/repository/public/" }
 
 This repository contains **decompiled sources** for the Minecraft **Fabric 1.20.1** mod **Mysterious Revival (神秘复苏 / SMFS)** and its compatibility addon.
 
-> **This is not an official source repository.** The author never published source code; every `.java` file here was produced by decompiling the shipped bytecode. Resource files are **byte-for-byte identical** to the original jar.
+> **This is not the official source repository.** The author's own repository is hosted on Gitee: <https://gitee.com/xiaoxieY/mysterious-revival> — the mod is not obfuscated and the source was already public. Every `.java` file here was produced by decompiling the shipped bytecode, and resource files are **byte-for-byte identical** to the original jar.
+
+**Why this mirror exists:** the official repository lives on Gitee, which is not indexed or searchable through GitHub in practice. This repository simply makes the same code findable from GitHub, and is pinned to release 1.5.0 while upstream master has moved on to `26.9.21` — for current code, use the official repository above.
+
+**A note on download channels:** the netdisk links the author posts in video descriptions (Bilibili and similar) are typically affiliate links that generate revenue for the poster. If you just want to play the mod, going through the author's official channels is more direct and guarantees an unmodified build. This is a statement about distribution links only, and is not a comment on the author.
 
 **Pipeline:** unpack → remap `intermediary` → `named` with TinyRemapper (Yarn `1.20.1+build.10`, Mixin extension enabled so `@Mixin`/`@Inject` annotation payloads are rewritten too) → decompile with Vineflower 1.12.0 → repair a compile-time UTF-8↔GBK encoding defect → lay out as `src/main/java` + `src/main/resources`.
 
