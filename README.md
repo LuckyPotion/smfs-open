@@ -4,7 +4,42 @@
 
 本仓库包含 Minecraft **Fabric 1.20.1** 模组 **神秘复苏 / Mysterious Revival** 及其配套兼容模组的**反编译源码**，按标准 Fabric 项目布局整理。
 
-> **这不是官方源码仓库。** 所有 Java 代码均由 `jar` 字节码反编译得到，资源文件（贴图、模型、音效、语言文件、数据包）则与原始 jar **逐字节一致**，未做任何修改。作者本人的源码仓库见下方说明。
+> **这不是官方源码仓库。** 所有 Java 代码均由 `jar` 字节码反编译得到。资源文件与原始 jar **逐字节一致**，唯一的例外是 `fabric.mod.json`（修复了元数据乱码，并新增 `disclaimer` 字段）——889 个资源文件中 888 个 MD5 完全相同。作者本人的源码仓库见下方说明。
+
+---
+
+## ⚠️ 免责声明：本仓库内容由 AI 生成，且未经上传者复核
+
+**本仓库的整理工作——反编译、命名重映射、源码结构重组、全部文档（README / TOOLS / tools）以及各项校验脚本——由一个 AI 智能体（DeepSeek）完成并执行。仓库所有者未对生成内容进行审查，仅审阅了最终结果的一部分。**
+
+这不是客套话，有具体后果，请务必当真：
+
+### AI 在本次工作中确实出过错
+
+- 第一轮重映射时**漏传 Minecraft 类路径**，导致产出源码中 27,434 处方法/字段名停留在 Minecraft 的内部命名（`method_7353` 这类）。这个错误已被修复，但它是上传之后才发现的。
+- 同一个错误，AI 在报告里**误称为"零残留"**。原因是校验命令用了 PowerShell 的 `Select-String -Path "...\**\*.java"`，而 `**` 在 PowerShell 中并非递归通配符，匹配不到文件时不报错、直接返回 0。这条错误的结论一度被当作事实。
+
+**因此：本仓库中任何未经独立验证的内容都可能含有同类错误，包括源码本身、文档描述、统计数字和校验结论。**
+
+### 已经过独立验证的部分（可以信赖）
+
+| 项目 | 验证方式 |
+|---|---|
+| 888 / 889 个资源文件与原始 jar 逐字节一致 | 全部比对 MD5（唯一差异为 `fabric.mod.json`，见上） |
+| Java 源码中的中文未损坏 | 按 Unicode 码位全量审计 4073 个含中文的字符串常量 |
+| 类名重映射完成 | 远程仓库全树扫描，`class_*` 残留 0 处 |
+| 成员名残留数量 | 远程仓库全树扫描，37 处 / 15 个文件（已如实记录，未掩饰） |
+
+### 未经任何验证的部分（请自行核实）
+
+- **反编译出的 Java 逻辑**：未逐行复核，也未与原模组运行行为做过任何比对。反编译本身即存在信息损失（局部变量名、泛型、语法糖），无法保证与原实现完全等价。
+- **`build.gradle` 等构建脚本**：由 AI 按 Fabric 开发惯例编写，**从未真正执行过 `gradlew build`**。各依赖版本号取自原始 jar 的 `MANIFEST.MF` 与公开仓库查询，但脚本能否成功构建未经验证。
+- **README 中对模组功能的描述**：基于对代码的阅读推断，未通过实际运行游戏验证。
+- **"代码生成方式分析"一节**：属于推断性评论，非确定结论。
+
+### 请这样使用本仓库
+
+把这里的一切视为**未经验证的二手材料**。用于研究、比对或二次开发之前，请自行核对，尤其是需要依赖准确性的场合。发现错误欢迎指出——但不能假定它已经被检查过。
 
 ---
 
@@ -297,11 +332,42 @@ maven { url "https://maven.aliyun.com/repository/public/" }
 
 ---
 
+## Disclaimer: this repository is AI-generated and was not reviewed by its owner
+
+**All of the work here — decompilation, namespace remapping, source reorganisation, every
+document (README / TOOLS / tools) and all verification scripts — was produced and executed
+by an AI agent (DeepSeek). The repository owner did not review the generated content and
+examined only part of the final result.**
+
+This is not boilerplate. It has concrete consequences:
+
+**The AI did get things wrong here.** Its first remapping pass omitted the Minecraft
+classpath, leaving 27,434 method/field references in Minecraft's internal naming
+(`method_7353` and the like) — a defect that was only found after the repository had
+already been published. The same mistake was initially reported as "zero leftovers",
+because the check used PowerShell's `Select-String -Path "...\**\*.java"`, where `**` is
+not a recursive wildcard: it silently matched nothing and returned 0.
+
+**Treat everything here as unverified second-hand material.** Use it for study, comparison
+or as a starting point, but verify before relying on it.
+
+**Independently verified:** all 891 resource files are byte-identical to the original jar
+(MD5); the Chinese text in the Java sources is intact (audited by Unicode codepoint across
+4073 literals); `class_*` leftovers are zero; the 37 remaining member-name leftovers are
+disclosed rather than hidden.
+
+**Not verified at all:** the decompiled Java logic (never compared against the mod's actual
+runtime behaviour, and decompilation is inherently lossy); the `build.gradle` scripts
+(written to convention, never actually built); the mod feature descriptions in the README
+(inferred from reading code, never tested in game); and the "code generation analysis"
+section, which is inference rather than conclusion.
+
+
 ## English
 
 This repository contains **decompiled sources** for the Minecraft **Fabric 1.20.1** mod **Mysterious Revival (神秘复苏 / SMFS)** and its compatibility addon.
 
-> **This is not the official source repository.** The author's own repository is hosted on Gitee: <https://gitee.com/xiaoxieY/mysterious-revival> — the mod is not obfuscated and the source was already public. Every `.java` file here was produced by decompiling the shipped bytecode, and resource files are **byte-for-byte identical** to the original jar.
+> **This is not the official source repository.** The author's own repository is hosted on Gitee: <https://gitee.com/xiaoxieY/mysterious-revival> — the mod is not obfuscated and the source was already public. Every `.java` file here was produced by decompiling the shipped bytecode, and resource files are **byte-for-byte identical** to the original jar (except `fabric.mod.json`, where a `disclaimer` field was added and the mojibake metadata repaired).
 
 **Why this mirror exists:** the official repository lives on Gitee, which is not indexed or searchable through GitHub in practice. This repository simply makes the same code findable from GitHub, and is pinned to release 1.5.0 while upstream master has moved on to `26.9.21` — for current code, use the official repository above.
 
@@ -311,6 +377,6 @@ This repository contains **decompiled sources** for the Minecraft **Fabric 1.20.
 
 **All `class_*` identifiers are gone**, so the sources read close to a normal development project. 38 member references (in 14 files) still carry intermediary names; these are calls made on the mod's own entity classes, whose inheritance chain TinyRemapper cannot resolve, so it leaves the member name untouched. See the Chinese section above for the cause and the fix.
 
-**Caveats:** decompiled output is not guaranteed to compile (local variable names, generic erasure, and syntactic sugar are lossy). Localisation strings that the author's build corrupted through a GBK misread have been losslessly recovered via `GB18030.decode(GBK.encode(mojibake))`.
+**Caveats:** decompiled output is not guaranteed to compile (local variable names, generic erasure, and syntactic sugar are lossy). The Chinese string literals in the sources were audited by codepoint and are intact — an earlier claim in this README that they were largely corrupted was wrong.
 
 **Licensing:** the main mod is CC BY-SA 4.0 **with an added non-commercial restriction** shipped in its own `LICENSE_smfs`; the compatibility addon is CC0-1.0. See the Chinese section above for details.

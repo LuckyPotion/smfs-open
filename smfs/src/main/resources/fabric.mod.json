@@ -12,6 +12,7 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC BY-SA 4.0",
+	"disclaimer": "本包为反编译所得，整理工作全部由 AI 完成且未经人工复核，内容正确性不作保证。原始模组版权归作者进击的蟹某人所有（CC BY-SA 4.0 + 禁止商业使用），源码见 https://gitee.com/xiaoxieY/mysterious-revival 。",
 	"icon": "icon.png",
 	"environment": "*",
 	"entrypoints": {
